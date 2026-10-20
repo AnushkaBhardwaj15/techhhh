@@ -1,0 +1,37 @@
+{
+  "ticket": 23,
+  "status": "passed",
+  "commands": {
+    "typecheck": "passed",
+    "lint": "passed",
+    "build": "passed",
+    "test": {
+      "pass": 260,
+      "fail": 0
+    },
+    "test:integration": {
+      "pass": 152,
+      "fail": 0
+    },
+    "test:e2e": {
+      "pass": 2,
+      "fail": 0
+    },
+    "test:security": {
+      "pass": 162,
+      "fail": 0
+    },
+    "verify:container": "passed",
+    "test:load": "passed"
+  },
+  "databaseIsolation": "Fresh disposable databases; deployment uses an owned isolated Docker PostgreSQL container.",
+  "reviews": {
+    "standards": "no unresolved findings",
+    "spec": "no unresolved findings"
+  },
+  "limitations": [
+    "Local host qualification only; AWS not provisioned or deployed.",
+    "No OS image vulnerability scanner installed."
+  ],
+  "loadGeneratedAt": "2026-10-17T09:05:33.628Z"
+}

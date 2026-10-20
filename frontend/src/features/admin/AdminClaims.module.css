@@ -1,0 +1,44 @@
+.page { max-width: 1320px; margin: 0 auto; padding: 48px clamp(20px, 5vw, 72px) 72px; color: #1d2421; }
+.eyebrow { margin: 0 0 10px; color: #315c53; font: 700 11px/1.4 ui-monospace, monospace; letter-spacing: .16em; }
+.heading { display: flex; justify-content: space-between; align-items: end; gap: 24px; margin-bottom: 32px; }
+.heading h1 { margin: 0; font-size: clamp(36px, 5vw, 62px); line-height: .98; letter-spacing: -.045em; }
+.heading p:last-child { max-width: 620px; margin: 14px 0 0; line-height: 1.55; }
+.heading a, .queue button, .actions button, .pagination button { min-height: 44px; border: 2px solid #1d2421; border-radius: 0; background: #ef8076; color: #1d2421; font: 700 14px/1.2 system-ui, sans-serif; text-decoration: none; cursor: pointer; box-shadow: 4px 4px 0 #1d2421; }
+.heading a { display: inline-flex; align-items: center; padding: 0 16px; white-space: nowrap; }
+.layout { display: grid; grid-template-columns: minmax(280px, .85fr) minmax(360px, 1.15fr); gap: 28px; align-items: start; }
+.queue, .detail { min-width: 0; border: 2px solid #1d2421; background: #f4ecd6; }
+.queueHeader, .detailHeader { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 18px 20px; border-bottom: 1px solid #1d2421; }
+.queueHeader h2, .detailHeader h2 { margin: 0; font-size: 23px; letter-spacing: -.025em; }
+.queueHeader span { color: #315c53; font: 700 12px ui-monospace, monospace; }
+.claims { display: grid; }
+.claimButton { display: grid; gap: 7px; width: 100%; padding: 16px 20px; border: 0 !important; border-bottom: 1px solid #b7b09e !important; background: transparent !important; box-shadow: none !important; text-align: left; }
+.claimButton[aria-pressed="true"] { background: #e9dfc5 !important; box-shadow: inset 5px 0 #ef8076 !important; }
+.claimButton:focus-visible, .heading a:focus-visible, .actions button:focus-visible, .pagination button:focus-visible, .retry:focus-visible { outline: 3px solid #ef8076; outline-offset: 3px; }
+.claimTitle { font-size: 16px; font-weight: 700; }
+.claimMeta { color: #46504b; font: 700 11px/1.5 ui-monospace, monospace; }
+.claimStatus { width: fit-content; padding: 4px 6px; border: 1px solid #1d2421; background: #d0dfbd; font: 700 10px ui-monospace, monospace; }
+.claimStatus[data-status="PENDING_VERIFICATION"] { background: #f2b5a9; }
+.claimStatus[data-status^="REJECTED"] { background: #ead1bf; }
+.empty, .error, .loading { margin: 0; padding: 22px 20px; line-height: 1.5; }
+.error { color: #7c2923; }
+.retry { margin: 0 20px 20px; min-height: 40px; padding: 0 12px; border: 1px solid #1d2421; background: #f4ecd6; font-weight: 700; cursor: pointer; }
+.detailBody .retry { margin: 14px 0 0; }
+.pagination { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 18px; border-top: 1px solid #1d2421; font: 700 12px ui-monospace, monospace; }
+.pagination button { min-height: 38px; padding: 0 10px; background: #f4ecd6; box-shadow: 3px 3px 0 #1d2421; }
+.pagination button:disabled, .actions button:disabled { opacity: .55; box-shadow: none; cursor: not-allowed; }
+.detailBody { padding: 20px; }
+.detailBody > p { margin: 0; line-height: 1.55; }
+.facts { display: grid; grid-template-columns: minmax(110px, .65fr) minmax(0, 1.35fr); margin: 0; border-top: 1px solid #b7b09e; }
+.facts dt, .facts dd { margin: 0; padding: 11px 8px; border-bottom: 1px solid #b7b09e; overflow-wrap: anywhere; }
+.facts dt { font: 700 11px ui-monospace, monospace; text-transform: uppercase; }
+.actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 22px; }
+.actions button { min-width: 130px; padding: 0 16px; }
+.actions button:last-child { background: #d0dfbd; }
+.message { margin: 18px 0 0 !important; padding: 12px; border-left: 4px solid #315c53; background: #e9dfc5; }
+@media (max-width: 760px) {
+  .page { padding-top: 30px; }
+  .heading { align-items: start; flex-direction: column; }
+  .layout { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  .queue, .detail { width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; } }

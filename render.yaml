@@ -1,0 +1,67 @@
+projects:
+  - name: tech-tombola
+    environments:
+      - name: production
+        services:
+          - type: web
+            name: backend
+            runtime: docker
+            region: singapore
+            plan: 0.5c-512mb
+            dockerfilePath: ./backend/Dockerfile
+            dockerContext: ./backend
+            autoDeployTrigger: commit
+            healthCheckPath: /ready
+            preDeployCommand: bun migrate.js
+            envVars:
+              - key: NODE_ENV
+                value: production
+              - key: HOST
+                value: 0.0.0.0
+              - key: DATABASE_URL
+                fromDatabase:
+                  name: tech-tombola-db
+                  property: connectionString
+              - key: JWT_SECRET
+                generateValue: true
+              - key: SESSION_SECRET
+                generateValue: true
+              - key: FRONTEND_HOST
+                fromService:
+                  name: frontend
+                  type: web
+                  envVarKey: RENDER_EXTERNAL_HOSTNAME
+              - key: SUPER_ADMIN_BOOTSTRAP_SECRET
+                sync: false
+              - key: LOG_LEVEL
+                value: info
+
+          - type: web
+            name: frontend
+            runtime: docker
+            region: singapore
+            plan: 0.5c-512mb
+            dockerfilePath: ./frontend/Dockerfile
+            dockerContext: ./frontend
+            autoDeployTrigger: commit
+            healthCheckPath: /
+            envVars:
+              - key: BACKEND_HOST
+                fromService:
+                  name: backend
+                  type: web
+                  property: hostport
+              - key: NGINX_ENVSUBST_FILTER
+                value: BACKEND_HOST
+              - key: RENDER_EXTERNAL_HOSTNAME
+                fromService:
+                  name: frontend
+                  type: web
+                  envVarKey: RENDER_EXTERNAL_HOSTNAME
+
+        databases:
+          - name: tech-tombola-db
+            plan: basic-256mb
+            region: singapore
+            postgresMajorVersion: "16"
+            databaseName: techtombola

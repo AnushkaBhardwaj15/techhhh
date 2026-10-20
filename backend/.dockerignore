@@ -1,0 +1,7 @@
+*
+!package.json
+!bun.lock
+!src/
+!src/**
+src/**/*.test.ts
+src/**/*.test.tsx

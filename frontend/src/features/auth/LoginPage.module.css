@@ -1,0 +1,38 @@
+.page { min-height: 100dvh; color: var(--ink); background: var(--forest); display: flex; flex-direction: column; }
+.topbar, .bottom { display:flex; align-items:center; justify-content:space-between; padding: 22px clamp(20px, 5vw, 72px); color: var(--cream); border-bottom: 1px solid rgb(248 240 217 / 24%); }
+.topActions { display:flex; align-items:center; gap:16px; }
+.navBack { color:var(--cream); text-decoration:none; font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:.05em; padding:4px 0; border-bottom:1.5px solid transparent; transition:border-color 100ms ease; }
+.navBack:hover { border-bottom-color:var(--coral); }
+.navLive { color:var(--coral); text-decoration:none; font-family:var(--mono); font-size:10px; font-weight:800; letter-spacing:.08em; padding:4px 8px; border:1px dashed var(--coral); background:rgba(239, 128, 118, 0.1); }
+.navLive:hover { background:rgba(239, 128, 118, 0.2); }
+.navBack:focus-visible, .navLive:focus-visible { outline:2px solid var(--coral); outline-offset:2px; }
+.wordmark { display:flex; gap:7px; align-items:center; color:inherit; text-decoration:none; font-size:12px; font-weight:900; letter-spacing:.08em; }
+.wordmark span { border:1px solid var(--cream); padding:4px 5px; }
+.edition, .eyebrow, .panelLabel, .bottom, .rule { font-family:var(--mono); font-size:10px; letter-spacing:.12em; }
+.content { width:min(1120px, calc(100% - 40px)); margin:auto; padding:clamp(48px, 9vh, 100px) 0; display:grid; grid-template-columns:minmax(0,1fr) minmax(330px,430px); gap:clamp(44px, 9vw, 130px); align-items:center; }
+.intro { color:var(--cream); }
+.eyebrow { color:#f0a39a; margin:0 0 25px; }
+.intro h1 { margin:0; font:950 clamp(50px, 7vw, 88px)/.9 Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif; letter-spacing:-.04em; }
+.intro h1 em { color:var(--coral); font-style:normal; }
+.copy { max-width:390px; margin:28px 0 0; color:#e2e3d9; font-size:17px; line-height:1.55; }
+.rule { display:flex; align-items:center; gap:10px; margin-top:42px; color:#d8dfd6; }
+.rule > span:nth-child(odd) { color:var(--coral); }
+.ruleLine { width:30px; height:1px; background:#97b0a4; }
+.formPanel { background:var(--cream); padding:clamp(25px, 4vw, 42px); border:2px solid var(--ink); box-shadow:8px 8px 0 var(--ink); }
+.panelLabel { margin:0 0 18px; color:#42695e; }
+.formPanel h2 { margin:0; font-size:33px; line-height:1; letter-spacing:-.04em; }
+.panelCopy { margin:12px 0 28px; color:#575b53; font-size:14px; }
+.field { display:grid; gap:8px; margin:18px 0; font-size:13px; font-weight:750; }
+.field input { width:100%; min-height:48px; border:1.5px solid var(--ink); border-radius:0; background:#fffdf7; padding:12px; color:var(--ink); font:inherit; outline-offset:3px; }
+.field input:focus-visible { outline:3px solid var(--coral); }
+.help { font-size:11px; font-weight:450; color:#62675d; }
+.error { color:#8d271f; font-size:13px; line-height:1.4; }
+.submit { width:100%; display:flex; justify-content:space-between; align-items:center; min-height:52px; margin-top:22px; padding:0 17px; border:2px solid var(--ink); border-radius:0; background:var(--coral); color:var(--ink); font:800 12px var(--mono); letter-spacing:.08em; cursor:pointer; box-shadow:4px 4px 0 var(--ink); transition:transform 100ms ease, box-shadow 100ms ease; }
+.submit:hover { background:#ff9c90; }
+.submit:active { transform:translate(3px,3px); box-shadow:1px 1px 0 var(--ink); }
+.submit:disabled { cursor:wait; opacity:.72; }
+.submit:focus-visible { outline:3px solid var(--forest); outline-offset:5px; }
+.footerNote { margin:25px 0 0; color:#5e6258; font-size:11px; }
+.bottom { border-top:1px solid rgb(248 240 217 / 24%); border-bottom:0; color:#c8d3cc; }
+@media (max-width:700px) { .topbar { padding:17px 20px; } .content { grid-template-columns:1fr; width:calc(100% - 40px); gap:34px; padding:45px 0 55px; } .intro h1 { font-size:clamp(48px, 14vw, 68px); } .copy { margin-top:18px; font-size:15px; } .rule { margin-top:24px; } .formPanel { padding:24px; box-shadow:5px 5px 0 var(--ink); } .bottom { align-items:flex-start; gap:12px; flex-direction:column; font-size:9px; padding:16px 20px; } }
+@media (prefers-reduced-motion: reduce) { .submit { transition:none; } }

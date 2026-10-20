@@ -1,0 +1,52 @@
+{
+  "ticket": 23,
+  "result": "passed",
+  "checks": {
+    "dependencyAudit": "passed",
+    "nonRootAndImageContents": "passed",
+    "missingConfiguration": "passed",
+    "cleanMigration": "passed",
+    "readOnlyAndProbes": "passed",
+    "deploymentSmoke": "passed",
+    "migrationMismatchAndRecovery": "passed",
+    "databaseUnavailableAndRestored": "passed",
+    "inFlightSigterm": "passed",
+    "structuredLogsAndRedaction": "passed",
+    "rollbackRedeployAndIdleSigterm": "passed",
+    "disposableResourcesRemoved": "passed"
+  },
+  "failures": [],
+  "osImageScanner": "not installed in this project",
+  "assumptions": {
+    "applicationInstances": 1,
+    "database": "postgres:16-alpine@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685",
+    "appMemoryLimitBytes": 1073741824,
+    "budgetTargetUsd": 100,
+    "awsProvisioned": false
+  },
+  "image": {
+    "id": "sha256:297628c07a11bfa5c2dc8e3ae97a1e7dfd3fe4486bc356b2e4b0b6c66d0374dd",
+    "user": "bun",
+    "architecture": "amd64",
+    "bun": "1.4.2",
+    "baseDigest": "sha256:9114c058aeae42162ee16dd5084b95fe9473970bb6bcb5b232ab1630f0546895"
+  },
+  "logEvidence": {
+    "events": [
+      "recovery_state",
+      "request_completed",
+      "game_action",
+      "request_rejected",
+      "authorization_failure"
+    ],
+    "requestRecords": 14,
+    "credentialsAbsent": true
+  },
+  "rollback": {
+    "codeRef": "b7c6b8f69450411ac41159bfe33b92a23a7444ea",
+    "dependencies": "current audited lockfile",
+    "image": "sha256:e9b5953d9f2f6a14098fe4325ac9b4800ce49014e8bd8a03ee876f077b145bd4"
+  },
+  "generatedAt": "2026-10-17T13:09:28.726Z",
+  "durationSeconds": 14.741658434000001
+}

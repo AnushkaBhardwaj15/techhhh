@@ -1,0 +1,22 @@
+.page { max-width:1040px; margin:0 auto; padding:clamp(24px,6vw,64px) clamp(18px,5vw,48px); display:grid; gap:20px; }
+.welcome { max-width:690px; padding-bottom:20px; }
+.kicker,.label { font:700 11px/1.2 var(--mono); letter-spacing:.13em; }
+.kicker { color:#a2483e; }
+.welcome h1 { margin:12px 0; font-size:clamp(38px,8vw,72px); line-height:.98; letter-spacing:-.06em; }
+.welcome h1 em { color:#a2483e; font-family:Georgia,serif; font-weight:500; }
+.welcome > p:last-child { max-width:540px; line-height:1.6; }
+.eventCard,.roundCard,.help { background:#fffaf0; border:2px solid var(--ink); box-shadow:5px 5px 0 var(--ink); padding:clamp(20px,4vw,32px); }
+.roundCard { background:#dfe9dd; }
+.cardHead { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:22px; }
+.signals { display:grid; gap:5px; text-align:right; font:700 9px/1 var(--mono); letter-spacing:.04em; color:#315c53; }
+.eventCard h2,.roundCard h2,.help h2 { margin:0 0 10px; font-size:clamp(24px,4vw,36px); letter-spacing:-.04em; }
+.eventCard p,.roundCard p,.help p { line-height:1.55; }
+.status { display:flex; flex-wrap:wrap; align-items:baseline; gap:10px; }
+.status span { border:1px solid var(--ink); padding:5px 8px; font:700 10px var(--mono); }
+.schedule,.ticketNote { font:12px var(--mono); }
+.gameLink,.eventCard button,.roundCard button { display:inline-flex; gap:12px; align-items:center; margin-top:12px; padding:12px 16px; background:var(--coral); color:var(--ink); border:2px solid var(--ink); box-shadow:3px 3px 0 var(--ink); font-weight:800; text-decoration:none; cursor:pointer; }
+.gameLink:focus-visible,.eventCard button:focus-visible,.roundCard button:focus-visible { outline:3px solid #315c53; outline-offset:4px; }
+.help { background:#f3dfad; }
+.help h2 { max-width:600px; }
+.ticketNote { margin-top:20px; }
+@media (prefers-reduced-motion: reduce) { *,*::before,*::after { scroll-behavior:auto !important; animation-duration:.01ms !important; transition-duration:.01ms !important; } }

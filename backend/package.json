@@ -1,0 +1,47 @@
+{
+  "name": "tech-tombola-backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun --watch src/server.ts",
+    "start": "bun src/server.ts",
+    "build": "bun build src/server.ts --outdir dist --target bun && bun -e \"import { cp } from 'node:fs/promises'; await cp('src/db/migrations', 'dist/migrations', { recursive: true });\"",
+    "test:e2e": "bun test tests/e2e",
+    "test:load": "bun run build && bun test tests/load/metrics.test.ts && bun tests/load/runner.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit",
+    "db:migrate": "bun src/db/migrate.ts",
+    "db:check": "bun src/db/check.ts",
+    "test": "bun test tests/unit src/app.test.ts src/modules/auth/*.test.ts src/modules/claims/*.test.ts src/modules/operations/*.test.ts src/modules/live/*.test.ts src/modules/recovery/*.test.ts src/shared/email/*.test.ts src/realtime/*.test.ts tests/operations/*.test.ts tests/restore/guards.test.ts",
+    "test:security": "bun test --parallel=1 tests/security tests/unit/logger-security.test.ts src/shared/email/email.service.test.ts tests/integration/auth.test.ts tests/integration/errors.test.ts tests/integration/import.test.ts tests/integration/participant.test.ts tests/integration/ticket.test.ts tests/integration/mark-persistence.test.ts tests/integration/draw-engine.test.ts tests/integration/claim-submission.test.ts tests/integration/live-display.test.ts tests/integration/operations.test.ts tests/integration/recovery.test.ts tests/integration/question.test.ts tests/integration/round-operation.test.ts tests/integration/event.test.ts tests/integration/admin.test.ts src/modules/live/live.service.test.ts src/modules/operations/operations.test.ts src/realtime/events.test.ts src/realtime/realtime.routes.test.ts",
+    "test:integration": "bun test --parallel=1 tests/integration src/realtime/realtime.routes.test.ts",
+    "verify:container": "bun test tests/operations/command.test.ts && bun tests/deployment/run.ts",
+    "smoke:deployment": "bun tests/deployment/run.ts",
+    "verify:restore": "bun test tests/restore/guards.test.ts && bun tests/restore/run.ts"
+  },
+  "dependencies": {
+    "@fastify/cookie": "^11.1.3",
+    "@fastify/cors": "^11.3.1",
+    "@fastify/multipart": "^10.1.4",
+    "@fastify/websocket": "^11.3.4",
+    "argon2": "^0.41.1",
+    "drizzle-orm": "^0.45.2",
+    "fastify": "^5.2.1",
+    "jsonwebtoken": "^9.0.2",
+    "postgres": "^3.4.5",
+    "ws": "^8.18.1",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.4.3",
+    "@types/jsonwebtoken": "^9.0.9",
+    "@types/node": "^22.13.10",
+    "@types/ws": "^8.5.14",
+    "drizzle-kit": "^0.31.11",
+    "typescript": "^5.8.2"
+  },
+  "overrides": {
+    "esbuild": "^0.25.4"
+  }
+}

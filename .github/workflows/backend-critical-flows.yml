@@ -1,0 +1,51 @@
+name: Backend critical flows
+
+on:
+  push:
+    branches: ['**']
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-critical-flows.yml'
+  pull_request:
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-critical-flows.yml'
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5433/techtombola_test
+      E2E_DATABASE_URL: postgresql://postgres:postgres@localhost:5433/postgres
+      JWT_SECRET: ci-jwt-secret-with-at-least-thirty-two-characters
+      SESSION_SECRET: ci-session-secret-with-at-least-thirty-two-characters
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+      - run: bun install --no-save
+      - run: bun run build && bun run test:e2e
+      - run: bun run build && bun run test:e2e
+      - run: bun run typecheck
+      - run: bun run lint
+      - run: bun run test
+      - run: psql "$E2E_DATABASE_URL" -v ON_ERROR_STOP=1 -c 'CREATE DATABASE techtombola_test'
+      - run: bun run test:integration

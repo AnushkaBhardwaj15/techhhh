@@ -1,0 +1,14 @@
+:root { font-family: system-ui, sans-serif; font-synthesis:none; text-rendering:optimizeLegibility; --forest:#315c53; --cream:#f4ecd6; --coral:#ef8076; --ink:#1d2421; --mono:ui-monospace, SFMono-Regular, Menlo, monospace; color:var(--ink); background:var(--forest); }
+* { box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body { margin:0; min-width:320px; min-height:100dvh; }
+button, input { font:inherit; }
+.feedback { min-height:100dvh; padding:32px; display:grid; place-content:center; color:var(--cream); background:var(--forest); text-align:center; }
+.feedback h1 { font-size:clamp(28px, 6vw, 46px); }
+.role-page { min-height:100dvh; background:var(--cream); }
+.role-page > header { display:flex; gap:20px; align-items:center; padding:18px 24px; border-bottom:2px solid var(--ink); }
+.role-page > header span { margin-left:auto; }
+.role-page > header button { border:1px solid var(--ink); background:transparent; padding:8px 12px; cursor:pointer; }
+.role-page > main { padding:32px; }
+@media(max-width:430px) { .role-page > header { gap:8px; padding:12px; } .role-page > header strong { font-size:13px; } .role-page > header span { font-size:12px; } .role-page > header button { padding:7px 8px; } }

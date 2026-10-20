@@ -1,0 +1,60 @@
+---
+description: Bun/Fastify backend layer rules — game logic in domain modules only
+globs: backend/**/*.{ts,js}
+alwaysApply: false
+---
+
+# Bun Backend Architecture (Strict)
+
+Tech Tombola backend is a **Bun/Fastify modular monolith** with PostgreSQL. Full reference: `docs/ARCHITECTURE_CODING_STANDARDS.md`.
+
+## Layer flow
+
+```text
+routes → service → domain ← repository
+                         ← email
+                         ← websocket
+```
+
+## Rules
+
+- **Game logic in `domain` only** — draw validation, winner evaluation, ticket generation, state-machine transitions.
+- **routes:** parse HTTP request/response, validate with Zod, call service, return JSON. No game logic.
+- **service:** orchestrate use-case — coordinate domain, repository, and side effects (WebSocket, email). No game rules.
+- **domain:** pure functions — no database, no HTTP, no IO. Testable in isolation.
+- **repository:** database access via Drizzle ORM. Explicit transactions for game-critical operations.
+- **WebSocket:** broadcast events only. Never determines game state.
+
+## Validation
+
+- All external input validated with Zod schemas.
+- Parameterized queries only — no string interpolation in SQL.
+- Game-critical operations use database transactions (draws, winner verification, ticket generation).
+
+## Authentication / Authorization
+
+- JWT access tokens + Argon2id password hashing.
+- Every protected endpoint checks: auth → role → resource ownership → event/round scope.
+- Plaintext passwords NEVER stored.
+
+## State machines
+
+- Round and event transitions must be explicit — invalid transitions return errors.
+- Only one round may be ACTIVE at a time.
+
+## Tests
+
+- Colocate `*.test.ts` in the module directory.
+- Domain: pure unit tests, no external deps.
+- Service: mock repository and IO boundaries.
+- Routes: integration tests with supertest or similar.
+- `bun test` must pass before PR.
+
+## Idempotency
+
+- Draw creation, winner verification, round start/resume must be safe against duplicate requests.
+- Double-click on "Draw Next" must not create two draws.
+
+## Before new modules or API endpoints
+
+Run `/grill-me` on game edge cases, API contract, state transitions, and concurrency. Grill before `/implement`.

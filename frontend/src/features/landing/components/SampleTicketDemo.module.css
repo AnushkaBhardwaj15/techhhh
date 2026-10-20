@@ -1,0 +1,388 @@
+.wrapper {
+  background: var(--cream);
+  border: 2px solid var(--ink);
+  box-shadow: 6px 6px 0 var(--ink);
+  padding: clamp(16px, 3vw, 28px);
+  width: 100%;
+}
+
+.controlsBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(29, 36, 33, 0.18);
+  margin-bottom: 16px;
+}
+
+.controlsInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.label {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: var(--forest);
+}
+
+.instruction {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.actionButtons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.simButton {
+  background: var(--coral);
+  color: var(--ink);
+  border: 1.5px solid var(--ink);
+  padding: 8px 14px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 var(--ink);
+  transition: transform 100ms ease, box-shadow 100ms ease, background 100ms ease;
+}
+
+.simButton:hover {
+  background: #ff9b8f;
+}
+
+.simButton:active {
+  transform: translate(2px, 2px);
+  box-shadow: 0 0 0 var(--ink);
+}
+
+.resetButton {
+  background: transparent;
+  color: var(--ink);
+  border: 1.5px solid var(--ink);
+  padding: 8px 12px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.resetButton:hover {
+  background: rgba(29, 36, 33, 0.08);
+}
+
+.simButton:focus-visible,
+.resetButton:focus-visible,
+.playableCell:focus-visible {
+  outline: 3px solid var(--coral);
+  outline-offset: 2px;
+}
+
+/* Simulated Clue Banner */
+.clueCard {
+  background: #fffdf8;
+  border: 1.5px solid var(--ink);
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  animation: fadeIn 200ms ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.clueHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.clueBadge {
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: var(--coral);
+  background: rgba(239, 128, 118, 0.15);
+  padding: 2px 6px;
+  border: 1px solid var(--coral);
+}
+
+.revealedKeyBadge {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--forest);
+}
+
+.revealedKeyBadge strong {
+  background: var(--forest);
+  color: var(--cream);
+  padding: 2px 6px;
+  margin-left: 4px;
+}
+
+.cluePrompt {
+  margin: 4px 0 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.4;
+}
+
+.clueHelp {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: #55625c;
+}
+
+/* Ticket Card */
+.ticketCard {
+  background: #fffaf0;
+  border: 2px solid var(--ink);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.ticketCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.cardKicker {
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: #a2483e;
+}
+
+.cardId {
+  margin: 2px 0 0;
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.ticketScore {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--forest);
+  background: rgba(49, 92, 83, 0.1);
+  padding: 4px 8px;
+  border: 1px solid rgba(49, 92, 83, 0.25);
+}
+
+.ticketScore strong {
+  font-size: 13px;
+}
+
+.gridContainer {
+  width: 100%;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.grid {
+  width: 100%;
+  min-width: 580px;
+  border-collapse: separate;
+  border-spacing: 4px;
+}
+
+.emptyCell {
+  background: #ece5d6;
+  border: 1px dashed rgba(29, 36, 33, 0.3);
+  text-align: center;
+  vertical-align: middle;
+  height: 58px;
+}
+
+.emptyDot {
+  color: #8c938b;
+  font-size: 16px;
+}
+
+.playableCell {
+  background: #ffffff;
+  border: 1.5px solid var(--ink);
+  text-align: center;
+  vertical-align: middle;
+  height: 58px;
+  padding: 4px 2px;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 80ms ease, background 120ms ease;
+  position: relative;
+}
+
+.playableCell:hover {
+  background: #fff3db;
+}
+
+.playableCell:active {
+  transform: scale(0.96);
+}
+
+.cellMarked {
+  background: var(--forest) !important;
+  color: var(--cream);
+  border-color: var(--ink);
+}
+
+.cellHighlighted {
+  outline: 3px solid var(--coral);
+  outline-offset: 2px;
+  z-index: 2;
+  animation: pulse 1s infinite alternate;
+}
+
+@keyframes pulse {
+  from {
+    box-shadow: 0 0 0 rgba(239, 128, 118, 0.4);
+  }
+  to {
+    box-shadow: 0 0 10px rgba(239, 128, 118, 0.8);
+  }
+}
+
+.coord {
+  display: block;
+  font-family: var(--mono);
+  font-size: 8px;
+  font-weight: 700;
+  color: #647069;
+  margin-bottom: 2px;
+}
+
+.cellMarked .coord {
+  color: #c0ded4;
+}
+
+.keyText {
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1.1;
+}
+
+.checkIcon {
+  display: block;
+  font-size: 10px;
+  font-weight: 800;
+  margin-top: 2px;
+}
+
+.cellMarked .checkIcon {
+  color: #7de8be;
+}
+
+/* Pattern Eligibility Status */
+.patternsBar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.patternsLabel {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: var(--forest);
+}
+
+.patternChips {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 8px;
+}
+
+.patternChip {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 10px;
+  border: 1px solid rgba(29, 36, 33, 0.2);
+  background: #f7f0e0;
+  font-size: 11px;
+}
+
+.patternIcon {
+  font-size: 12px;
+  color: #8c938b;
+  margin-bottom: 2px;
+}
+
+.patternChip strong {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink);
+}
+
+.patternDesc {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: #636d67;
+  margin-top: 2px;
+}
+
+.patternAchieved {
+  background: #d8ece2;
+  border-color: var(--forest);
+  box-shadow: 2px 2px 0 var(--forest);
+}
+
+.patternAchieved .patternIcon {
+  color: var(--forest);
+}
+
+.patternAchieved strong {
+  color: var(--forest);
+}
+
+@media (max-width: 600px) {
+  .controlsBar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .actionButtons {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .patternChips {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .playableCell,
+  .simButton,
+  .cellHighlighted {
+    animation: none !important;
+    transition: none !important;
+  }
+}

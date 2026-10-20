@@ -1,0 +1,42 @@
+---
+description: Unit tests are mandatory for every dev task with full scenario coverage
+alwaysApply: true
+---
+
+# Mandatory Unit Tests
+
+**No task is complete without unit tests.** Production code and tests ship together in the same change — never "tests in a follow-up."
+
+## When this applies
+
+Every dev task: feature, bug fix, refactor, or API change. If code is written or modified, tests are required.
+
+## Scenario coverage (compulsory)
+
+Before writing tests, list **all scenarios** the behavior must handle. Cover every category that applies to the task:
+
+1. **Happy path** — valid inputs produce the expected output.
+2. **Invalid inputs** — malformed, missing, or wrong-type inputs return errors or validation failures.
+3. **Boundary values** — empty, zero, min/max, single item, large sets, nil/null/undefined.
+4. **Error paths** — not found, conflict, timeout, upstream/dependency failure.
+5. **Domain edge cases** — rules from the spec/PRD (e.g. duplicate draws, ticket immutability, winner race conditions, state-machine transitions, data isolation).
+
+Do not skip a category because it "seems obvious." If a category does not apply, state why in a one-line comment above the test group.
+
+## Test quality
+
+- Test **public behavior** at module seams — not private helpers or internal call order.
+- Expected values come from the **spec or known-good literals**, not by re-implementing the production logic in the test.
+- One logical assertion per test; name tests after the scenario: `it('rejects marking an undrawn key')`.
+- Bun/Backend: `*.test.ts` colocated in the module directory, run with `bun test`.
+- TypeScript/React: colocate as `*.test.ts` / `*.test.tsx`, run with the project test runner.
+
+## Definition of done
+
+A task is **not done** until:
+
+- [ ] Scenario list is written (in PR description, commit message, or task notes).
+- [ ] A unit test exists for **each listed scenario**.
+- [ ] All new and existing tests pass locally.
+
+If tests cannot be added (e.g. untestable third-party SDK), document the blocker and propose a testable seam — do not silently skip.

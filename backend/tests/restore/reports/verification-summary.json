@@ -1,0 +1,41 @@
+{
+  "ticket": 24,
+  "status": "passed",
+  "commands": {
+    "verify:restore": "passed",
+    "typecheck": "passed",
+    "lint": "passed",
+    "build": "passed",
+    "test": {
+      "pass": 264,
+      "fail": 0
+    },
+    "test:integration": {
+      "pass": 152,
+      "fail": 0
+    },
+    "test:e2e": {
+      "pass": 2,
+      "fail": 0
+    },
+    "test:security": {
+      "pass": 162,
+      "fail": 0
+    }
+  },
+  "restoreGeneratedAt": "2026-10-17T09:15:36.789Z",
+  "reproducedBugs": [
+    "Ordinary resume accepted RECOVERY_REQUIRED without consistency validation (200 instead of409).",
+    "Ordinary start accepted RECOVERY_REQUIRED without consistency validation (200 instead of409)."
+  ],
+  "fix": "Start requires READY; ordinary resume requires PAUSED; recovery requires the existing validated Admin confirmation.",
+  "reviews": {
+    "standards": "no unresolved findings",
+    "spec": "no unresolved findings"
+  },
+  "databaseIsolation": "Generated local source/target only; source preserved, target removed, temporary backup login disabled.",
+  "limitations": [
+    "Synthetic local PostgreSQL16 rehearsal, no production or managed-provider cutover.",
+    "Fixture source databases and restricted ignored archives retained intentionally."
+  ]
+}

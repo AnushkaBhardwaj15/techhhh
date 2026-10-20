@@ -1,0 +1,52 @@
+---
+description: React frontend layer rules — no game logic in the browser
+globs: frontend/**/*.{ts,tsx,js,jsx}
+alwaysApply: false
+---
+
+# React Frontend Architecture (Strict)
+
+Tech Tombola frontend is a **React SPA** that talks to the Bun/Fastify API. Full reference: `docs/ARCHITECTURE_CODING_STANDARDS.md`.
+
+## Layer flow
+
+```text
+pages → features → hooks → lib/api → Bun backend
+                 ↘ components
+```
+
+## Rules
+
+- **No game-state calculations in React** — display, input, and API calls only. Draw validation, winner evaluation, mark validation, and ticket generation live in Bun.
+- **No scattered `fetch`** — all HTTP through `src/lib/api/`.
+- **components:** presentational — props in, events out. No direct API calls in leaf components.
+- **hooks:** data fetching (TanStack Query), WebSocket event handling, form state, derived UI state.
+- **features:** feature-specific components + hooks for auth, participant, ticket, game, claims, admin, etc.
+- **pages:** route-level wiring of features + layouts.
+- **types:** mirror Bun JSON DTOs; backend schemas are source of truth.
+- **stores (Zustand):** ephemeral UI state only (WebSocket status, animation state, modals). Do NOT duplicate server state.
+
+## Game authority
+
+The backend is the **source of truth** for all game-critical state. The browser displays and requests actions but **never decides** whether a draw, mark, ticket, or win is valid.
+
+## Validation
+
+- Client validation = UX convenience only. Backend re-validates every input.
+- Never trust browser-side game state for marks, claims, or wins.
+
+## State management (YAGNI)
+
+- TanStack Query for server state (ticket, draws, round, claims).
+- Zustand for ephemeral UI state (WebSocket status, modals, animation).
+- No global store bloat — start simple, scale when proven necessary.
+
+## Tests
+
+- Colocate `*.test.tsx` / `*.test.ts`.
+- Mock `lib/api/` module — do not hit real backend in unit tests.
+- Test user-visible behavior, not implementation details.
+
+## Before new pages or API client methods
+
+Run `/grill-me` on UX edge cases, error states, and API contract. Grill before `/implement`.

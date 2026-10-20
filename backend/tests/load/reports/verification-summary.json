@@ -1,0 +1,44 @@
+{
+  "ticket": 22,
+  "status": "passed",
+  "qualificationGeneratedAt": "2026-10-17T08:38:24.098Z",
+  "commands": {
+    "typecheck": "passed",
+    "lint": "passed",
+    "build": "passed",
+    "test": {
+      "pass": 256,
+      "fail": 0
+    },
+    "test:integration": {
+      "pass": 150,
+      "fail": 0
+    },
+    "test:e2e": {
+      "pass": 1,
+      "fail": 0
+    },
+    "test:security": {
+      "pass": 160,
+      "fail": 0
+    },
+    "test:load": "passed"
+  },
+  "databaseIsolation": "Fresh disposable database per integration/security suite; E2E and load create and remove their own unique databases.",
+  "reviews": {
+    "standards": "no unresolved findings",
+    "spec": "no unresolved findings"
+  },
+  "priorPullRequests": {
+    "tickets16to21": [
+      9,
+      12,
+      10,
+      11,
+      13,
+      14
+    ],
+    "state": "closed",
+    "merged": false
+  }
+}

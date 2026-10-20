@@ -1,0 +1,56 @@
+---
+description: Grill-me is mandatory before specs, architecture changes, or implementation
+alwaysApply: true
+---
+
+# Mandatory `/grill-me` (Strict)
+
+**Do not guess requirements.** When anything is ambiguous, missing, or assumed, run `/grill-me` — do not proceed by filling gaps yourself.
+
+## When `/grill-me` is required
+
+Run it **before**:
+
+- Writing or updating a feature spec (`/to-spec`)
+- Changing architecture docs or ADRs
+- Breaking work into tickets (`/to-tickets`) for a new feature area
+- Writing production code (`/implement`, `/tdd`) for a ticket that has open questions
+
+Also run it when the user gives a vague request ("build the upload flow", "add categorization") without settled edge cases, terms, or acceptance criteria.
+
+**Architecture grilling topics** (always cover for new modules):
+
+- Layer placement (routes vs service vs domain)
+- API contract and error cases
+- Game edge cases (duplicate draws, concurrent winners, ticket immutability, mark validation, state-machine transitions)
+- What React shows vs what Bun computes
+- Test seams and scenario list
+
+## How to run it
+
+```
+/grill-me
+
+[Scope: PRD section, architecture area, or ticket title]
+Grill me on every ambiguous requirement, undefined term, and missing edge case.
+Do not propose code or architecture until the frontier is empty and I confirm we have a shared understanding.
+```
+
+Use `/grill-with-docs` instead when decisions must be captured in `CONTEXT.md` or `docs/adr/` as you go.
+
+## Rules during a grill session
+
+- Ask the **whole frontier** each round — numbered questions with a recommended answer.
+- **Never answer your own questions** or silently assume defaults.
+- **Never skip to implementation** mid-session.
+- Session is **incomplete** until the design-tree frontier is empty and the user confirms shared understanding.
+
+## Gate — what may proceed without re-grilling
+
+| Allowed to proceed | Blocked until grilled |
+|---|---|
+| Ticket with explicit acceptance criteria and no TBDs | Any "TBD", "probably", or assumed behavior |
+| Spec published after a completed grill session | New scope added since last grill |
+| Bug fix with clear repro and expected behavior | Behavior change or unclear expected outcome |
+
+If in doubt, grill first.

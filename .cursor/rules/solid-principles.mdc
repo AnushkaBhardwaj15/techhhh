@@ -1,0 +1,45 @@
+---
+description: SOLID principles — pragmatic application in Bun and React
+alwaysApply: true
+---
+
+# SOLID (Strict, Pragmatic)
+
+Apply SOLID to **real code**, not as an excuse for extra layers. Full reference: `docs/ARCHITECTURE_CODING_STANDARDS.md`.
+
+## Single Responsibility (S)
+
+- One reason to change per function, class, component, or module.
+- Bun: `routes` parse HTTP; `service` orchestrates; `domain` holds game rules; `repository` persists.
+- React: components render; hooks fetch/state; `lib/api/` calls the backend.
+
+## Open/Closed (O)
+
+- Extend with new functions or composed types — not inheritance hierarchies or plugin registries.
+- New behavior = new code path behind existing seam, not a framework.
+
+## Liskov Substitution (L)
+
+- Test fakes and production implementations must honor the same contract (errors, invariants, game-state consistency).
+- Breaking a port's contract is a bug — fix the implementation, not the caller's expectations.
+
+## Interface Segregation (I)
+
+- Small interfaces at IO boundaries only (database repository, email provider, WebSocket transport).
+- No "god interfaces" with unused methods.
+
+## Dependency Inversion (D)
+
+- Domain and service depend on abstractions; `repository`, `email`, and `websocket` implement them.
+- Wire dependencies in `server.ts` / `app.ts` — no global singletons.
+- **YAGNI gate:** no interface until a second implementation or test fake needs it.
+
+## SOLID vs YAGNI
+
+| SOLID says | YAGNI limits |
+|---|---|
+| Depend on abstractions at boundaries | Don't create abstractions before the boundary exists |
+| One responsibility | Don't split one function into five files prematurely |
+| Open for extension | Don't build extension points nothing extends yet |
+
+When SOLID and YAGNI conflict, **YAGNI wins** until a second use case appears.

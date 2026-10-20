@@ -1,0 +1,18 @@
+import { authenticatedUserSchema, loginUserSchema, type AuthenticatedUser, type LoginUser } from '../../types/auth';
+import { apiRequest } from './client';
+
+export async function login(email: string, password: string, signal?: AbortSignal): Promise<LoginUser> {
+  const response = await apiRequest<{ user: unknown }>('/auth/login', {
+    method: 'POST', body: JSON.stringify({ email, password }), signal,
+  });
+  return loginUserSchema.parse(response?.user);
+}
+
+export async function getMe(signal?: AbortSignal): Promise<AuthenticatedUser> {
+  const response = await apiRequest<{ user: unknown }>('/me', { signal });
+  return authenticatedUserSchema.parse(response?.user);
+}
+
+export async function logout(signal?: AbortSignal): Promise<void> {
+  await apiRequest('/auth/logout', { method: 'POST', signal });
+}

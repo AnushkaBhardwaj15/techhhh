@@ -1,0 +1,9 @@
+node_modules
+dist
+test-results
+coverage
+.git
+.husky
+**/*.test.ts
+**/*.test.tsx
+e2e

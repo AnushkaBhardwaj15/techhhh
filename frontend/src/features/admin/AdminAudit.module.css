@@ -1,0 +1,37 @@
+.page { max-width: 1320px; margin: 0 auto; padding: 48px clamp(20px, 5vw, 72px) 72px; color: #1d2421; }
+.eyebrow { margin: 0 0 10px; color: #315c53; font: 700 11px/1.4 ui-monospace, monospace; letter-spacing: .16em; }
+.heading { margin-bottom: 28px; }
+.heading h1 { margin: 0; font-size: clamp(36px, 5vw, 62px); line-height: .98; letter-spacing: -.045em; }
+.heading p { max-width: 680px; margin: 14px 0 0; line-height: 1.55; }
+.filters { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)) auto; align-items: end; gap: 14px; margin-bottom: 20px; }
+.filters label { display: grid; gap: 6px; color: #315c53; font: 700 11px ui-monospace, monospace; text-transform: uppercase; }
+.filters input { width: 100%; min-width: 0; min-height: 42px; padding: 8px; border: 2px solid #1d2421; border-radius: 0; background: #f4ecd6; color: #1d2421; font: 14px system-ui, sans-serif; }
+.filters button, .panelHeader button, .state button, .pagination button { min-height: 42px; padding: 0 14px; border: 2px solid #1d2421; border-radius: 0; background: #ef8076; color: #1d2421; font: 700 13px system-ui, sans-serif; cursor: pointer; box-shadow: 4px 4px 0 #1d2421; }
+.filters button:active, .panel button:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #1d2421; }
+.filters :focus-visible, .panel button:focus-visible, .panel summary:focus-visible { outline: 3px solid #ef8076; outline-offset: 3px; }
+.error { margin: -8px 0 18px; color: #7c2923; font-weight: 700; }
+.panel { border: 2px solid #1d2421; background: #f4ecd6; }
+.panelHeader { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 18px 20px; border-bottom: 1px solid #1d2421; }
+.panelHeader > div { display: flex; align-items: baseline; flex-wrap: wrap; gap: 14px; }
+.panelHeader h2 { margin: 0; font-size: 23px; letter-spacing: -.025em; }
+.panelHeader span { color: #315c53; font: 700 11px ui-monospace, monospace; }
+.tableWrap { overflow-x: auto; }
+.tableWrap:focus-visible { outline: 3px solid #ef8076; outline-offset: 3px; }
+.scrollHint { display: none; }
+table { width: 100%; border-collapse: collapse; text-align: left; }
+th { padding: 13px 16px; background: #e9dfc5; font: 700 11px ui-monospace, monospace; letter-spacing: .06em; text-transform: uppercase; }
+td { padding: 14px 16px; border-top: 1px solid #b7b09e; line-height: 1.4; vertical-align: top; }
+td span, td code { display: block; }
+td code { margin-top: 3px; font: 11px ui-monospace, monospace; overflow-wrap: anywhere; }
+td details { min-width: 140px; }
+td summary { color: #315c53; font-weight: 700; cursor: pointer; }
+td pre { max-width: 380px; max-height: 220px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; font: 11px/1.5 ui-monospace, monospace; }
+.state { margin: 0; padding: 22px 20px; line-height: 1.5; }
+.state button { margin-top: 10px; }
+.pagination { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 18px; border-top: 1px solid #1d2421; font: 700 12px ui-monospace, monospace; }
+.pagination button { min-height: 38px; background: #f4ecd6; box-shadow: 3px 3px 0 #1d2421; }
+.pagination button:disabled, .panelHeader button:disabled { opacity: .55; box-shadow: none; cursor: not-allowed; }
+.visuallyHidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+@media (max-width: 1050px) { .filters { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 760px) { .page { padding-top: 30px; } .panelHeader { align-items: start; flex-direction: column; } .scrollHint { display: block; margin: 0; padding: 9px 12px; border-bottom: 1px solid #b7b09e; color: #46504b; font: 700 11px ui-monospace, monospace; } table { min-width: 760px; } }
+@media (max-width: 480px) { .filters { grid-template-columns: 1fr; } }

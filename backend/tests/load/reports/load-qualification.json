@@ -1,0 +1,413 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-10-17T12:46:19.256Z",
+  "result": "passed",
+  "assumptions": {
+    "participants": 500,
+    "concurrency": 500,
+    "warmupSeconds": 10,
+    "sustainedDurationSeconds": 30,
+    "applicationInstances": 1,
+    "databasePoolMax": 20,
+    "maxHttpRequests": 512,
+    "cpuAffinity": {
+      "driver": "4-7",
+      "backend": "0-3"
+    },
+    "thresholds": {
+      "p50Ms": 200,
+      "p95Ms": 500,
+      "p99Ms": 1000,
+      "drawPropagationMs": 1000
+    },
+    "measurementScope": "The load driver and the separately spawned backend use distinct Bun processes; RSS and event-loop delay are sampled from the backend process."
+  },
+  "host": {
+    "platform": "linux 7.2.10-100.fc43.x86_64",
+    "cpu": "12th Gen Intel(R) Core(TM) i5-12450H",
+    "logicalCpus": 12,
+    "totalMemoryBytes": 16443478016,
+    "bunVersion": "1.4.2",
+    "postgresVersion": "PostgreSQL 16.15 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit"
+  },
+  "metrics": {
+    "phases": {
+      "participant_login": {
+        "requests": 500,
+        "errors": 0,
+        "errorRate": 0,
+        "p50Ms": 647.6198529999965,
+        "p95Ms": 884.1044739999998,
+        "p99Ms": 900.0129789999992,
+        "maxMs": 933.390558
+      },
+      "ticket_read": {
+        "requests": 500,
+        "errors": 0,
+        "errorRate": 0,
+        "p50Ms": 96.14147999999841,
+        "p95Ms": 113.5876519999947,
+        "p99Ms": 115.08585300000414,
+        "maxMs": 115.57348400000046
+      },
+      "participant_state_read": {
+        "requests": 500,
+        "errors": 0,
+        "errorRate": 0,
+        "p50Ms": 87.7370710000032,
+        "p95Ms": 97.63909299999796,
+        "p99Ms": 98.59992699999566,
+        "maxMs": 98.91805500000191
+      },
+      "live_state_read": {
+        "requests": 500,
+        "errors": 0,
+        "errorRate": 0,
+        "p50Ms": 69.04390299999795,
+        "p95Ms": 76.90859500000079,
+        "p99Ms": 78.67891899999813,
+        "maxMs": 80.67612099999678
+      },
+      "reconnect_rest_recovery": {
+        "requests": 500,
+        "errors": 0,
+        "errorRate": 0,
+        "p50Ms": 118.96748499999376,
+        "p95Ms": 147.38990600000398,
+        "p99Ms": 149.00497200000245,
+        "maxMs": 149.98183399999834
+      },
+      "mark_burst": {
+        "requests": 500,
+        "errors": 0,
+        "errorRate": 0,
+        "p50Ms": 723.4381379999977,
+        "p95Ms": 781.7178089999943,
+        "p99Ms": 784.8966379999983,
+        "maxMs": 785.7944739999948
+      },
+      "claim_burst": {
+        "requests": 500,
+        "errors": 0,
+        "errorRate": 0,
+        "p50Ms": 953.1256749999957,
+        "p95Ms": 1134.8379770000029,
+        "p99Ms": 1149.576982999999,
+        "maxMs": 1152.613050999993
+      },
+      "claim_verify": {
+        "requests": 500,
+        "errors": 0,
+        "errorRate": 0,
+        "p50Ms": 3661.0091059999977,
+        "p95Ms": 6539.061730999994,
+        "p99Ms": 6794.404991000003,
+        "maxMs": 6839.456384999998
+      },
+      "live_under_participant_load": {
+        "requests": 254,
+        "errors": 0,
+        "errorRate": 0,
+        "p50Ms": 27.162261000004946,
+        "p95Ms": 117.023325999995,
+        "p99Ms": 144.9670929999993,
+        "maxMs": 164.24343499999668
+      },
+      "sustained_read": {
+        "requests": 127000,
+        "errors": 0,
+        "errorRate": 0,
+        "p50Ms": 98.40211699999054,
+        "p95Ms": 127.81810699999915,
+        "p99Ms": 146.0701570000092,
+        "maxMs": 176.58418200000597
+      },
+      "participant_import": {
+        "requests": 1,
+        "errors": 0,
+        "errorRate": 0,
+        "p50Ms": 1244.698298000003,
+        "p95Ms": 1244.698298000003,
+        "p99Ms": 1244.698298000003,
+        "maxMs": 1244.698298000003
+      },
+      "post_load_recovery": {
+        "requests": 500,
+        "errors": 0,
+        "errorRate": 0,
+        "p50Ms": 95.58625000000757,
+        "p95Ms": 106.1819850000029,
+        "p99Ms": 107.86648099999002,
+        "maxMs": 108.29821899998933
+      }
+    },
+    "serverPhases": {
+      "participant_login": {
+        "requests": 500,
+        "errors": 0,
+        "errorRate": 0,
+        "p50Ms": 644.87,
+        "p95Ms": 879.12,
+        "p99Ms": 896.13,
+        "maxMs": 916.67
+      },
+      "ticket_read": {
+        "requests": 500,
+        "errors": 0,
+        "errorRate": 0,
+        "p50Ms": 45.46,
+        "p95Ms": 80.88,
+        "p99Ms": 87.72,
+        "maxMs": 90.87
+      },
+      "participant_state_read": {
+        "requests": 500,
+        "errors": 0,
+        "errorRate": 0,
+        "p50Ms": 41.8,
+        "p95Ms": 71.85,
+        "p99Ms": 77.01,
+        "maxMs": 79.64
+      },
+      "live_state_read": {
+        "requests": 500,
+        "errors": 0,
+        "errorRate": 0,
+        "p50Ms": 40.66,
+        "p95Ms": 55.4,
+        "p99Ms": 57.83,
+        "maxMs": 59.32
+      },
+      "reconnect_rest_recovery": {
+        "requests": 500,
+        "errors": 0,
+        "errorRate": 0,
+        "p50Ms": 60.79,
+        "p95Ms": 99.55,
+        "p99Ms": 112.8,
+        "maxMs": 117
+      },
+      "mark_burst": {
+        "requests": 500,
+        "errors": 0,
+        "errorRate": 0,
+        "p50Ms": 680.61,
+        "p95Ms": 747.64,
+        "p99Ms": 753.36,
+        "maxMs": 765.55
+      },
+      "claim_burst": {
+        "requests": 500,
+        "errors": 0,
+        "errorRate": 0,
+        "p50Ms": 907.08,
+        "p95Ms": 1088.87,
+        "p99Ms": 1101.25,
+        "maxMs": 1104.28
+      },
+      "live_under_participant_load": {
+        "requests": 254,
+        "errors": 0,
+        "errorRate": 0,
+        "p50Ms": 14.19,
+        "p95Ms": 94.5,
+        "p99Ms": 131.86,
+        "maxMs": 161.56
+      },
+      "sustained_read": {
+        "requests": 127000,
+        "errors": 0,
+        "errorRate": 0,
+        "p50Ms": 45.54,
+        "p95Ms": 87.14,
+        "p99Ms": 103.97,
+        "maxMs": 153.2
+      },
+      "participant_import": {
+        "requests": 1,
+        "errors": 0,
+        "errorRate": 0,
+        "p50Ms": 1243.52,
+        "p95Ms": 1243.52,
+        "p99Ms": 1243.52,
+        "maxMs": 1243.52
+      },
+      "post_load_recovery": {
+        "requests": 500,
+        "errors": 0,
+        "errorRate": 0,
+        "p50Ms": 41.07,
+        "p95Ms": 75.52,
+        "p99Ms": 81.12,
+        "maxMs": 84.17
+      }
+    },
+    "workerPhases": {
+      "participant_login": {
+        "requests": 0,
+        "errors": 0,
+        "errorRate": 0,
+        "p50Ms": 0,
+        "p95Ms": 0,
+        "p99Ms": 0,
+        "maxMs": 0
+      },
+      "ticket_read": {
+        "requests": 500,
+        "errors": 0,
+        "errorRate": 0,
+        "p50Ms": 94.50972300000285,
+        "p95Ms": 111.46732699999848,
+        "p99Ms": 112.3310530000017,
+        "maxMs": 112.61456999999791
+      },
+      "participant_state_read": {
+        "requests": 500,
+        "errors": 0,
+        "errorRate": 0,
+        "p50Ms": 86.94432299999607,
+        "p95Ms": 96.93197099999816,
+        "p99Ms": 97.81473299999925,
+        "maxMs": 98.10554399999819
+      },
+      "live_state_read": {
+        "requests": 500,
+        "errors": 0,
+        "errorRate": 0,
+        "p50Ms": 67.70253100000264,
+        "p95Ms": 75.52306400000089,
+        "p99Ms": 77.09214899999643,
+        "maxMs": 77.74302599999646
+      },
+      "reconnect_rest_recovery": {
+        "requests": 500,
+        "errors": 0,
+        "errorRate": 0,
+        "p50Ms": 117.33918000000267,
+        "p95Ms": 145.26787499999773,
+        "p99Ms": 146.91457999999693,
+        "maxMs": 147.4706389999992
+      },
+      "mark_burst": {
+        "requests": 0,
+        "errors": 0,
+        "errorRate": 0,
+        "p50Ms": 0,
+        "p95Ms": 0,
+        "p99Ms": 0,
+        "maxMs": 0
+      },
+      "claim_burst": {
+        "requests": 0,
+        "errors": 0,
+        "errorRate": 0,
+        "p50Ms": 0,
+        "p95Ms": 0,
+        "p99Ms": 0,
+        "maxMs": 0
+      },
+      "live_under_participant_load": {
+        "requests": 254,
+        "errors": 0,
+        "errorRate": 0,
+        "p50Ms": 26.754638999991585,
+        "p95Ms": 114.2284520000103,
+        "p99Ms": 143.53921100001025,
+        "maxMs": 164.16956799999753
+      },
+      "sustained_read": {
+        "requests": 127000,
+        "errors": 0,
+        "errorRate": 0,
+        "p50Ms": 96.75728200000594,
+        "p95Ms": 126.01742000000377,
+        "p99Ms": 144.10572700000193,
+        "maxMs": 173.99068899999838
+      },
+      "participant_import": {
+        "requests": 0,
+        "errors": 0,
+        "errorRate": 0,
+        "p50Ms": 0,
+        "p95Ms": 0,
+        "p99Ms": 0,
+        "maxMs": 0
+      },
+      "post_load_recovery": {
+        "requests": 500,
+        "errors": 0,
+        "errorRate": 0,
+        "p50Ms": 94.51004300000204,
+        "p95Ms": 105.2176230000041,
+        "p99Ms": 106.72133099999337,
+        "maxMs": 107.60396300000139
+      }
+    },
+    "peakRssBytes": 368881664,
+    "eventLoopDelay": {
+      "samples": 96,
+      "meanSampleMeanMs": 10.427070834013884,
+      "peakSampleP99Ms": 121.765887,
+      "peakSampleMaxMs": 121.761171
+    },
+    "databasePool": {
+      "max": 20,
+      "peakConnections": 20,
+      "saturation": 1,
+      "peakActiveQueries": 20,
+      "peakDatabaseWaits": 20,
+      "peakWaitEvents": {
+        "IO:WALSync": 1,
+        "Client:ClientRead": 15,
+        "CPU:none": 12,
+        "LWLock:WALWrite": 1,
+        "Lock:transactionid": 1,
+        "Lock:tuple": 18,
+        "IO:DataFileRead": 1,
+        "IPC:BufferIO": 19,
+        "LWLock:LockManager": 4
+      }
+    },
+    "websocket": {
+      "peakConnections": 500,
+      "simultaneousReconnectAttempts": 500,
+      "publicConnections": 1,
+      "publicDrawEvents": 9
+    },
+    "drawPropagationMs": 88.23901999999362,
+    "doubleClickCount": 2,
+    "doubleClickDrawsCreated": 1,
+    "concurrentDrawCount": 7,
+    "claimsSubmitted": 500,
+    "claimVerifications": 500,
+    "verifiedClaims": 1,
+    "closedPatternClaims": 499,
+    "winners": 1,
+    "loginLoad": {
+      "participants": 500,
+      "maxConcurrency": 10
+    },
+    "separateAdminImport": {
+      "rows": 5,
+      "created": 5,
+      "emailDeliveries": 5
+    },
+    "recoveryCheck": {
+      "healthStatus": 200,
+      "readyStatus": 200
+    },
+    "healthDuringLoad": {
+      "status": 200,
+      "latencyMs": 64.2779029999947
+    },
+    "invariantChecks": {
+      "tickets": 500,
+      "ticketCells": 7500,
+      "marks": 500,
+      "participantSessions": 500,
+      "draws": 14,
+      "duplicateDraws": 0
+    }
+  },
+  "failures": []
+}

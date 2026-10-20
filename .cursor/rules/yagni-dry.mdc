@@ -1,0 +1,40 @@
+---
+description: YAGNI, DRY, and lean design — no speculative abstraction
+alwaysApply: true
+---
+
+# YAGNI and DRY (Strict)
+
+Every implementation task must stay lean. SOLID applies at real boundaries — see `.cursor/rules/solid-principles.mdc`. Architecture layers: `docs/ARCHITECTURE_CODING_STANDARDS.md`.
+
+## YAGNI — You Aren't Gonna Need It
+
+- Implement **only** what the current task/spec requires. No hooks, interfaces, or config for hypothetical futures.
+- **One caller, one implementation.** Do not extract an abstraction until the same logic is needed in **two or more** places with the same shape.
+- Prefer **concrete code** over factories, strategy registries, plugin systems, or generic frameworks unless the spec explicitly requires them.
+- Do not add wrapper types, service layers, or repository interfaces around a single database call or HTTP handler.
+- If a feature is out of scope for the task, **do not stub it** — omit it entirely.
+- **Bun:** no new module directory until the task needs a distinct layer concern.
+- **React:** no global state library beyond TanStack Query + Zustand, no component library wrap, no abstraction hook until the second use.
+
+## DRY — Don't Repeat Yourself
+
+- Duplicate logic is a bug. When the same **game rule** appears twice, extract **one** domain function — not a new module.
+- DRY applies to **behavior**, not line count. Two similar-looking blocks with different domain meaning should stay separate.
+- Reuse existing helpers and types before creating new ones. Read the codebase first.
+- API shapes: define once in Bun; mirror in `frontend/src/types` — do not invent a third shape.
+
+## Abstraction red flags — stop and simplify
+
+| Do not add | Do instead |
+|---|---|
+| Interface with one implementation | Concrete type or function |
+| `Base*` / `Abstract*` for one subtype | Single struct or component |
+| Generic utility "framework" | Inline logic or one focused helper |
+| Extra package for 1–2 functions | Colocate with the caller |
+| Redux/store for one screen's state | `useState` / lifted state |
+| React context for one prop | Pass the prop |
+
+## Before finishing a task
+
+Ask: *Can I delete anything and still meet the spec?* If yes, delete it.
