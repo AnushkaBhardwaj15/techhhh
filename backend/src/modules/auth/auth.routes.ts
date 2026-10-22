@@ -1,4 +1,5 @@
 import type { FastifyPluginAsync } from 'fastify';
+import { z } from 'zod';
 import { loginSchema } from './auth.schemas.ts';
 import { authService } from './auth.service.ts';
 import { getSessionCookieOptions, SESSION_COOKIE_NAME, verifyAuthToken } from './auth.domain.ts';
@@ -22,6 +23,27 @@ export function createAuthRoutes({ onSessionRevoked }: AuthRouteDependencies = {
       });
       reply.status(201);
       return { user };
+    });
+
+    fastify.post('/auth/quick-join', async (request, reply) => {
+      const quickJoinSchema = z.object({
+        name: z.string().min(1, 'Name is required'),
+        email: z.string().email('Valid email is required'),
+        password: z.string().min(6).optional(),
+        eventId: z.string().uuid().optional(),
+      });
+      const body = quickJoinSchema.parse(request.body);
+      const result = await authService.quickJoin({
+        name: body.name,
+        email: body.email,
+        password: body.password,
+        eventId: body.eventId,
+        ip: request.ip,
+        userAgent: request.headers['user-agent'],
+        requestId: request.id,
+      });
+      reply.setCookie(SESSION_COOKIE_NAME, result.token, getSessionCookieOptions());
+      return { user: result.user, roundId: result.roundId, ticketId: result.ticketId };
     });
 
     fastify.post('/auth/login', async (request, reply) => {

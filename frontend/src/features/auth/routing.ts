@@ -1,7 +1,7 @@
 import type { AuthenticatedUser } from '../../types/auth';
 
 export function roleHomePath(role: AuthenticatedUser['role']): string {
-  if (role === 'PARTICIPANT') return '/participant';
+  if (role === 'PARTICIPANT') return '/participant/lobby';
   if (role === 'ADMIN' || role === 'SUPER_ADMIN') return '/admin';
   return '/login';
 }

@@ -10,19 +10,19 @@
 .connection [data-connection="CONNECTED"] { color:#a7d1b6; }
 .connection [data-connection="DISCONNECTED"] { color:#f2a18c; }
 .connection button,.error button { padding:7px 10px; border:1px solid currentColor; background:transparent; color:inherit; font:700 10px var(--mono); cursor:pointer; }
-.questionCard { display:grid; grid-template-columns:minmax(0,1.25fr) minmax(150px,.75fr); gap:12px; }
+.questionCard { display:grid; grid-template-columns:minmax(0,1.35fr) minmax(180px,.65fr); gap:12px; }
 .questionCard > div { min-height:118px; padding:16px; border:1px solid #63736d; background:#20322e; }
 .question { margin:12px 0 0; font-size:clamp(19px,3.2vw,27px); line-height:1.25; }
-.keyReveal { display:flex; flex-direction:column; justify-content:space-between; background:#fffaf0 !important; color:var(--ink); }
-.keyReveal .label { color:#a2483e; }
-.key { margin:10px 0 0; color:#315c53; font-size:clamp(22px,4vw,36px); font-weight:850; line-height:1.1; overflow-wrap:anywhere; }
+.clueBadgeBox { display:flex; flex-direction:column; justify-content:space-between; background:#1b2a27 !important; border:1px solid #3d564f !important; }
+.clueBadgeBox .label { color:#e28b73; }
+.clueStatus { margin:10px 0 0; color:#a7d1b6; font-size:clamp(16px,2.5vw,22px); font-weight:850; font-family:var(--mono); letter-spacing:.05em; line-height:1.1; overflow-wrap:anywhere; }
+.clueHint { color:#d6cdb9; font:500 11px/1.4 var(--mono); margin-top:8px; }
 .history { margin-top:20px; }
 .history h2 { margin:0 0 10px; font:700 11px var(--mono); letter-spacing:.08em; text-transform:uppercase; }
 .history ol { display:grid; gap:6px; margin:0; padding:0; list-style:none; }
 .history li { display:grid; grid-template-columns:36px minmax(0,1fr) auto; gap:4px 10px; align-items:baseline; padding:9px 0; border-top:1px solid #53625d; font-size:13px; }
 .history li > span:first-child,.history time { color:#c5d2ca; font:700 9px var(--mono); }
-.history strong { color:#a7d1b6; font:800 12px var(--mono); }
-.history time { grid-column:2 / -1; }
+.history time { text-align:right; font:700 9px var(--mono); }
 .empty,.stale { color:#d6cdb9; line-height:1.5; }
 .stale { font:700 10px var(--mono); }
 .error { display:flex; flex-wrap:wrap; align-items:center; gap:8px; color:#f2a18c; }

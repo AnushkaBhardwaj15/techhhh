@@ -38,9 +38,21 @@ export function ParticipantLobby() {
     refetchOnReconnect: 'always', refetchOnWindowFocus: 'always',
   });
   const currentRound = useQuery({
-    queryKey: ['participant', user.id, 'round', event.data?.id], queryFn: ({ signal }) => getCurrentRound(signal), enabled: !!event.data,
-    refetchOnReconnect: 'always', refetchOnWindowFocus: 'always',
+    queryKey: ['participant', user.id, 'round', event.data?.id],
+    queryFn: ({ signal }) => getCurrentRound(signal),
+    enabled: !!event.data,
+    refetchOnReconnect: 'always',
+    refetchOnWindowFocus: 'always',
+    refetchInterval: (query) => (query.state.data?.status === 'ACTIVE' ? false : 2500),
   });
+
+  // Auto-redirect to live game when round becomes ACTIVE
+  useEffect(() => {
+    if (currentRound.data?.status === 'ACTIVE') {
+      navigate('/participant/game', { replace: true });
+    }
+  }, [currentRound.data?.status, navigate]);
+
   const noAssignment = event.error instanceof ApiError && event.error.status === 404;
   const noRound = currentRound.error instanceof ApiError && currentRound.error.status === 404;
   const observeEvent = event.error ? noAssignment : !!event.data && refreshableEvent.has(event.data.status);
@@ -50,14 +62,13 @@ export function ParticipantLobby() {
   useEffect(() => {
     if (!observeEvent && !observeRound) return;
     let stopped = false;
-    let remaining = 5;
-    let timer: number | undefined;
+    let remaining = 10;
     const observe = async () => {
       remaining -= 1;
       await Promise.all([observeEvent ? refetchEvent() : undefined, observeRound ? refetchRound() : undefined]);
-      if (!stopped && remaining > 0) timer = window.setTimeout(observe, 5_000);
+      if (!stopped && remaining > 0) timer = window.setTimeout(observe, 2_500);
     };
-    timer = window.setTimeout(observe, 5_000);
+    let timer = window.setTimeout(observe, 2_500);
     return () => { stopped = true; if (timer !== undefined) window.clearTimeout(timer); };
   }, [observeEvent, observeRound, refetchEvent, refetchRound]);
   useEffect(() => {
@@ -82,8 +93,35 @@ export function ParticipantLobby() {
     </section>
     {event.data && <section className={styles.roundCard} aria-label="Current round">
       <div className={styles.cardHead}><span className={styles.label}>CURRENT ROUND</span><SyncSignals error={currentRound.error} hasData={!!currentRound.data} emptyState="NO ROUND" /></div>
-      {currentRound.isPending ? <p role="status">Checking for a round…</p> : noRound ? <div><h2>No current round available</h2><p>Your host has not made a current round available yet. This page will update when one is available.</p></div> : currentRound.error ? <div><h2>Round status unavailable</h2><p role="alert">{currentRound.error instanceof ApiError && currentRound.error.status === 403 ? 'You do not have permission to view round status.' : 'We could not load round status. Try again.'}</p><button onClick={() => void currentRound.refetch()}>Retry</button></div> : currentRound.data ? <div><h2>{currentRound.data.name}</h2><p className={styles.status}><span>{currentRound.data.status.replaceAll('_', ' ')}</span>{roundCopy[currentRound.data.status]}</p>{currentRound.data.status === 'ACTIVE' && <Link className={styles.gameLink} to="/participant/game">Open live game <span aria-hidden="true">↗</span></Link>}</div> : null}
+      {currentRound.isPending ? <p role="status">Checking for a round…</p> : noRound ? <div><h2>No current round available</h2><p>Your host has not made a current round available yet. This page will update when one is available.</p></div> : currentRound.error ? <div><h2>Round status unavailable</h2><p role="alert">{currentRound.error instanceof ApiError && currentRound.error.status === 403 ? 'You do not have permission to view round status.' : 'We could not load round status. Try again.'}</p><button onClick={() => void currentRound.refetch()}>Retry</button></div> : currentRound.data ? <div>
+        <h2>{currentRound.data.name}</h2>
+        <p className={styles.status}><span>{currentRound.data.status.replaceAll('_', ' ')}</span>{roundCopy[currentRound.data.status]}</p>
+        {currentRound.data.status === 'ACTIVE' ? (
+          <Link className={styles.gameLink} to="/participant/game">Open live game <span aria-hidden="true">↗</span></Link>
+        ) : (
+          <div style={{ marginTop: '16px', padding: '16px', background: '#fdf7e7', border: '1.5px solid #d4a373', borderRadius: '4px' }}>
+            <p style={{ margin: '0 0 6px', fontWeight: 800, color: '#8a5a00', fontFamily: 'var(--mono)', fontSize: '12px' }}>
+              ⏳ WAITING IN LOBBY
+            </p>
+            <p style={{ margin: 0, fontSize: '14px', color: '#4a3800' }}>
+              Please wait here. When the host starts the game, you will <strong>automatically be redirected</strong> to where the game is happening.
+            </p>
+          </div>
+        )}
+      </div> : null}
     </section>}
-    <section className={styles.help} aria-labelledby="help-title"><p className={styles.label}>HOW TO PLAY</p><h2 id="help-title">Listen for the clue. Mark the key.</h2><p>Each question points to an answer key. The host reveals that key; find it on your ticket and tap the cell yourself. There is no quiz answer to submit.</p><p className={styles.ticketNote}>Your ticket details will appear after they are loaded.</p></section>
+    <section className={styles.help} aria-labelledby="help-title">
+      <p className={styles.label}>PARTICIPANT ACTIONS</p>
+      <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', margin: '12px 0 20px' }}>
+        <Link to="/participant/ticket-entry" style={{ background: 'var(--ink)', color: 'var(--cream)', padding: '10px 18px', textDecoration: 'none', fontFamily: 'var(--mono)', fontSize: '12px', fontWeight: 800 }}>
+          🎟️ Enter / Verify Ticket
+        </Link>
+        <Link to="/participant/profile" style={{ background: 'transparent', color: 'var(--ink)', border: '1.5px solid var(--ink)', padding: '10px 18px', textDecoration: 'none', fontFamily: 'var(--mono)', fontSize: '12px', fontWeight: 800 }}>
+          👤 View My Profile & Claims
+        </Link>
+      </div>
+      <h2 id="help-title">Listen for the clue. Mark the key.</h2>
+      <p>Each question points to an answer key. The host reveals that key; find it on your ticket and tap the cell yourself. There is no quiz answer to submit.</p>
+    </section>
   </main>;
 }

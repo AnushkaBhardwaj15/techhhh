@@ -58,7 +58,7 @@ describe('Admin Event management', () => {
     fireEvent.change(screen.getByLabelText('Description'), { target: { value: 'A description' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save Event' }));
     await screen.findByText('Event created and saved.');
-    expect(createAdminEvent).toHaveBeenCalledWith({ title: 'New Event', description: 'A description', scheduledAt: null });
+    expect(createAdminEvent).toHaveBeenCalledWith({ title: 'New Event', description: 'A description' });
     expect(await screen.findByText('DRAFT')).toBeInTheDocument();
   });
 
@@ -85,7 +85,7 @@ describe('Admin Event management', () => {
     fireEvent.change(screen.getByLabelText('Event title'), { target: { value: 'Renamed event' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
     await screen.findByText('Event changes saved.');
-    expect(updateAdminEvent).toHaveBeenCalledWith(eventA.id, { title: 'Renamed event', description: 'Annual event', scheduledAt: null });
+    expect(updateAdminEvent).toHaveBeenCalledWith(eventA.id, { title: 'Renamed event', description: 'Annual event' });
   });
 
   it('moves a newly created Event from DRAFT through READY to LIVE using server transitions', async () => {

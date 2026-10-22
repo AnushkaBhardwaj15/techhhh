@@ -23,3 +23,8 @@ export async function updateAdminEvent(id: string, input: UpdateAdminEvent, sign
   const response = await apiRequest<{ event: unknown }>(`/admin/events/${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify(body), signal });
   return adminEventSchema.parse(response?.event);
 }
+
+export async function quickSetupGame(signal?: AbortSignal) {
+  const response = await apiRequest<{ success: boolean; event: unknown }>('/admin/quick-setup-game', { method: 'POST', signal });
+  return adminEventSchema.parse(response?.event);
+}

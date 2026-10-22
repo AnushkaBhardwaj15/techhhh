@@ -12,7 +12,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 12px 24px;
+  padding: 14px 24px;
   max-width: 1400px;
   margin: 0 auto;
 }
@@ -29,7 +29,7 @@
   gap: 6px;
   text-decoration: none;
   color: var(--ink);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 900;
   letter-spacing: 0.08em;
 }
@@ -44,292 +44,53 @@
   letter-spacing: 0.1em;
 }
 
-.roleChip {
-  font-family: var(--mono);
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  padding: 3px 6px;
-  border: 1px solid var(--forest);
-  color: var(--forest);
-  background: rgba(49, 92, 83, 0.08);
-}
-
-.desktopNav {
-  display: flex;
-  align-items: center;
-}
-
-.navList {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.navLink {
-  display: inline-block;
-  padding: 6px 12px;
-  font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-decoration: none;
-  color: var(--ink);
-  border: 1px solid transparent;
-  transition: background 120ms ease, border-color 120ms ease;
-}
-
-.navLink:hover {
-  border-color: var(--ink);
-  background: rgba(29, 36, 33, 0.05);
-}
-
-.navLinkActive {
-  background: var(--ink);
-  color: var(--cream) !important;
-  border-color: var(--ink);
-}
-
-.navLink:focus-visible,
-.liveDisplayLink:focus-visible,
-.logoutButton:focus-visible,
-.mobileMenuToggle:focus-visible,
-.wordmark:focus-visible {
-  outline: 3px solid var(--coral);
-  outline-offset: 2px;
-}
-
-.liveDisplayLink {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 12px;
-  font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-decoration: none;
-  color: var(--forest);
-  border: 1px dashed var(--forest);
-  background: rgba(49, 92, 83, 0.06);
-  transition: background 120ms ease;
-}
-
-.liveDisplayLink:hover {
-  background: rgba(49, 92, 83, 0.14);
-}
-
-.externalArrow {
-  font-size: 12px;
-  line-height: 1;
-}
-
 .userActions {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-.userName {
+.profileButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--ink);
+  border: 1.5px solid var(--ink);
+  padding: 6px 14px;
   font-family: var(--mono);
   font-size: 11px;
-  font-weight: 700;
-  color: var(--forest);
-  background: rgba(49, 92, 83, 0.1);
-  padding: 4px 8px;
-  border: 1px solid rgba(49, 92, 83, 0.2);
-  white-space: nowrap;
+  font-weight: 800;
+  text-decoration: none;
+  border-radius: 2px;
+  transition: all 0.12s ease;
+}
+
+.profileButton:hover {
+  background: var(--ink);
+  color: var(--cream);
 }
 
 .logoutButton {
+  background: var(--cream);
+  color: var(--ink);
   border: 1.5px solid var(--ink);
-  background: transparent;
-  padding: 6px 12px;
+  box-shadow: 2px 2px 0 var(--ink);
+  padding: 6px 14px;
   font-family: var(--mono);
   font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  color: var(--ink);
+  font-weight: 800;
   cursor: pointer;
-  box-shadow: 2px 2px 0 var(--ink);
-  transition: transform 100ms ease, box-shadow 100ms ease, background 100ms ease;
-  white-space: nowrap;
+  border-radius: 2px;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
 }
 
-.logoutButton:hover {
-  background: #ecd9c6;
-}
-
-.logoutButton:active {
-  transform: translate(2px, 2px);
-  box-shadow: 0 0 0 var(--ink);
+.logoutButton:hover:not(:disabled) {
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 var(--ink);
 }
 
 .logoutButton:disabled {
   opacity: 0.6;
-  cursor: wait;
-}
-
-.mobileMenuToggle {
-  display: none;
-  flex-direction: column;
-  justify-content: space-around;
-  width: 32px;
-  height: 32px;
-  background: transparent;
-  border: 1.5px solid var(--ink);
-  padding: 5px;
-  cursor: pointer;
-}
-
-.hamburgerBar {
-  width: 100%;
-  height: 2px;
-  background: var(--ink);
-}
-
-/* Mobile Quick Navigation Strip (horizontal scroll) */
-.mobileStrip {
-  display: none;
-  border-top: 1px solid rgba(29, 36, 33, 0.15);
-  background: #f0e6ce;
-  overflow-x: auto;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-}
-
-.mobileStrip::-webkit-scrollbar {
-  display: none;
-}
-
-.mobileStripInner {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  min-width: max-content;
-}
-
-.stripLink {
-  padding: 5px 10px;
-  font-family: var(--mono);
-  font-size: 10px;
-  font-weight: 700;
-  text-decoration: none;
-  color: var(--ink);
-  border: 1px solid rgba(29, 36, 33, 0.25);
-  background: var(--cream);
-  white-space: nowrap;
-}
-
-.stripLinkActive {
-  background: var(--ink);
-  color: var(--cream);
-  border-color: var(--ink);
-}
-
-.stripLinkLive {
-  padding: 5px 10px;
-  font-family: var(--mono);
-  font-size: 10px;
-  font-weight: 700;
-  text-decoration: none;
-  color: var(--forest);
-  border: 1px dashed var(--forest);
-  background: rgba(49, 92, 83, 0.08);
-  white-space: nowrap;
-}
-
-.mobileDrawer {
-  display: none;
-  background: var(--cream);
-  border-top: 2px solid var(--ink);
-  padding: 16px;
-}
-
-.mobileDrawerList {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.drawerLink {
-  display: block;
-  padding: 10px 14px;
-  font-family: var(--mono);
-  font-size: 13px;
-  font-weight: 700;
-  text-decoration: none;
-  color: var(--ink);
-  border: 1px solid var(--ink);
-  background: #fffaf0;
-}
-
-.drawerLinkActive {
-  background: var(--ink);
-  color: var(--cream);
-}
-
-.drawerLinkLive {
-  display: block;
-  padding: 10px 14px;
-  font-family: var(--mono);
-  font-size: 13px;
-  font-weight: 700;
-  text-decoration: none;
-  color: var(--forest);
-  border: 1px dashed var(--forest);
-  background: rgba(49, 92, 83, 0.06);
-}
-
-@media (max-width: 900px) {
-  .desktopNav {
-    display: none;
-  }
-  .mobileStrip {
-    display: block;
-  }
-  .mobileMenuToggle {
-    display: flex;
-  }
-  .mobileDrawer {
-    display: block;
-  }
-}
-
-@media (max-width: 480px) {
-  .topRow {
-    padding: 10px 12px;
-    gap: 8px;
-  }
-  .wordmark strong {
-    font-size: 11px;
-  }
-  .roleChip {
-    display: none;
-  }
-  .userName {
-    font-size: 10px;
-    max-width: 90px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .logoutButton {
-    padding: 5px 8px;
-    font-size: 10px;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .logoutButton,
-  .navLink,
-  .liveDisplayLink {
-    transition: none !important;
-  }
+  cursor: not-allowed;
 }

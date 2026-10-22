@@ -105,7 +105,7 @@ export class ClaimService {
     const isEligible = evaluatePattern(pattern, cells, drawnKeyIds);
     if (!isEligible) {
       throw new UnprocessableEntityError(
-        `Ticket does not satisfy the requirements for winning pattern ${pattern}`,
+        `Ticket does not satisfy the requirements for winning pattern ${pattern}. Please ensure all required keys for this pattern have been drawn.`,
         'CLAIM_INELIGIBLE'
       );
     }
@@ -134,6 +134,8 @@ export class ClaimService {
             roundId,
             patternType: pattern,
             ticketId: ticket.id,
+            participantId: profile.id,
+            participantName: profile.name,
           },
         },
         tx

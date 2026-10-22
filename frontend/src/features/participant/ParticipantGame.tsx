@@ -73,7 +73,7 @@ export function ParticipantGame() {
       {history.length > 0 && <DrawHistory draws={history} />}
     </section>
     {canRead && <WinnerBanner userId={user.id} roundId={round.data.id} roundStatus={round.data.status} />}
-    <ParticipantTicket revealedKey={latest?.keyValue} animateReveal={animateSequence === latest?.sequenceNumber} drawnKeys={drawnKeys} canMark={round.data?.status === 'ACTIVE' && !round.error && !event.error && realtime.status === 'CONNECTED' && !draws.isFetching && !draws.error} />
+    <ParticipantTicket animateReveal={animateSequence === latest?.sequenceNumber} drawnKeys={drawnKeys} canMark={round.data?.status === 'ACTIVE' && !round.error && !event.error && realtime.status === 'CONNECTED' && !draws.isFetching && !draws.error} />
     {event.data && round.data && <ClaimPanel round={round.data} canSubmit={realtime.status === 'CONNECTED' && !event.error && !round.error} />}
   </div>;
 }
@@ -107,11 +107,29 @@ export function QuestionCard({ draw, animate }: { draw: DisplayDraw; animate: bo
   }, [animate, draw.sequenceNumber]);
 
   return <article ref={cardRef} className={styles.questionCard} aria-label={`Question ${draw.sequenceNumber}`}>
-    <div><p className={styles.label}>QUESTION {draw.sequenceNumber}</p><p ref={questionRef} className={styles.question} aria-live="polite">{draw.questionText}</p></div>
-    <div className={styles.keyReveal}><p className={styles.label}>ANSWER / KEY</p><p ref={keyRef} className={styles.key} aria-live="polite">{draw.keyValue}</p></div>
+    <div>
+      <p className={styles.label}>QUESTION {draw.sequenceNumber}</p>
+      <p ref={questionRef} className={styles.question} aria-live="polite">{draw.questionText}</p>
+    </div>
+    <div className={styles.clueBadgeBox}>
+      <p className={styles.label}>CLUE ACTIVE</p>
+      <p ref={keyRef} className={styles.clueStatus} aria-live="polite">SOLVE &amp; MARK</p>
+      <span className={styles.clueHint}>Find &amp; mark the matching technology on your ticket</span>
+    </div>
   </article>;
 }
 
 function DrawHistory({ draws }: { draws: DisplayDraw[] }) {
-  return <section className={styles.history} aria-label="Draw history"><h2>Draw history</h2><ol>{draws.map((draw) => <li key={draw.id ?? draw.sequenceNumber}><span>#{draw.sequenceNumber}</span><span>{draw.questionText}</span><strong>{draw.keyValue}</strong><time dateTime={draw.drawnAt}>{new Date(draw.drawnAt).toLocaleTimeString()}</time></li>)}</ol></section>;
+  return <section className={styles.history} aria-label="Draw history">
+    <h2>Draw history</h2>
+    <ol>
+      {draws.map((draw) => (
+        <li key={draw.id ?? draw.sequenceNumber}>
+          <span>#{draw.sequenceNumber}</span>
+          <span>{draw.questionText}</span>
+          <time dateTime={draw.drawnAt}>{new Date(draw.drawnAt).toLocaleTimeString()}</time>
+        </li>
+      ))}
+    </ol>
+  </section>;
 }

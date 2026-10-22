@@ -16,45 +16,29 @@ const mockUser: AuthenticatedUser = {
 describe('ParticipantNav', () => {
   afterEach(cleanup);
 
-  it('renders navigation links to all key participant routes', () => {
+  it('renders brand and Profile link, and removes intermediate game links from navbar', () => {
     render(
       <MemoryRouter initialEntries={['/participant/lobby']}>
         <ParticipantNav user={mockUser} onLogout={vi.fn()} />
       </MemoryRouter>
     );
 
-    expect(screen.getByRole('link', { name: 'Lobby' })).toHaveAttribute(
-      'href',
-      '/participant/lobby'
-    );
-    expect(screen.getByRole('link', { name: 'My Ticket' })).toHaveAttribute(
-      'href',
-      '/participant/ticket'
-    );
-    expect(screen.getByRole('link', { name: 'Live Game' })).toHaveAttribute(
-      'href',
-      '/participant/game'
-    );
-    expect(screen.getByRole('link', { name: 'My Claims' })).toHaveAttribute(
-      'href',
-      '/participant/claims'
-    );
-    expect(screen.getByRole('link', { name: 'Results' })).toHaveAttribute(
-      'href',
-      '/participant/results'
-    );
-    expect(screen.getByRole('link', { name: /Live Board/i })).toHaveAttribute('href', '/live');
-  });
+    // Brand
+    expect(screen.getByRole('link', { name: /Tech Tombola home page/i })).toBeInTheDocument();
 
-  it('displays user first name and participant role indicator', () => {
-    render(
-      <MemoryRouter>
-        <ParticipantNav user={mockUser} onLogout={vi.fn()} />
-      </MemoryRouter>
+    // Profile link
+    expect(screen.getByRole('link', { name: /profile/i })).toHaveAttribute(
+      'href',
+      '/participant/profile'
     );
 
-    expect(screen.getByText('Sam')).toBeInTheDocument();
-    expect(screen.getByText('PARTICIPANT')).toBeInTheDocument();
+    // The 6 removed links must not be present
+    expect(screen.queryByRole('link', { name: 'Lobby' })).toBeNull();
+    expect(screen.queryByRole('link', { name: 'My Ticket' })).toBeNull();
+    expect(screen.queryByRole('link', { name: 'Live Game' })).toBeNull();
+    expect(screen.queryByRole('link', { name: 'My Claims' })).toBeNull();
+    expect(screen.queryByRole('link', { name: 'Results' })).toBeNull();
+    expect(screen.queryByRole('link', { name: /Live Board/i })).toBeNull();
   });
 
   it('triggers onLogout callback when the sign out button is pressed', async () => {

@@ -27,3 +27,16 @@ export const participantTicketSchema = z.object({
 });
 
 export type ParticipantTicket = z.infer<typeof participantTicketSchema>;
+
+/**
+ * Returns a 6-digit alphanumeric ticket code derived from any ticket identifier.
+ * Example: '8679def1-0919-4cfc-b2cd-9d23961b5a5f' -> '8679DE'
+ */
+export function formatTicketCode(ticketId?: string | null): string {
+  if (!ticketId) return '------';
+  const alphanumeric = ticketId.replace(/[^a-zA-Z0-9]/g, '');
+  if (alphanumeric.length >= 6) {
+    return alphanumeric.slice(0, 6).toUpperCase();
+  }
+  return alphanumeric.toUpperCase().padEnd(6, '0');
+}

@@ -103,7 +103,10 @@ export function useParticipantClaimSubmission(userId: string, round: Participant
         expireParticipantSession(queryClient, identityChanged, navigate, location.pathname + location.search + location.hash);
         return false;
       } else if (error instanceof ApiError && error.status === 422) {
-        setFeedback({ kind: 'error', text: 'The server could not accept this claim. Your Ticket and pattern status remain unchanged.' });
+        const detail = error.message && !error.message.startsWith('Request failed')
+          ? `(${error.message})`
+          : '(Ticket does not satisfy pattern requirements yet)';
+        setFeedback({ kind: 'error', text: `The server could not accept this claim. ${detail}. Your Ticket and pattern status remain unchanged.` });
         return false;
       } else if (error instanceof ApiError && error.status === 403) {
         setFeedback({ kind: 'error', text: 'Your account cannot submit a claim.' });

@@ -1,18 +1,47 @@
-import { useQuery } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
-import { getMe } from '../../lib/api/auth';
+import { useState, type FormEvent } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Link, useNavigate } from 'react-router-dom';
+import { getMe, quickJoin } from '../../lib/api/auth';
 import { useAuthUiStore } from '../auth/authStore';
 import { roleHomePath } from '../auth/routing';
 import { SampleTicketDemo } from './components/SampleTicketDemo';
 import styles from './LandingPage.module.css';
 
 export function LandingPage() {
+  const [joinName, setJoinName] = useState('');
+  const [joinEmail, setJoinEmail] = useState('');
+  const [joining, setJoining] = useState(false);
+  const [joinError, setJoinError] = useState('');
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const identityChanged = useAuthUiStore((state) => state.identityChanged);
+
   const sessionVersion = useAuthUiStore((state) => state.sessionVersion);
   const session = useQuery({
     queryKey: ['auth', 'me', sessionVersion],
     queryFn: ({ signal }) => getMe(signal),
     retry: false,
   });
+
+  async function handleQuickJoin(e: FormEvent) {
+    e.preventDefault();
+    if (!joinName.trim() || !joinEmail.trim()) {
+      setJoinError('Please enter your name and email address.');
+      return;
+    }
+    setJoining(true);
+    setJoinError('');
+    try {
+      const user = await quickJoin(joinName.trim(), joinEmail.trim());
+      identityChanged();
+      queryClient.clear();
+      navigate(roleHomePath(user.role), { replace: true });
+    } catch (err) {
+      setJoinError(err instanceof Error ? err.message : 'Could not join event. Try again.');
+    } finally {
+      setJoining(false);
+    }
+  }
 
   const user = session.data;
   const destination = user ? roleHomePath(user.role) : '/login';
@@ -89,6 +118,85 @@ export function LandingPage() {
                   <span>Watch Public Live Screen</span>
                 </Link>
               </div>
+
+              {!user && (
+                <div style={{
+                  margin: '28px 0 0',
+                  padding: '20px 24px',
+                  background: 'var(--cream)',
+                  border: '2px solid var(--ink)',
+                  boxShadow: '6px 6px 0 var(--ink)',
+                  maxWidth: '560px',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ background: 'var(--coral)', color: 'var(--ink)', padding: '3px 8px', fontFamily: 'var(--mono)', fontSize: '11px', fontWeight: 900 }}>
+                      ⚡ INSTANT GAME JOIN
+                    </span>
+                    <span style={{ fontFamily: 'var(--mono)', fontSize: '11px', color: 'var(--forest)', fontWeight: 800 }}>
+                      NO PASSWORD NEEDED
+                    </span>
+                  </div>
+                  <p style={{ margin: '0 0 14px', fontSize: '13px', color: '#444', lineHeight: 1.4 }}>
+                    Join the live room immediately with an automatically allocated 15-cell ticket:
+                  </p>
+                  <form onSubmit={handleQuickJoin} style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    <input
+                      type="text"
+                      placeholder="Your Full Name"
+                      value={joinName}
+                      onChange={(e) => setJoinName(e.target.value)}
+                      required
+                      style={{
+                        flex: '1 1 160px',
+                        minHeight: '44px',
+                        padding: '10px 12px',
+                        border: '1.5px solid var(--ink)',
+                        fontFamily: 'inherit',
+                        fontSize: '13px',
+                      }}
+                    />
+                    <input
+                      type="email"
+                      placeholder="Your Email"
+                      value={joinEmail}
+                      onChange={(e) => setJoinEmail(e.target.value)}
+                      required
+                      style={{
+                        flex: '1 1 180px',
+                        minHeight: '44px',
+                        padding: '10px 12px',
+                        border: '1.5px solid var(--ink)',
+                        fontFamily: 'inherit',
+                        fontSize: '13px',
+                      }}
+                    />
+                    <button
+                      type="submit"
+                      disabled={joining}
+                      style={{
+                        minHeight: '44px',
+                        padding: '0 18px',
+                        background: 'var(--coral)',
+                        color: 'var(--ink)',
+                        border: '1.5px solid var(--ink)',
+                        fontFamily: 'var(--mono)',
+                        fontSize: '12px',
+                        fontWeight: 900,
+                        cursor: 'pointer',
+                        boxShadow: '3px 3px 0 var(--ink)',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {joining ? 'JOINING…' : 'GET TICKET & PLAY ↗'}
+                    </button>
+                  </form>
+                  {joinError && (
+                    <p style={{ margin: '8px 0 0', color: '#8d271f', fontSize: '12px', fontWeight: 600 }}>
+                      {joinError}
+                    </p>
+                  )}
+                </div>
+              )}
 
               {/* Statistics & Confidence Strip */}
               <div className={styles.statsStrip} aria-label="Game engine specifications">

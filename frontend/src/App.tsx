@@ -13,7 +13,6 @@ import { AdminTopBar } from './components/navigation/AdminTopBar';
 import type { AuthenticatedUser } from './types/auth';
 import './styles/global.css';
 
-const LandingPage = lazy(() => import('./features/landing/LandingPage').then((module) => ({ default: module.LandingPage })));
 const LoginPage = lazy(() => import('./features/auth/LoginPage').then((module) => ({ default: module.LoginPage })));
 const AdminDashboard = lazy(() => import('./features/admin/AdminDashboard').then((module) => ({ default: module.AdminDashboard })));
 const AdminLayout = lazy(() => import('./features/admin/AdminLayout').then((module) => ({ default: module.AdminLayout })));
@@ -28,10 +27,12 @@ const AdminAdministrators = lazy(() => import('./features/admin/AdminAdministrat
 const AdminAudit = lazy(() => import('./features/admin/AdminAudit').then((module) => ({ default: module.AdminAudit })));
 const AdminSystem = lazy(() => import('./features/admin/AdminSystem').then((module) => ({ default: module.AdminSystem })));
 const ParticipantLobby = lazy(() => import('./features/participant/ParticipantLobby').then((module) => ({ default: module.ParticipantLobby })));
+const ParticipantTicketEntry = lazy(() => import('./features/participant/ParticipantTicketEntry').then((module) => ({ default: module.ParticipantTicketEntry })));
 const ParticipantTicket = lazy(() => import('./features/participant/ParticipantTicket').then((module) => ({ default: module.ParticipantTicket })));
 const ParticipantGame = lazy(() => import('./features/participant/ParticipantGame').then((module) => ({ default: module.ParticipantGame })));
 const ParticipantClaims = lazy(() => import('./features/participant/ParticipantClaims').then((module) => ({ default: module.ParticipantClaims })));
 const ParticipantResults = lazy(() => import('./features/participant/ParticipantResults').then((module) => ({ default: module.ParticipantResults })));
+const ParticipantProfile = lazy(() => import('./features/participant/ParticipantProfile').then((module) => ({ default: module.ParticipantProfile })));
 const LiveDisplay = lazy(() => import('./features/live/LiveDisplay').then((module) => ({ default: module.LiveDisplay })));
 
 function ProtectedLayout({ allowed }: { allowed: AuthenticatedUser['role'][] }) {
@@ -112,19 +113,23 @@ function AppRoutes() {
   return (
     <Suspense fallback={<LoadingMessage>Loading page…</LoadingMessage>}>
       <Routes>
-        <Route path="/" element={<LandingPage />} />
+        <Route path="/" element={<LoginRoute />} />
         <Route path="/live" element={<LiveDisplay />} />
         <Route path="/display" element={<LiveDisplay />} />
         <Route path="/display/round" element={<LiveDisplay />} />
         <Route path="/display/winner" element={<LiveDisplay />} />
-        <Route path="/login" element={<LoginRoute />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/sign-in" element={<LoginPage />} />
+        <Route path="/signin" element={<LoginPage />} />
         <Route element={<ProtectedLayout allowed={['PARTICIPANT']} />}>
           <Route path="/participant" element={<Navigate to="/participant/lobby" replace />} />
           <Route path="/participant/lobby" element={<ParticipantLobby />} />
+          <Route path="/participant/ticket-entry" element={<ParticipantTicketEntry />} />
           <Route path="/participant/ticket" element={<ParticipantTicket />} />
           <Route path="/participant/game" element={<ParticipantGame />} />
           <Route path="/participant/claims" element={<ParticipantClaims />} />
           <Route path="/participant/results" element={<ParticipantResults />} />
+          <Route path="/participant/profile" element={<ParticipantProfile />} />
         </Route>
         <Route element={<ProtectedLayout allowed={['ADMIN', 'SUPER_ADMIN']} />}>
           <Route path="/admin" element={<AdminLayout />}>

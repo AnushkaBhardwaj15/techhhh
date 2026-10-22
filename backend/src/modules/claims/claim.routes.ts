@@ -9,18 +9,19 @@ import {
 } from './claim.schemas.ts';
 import { claimService } from './claim.service.ts';
 import type { WinnerService } from './winner.service.ts';
+import { roundRepository } from '../rounds/round.repository.ts';
 
 export function createClaimRoutes(winnerService: WinnerService): FastifyPluginAsync {
   return async (fastify) => {
   // Participant: Submit win claim
   fastify.post('/participant/claims', { preHandler: [requireParticipant] }, async (request, reply) => {
     const body = submitClaimBodySchema.parse(request.body);
-    const eventId = request.user!.eventId;
-    if (!eventId) throw new NotFoundError('No event associated with this participant');
+    const round = await roundRepository.findById(body.roundId);
+    if (!round) throw new NotFoundError('Round not found');
 
     const result = await claimService.submitClaim({
       userId: request.user!.id,
-      eventId,
+      eventId: round.eventId,
       roundId: body.roundId,
       pattern: body.pattern,
     });

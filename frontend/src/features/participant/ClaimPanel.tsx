@@ -31,6 +31,13 @@ export function ClaimPanel({ round, canSubmit = true }: { round: ParticipantRoun
     {round.status === 'ACTIVE' && !canSubmit && <p className={styles.note} role="status">Reconnect and sync the current game details before submitting a claim.</p>}
     {selectedPattern && !uncertainPattern && <div className={styles.confirmation} aria-labelledby="claim-confirm-title">
       <h3 id="claim-confirm-title">Confirm your claim</h3><p>Submit <strong>{patternNames[selectedPattern]}</strong> for <strong>{round.name}</strong>?</p>
+      <p className={styles.guidance} style={{ fontSize: '0.85rem', marginTop: '0.25rem', marginBottom: '0.75rem', opacity: 0.85 }}>
+        {selectedPattern === 'EARLY_5' && 'Requirement: Any 5 numbers/keys across your entire ticket must be drawn.'}
+        {selectedPattern === 'TOP_LINE' && 'Requirement: All 5 numbers/keys in Row 1 (top row) must be drawn.'}
+        {selectedPattern === 'MIDDLE_LINE' && 'Requirement: All 5 numbers/keys in Row 2 (middle row) must be drawn.'}
+        {selectedPattern === 'BOTTOM_LINE' && 'Requirement: All 5 numbers/keys in Row 3 (bottom row) must be drawn.'}
+        {selectedPattern === 'FULL_HOUSE' && 'Requirement: All 15 numbers/keys across your entire ticket must be drawn.'}
+      </p>
       <div><button type="button" onClick={() => void submission.submit(selectedPattern).then((recorded) => { if (recorded) setSelectedPattern(undefined); })} disabled={pending || round.status !== 'ACTIVE' || !canSubmit || !!uncertainPattern || pendingPatterns.has(selectedPattern)}>{pending ? 'Submitting claim…' : 'Confirm claim'}</button><button type="button" onClick={() => setSelectedPattern(undefined)} disabled={pending}>Cancel</button></div>
     </div>}
     {uncertainPattern && <button type="button" className={styles.checkButton} onClick={() => void submission.checkStatus()}>Check claim status</button>}

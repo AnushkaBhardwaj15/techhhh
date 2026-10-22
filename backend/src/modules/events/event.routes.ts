@@ -52,4 +52,12 @@ export const eventRoutes: FastifyPluginAsync = async (fastify) => {
 
     return { event: updated };
   });
+
+  fastify.post('/admin/quick-setup-game', async () => {
+    const { seed } = await import('../../db/seed.ts');
+    await seed();
+    const latestEvents = await eventService.listEvents(1, 1, 'LIVE');
+    const event = latestEvents.data[0] || null;
+    return { success: true, event };
+  });
 };

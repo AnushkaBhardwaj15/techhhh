@@ -161,7 +161,13 @@ export class WinnerService {
           action: 'WIN_VERIFIED',
           resourceType: 'WINNER',
           resourceId: winner.id,
-          metadata: { claimId: claim.id, roundId: claim.roundId, patternType: claim.patternType },
+          metadata: {
+            claimId: claim.id,
+            roundId: claim.roundId,
+            patternType: claim.patternType,
+            participantId: claim.participantId,
+            participantName: context.participantName,
+          },
         },
         tx
       );
@@ -240,7 +246,12 @@ export class WinnerService {
           action: 'WIN_CLAIM_REJECTED',
           resourceType: 'CLAIM',
           resourceId: claim.id,
-          metadata: { roundId: claim.roundId, patternType: claim.patternType, rejectionReason },
+          metadata: {
+            roundId: claim.roundId,
+            patternType: claim.patternType,
+            rejectionReason,
+            participantId: claim.participantId,
+          },
         },
         tx
       );
