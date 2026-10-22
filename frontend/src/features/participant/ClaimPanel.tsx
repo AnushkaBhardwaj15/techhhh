@@ -1,47 +1,358 @@
 import { useState } from 'react';
-import { Link, useOutletContext } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
+import { useOutletContext } from 'react-router-dom';
 import { ApiError } from '../../lib/api/client';
 import { type ClaimPattern } from '../../types/claims';
 import type { AuthenticatedUser } from '../../types/auth';
 import type { ParticipantRound } from '../../types/participant';
+import type { ParticipantTicket as Ticket } from '../../types/ticket';
 import { claimStatusText, patternNames, useParticipantClaimSubmission } from './useParticipantClaims';
 import styles from './ClaimPanel.module.css';
 
-export function ClaimPanel({ round, canSubmit = true }: { round: ParticipantRound; canSubmit?: boolean }) {
+const CLAIM_CARDS: {
+  pattern: ClaimPattern;
+  title: string;
+  subtitle: string;
+  description: string;
+  points: string;
+}[] = [
+  {
+    pattern: 'EARLY_5',
+    title: 'Early Five',
+    subtitle: 'Any 5 numbers',
+    description: 'Any 5 cells marked on your ticket',
+    points: '+10 pts',
+  },
+  {
+    pattern: 'TOP_LINE',
+    title: 'Top Line',
+    subtitle: 'Row 1 complete',
+    description: 'All 5 cells in the top row marked',
+    points: '+30 pts',
+  },
+  {
+    pattern: 'MIDDLE_LINE',
+    title: 'Middle Line',
+    subtitle: 'Row 2 complete',
+    description: 'All 5 cells in the middle row marked',
+    points: '+30 pts',
+  },
+  {
+    pattern: 'BOTTOM_LINE',
+    title: 'Bottom Line',
+    subtitle: 'Row 3 complete',
+    description: 'All 5 cells in the bottom row marked',
+    points: '+30 pts',
+  },
+  {
+    pattern: 'FULL_HOUSE',
+    title: 'Full House',
+    subtitle: 'All 15 numbers',
+    description: 'All 15 cells across your ticket marked',
+    points: '+50 pts',
+  },
+];
+
+export interface PatternCheckResult {
+  valid: boolean;
+  markedCount: number;
+  requiredCount: number;
+  label: string;
+  warning?: string;
+}
+
+export function checkPatternBoxes(pattern: ClaimPattern, ticket?: Ticket | null): PatternCheckResult {
+  if (!ticket || !ticket.cells || ticket.cells.length === 0) {
+    return {
+      valid: true,
+      markedCount: 0,
+      requiredCount: 0,
+      label: '',
+    };
+  }
+
+  const cells = ticket.cells;
+
+  switch (pattern) {
+    case 'EARLY_5': {
+      const markedCount = cells.filter((c) => c.marked).length;
+      const requiredCount = 5;
+      const valid = markedCount >= requiredCount;
+      return {
+        valid,
+        markedCount,
+        requiredCount,
+        label: `${markedCount}/${requiredCount} checked`,
+        warning: valid
+          ? undefined
+          : `⚠️ Cannot Send Claim for Early Five: You have marked only ${markedCount}/5 boxes on your ticket. You must check at least 5 boxes before submitting!`,
+      };
+    }
+    case 'TOP_LINE': {
+      const row0 = cells.filter((c) => c.rowIndex === 0);
+      const markedCount = row0.filter((c) => c.marked).length;
+      const requiredCount = row0.length || 5;
+      const valid = row0.length > 0 && markedCount === requiredCount;
+      return {
+        valid,
+        markedCount,
+        requiredCount,
+        label: `${markedCount}/${requiredCount} checked`,
+        warning: valid
+          ? undefined
+          : `⚠️ Cannot Send Claim for Top Line: You have marked only ${markedCount}/${requiredCount} boxes in Row 1. All ${requiredCount} boxes in the top line must be checked before submitting!`,
+      };
+    }
+    case 'MIDDLE_LINE': {
+      const row1 = cells.filter((c) => c.rowIndex === 1);
+      const markedCount = row1.filter((c) => c.marked).length;
+      const requiredCount = row1.length || 5;
+      const valid = row1.length > 0 && markedCount === requiredCount;
+      return {
+        valid,
+        markedCount,
+        requiredCount,
+        label: `${markedCount}/${requiredCount} checked`,
+        warning: valid
+          ? undefined
+          : `⚠️ Cannot Send Claim for Middle Line: You have marked only ${markedCount}/${requiredCount} boxes in Row 2. All ${requiredCount} boxes in the middle line must be checked before submitting!`,
+      };
+    }
+    case 'BOTTOM_LINE': {
+      const row2 = cells.filter((c) => c.rowIndex === 2);
+      const markedCount = row2.filter((c) => c.marked).length;
+      const requiredCount = row2.length || 5;
+      const valid = row2.length > 0 && markedCount === requiredCount;
+      return {
+        valid,
+        markedCount,
+        requiredCount,
+        label: `${markedCount}/${requiredCount} checked`,
+        warning: valid
+          ? undefined
+          : `⚠️ Cannot Send Claim for Bottom Line: You have marked only ${markedCount}/${requiredCount} boxes in Row 3. All ${requiredCount} boxes in the bottom line must be checked before submitting!`,
+      };
+    }
+    case 'FULL_HOUSE': {
+      const markedCount = cells.filter((c) => c.marked).length;
+      const requiredCount = cells.length || 15;
+      const valid = cells.length > 0 && markedCount === requiredCount;
+      return {
+        valid,
+        markedCount,
+        requiredCount,
+        label: `${markedCount}/${requiredCount} checked`,
+        warning: valid
+          ? undefined
+          : `⚠️ Cannot Send Claim for Full House: You have marked only ${markedCount}/${requiredCount} boxes across your ticket. All ${requiredCount} boxes must be checked before submitting!`,
+      };
+    }
+    default:
+      return { valid: true, markedCount: 0, requiredCount: 0, label: '' };
+  }
+}
+
+export function ClaimPanel({
+  round,
+  ticket,
+  canSubmit = true,
+}: {
+  round: ParticipantRound;
+  ticket?: Ticket | null;
+  canSubmit?: boolean;
+}) {
   const user = useOutletContext<AuthenticatedUser>();
+  const queryClient = useQueryClient();
   const submission = useParticipantClaimSubmission(user.id, round);
   const { claims, currentRoundClaims, pendingPatterns, pending, uncertainPattern, feedback } = submission;
-  const [selectedPattern, setSelectedPattern] = useState<ClaimPattern>();
+  const [validationWarning, setValidationWarning] = useState<string | null>(null);
 
-  return <section className={styles.panel} aria-labelledby="claim-panel-title">
-    <div className={styles.header}><div><p className={styles.kicker}>CLAIMS / GAME STATUS</p><h2 id="claim-panel-title">Claim a winning pattern</h2></div><Link to="/participant/claims">View all claims <span aria-hidden="true">↗</span></Link></div>
-    <p className={styles.guidance}>Choose a configured pattern and confirm the round. The server checks whether your Ticket qualifies.</p>
-    {claims.isPending ? <p role="status">Loading your claim status…</p> : claims.error && !claims.data ? <div className={styles.error}><p role="alert">{claims.error instanceof ApiError && claims.error.status === 403 ? 'Your account cannot view claim status.' : 'We could not load your claims. Check your connection and try again.'}</p><button type="button" onClick={() => void claims.refetch()}>Retry</button></div> : null}
-    {claims.data && claims.error && <p className={styles.stale} role="status">Showing the last claim status received from the server.</p>}
-    <ul className={styles.patterns} aria-label="Configured winning patterns">
-      {round.patterns.map((pattern) => {
-        const open = pattern.enabled && pattern.status === 'OPEN';
-        return <li key={pattern.id}>
-          <div><strong>{patternNames[pattern.patternType]}</strong><span>{pattern.status === 'CLOSED' ? 'Closed' : pattern.enabled ? 'Open' : 'Disabled'}</span></div>
-          <button type="button" disabled={!open || round.status !== 'ACTIVE' || !canSubmit || pending || !!uncertainPattern || pendingPatterns.has(pattern.patternType)} aria-pressed={selectedPattern === pattern.patternType} onClick={() => { setSelectedPattern(pattern.patternType); submission.clearFeedback(); }}>{pendingPatterns.has(pattern.patternType) ? 'Claim pending' : selectedPattern === pattern.patternType ? 'Selected' : open ? 'Choose pattern' : 'Unavailable'}</button>
-        </li>;
-      })}
-    </ul>
-    {round.status !== 'ACTIVE' && <p className={styles.note} role="status">Claims are available while the round is active.</p>}
-    {round.status === 'ACTIVE' && !canSubmit && <p className={styles.note} role="status">Reconnect and sync the current game details before submitting a claim.</p>}
-    {selectedPattern && !uncertainPattern && <div className={styles.confirmation} aria-labelledby="claim-confirm-title">
-      <h3 id="claim-confirm-title">Confirm your claim</h3><p>Submit <strong>{patternNames[selectedPattern]}</strong> for <strong>{round.name}</strong>?</p>
-      <p className={styles.guidance} style={{ fontSize: '0.85rem', marginTop: '0.25rem', marginBottom: '0.75rem', opacity: 0.85 }}>
-        {selectedPattern === 'EARLY_5' && 'Requirement: Any 5 numbers/keys across your entire ticket must be drawn.'}
-        {selectedPattern === 'TOP_LINE' && 'Requirement: All 5 numbers/keys in Row 1 (top row) must be drawn.'}
-        {selectedPattern === 'MIDDLE_LINE' && 'Requirement: All 5 numbers/keys in Row 2 (middle row) must be drawn.'}
-        {selectedPattern === 'BOTTOM_LINE' && 'Requirement: All 5 numbers/keys in Row 3 (bottom row) must be drawn.'}
-        {selectedPattern === 'FULL_HOUSE' && 'Requirement: All 15 numbers/keys across your entire ticket must be drawn.'}
+  const effectiveTicket =
+    ticket ??
+    queryClient.getQueryData<Ticket>(['participant', user.id, 'ticket', round.eventId, round.id]);
+
+  const roundPatternsMap = new Map(round.patterns.map((p) => [p.patternType, p]));
+  const userClaimsMap = new Map(currentRoundClaims.map((c) => [c.patternType, c]));
+
+  async function handleClaim(pattern: ClaimPattern) {
+    if (pending || !canSubmit || round.status !== 'ACTIVE') return;
+
+    // First check whether the user actually has checked all of the boxes or not
+    const check = checkPatternBoxes(pattern, effectiveTicket);
+    if (!check.valid) {
+      setValidationWarning(
+        check.warning ?? 'You must mark all required boxes on your ticket before submitting this claim!'
+      );
+      return;
+    }
+
+    // All required boxes are checked: allow them to send the claim to the admin
+    setValidationWarning(null);
+    await submission.submit(pattern);
+  }
+
+  return (
+    <section className={styles.panel} aria-labelledby="claim-panel-title">
+      <div className={styles.header}>
+        <div>
+          <p className={styles.kicker}>WINNING PATTERNS</p>
+          <h2 id="claim-panel-title">Claim Pattern</h2>
+        </div>
+        <span className={styles.autoCheckBadge}>Server Verified</span>
+      </div>
+
+      <p className={styles.guidance}>
+        When your marked cells meet a pattern requirement, click the claim button below. The server validates your claim.
       </p>
-      <div><button type="button" onClick={() => void submission.submit(selectedPattern).then((recorded) => { if (recorded) setSelectedPattern(undefined); })} disabled={pending || round.status !== 'ACTIVE' || !canSubmit || !!uncertainPattern || pendingPatterns.has(selectedPattern)}>{pending ? 'Submitting claim…' : 'Confirm claim'}</button><button type="button" onClick={() => setSelectedPattern(undefined)} disabled={pending}>Cancel</button></div>
-    </div>}
-    {uncertainPattern && <button type="button" className={styles.checkButton} onClick={() => void submission.checkStatus()}>Check claim status</button>}
-    {feedback && <p className={feedback.kind === 'status' ? styles.success : feedback.kind === 'uncertain' ? styles.uncertain : styles.errorText} role={feedback.kind === 'status' ? 'status' : 'alert'}>{feedback.text}</p>}
-    {currentRoundClaims.length > 0 && <section className={styles.statusList} aria-label="Current round claim statuses"><h3>Current round claims</h3><ul>{currentRoundClaims.map((claim) => <li key={claim.id}><strong>{patternNames[claim.patternType]}</strong><span>{claimStatusText(claim.status)}</span></li>)}</ul></section>}
-  </section>;
+
+      {validationWarning && (
+        <div className={styles.validationWarning} role="alert">
+          <div className={styles.validationWarningContent}>
+            <span className={styles.warningIcon}>⚠️</span>
+            <p className={styles.warningMessage}>{validationWarning}</p>
+          </div>
+          <button
+            type="button"
+            className={styles.closeWarningBtn}
+            onClick={() => setValidationWarning(null)}
+            aria-label="Dismiss warning"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
+      {claims.isPending ? (
+        <p role="status">Checking claim statuses…</p>
+      ) : claims.error && !claims.data ? (
+        <div className={styles.error}>
+          <p role="alert">
+            {claims.error instanceof ApiError && claims.error.status === 403
+              ? 'Your account cannot view claim status.'
+              : 'Could not load your claims.'}
+          </p>
+          <button type="button" onClick={() => void claims.refetch()}>
+            Retry
+          </button>
+        </div>
+      ) : null}
+
+      <div className={styles.cardGrid}>
+        {CLAIM_CARDS.map((card) => {
+          const config = roundPatternsMap.get(card.pattern);
+          const isEnabled = config ? config.enabled : false;
+          const isConfigOpen = config ? config.status === 'OPEN' : false;
+          const userClaim = userClaimsMap.get(card.pattern);
+          const isPendingVerification = userClaim?.status === 'PENDING_VERIFICATION' || pendingPatterns.has(card.pattern);
+          const isVerified = userClaim?.status === 'VERIFIED';
+          const isRejected = userClaim?.status === 'REJECTED';
+
+          const boxCheck = checkPatternBoxes(card.pattern, effectiveTicket);
+
+          const canClick =
+            isEnabled &&
+            isConfigOpen &&
+            round.status === 'ACTIVE' &&
+            canSubmit &&
+            !isPendingVerification &&
+            !isVerified &&
+            !pending;
+
+          return (
+            <div
+              key={card.pattern}
+              className={`${styles.claimCard} ${isVerified ? styles.cardWinner : isPendingVerification ? styles.cardPending : ''}`}
+            >
+              <div className={styles.cardTop}>
+                <div>
+                  <h3 className={styles.cardTitle}>{card.title}</h3>
+                  <p className={styles.cardSubtitle}>{card.subtitle}</p>
+                </div>
+                <span className={styles.cardPoints}>{card.points}</span>
+              </div>
+
+              <p className={styles.cardDesc}>{card.description}</p>
+
+              {boxCheck.label && (
+                <div className={styles.cardRequirement}>
+                  <span
+                    className={`${styles.requirementBadge} ${boxCheck.valid ? styles.reqValid : styles.reqPending}`}
+                  >
+                    {boxCheck.valid ? `✓ Ready (${boxCheck.label})` : `Checked: ${boxCheck.label}`}
+                  </span>
+                </div>
+              )}
+
+              <div className={styles.cardFooter}>
+                {isVerified ? (
+                  <span className={styles.statusVerified}>🏆 VERIFIED WINNER</span>
+                ) : isPendingVerification ? (
+                  <span className={styles.statusPending}>⏳ PENDING REVIEW</span>
+                ) : isRejected ? (
+                  <div className={styles.rejectedBox}>
+                    <span className={styles.statusRejected}>❌ REJECTED</span>
+                    {canClick && (
+                      <button
+                        type="button"
+                        className={styles.retryBtn}
+                        onClick={() => void handleClaim(card.pattern)}
+                      >
+                        Retry Claim
+                      </button>
+                    )}
+                  </div>
+                ) : !isConfigOpen || !isEnabled ? (
+                  <span className={styles.statusClosed}>CLOSED</span>
+                ) : (
+                  <button
+                    type="button"
+                    className={styles.claimBtn}
+                    disabled={!canClick}
+                    onClick={() => void handleClaim(card.pattern)}
+                  >
+                    {pending ? 'Submitting…' : `Claim ${card.title}`}
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {uncertainPattern && (
+        <button type="button" className={styles.checkButton} onClick={() => void submission.checkStatus()}>
+          Check claim status
+        </button>
+      )}
+
+      {feedback && (
+        <p
+          className={
+            feedback.kind === 'status'
+              ? styles.success
+              : feedback.kind === 'uncertain'
+              ? styles.uncertain
+              : styles.errorText
+          }
+          role={feedback.kind === 'status' ? 'status' : 'alert'}
+        >
+          {feedback.text}
+        </p>
+      )}
+
+      {currentRoundClaims.length > 0 && (
+        <div className={styles.recentClaims}>
+          <h4>Your Submitted Claims</h4>
+          <ul>
+            {currentRoundClaims.map((claim) => (
+              <li key={claim.id}>
+                <strong>{patternNames[claim.patternType]}</strong>
+                <span data-status={claim.status}>{claimStatusText(claim.status)}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </section>
+  );
 }

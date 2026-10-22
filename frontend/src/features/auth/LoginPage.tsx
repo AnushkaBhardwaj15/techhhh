@@ -119,13 +119,13 @@ export function LoginPage() {
     ? activeMutation.error.status === 429
       ? 'Too many attempts. Wait a moment, then try again.'
       : activeMutation.error.status === 401
-      ? 'Email or password is incorrect.'
-      : activeMutation.error.message
+        ? 'Email or password is incorrect.'
+        : activeMutation.error.message
     : activeMutation.error instanceof ZodError
-    ? 'The server returned an unexpected account profile.'
-    : activeMutation.error
-    ? 'Unable to join right now. Please try again.'
-    : '';
+      ? 'The server returned an unexpected account profile.'
+      : activeMutation.error
+        ? 'Unable to join right now. Please try again.'
+        : '';
 
   return (
     <main className={styles.page}>
@@ -320,8 +320,8 @@ export function LoginPage() {
               {activeMutation.isPending
                 ? 'CONNECTING TO GAME…'
                 : mode === 'quick-join'
-                ? 'CREATE ACCOUNT & PROCEED'
-                : 'SIGN IN'}
+                  ? 'CREATE ACCOUNT & PROCEED'
+                  : 'SIGN IN'}
               <span aria-hidden="true">↗</span>
             </button>
           </form>

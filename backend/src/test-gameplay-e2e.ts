@@ -109,6 +109,8 @@ describe('Full End-to-End Gameplay & Claim Verification Flow', () => {
         patterns: [
           { patternType: 'EARLY_5', enabled: true, maxWinners: 1 },
           { patternType: 'TOP_LINE', enabled: true, maxWinners: 1 },
+          { patternType: 'MIDDLE_LINE', enabled: true, maxWinners: 1 },
+          { patternType: 'BOTTOM_LINE', enabled: true, maxWinners: 1 },
           { patternType: 'FULL_HOUSE', enabled: true, maxWinners: 1 },
         ],
       }),
@@ -120,15 +122,16 @@ describe('Full End-to-End Gameplay & Claim Verification Flow', () => {
     expect(roundId).toBeTruthy();
   });
 
-  it('5. Admin assigns at least 15 Questions to the new Round', async () => {
+  it('5. Admin assigns at least 25 Questions to the new Round', async () => {
     const keysRes = await fetchJson(`/admin/keys?eventId=${eventId}&limit=100`, {}, adminCookie);
     expect(keysRes.status).toBe(200);
     const keys = keysRes.data.data;
     console.log(`Found ${keys.length} available event keys.`);
-    expect(keys.length).toBeGreaterThanOrEqual(15);
+    expect(keys.length).toBeGreaterThanOrEqual(25);
 
-    // Create 18 questions for this round
-    for (let i = 0; i < 18; i++) {
+    // Create 25 questions for this round
+    const qCount = Math.min(keys.length, 25);
+    for (let i = 0; i < qCount; i++) {
       const key = keys[i];
       const qRes = await fetchJson('/admin/questions', {
         method: 'POST',
@@ -141,7 +144,7 @@ describe('Full End-to-End Gameplay & Claim Verification Flow', () => {
       expect(qRes.status).toBe(201);
     }
 
-    console.log('Successfully assigned 18 questions to Round', roundId);
+    console.log(`Successfully assigned ${qCount} questions to Round`, roundId);
   });
 
   it('6. Admin generates Tickets for the Round', async () => {

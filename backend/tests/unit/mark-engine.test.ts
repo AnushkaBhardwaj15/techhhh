@@ -22,34 +22,19 @@ describe('Participant Mark Engine Domain Logic (Pure Unit Tests)', () => {
   });
 
   describe('validateCellEligibleForMark', () => {
-    const drawnKeyIds = new Set(['k1', 'k2', 'k3']);
-
-    it('accepts a cell whose key is in drawnKeyIds', () => {
+    it('accepts any populated cell so participant does not leak answer correctness', () => {
       expect(() =>
-        validateCellEligibleForMark({ id: 'c1', keyId: 'k1' }, drawnKeyIds)
+        validateCellEligibleForMark({ id: 'c1', keyId: 'k1' })
+      ).not.toThrow();
+      expect(() =>
+        validateCellEligibleForMark({ id: 'c_undrawn', keyId: 'k_future' })
       ).not.toThrow();
     });
 
     it('rejects an empty cell with UnprocessableEntityError (422)', () => {
       expect(() =>
-        validateCellEligibleForMark({ id: 'c_empty', keyId: null }, drawnKeyIds)
+        validateCellEligibleForMark({ id: 'c_empty', keyId: null })
       ).toThrow(UnprocessableEntityError);
-      try {
-        validateCellEligibleForMark({ id: 'c_empty', keyId: null }, drawnKeyIds);
-      } catch (err: any) {
-        expect(err.message).toContain('empty');
-      }
-    });
-
-    it('rejects a cell whose key has not been drawn with UnprocessableEntityError (422)', () => {
-      expect(() =>
-        validateCellEligibleForMark({ id: 'c_undrawn', keyId: 'k_future' }, drawnKeyIds)
-      ).toThrow(UnprocessableEntityError);
-      try {
-        validateCellEligibleForMark({ id: 'c_undrawn', keyId: 'k_future' }, drawnKeyIds);
-      } catch (err: any) {
-        expect(err.message).toContain('not been drawn');
-      }
     });
   });
 

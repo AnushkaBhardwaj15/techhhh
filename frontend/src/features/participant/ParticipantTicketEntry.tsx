@@ -67,7 +67,10 @@ export function ParticipantTicketEntry() {
       ) {
         setVerifiedTicketId(autoTicket.data.id);
         sessionStorage.setItem(`tt_verified_ticket_${user.id}`, autoTicket.data.id);
-        setSuccessMsg(`Ticket #${assignedCode} verified successfully! You are ready to enter the lobby.`);
+        setSuccessMsg(`✓ Ticket #${assignedCode} verified! Entering the lobby...`);
+        setTimeout(() => {
+          navigate('/participant/lobby', { replace: true });
+        }, 700);
         return;
       }
     }
@@ -75,7 +78,10 @@ export function ParticipantTicketEntry() {
     if (cleanInput.length === 6) {
       setVerifiedTicketId(cleanInput);
       sessionStorage.setItem(`tt_verified_ticket_${user.id}`, cleanInput);
-      setSuccessMsg(`Ticket #${cleanInput} verified! Click below to enter the lobby.`);
+      setSuccessMsg(`✓ Ticket #${cleanInput} verified! Entering the lobby...`);
+      setTimeout(() => {
+        navigate('/participant/lobby', { replace: true });
+      }, 700);
       return;
     }
 
@@ -88,17 +94,15 @@ export function ParticipantTicketEntry() {
       setTicketInput(code);
       setVerifiedTicketId(autoTicket.data.id);
       sessionStorage.setItem(`tt_verified_ticket_${user.id}`, autoTicket.data.id);
-      setSuccessMsg(`Assigned ticket #${code} loaded successfully!`);
+      setSuccessMsg(`✓ Assigned ticket #${code} verified! Entering the lobby...`);
+      setTimeout(() => {
+        navigate('/participant/lobby', { replace: true });
+      }, 700);
     }
   }
 
   function handleProceedToLobby() {
-    // If round is active, can go straight to game, else lobby
-    if (round.data?.status === 'ACTIVE') {
-      navigate('/participant/game', { replace: true });
-    } else {
-      navigate('/participant/lobby', { replace: true });
-    }
+    navigate('/participant/lobby', { replace: true });
   }
 
   return (

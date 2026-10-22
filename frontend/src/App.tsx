@@ -16,8 +16,6 @@ import './styles/global.css';
 const LoginPage = lazy(() => import('./features/auth/LoginPage').then((module) => ({ default: module.LoginPage })));
 const AdminDashboard = lazy(() => import('./features/admin/AdminDashboard').then((module) => ({ default: module.AdminDashboard })));
 const AdminLayout = lazy(() => import('./features/admin/AdminLayout').then((module) => ({ default: module.AdminLayout })));
-const AdminEventManagement = lazy(() => import('./features/admin/AdminEventManagement').then((module) => ({ default: module.AdminEventManagement })));
-const AdminRounds = lazy(() => import('./features/admin/AdminRounds').then((module) => ({ default: module.AdminRounds })));
 const AdminQuestions = lazy(() => import('./features/admin/AdminQuestions').then((module) => ({ default: module.AdminQuestions })));
 const AdminParticipants = lazy(() => import('./features/admin/AdminParticipants').then((module) => ({ default: module.AdminParticipants })));
 const AdminDrawControl = lazy(() => import('./features/admin/AdminDrawControl').then((module) => ({ default: module.AdminDrawControl })));
@@ -121,6 +119,8 @@ function AppRoutes() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/sign-in" element={<LoginPage />} />
         <Route path="/signin" element={<LoginPage />} />
+        <Route path="/play" element={<Navigate to="/participant/game" replace />} />
+        <Route path="/host" element={<Navigate to="/admin/draw-control" replace />} />
         <Route element={<ProtectedLayout allowed={['PARTICIPANT']} />}>
           <Route path="/participant" element={<Navigate to="/participant/lobby" replace />} />
           <Route path="/participant/lobby" element={<ParticipantLobby />} />
@@ -134,9 +134,9 @@ function AppRoutes() {
         <Route element={<ProtectedLayout allowed={['ADMIN', 'SUPER_ADMIN']} />}>
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />
-            <Route path="event" element={<AdminEventManagement />} />
-            <Route path="events" element={<Navigate to="/admin/event" replace />} />
-            <Route path="rounds" element={<AdminRounds />} />
+            <Route path="event" element={<Navigate to="/admin" replace />} />
+            <Route path="events" element={<Navigate to="/admin" replace />} />
+            <Route path="rounds" element={<Navigate to="/admin" replace />} />
             <Route path="questions" element={<AdminQuestions />} />
             <Route path="participants" element={<AdminParticipants />} />
             <Route path="draw-control" element={<AdminDrawControl />} />

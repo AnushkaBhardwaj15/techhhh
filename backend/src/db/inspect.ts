@@ -22,8 +22,19 @@ async function main() {
   const winners = await sql`SELECT * FROM winners WHERE round_id = ${roundId}`;
   console.log('Winners:', JSON.stringify(winners, null, 2));
 
-  const ticketRows = await sql`SELECT id, round_id, participant_id, event_id FROM tickets LIMIT 5`;
-  console.log('Tickets:', JSON.stringify(ticketRows, null, 2));
+  const ticketRows = await sql`
+    SELECT t.id, u.email, u.name, r.name as round_name
+    FROM tickets t 
+    JOIN participant_profiles p ON p.id = t.participant_id 
+    JOIN users u ON u.id = p.user_id 
+    JOIN rounds r ON r.id = t.round_id
+    LIMIT 10
+  `;
+  console.log('Tickets with 6-digit codes:');
+  for (const t of ticketRows) {
+    const code = t.id.replace(/[^a-zA-Z0-9]/g, '').slice(0, 6).toUpperCase();
+    console.log(`Code: ${code} | Participant: ${t.name} (${t.email}) | UUID: ${t.id}`);
+  }
 
   await sql.end();
 }

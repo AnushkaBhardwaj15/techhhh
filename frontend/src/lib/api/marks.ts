@@ -13,3 +13,9 @@ export async function markTicketCell(ticketId: string, cellId: string) {
   if (response.mark.ticketId !== ticketId || response.mark.cellId !== cellId) throw new Error('Mark response does not match the requested Ticket cell.');
   return response.mark;
 }
+
+export async function unmarkTicketCell(ticketId: string, cellId: string) {
+  return await apiRequest<{ success: boolean }>(`/participant/tickets/${ticketId}/marks/${cellId}`, {
+    method: 'DELETE',
+  });
+}

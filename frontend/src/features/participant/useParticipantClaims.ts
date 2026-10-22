@@ -20,7 +20,7 @@ export function useParticipantClaims(userId: string, page = 1) {
     queryFn: ({ signal }) => getParticipantClaims(page, 50, signal),
     refetchOnReconnect: 'always',
     refetchOnWindowFocus: 'always',
-    refetchInterval: (query) => query.state.data?.data.some((claim) => claim.status === 'PENDING_VERIFICATION') ? 3000 : false,
+    refetchInterval: 3000,
   });
   useEffect(() => {
     if (!(claims.error instanceof ApiError && claims.error.status === 401)) return;
@@ -91,12 +91,20 @@ export function useParticipantClaimSubmission(userId: string, round: Participant
   async function submit(pattern: ClaimPattern) {
     if (pendingRef.current || uncertainPattern || pendingPatterns.has(pattern) || round.status !== 'ACTIVE') return;
     const config = round.patterns.find((item) => item.patternType === pattern);
-    if (!config?.enabled || config.status !== 'OPEN') return;
+    if (!config?.enabled || config.status !== 'OPEN') {
+      setFeedback({
+        kind: 'error',
+        text: `The ${patternNames[pattern]} pattern is not currently open for claims in this round.`,
+      });
+      return false;
+    }
     pendingRef.current = true;
     setPending(true);
     setFeedback(undefined);
     try {
-      recordClaim(await submitParticipantClaim(round.id, pattern), false);
+      const claim = await submitParticipantClaim(round.id, pattern);
+      recordClaim(claim, false);
+      await queryClient.invalidateQueries({ queryKey: participantClaimsKey(userId) });
       return true;
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {

@@ -14,18 +14,14 @@ export function validateRoundActiveForMark(status: string): void {
 /**
  * Validates that the cell is eligible to be marked:
  * 1. Cell must be populated with a key (not empty).
- * 2. Key must have been drawn in the round.
+ * Participants can mark any cell based on their knowledge without leaking answer correctness.
  */
 export function validateCellEligibleForMark(
   cell: { id: string; keyId: string | null },
-  drawnKeyIds: Set<string>
+  _drawnKeyIds?: Set<string>
 ): void {
   if (!cell.keyId) {
     throw new UnprocessableEntityError('Cannot mark an empty cell');
-  }
-
-  if (!drawnKeyIds.has(cell.keyId)) {
-    throw new UnprocessableEntityError('Cell key has not been drawn yet');
   }
 }
 

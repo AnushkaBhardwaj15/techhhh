@@ -5,7 +5,7 @@ import { Link, useLocation, useNavigate, useOutletContext } from 'react-router-d
 import { ApiError } from '../../lib/api/client';
 import { getCurrentRound, getParticipantEvent } from '../../lib/api/participant';
 import { getParticipantTicket } from '../../lib/api/ticket';
-import { markTicketCell } from '../../lib/api/marks';
+import { markTicketCell, unmarkTicketCell } from '../../lib/api/marks';
 import { cancelOnReducedMotion } from '../../lib/reducedMotion';
 import { useAuthUiStore } from '../auth/authStore';
 import { useParticipantWins } from './useParticipantWins';
@@ -15,10 +15,31 @@ import styles from './ParticipantTicket.module.css';
 
 const refreshableRound = new Set(['DRAFT', 'READY', 'RECOVERY_REQUIRED']);
 
-export function TicketGrid({ ticket, revealedKey, animateReveal = false, drawnKeys: _drawnKeys = new Set<string>(), canMark = false, pendingCellIds = new Set<string>(), uncertainCellIds = new Set<string>(), winningCellIds = new Set<string>(), onMark }: { ticket: Ticket; revealedKey?: string; animateReveal?: boolean; drawnKeys?: ReadonlySet<string>; canMark?: boolean; pendingCellIds?: ReadonlySet<string>; uncertainCellIds?: ReadonlySet<string>; winningCellIds?: ReadonlySet<string>; onMark?: (cellId: string) => void }) {
+export function TicketGrid({
+  ticket,
+  revealedKey,
+  animateReveal = false,
+  drawnKeys: _drawnKeys = new Set<string>(),
+  canMark = false,
+  pendingCellIds = new Set<string>(),
+  uncertainCellIds = new Set<string>(),
+  winningCellIds = new Set<string>(),
+  onToggleCell,
+}: {
+  ticket: Ticket;
+  revealedKey?: string;
+  animateReveal?: boolean;
+  drawnKeys?: ReadonlySet<string>;
+  canMark?: boolean;
+  pendingCellIds?: ReadonlySet<string>;
+  uncertainCellIds?: ReadonlySet<string>;
+  winningCellIds?: ReadonlySet<string>;
+  onToggleCell?: (cell: Ticket['cells'][number]) => void;
+}) {
   const matchRef = useRef<HTMLTableCellElement>(null);
   const scrollHintId = useId();
   const cells = new Map(ticket.cells.map((cell) => [`${cell.rowIndex}:${cell.colIndex}`, cell]));
+
   useEffect(() => {
     const preference = window.matchMedia?.('(prefers-reduced-motion: reduce)');
     if (!animateReveal || !revealedKey || !matchRef.current || preference?.matches) return;
@@ -27,29 +48,105 @@ export function TicketGrid({ ticket, revealedKey, animateReveal = false, drawnKe
     }, matchRef);
     return cancelOnReducedMotion(preference, () => context.revert());
   }, [animateReveal, revealedKey]);
-  return <>
-    <p className={styles.gridScrollHint} id={scrollHintId}>If needed, scroll horizontally to see all nine columns.</p>
-    <div className={styles.gridViewport} role="region" aria-label="Ticket grid" aria-describedby={scrollHintId} tabIndex={0}>
-    <table className={styles.grid} aria-label="Your Tombola ticket">
-    <tbody>{Array.from({ length: 3 }, (_, row) => <tr key={row}>
-      {Array.from({ length: 9 }, (_, column) => {
-        const cell = cells.get(`${row}:${column}`);
-        const matched = !!cell && cell.keyValue === revealedKey;
-        const pending = !!cell && pendingCellIds.has(cell.id);
-        const uncertain = !!cell && uncertainCellIds.has(cell.id);
-        const winning = !!cell && winningCellIds.has(cell.id);
-        const markable = !!cell && !cell.marked;
-        return <td key={column} ref={matched ? matchRef : undefined} aria-label={cell ? `Row ${row + 1}, column ${column + 1}: ${cell.keyValue}, ${cell.marked ? 'marked' : 'not marked'}${matched ? ', matches latest revealed key' : ''}${winning ? ', verified winning cell' : ''}` : `Row ${row + 1}, column ${column + 1}: empty`} className={`${cell ? cell.marked ? styles.marked : styles.playable : styles.empty}${matched ? ` ${styles.matched}` : ''}${pending ? ` ${styles.pending}` : ''}${winning ? ` ${styles.winning}` : ''}`} data-cell-id={cell?.id} data-marked={cell?.marked ?? undefined} data-winning={winning || undefined}>
-          {cell ? <><span className={styles.position}>R{row + 1} · C{column + 1}</span><strong>{cell.keyValue}</strong>{winning && <span className={styles.winningState}>Verified win cell</span>}{markable ? <button className={styles.markButton} type="button" aria-label={`Mark ${cell.keyValue}, row ${row + 1}, column ${column + 1}`} aria-busy={pending || undefined} disabled={!canMark || pending || uncertain} onClick={() => onMark?.(cell.id)}>{pending ? 'Saving…' : uncertain ? 'Status unknown' : 'Mark'}</button> : <span className={styles.cellState}>{cell.marked ? 'Marked' : 'Not marked'}</span>}<span className={styles.statusIcon} aria-hidden="true">{cell.marked ? '✓' : '○'}</span></> : <span className={styles.emptyLabel}>Empty</span>}
-        </td>;
-      })}
-    </tr>)}</tbody>
-    </table>
-    </div>
-  </>;
+
+  return (
+    <>
+      <p className={styles.gridScrollHint} id={scrollHintId}>
+        If needed, scroll horizontally to see all nine columns.
+      </p>
+      <div className={styles.gridViewport} role="region" aria-label="Ticket grid" aria-describedby={scrollHintId} tabIndex={0}>
+        <table className={styles.grid} aria-label="Your Tombola ticket">
+          <tbody>
+            {Array.from({ length: 3 }, (_, row) => (
+              <tr key={row}>
+                {Array.from({ length: 9 }, (_, column) => {
+                  const cell = cells.get(`${row}:${column}`);
+                  const matched = !!cell && cell.keyValue === revealedKey;
+                  const pending = !!cell && pendingCellIds.has(cell.id);
+                  const uncertain = !!cell && uncertainCellIds.has(cell.id);
+                  const winning = !!cell && winningCellIds.has(cell.id);
+                  return (
+                    <td
+                      key={column}
+                      ref={matched ? matchRef : undefined}
+                      aria-label={
+                        cell
+                          ? `Row ${row + 1}, column ${column + 1}: ${cell.keyValue}, ${cell.marked ? 'marked' : 'not marked'}${matched ? ', matches latest revealed key' : ''}${winning ? ', verified winning cell' : ''}`
+                          : `Row ${row + 1}, column ${column + 1}: empty`
+                      }
+                      className={`${cell ? (cell.marked ? styles.marked : styles.playable) : styles.empty}${matched ? ` ${styles.matched}` : ''}${pending ? ` ${styles.pending}` : ''}${winning ? ` ${styles.winning}` : ''}`}
+                      data-cell-id={cell?.id}
+                      data-marked={cell?.marked ?? undefined}
+                      data-winning={winning || undefined}
+                      onClick={cell && canMark && !pending && !uncertain ? () => onToggleCell?.(cell) : undefined}
+                      role={cell && canMark ? 'button' : undefined}
+                      tabIndex={cell && canMark ? 0 : undefined}
+                      onKeyDown={
+                        cell && canMark && !pending && !uncertain
+                          ? (e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                onToggleCell?.(cell);
+                              }
+                            }
+                          : undefined
+                      }
+                      style={{ cursor: cell && canMark && !pending && !uncertain ? 'pointer' : 'default' }}
+                    >
+                      {cell ? (
+                        <div className={styles.cellContent}>
+                          <span className={styles.position}>
+                            R{row + 1} · C{column + 1}
+                          </span>
+                          <strong className={styles.cellText}>{cell.keyValue}</strong>
+                          {winning && <span className={styles.winningState}>★ WIN</span>}
+                          <div className={styles.cellState}>
+                            {pending ? 'Saving…' : uncertain ? 'Check status' : cell.marked ? '✓ Selected' : 'Tap to mark'}
+                          </div>
+                        </div>
+                      ) : (
+                        <span className={styles.emptyLabel}>·</span>
+                      )}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className={styles.legend}>
+        <div className={styles.legendItem}>
+          <span className={`${styles.legendBox} ${styles.markedBox}`}>✓</span>
+          <span>Selected (Tap to unselect)</span>
+        </div>
+        <div className={styles.legendItem}>
+          <span className={`${styles.legendBox} ${styles.playableBox}`}></span>
+          <span>Unselected (Tap to mark)</span>
+        </div>
+        <div className={styles.legendItem}>
+          <span className={`${styles.legendBox} ${styles.winningBox}`}>★</span>
+          <span>Verified Win</span>
+        </div>
+      </div>
+      <p className={styles.hintText}>💡 Tap any cell to select or unselect it using your knowledge!</p>
+    </>
+  );
 }
 
-export function ParticipantTicket({ revealedKey, animateReveal = false, drawnKeys = new Set<string>(), canMark = false }: { revealedKey?: string; animateReveal?: boolean; drawnKeys?: ReadonlySet<string>; canMark?: boolean } = {}) {
+export function ParticipantTicket({
+  revealedKey,
+  animateReveal = false,
+  drawnKeys = new Set<string>(),
+  canMark = false,
+  embedded = false,
+}: {
+  revealedKey?: string;
+  animateReveal?: boolean;
+  drawnKeys?: ReadonlySet<string>;
+  canMark?: boolean;
+  embedded?: boolean;
+} = {}) {
   const user = useOutletContext<AuthenticatedUser>();
   const queryClient = useQueryClient();
   const location = useLocation();
@@ -60,9 +157,18 @@ export function ParticipantTicket({ revealedKey, animateReveal = false, drawnKey
   const [uncertainCellIds, setUncertainCellIds] = useState<Set<string>>(() => new Set());
   const [markFeedback, setMarkFeedback] = useState<{ cellId?: string; kind: 'success' | 'error' | 'uncertain'; message: string }>();
   const pendingRef = useRef(new Set<string>());
-  const event = useQuery({ queryKey: ['participant', user.id, 'event'], queryFn: ({ signal }) => getParticipantEvent(signal), refetchOnReconnect: 'always', refetchOnWindowFocus: 'always' });
+
+  const event = useQuery({
+    queryKey: ['participant', user.id, 'event'],
+    queryFn: ({ signal }) => getParticipantEvent(signal),
+    refetchOnReconnect: 'always',
+    refetchOnWindowFocus: 'always',
+  });
+
   const round = useQuery({
-    queryKey: ['participant', user.id, 'round', event.data?.id], queryFn: ({ signal }) => getCurrentRound(signal), enabled: !!event.data,
+    queryKey: ['participant', user.id, 'round', event.data?.id],
+    queryFn: ({ signal }) => getCurrentRound(signal),
+    enabled: !!event.data,
     refetchOnReconnect: 'always',
     refetchOnWindowFocus: 'always',
     refetchInterval: (query) => {
@@ -70,13 +176,16 @@ export function ParticipantTicket({ revealedKey, animateReveal = false, drawnKey
       return query.state.data && refreshableRound.has(query.state.data.status) ? 5000 : false;
     },
   });
+
   const ticket = useQuery({
     queryKey: ['participant', user.id, 'ticket', event.data?.id, round.data?.id],
-    queryFn: ({ signal }) => getParticipantTicket(round.data!.id, event.data!.id, signal), enabled: !!event.data && !!round.data,
+    queryFn: ({ signal }) => getParticipantTicket(round.data!.id, event.data!.id, signal),
+    enabled: !!event.data && !!round.data,
     refetchOnReconnect: 'always',
     refetchOnWindowFocus: 'always',
-    refetchInterval: (query) => query.state.error instanceof ApiError && query.state.error.status === 404 ? 5000 : false,
+    refetchInterval: (query) => (query.state.error instanceof ApiError && query.state.error.status === 404 ? 5000 : false),
   });
+
   useEffect(() => {
     if ([event.error, round.error, ticket.error].some((error) => error instanceof ApiError && error.status === 401)) {
       queryClient.clear();
@@ -95,87 +204,203 @@ export function ParticipantTicket({ revealedKey, animateReveal = false, drawnKey
   const showRound = !!round.data && !noRound && !roundForbidden;
   const showTicket = !!ticket.data && !noTicket && !ticketForbidden;
   const retry = () => void (ticket.error ? ticket.refetch() : round.error ? round.refetch() : event.refetch());
+
   function setCellPending(cellId: string, pending: boolean) {
     if (pending) pendingRef.current.add(cellId);
     else pendingRef.current.delete(cellId);
     setPendingCellIds(new Set(pendingRef.current));
   }
-  async function refreshAfterMarkError(cellId: string, error: unknown) {
-    const result = await ticket.refetch();
-    if (result.error || !result.data) {
-      setUncertainCellIds((current) => new Set(current).add(cellId));
-      setMarkFeedback({ cellId, kind: 'uncertain', message: 'We could not confirm this mark. Check its status before trying again.' });
-    } else if (result.data.cells.find((cell) => cell.id === cellId)?.marked) {
-      setMarkFeedback({ cellId, kind: 'success', message: 'Your mark was saved on the server.' });
-      setUncertainCellIds((current) => { const next = new Set(current); next.delete(cellId); return next; });
-    } else {
-      const message = error instanceof ApiError && error.status === 422 ? 'The server rejected this mark: that technology has not been drawn in this round yet.' : error instanceof ApiError && error.status === 403 ? 'Your account cannot mark this Ticket.' : error instanceof ApiError && error.status === 404 ? 'This Ticket cell is no longer available.' : 'We could not save this mark. Your ticket was refreshed.';
-      setMarkFeedback({ cellId, kind: 'error', message });
-      setUncertainCellIds((current) => { const next = new Set(current); next.delete(cellId); return next; });
-    }
-  }
-  async function mark(cellId: string) {
-    if (!canMark || pendingRef.current.has(cellId) || uncertainCellIds.has(cellId)) return;
+
+  async function handleToggleCell(cell: Ticket['cells'][number]) {
     const currentTicket = ticket.data;
-    const cell = currentTicket?.cells.find((item) => item.id === cellId);
-    if (!currentTicket || !cell || cell.marked) return;
-    setCellPending(cellId, true);
+    if (!currentTicket || pendingRef.current.has(cell.id) || uncertainCellIds.has(cell.id)) return;
+
+    setCellPending(cell.id, true);
     setMarkFeedback(undefined);
-    try {
-      await markTicketCell(currentTicket.id, cellId);
-    } catch (error) {
-      if (error instanceof ApiError && error.status === 401) {
-        queryClient.clear();
-        identityChanged();
-        navigate('/login', { replace: true, state: { returnTo: location.pathname + location.search + location.hash } });
-        setCellPending(cellId, false);
-        return;
+
+    if (cell.marked) {
+      try {
+        await unmarkTicketCell(currentTicket.id, cell.id);
+        queryClient.setQueryData<Ticket>(
+          ['participant', user.id, 'ticket', currentTicket.eventId, currentTicket.roundId],
+          (current) =>
+            current && {
+              ...current,
+              cells: current.cells.map((item) => (item.id === cell.id ? { ...item, marked: false } : item)),
+            }
+        );
+        setMarkFeedback({ cellId: cell.id, kind: 'success', message: `Unselected "${cell.keyValue}".` });
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 401) {
+          queryClient.clear();
+          identityChanged();
+          navigate('/login', { replace: true, state: { returnTo: location.pathname + location.search + location.hash } });
+          setCellPending(cell.id, false);
+          return;
+        }
+        await ticket.refetch();
+        setMarkFeedback({ cellId: cell.id, kind: 'error', message: 'Could not unselect this cell. Ticket refreshed.' });
+      } finally {
+        setCellPending(cell.id, false);
       }
-      try { await refreshAfterMarkError(cellId, error); }
-      finally { setCellPending(cellId, false); }
-      return;
+    } else {
+      try {
+        await markTicketCell(currentTicket.id, cell.id);
+        queryClient.setQueryData<Ticket>(
+          ['participant', user.id, 'ticket', currentTicket.eventId, currentTicket.roundId],
+          (current) =>
+            current && {
+              ...current,
+              cells: current.cells.map((item) => (item.id === cell.id ? { ...item, marked: true } : item)),
+            }
+        );
+        setMarkFeedback({ cellId: cell.id, kind: 'success', message: `Marked "${cell.keyValue}" on your ticket.` });
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 401) {
+          queryClient.clear();
+          identityChanged();
+          navigate('/login', { replace: true, state: { returnTo: location.pathname + location.search + location.hash } });
+          setCellPending(cell.id, false);
+          return;
+        }
+        const result = await ticket.refetch();
+        if (result.error || !result.data) {
+          setUncertainCellIds((curr) => new Set(curr).add(cell.id));
+          setMarkFeedback({ cellId: cell.id, kind: 'uncertain', message: 'Could not confirm mark status. Try again.' });
+        } else if (result.data.cells.find((c) => c.id === cell.id)?.marked) {
+          setMarkFeedback({ cellId: cell.id, kind: 'success', message: 'Mark confirmed by server.' });
+        } else {
+          setMarkFeedback({ cellId: cell.id, kind: 'error', message: 'Could not save mark. Ticket refreshed.' });
+        }
+      } finally {
+        setCellPending(cell.id, false);
+      }
     }
-    queryClient.setQueryData<Ticket>(['participant', user.id, 'ticket', currentTicket.eventId, currentTicket.roundId], (current) => current && ({ ...current, cells: current.cells.map((item) => item.id === cellId ? { ...item, marked: true } : item) }));
-    setMarkFeedback({ cellId, kind: 'success', message: 'Mark confirmed by the server.' });
-    setCellPending(cellId, false);
-  }
-  async function checkMark(cellId: string) {
-    const result = await ticket.refetch();
-    if (result.error || !result.data) {
-      setMarkFeedback({ cellId, kind: 'uncertain', message: 'The mark status is still unavailable. Check again before retrying.' });
-      return;
-    }
-    setUncertainCellIds((current) => { const next = new Set(current); next.delete(cellId); return next; });
-    const confirmed = result.data.cells.find((cell) => cell.id === cellId)?.marked;
-    setMarkFeedback(confirmed ? { cellId, kind: 'success', message: 'Your mark was saved on the server.' } : { cellId, kind: 'error', message: 'The server did not save this mark. You can try again.' });
   }
 
-  return <main className={styles.page}>
-    <header className={styles.intro}>
-      <Link className={styles.back} to="/participant/lobby">← Lobby</Link>
-      <p className={styles.kicker}>YOUR TICKET</p>
-      <h1>Find the key.<br /><em>Mark the cell.</em></h1>
-      <p>When the host reveals a key, find the matching cell on this ticket. The host’s server holds your ticket and marked cells.</p>
-    </header>
-    {event.isPending ? <p className={styles.notice} role="status">Loading your event…</p> : noEvent ? <section className={styles.notice}><h2>No event assigned yet</h2><p>Your event administrator will connect your account to an event.</p></section> : event.error && (!event.data || eventForbidden) ? <TicketError error={event.error} retry={retry} /> : null}
-    {showEvent && <>
-      {round.isPending ? <p className={styles.notice} role="status">Checking for your current round…</p> : noRound ? <section className={styles.notice}><h2>No current round</h2><p>Your host has not made a round available yet. This page will update when one is ready.</p></section> : round.error && (!round.data || roundForbidden) ? <TicketError error={round.error} retry={retry} /> : null}
-      {showRound && <>
-        <div className={styles.roundHeading}><span>{event.data.title}</span><h2>{round.data.name}</h2><span className={styles.roundStatus}>{round.data.status.replaceAll('_', ' ')}</span></div>
-        {ticket.isPending ? <p className={styles.notice} role="status">Loading your ticket…</p> : noTicket ? <section className={styles.notice}><h2>Your ticket is being prepared</h2><p>This round is available, but its ticket has not arrived yet. This page will update when the host finishes preparing tickets.</p></section> : ticket.error && (!ticket.data || ticketForbidden) ? <TicketError error={ticket.error} retry={retry} /> : null}
-        {showTicket && <section className={styles.ticket} aria-label="Ticket details">
-          <div className={styles.ticketHead}><div><span className={styles.label}>6-DIGIT TICKET CODE</span><h3 style={{ letterSpacing: '0.12em' }}>#{formatTicketCode(ticket.data.id)}</h3></div><span className={styles.serverMark}>6-DIGIT ALPHANUMERIC · SAVED BY SERVER</span></div>
-          <TicketGrid ticket={ticket.data} revealedKey={revealedKey} animateReveal={animateReveal} drawnKeys={drawnKeys} canMark={canMark && round.data.status === 'ACTIVE' && !ticket.isFetching && !ticket.error} pendingCellIds={pendingCellIds} uncertainCellIds={uncertainCellIds} winningCellIds={new Set(wins.data?.data.filter((win) => win.roundId === ticket.data.roundId).flatMap((win) => win.eligibleCellIds ?? []))} onMark={(cellId) => void (uncertainCellIds.has(cellId) ? checkMark(cellId) : mark(cellId))} />
-          {wins.error && <p className={styles.stale} role="status">Verified winning-cell details could not be checked. Any winner decisions remain with the host.</p>}
-          {markFeedback && <p className={markFeedback.kind === 'error' ? styles.markError : markFeedback.kind === 'uncertain' ? styles.markUncertain : styles.markSuccess} role={markFeedback.kind === 'error' || markFeedback.kind === 'uncertain' ? 'alert' : 'status'}>{markFeedback.message}{markFeedback.kind === 'uncertain' && markFeedback.cellId && <button type="button" onClick={() => void checkMark(markFeedback.cellId!)}>Check mark status</button>}</p>}
-          {(ticket.error || event.error || round.error) && <p className={styles.stale} role="status">Could not refresh current details. Showing the last ticket received from the server.</p>}
-        </section>}
-      </>}
-    </>}
-  </main>;
+  const content = (
+    <>
+      {event.isPending ? (
+        <p className={styles.notice} role="status">Loading your event…</p>
+      ) : noEvent ? (
+        <section className={styles.notice}>
+          <h2>No event assigned yet</h2>
+          <p>Your event administrator will connect your account to an event.</p>
+        </section>
+      ) : event.error && (!event.data || eventForbidden) ? (
+        <TicketError error={event.error} retry={retry} />
+      ) : null}
+
+      {showEvent && (
+        <>
+          {round.isPending ? (
+            <p className={styles.notice} role="status">Checking for your current round…</p>
+          ) : noRound ? (
+            <section className={styles.notice}>
+              <h2>No current round</h2>
+              <p>Your host has not made a round available yet. This page will update when one is ready.</p>
+            </section>
+          ) : round.error && (!round.data || roundForbidden) ? (
+            <TicketError error={round.error} retry={retry} />
+          ) : null}
+
+          {showRound && (
+            <>
+              {!embedded && (
+                <div className={styles.roundHeading}>
+                  <span>{event.data.title}</span>
+                  <h2>{round.data.name}</h2>
+                  <span className={styles.roundStatus}>{round.data.status.replaceAll('_', ' ')}</span>
+                </div>
+              )}
+              {ticket.isPending ? (
+                <p className={styles.notice} role="status">Loading your ticket…</p>
+              ) : noTicket ? (
+                <section className={styles.notice}>
+                  <h2>Your ticket is being prepared</h2>
+                  <p>This round is available, but its ticket has not arrived yet.</p>
+                </section>
+              ) : ticket.error && (!ticket.data || ticketForbidden) ? (
+                <TicketError error={ticket.error} retry={retry} />
+              ) : null}
+
+              {showTicket && (
+                <section className={styles.ticket} aria-label="Ticket details">
+                  <div className={styles.ticketHead}>
+                    <div>
+                      <span className={styles.label}>6-DIGIT TICKET CODE</span>
+                      <h3 style={{ letterSpacing: '0.12em' }}>#{formatTicketCode(ticket.data.id)}</h3>
+                    </div>
+                    <span className={styles.serverMark}>6-DIGIT ALPHANUMERIC · SAVED BY SERVER</span>
+                  </div>
+                  <TicketGrid
+                    ticket={ticket.data}
+                    revealedKey={revealedKey}
+                    animateReveal={animateReveal}
+                    drawnKeys={drawnKeys}
+                    canMark={canMark && round.data.status === 'ACTIVE' && !ticket.error}
+                    pendingCellIds={pendingCellIds}
+                    uncertainCellIds={uncertainCellIds}
+                    winningCellIds={new Set(wins.data?.data.filter((w) => w.roundId === ticket.data.roundId).flatMap((w) => w.eligibleCellIds ?? []))}
+                    onToggleCell={handleToggleCell}
+                  />
+                  {wins.error && (
+                    <p className={styles.stale} role="status">
+                      Verified winning-cell details could not be checked. Any winner decisions remain with the host.
+                    </p>
+                  )}
+                  {markFeedback && (
+                    <p
+                      className={
+                        markFeedback.kind === 'error'
+                          ? styles.markError
+                          : markFeedback.kind === 'uncertain'
+                          ? styles.markUncertain
+                          : styles.markSuccess
+                      }
+                      role={markFeedback.kind === 'error' || markFeedback.kind === 'uncertain' ? 'alert' : 'status'}
+                    >
+                      {markFeedback.message}
+                    </p>
+                  )}
+                  {(ticket.error || event.error || round.error) && (
+                    <p className={styles.stale} role="status">
+                      Could not refresh current details. Showing the last ticket received from the server.
+                    </p>
+                  )}
+                </section>
+              )}
+            </>
+          )}
+        </>
+      )}
+    </>
+  );
+
+  if (embedded) {
+    return content;
+  }
+
+  return (
+    <main className={styles.page}>
+      <header className={styles.intro}>
+        <Link className={styles.back} to="/participant/lobby">← Lobby</Link>
+        <p className={styles.kicker}>YOUR TICKET</p>
+        <h1>Find the key.<br /><em>Mark the cell.</em></h1>
+        <p>When the host reveals a key, find the matching cell on this ticket. The host’s server holds your ticket and marked cells.</p>
+      </header>
+      {content}
+    </main>
+  );
 }
 
 function TicketError({ error, retry }: { error: unknown; retry: () => void }) {
   const message = error instanceof ApiError && error.status === 403 ? 'You do not have permission to view this ticket.' : 'We could not load your ticket data. Check your connection and try again.';
-  return <section className={styles.notice}><h2>Ticket unavailable</h2><p role="alert">{message}</p>{!(error instanceof ApiError && error.status === 403) && <button onClick={retry}>Retry</button>}</section>;
+  return (
+    <section className={styles.notice}>
+      <h2>Ticket unavailable</h2>
+      <p role="alert">{message}</p>
+      {!(error instanceof ApiError && error.status === 403) && <button onClick={retry}>Retry</button>}
+    </section>
+  );
 }

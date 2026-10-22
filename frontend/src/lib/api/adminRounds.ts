@@ -60,3 +60,20 @@ export async function getAdminRoundTicketCount(id: string, signal?: AbortSignal)
   const response = await apiRequest<unknown>(`/admin/rounds/${encodeURIComponent(id)}/tickets?page=1&limit=1`, { signal });
   return z.object({ total: z.number().int().nonnegative() }).parse(response).total;
 }
+
+export interface AdminRoundTicketItem {
+  id: string;
+  roundId: string;
+  participantId: string;
+  status?: string;
+  createdAt?: string;
+}
+
+export async function listAdminRoundTickets(id: string, page = 1, limit = 100, signal?: AbortSignal) {
+  const response = await apiRequest<{ data: AdminRoundTicketItem[]; total: number }>(
+    `/admin/rounds/${encodeURIComponent(id)}/tickets?page=${page}&limit=${limit}`,
+    { signal }
+  );
+  return response;
+}
+

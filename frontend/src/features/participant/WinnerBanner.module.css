@@ -1,9 +1,55 @@
-.banner { margin:22px 0 0; padding:16px 18px; border:2px solid var(--ink); background:#e7f0e8; color:var(--ink); box-shadow:4px 4px 0 var(--ink); }
-.banner h2 { margin:0; font-size:clamp(18px,3vw,24px); }
-.banner p { margin:7px 0 0; line-height:1.45; }
-.banner strong { color:#315c53; }
-.others { margin-top:12px; padding-top:10px; border-top:1px solid #b8c8b8; }
-.others ul { display:flex; flex-wrap:wrap; gap:8px 18px; margin:8px 0 0; padding:0; list-style:none; }
-.others li { font-size:12px; }
-.banner a { display:inline-block; margin-top:10px; color:#315c53; font:700 10px var(--mono); }
-@media(prefers-reduced-motion:reduce) { .banner { animation:none !important; transition:none !important; } }
+.banner {
+  margin: 22px 0 0;
+  padding: 16px 18px;
+  border: 2px solid var(--ink);
+  background: #e7f0e8;
+  color: var(--ink);
+  box-shadow: 4px 4px 0 var(--ink);
+}
+
+.banner h2 {
+  margin: 0;
+  font-size: clamp(18px, 3vw, 24px);
+}
+
+.banner p {
+  margin: 7px 0 0;
+  line-height: 1.45;
+}
+
+.banner strong {
+  color: #315c53;
+}
+
+.others {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #b8c8b8;
+}
+
+.others ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.others li {
+  font-size: 12px;
+}
+
+.banner a {
+  display: inline-block;
+  margin-top: 10px;
+  color: #315c53;
+  font: 700 10px var(--mono);
+}
+
+@media(prefers-reduced-motion:reduce) {
+  .banner {
+    animation: none !important;
+    transition: none !important;
+  }
+}

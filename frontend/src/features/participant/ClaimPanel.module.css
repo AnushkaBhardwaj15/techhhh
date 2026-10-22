@@ -1,29 +1,355 @@
-.panel { margin:22px 0 0; padding:clamp(14px,2.5vw,22px); border:2px solid var(--ink); background:#f4ecd6; color:var(--ink); box-shadow:4px 4px 0 var(--ink); }
-.header { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
-.header h2 { margin:5px 0 0; font-size:clamp(20px,3vw,27px); line-height:1.1; }
-.header > a { color:#315c53; font:700 10px/1.4 var(--mono); }
-.kicker { margin:0; color:#a2483e; font:700 9px/1.3 var(--mono); letter-spacing:.12em; }
-.guidance,.note { margin:10px 0 14px; color:#59635c; font-size:13px; line-height:1.5; }
-.patterns,.statusList ul { display:grid; gap:6px; margin:0; padding:0; list-style:none; }
-.patterns li { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:9px 0; border-top:1px solid #d0c7b3; }
-.patterns li > div { display:grid; gap:4px; }
-.patterns li > div span { color:#626b63; font:700 9px var(--mono); text-transform:uppercase; }
-.patterns button,.confirmation button,.checkButton,.error button { min-height:42px; padding:8px 10px; border:1px solid var(--ink); background:transparent; color:var(--ink); font:700 10px/1.3 var(--mono); cursor:pointer; }
-.patterns button[aria-pressed="true"],.confirmation button:first-child { background:#315c53; color:#fffaf0; }
-.patterns button:disabled,.confirmation button:disabled { opacity:.48; cursor:not-allowed; }
-.patterns button:focus-visible,.confirmation button:focus-visible,.checkButton:focus-visible,.error button:focus-visible { outline:3px solid #d76358; outline-offset:3px; }
-.confirmation { margin-top:14px; padding:12px; border:1px solid #315c53; background:#e7f0e8; }
-.confirmation h3,.statusList h3 { margin:0; font-size:15px; }
-.confirmation p { margin:8px 0 12px; line-height:1.45; }
-.confirmation > div { display:flex; flex-wrap:wrap; gap:8px; }
-.success,.errorText,.uncertain,.stale { margin:12px 0 0; padding:10px; line-height:1.45; }
-.success { background:#e7f0e8; color:#234b3e; }
-.errorText,.uncertain { background:#fff0e7; color:#893f34; }
-.stale { color:#626b63; font:700 9px var(--mono); }
-.error { display:flex; flex-wrap:wrap; align-items:center; gap:8px; color:#893f34; }
-.error p { margin:0; }
-.statusList { margin-top:16px; padding-top:12px; border-top:1px solid #bdb4a1; }
-.statusList ul { margin-top:8px; }
-.statusList li { display:flex; flex-wrap:wrap; justify-content:space-between; gap:8px; font-size:12px; }
-.checkButton { margin-top:12px; }
-@media(prefers-reduced-motion:reduce) { .panel *, .panel *::before, .panel *::after { scroll-behavior:auto !important; animation-duration:.01ms !important; transition-duration:.01ms !important; } }
+.panel {
+  margin: 24px 0 0;
+  padding: clamp(16px, 2.5vw, 24px);
+  border: 2px solid var(--ink);
+  background: #fdf8ee;
+  color: var(--ink);
+  box-shadow: 4px 4px 0 var(--ink);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.header h2 {
+  margin: 4px 0 0;
+  font-size: clamp(20px, 3vw, 26px);
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.kicker {
+  margin: 0;
+  color: #a2483e;
+  font: 700 10px/1.2 var(--mono);
+  letter-spacing: .12em;
+}
+
+.autoCheckBadge {
+  padding: 4px 8px;
+  background: #edf4e9;
+  border: 1px solid #315c53;
+  color: #315c53;
+  font: 700 10px var(--mono);
+  text-transform: uppercase;
+}
+
+.guidance {
+  margin: 8px 0 16px;
+  color: #59635c;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.claimCard {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 14px;
+  background: #fff;
+  border: 2px solid var(--ink);
+  box-shadow: 2px 2px 0 var(--ink);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.cardWinner {
+  background: #fff8e6;
+  border-color: #b58105;
+}
+
+.cardPending {
+  background: #fdfbee;
+  border-color: #d97706;
+}
+
+.cardTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.cardSubtitle {
+  margin: 2px 0 0;
+  font: 700 10px var(--mono);
+  color: #a2483e;
+  text-transform: uppercase;
+}
+
+.cardPoints {
+  font: 800 11px var(--mono);
+  padding: 2px 6px;
+  background: #f4ecd6;
+  border: 1px solid #c8beaa;
+  color: #315c53;
+}
+
+.cardDesc {
+  margin: 0 0 14px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #555;
+  flex-grow: 1;
+}
+
+.cardFooter {
+  margin-top: auto;
+}
+
+.claimBtn {
+  width: 100%;
+  padding: 10px 8px;
+  background: #315c53;
+  color: #fffaf0;
+  border: 2px solid var(--ink);
+  font: 700 11px var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: background-color 0.12s ease;
+}
+
+.claimBtn:hover:not(:disabled) {
+  background: #23433c;
+}
+
+.claimBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.statusVerified {
+  display: block;
+  text-align: center;
+  padding: 8px 6px;
+  background: #edf4e9;
+  border: 1px solid #315c53;
+  color: #315c53;
+  font: 800 11px var(--mono);
+}
+
+.statusPending {
+  display: block;
+  text-align: center;
+  padding: 8px 6px;
+  background: #fef3c7;
+  border: 1px solid #d97706;
+  color: #92400e;
+  font: 800 11px var(--mono);
+}
+
+.statusClosed {
+  display: block;
+  text-align: center;
+  padding: 8px 6px;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  color: #6b7280;
+  font: 700 11px var(--mono);
+}
+
+.rejectedBox {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.statusRejected {
+  display: block;
+  text-align: center;
+  padding: 4px;
+  background: #fee2e2;
+  border: 1px solid #ef4444;
+  color: #b91c1c;
+  font: 800 10px var(--mono);
+}
+
+.retryBtn {
+  width: 100%;
+  padding: 6px;
+  background: transparent;
+  border: 1px solid var(--ink);
+  font: 700 10px var(--mono);
+  cursor: pointer;
+}
+
+.checkButton {
+  display: block;
+  margin: 10px 0;
+  padding: 8px 14px;
+  border: 1px solid var(--ink);
+  background: #fff;
+  font: 700 11px var(--mono);
+  cursor: pointer;
+}
+
+.success,
+.uncertain,
+.errorText {
+  margin: 12px 0 6px;
+  padding: 10px 12px;
+  font: 700 11px/1.4 var(--mono);
+  border: 1px solid currentColor;
+}
+
+.success {
+  background: #edf4e9;
+  color: #315c53;
+}
+
+.uncertain {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.errorText {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.recentClaims {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px dashed #c8beaa;
+}
+
+.recentClaims h4 {
+  margin: 0 0 8px;
+  font: 700 11px var(--mono);
+  text-transform: uppercase;
+  color: #59635c;
+}
+
+.recentClaims ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.recentClaims li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: #fff;
+  border: 1px solid var(--ink);
+  font-size: 11px;
+}
+
+.recentClaims li [data-status="VERIFIED"] {
+  color: #315c53;
+  font-weight: 700;
+}
+
+.recentClaims li [data-status="PENDING_VERIFICATION"] {
+  color: #d97706;
+  font-weight: 700;
+}
+
+.recentClaims li [data-status="REJECTED"] {
+  color: #b91c1c;
+}
+
+.error {
+  padding: 8px 12px;
+  background: #fee2e2;
+  color: #b91c1c;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.error button {
+  padding: 4px 8px;
+  border: 1px solid currentColor;
+  background: transparent;
+  cursor: pointer;
+  font: 700 10px var(--mono);
+}
+
+.validationWarning {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 12px 0 16px;
+  padding: 14px 16px;
+  background: #fff3cd;
+  border: 2px solid #856404;
+  box-shadow: 3px 3px 0 var(--ink);
+  color: #856404;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+.validationWarningContent {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.warningIcon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.warningMessage {
+  margin: 0;
+  font-weight: 700;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.closeWarningBtn {
+  background: transparent;
+  border: none;
+  font-size: 16px;
+  font-weight: 800;
+  color: #856404;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+}
+
+.cardRequirement {
+  margin: 6px 0 10px;
+}
+
+.requirementBadge {
+  display: inline-block;
+  padding: 3px 6px;
+  font: 700 10px var(--mono);
+  border: 1px solid currentColor;
+}
+
+.reqValid {
+  background: #d4edda;
+  color: #155724;
+  border-color: #c3e6cb;
+}
+
+.reqPending {
+  background: #f8f9fa;
+  color: #6c757d;
+  border-color: #d6d8db;
+}

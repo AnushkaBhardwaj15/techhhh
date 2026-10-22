@@ -327,6 +327,12 @@ export class DrawService {
     const page = Math.max(1, options.page ?? 1);
     const limit = Math.min(100, Math.max(1, options.limit ?? 50));
     if (!sessionId) throw new UnauthorizedError('Authentication required');
+    if (!eventId && roundId) {
+      const round = await this.roundRepo.findById(roundId);
+      if (round) {
+        eventId = round.eventId;
+      }
+    }
     if (!eventId) throw new NotFoundError('No event associated with this participant');
 
     const read = await this.drawRepo.listForParticipantSession(sessionId, userId, roundId, eventId, { page, limit });

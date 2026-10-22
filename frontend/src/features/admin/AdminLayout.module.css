@@ -1,16 +1,84 @@
-.layout { display:grid; grid-template-columns:240px minmax(0,1fr); min-height:calc(100dvh - 65px); }
-.nav { padding:28px 18px; border-right:2px solid var(--ink); background:#e9dfc5; }
-.brand { margin:0 0 24px; font:700 12px/1.4 var(--mono); letter-spacing:.12em; }
-.navList { display:grid; gap:4px; margin:0; padding:0; list-style:none; }
-.navLink { display:block; padding:11px 12px; border:2px solid transparent; color:var(--ink); font-weight:650; text-decoration:none; }
-.navLink:hover,.navLink:focus-visible { border-color:var(--ink); outline:2px solid var(--coral); outline-offset:2px; }
-.active { border-color:var(--ink); background:var(--cream); box-shadow:3px 3px 0 var(--ink); }
-.content { min-width:0; padding:clamp(24px,4vw,56px); }
+.layout {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  min-height: calc(100dvh - 65px);
+}
+
+.nav {
+  padding: 28px 18px;
+  border-right: 2px solid var(--ink);
+  background: #e9dfc5;
+}
+
+.brand {
+  margin: 0 0 24px;
+  font: 700 12px/1.4 var(--mono);
+  letter-spacing: .12em;
+}
+
+.navList {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.navLink {
+  display: block;
+  padding: 11px 12px;
+  border: 2px solid transparent;
+  color: var(--ink);
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.navLink:hover,
+.navLink:focus-visible {
+  border-color: var(--ink);
+  outline: 2px solid var(--coral);
+  outline-offset: 2px;
+}
+
+.active {
+  border-color: var(--ink);
+  background: var(--cream);
+  box-shadow: 3px 3px 0 var(--ink);
+}
+
+.content {
+  min-width: 0;
+  padding: clamp(24px, 4vw, 56px);
+}
+
 @media (max-width:760px) {
-  .layout { display:block; }
-  .nav { padding:12px 16px; border-right:0; border-bottom:2px solid var(--ink); }
-  .brand { margin-bottom:10px; }
-  .navList { display:flex; gap:8px; overflow-x:auto; padding:4px 2px 8px; }
-  .navLink { min-width:max-content; padding:9px 11px; }
-  .content { padding:28px 20px; }
+  .layout {
+    display: block;
+  }
+
+  .nav {
+    padding: 12px 16px;
+    border-right: 0;
+    border-bottom: 2px solid var(--ink);
+  }
+
+  .brand {
+    margin-bottom: 10px;
+  }
+
+  .navList {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 4px 2px 8px;
+  }
+
+  .navLink {
+    min-width: max-content;
+    padding: 9px 11px;
+  }
+
+  .content {
+    padding: 28px 20px;
+  }
 }
