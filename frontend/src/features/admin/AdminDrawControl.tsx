@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useOutletContext, useSearchParams } from 'react-router-dom';
 import { ApiError } from '../../lib/api/client';
-import { createRandomAdminDraw, getLatestAdminDrawPage, listAdminRoundDraws } from '../../lib/api/adminDraws';
-import { getOrCreateIdempotencyKey, clearIdempotencyKey, isDefinitiveClientRejection } from '../../lib/api/idempotency';
+import { getLatestAdminDrawPage, listAdminRoundDraws } from '../../lib/api/adminDraws';
+import { getOrCreateIdempotencyKey, clearIdempotencyKey } from '../../lib/api/idempotency';
 import { getAdminRound, listAdminRounds } from '../../lib/api/adminRounds';
 import { listAdminEvents } from '../../lib/api/adminEvents';
 import { listAdminClaims, verifyAdminClaim, rejectAdminClaim } from '../../lib/api/adminClaims';
@@ -16,13 +16,7 @@ import styles from './AdminDrawControl.module.css';
 const PAGE_SIZE = 20;
 const drawKey = (userId: string, eventId: string, roundId: string) => ['admin-draws', userId, eventId, roundId] as const;
 const roundKey = (userId: string, eventId: string, roundId: string) => ['admin-rounds', userId, eventId, 'detail', roundId] as const;
-const randomScope = (userId: string, roundId: string) => `${userId}:${roundId}:draw:random`;
 const claimScope = (userId: string, claimId: string, action: 'verify' | 'reject') => `${userId}:claim:${claimId}:${action}`;
-
-function operationError(error: unknown) {
-  if (error instanceof ApiError && error.status >= 400 && error.status < 500 && error.status !== 408) return error.message;
-  return 'The draw result is uncertain. Check the latest history before retrying.';
-}
 
 function DrawCard({ draw, current = false }: { draw: AdminDraw; current?: boolean }) {
   return (
@@ -49,10 +43,7 @@ export function AdminDrawControl() {
   const eventId = params.get('eventId') ?? '';
   const roundId = params.get('roundId') ?? '';
   const requestedPage = Math.max(1, Number(params.get('drawPage')) || 1);
-  const latestParams = useRef(params);
-  latestParams.current = params;
   const queryClient = useQueryClient();
-  const [message, setMessage] = useState('');
   const [claimFeedback, setClaimFeedback] = useState('');
 
   // Auto-resolve event and round if missing in URL
@@ -92,10 +83,6 @@ export function AdminDrawControl() {
       setParams(next, { replace: true });
     }
   }, [eventId, roundId, activeRound, params, setParams]);
-
-  useEffect(() => {
-    setMessage('');
-  }, [eventId, roundId]);
 
   const round = useQuery({
     queryKey: roundKey(user.id, eventId, roundId),
@@ -155,35 +142,6 @@ export function AdminDrawControl() {
     onRoundChanged: handleRoundChanged,
   });
 
-  const draw = useMutation({
-    mutationFn: ({
-      roundId: targetRoundId,
-      userId: targetUserId,
-    }: {
-      eventId: string;
-      roundId: string;
-      userId: string;
-      mode: 'RANDOM';
-    }) => {
-      return createRandomAdminDraw(targetRoundId, getOrCreateIdempotencyKey(randomScope(targetUserId, targetRoundId)));
-    },
-    onSuccess: async (saved, variables) => {
-      clearIdempotencyKey(randomScope(variables.userId, variables.roundId));
-      if (latestParams.current.get('eventId') === variables.eventId && latestParams.current.get('roundId') === variables.roundId) {
-        setMessage(`Call #${saved.sequenceNumber} confirmed: "${saved.questionText}"`);
-      }
-      await queryClient.invalidateQueries({ queryKey: drawKey(variables.userId, variables.eventId, variables.roundId) });
-    },
-    onError: async (error, variables) => {
-      const scope = randomScope(variables.userId, variables.roundId);
-      if (isDefinitiveClientRejection(error)) clearIdempotencyKey(scope);
-      if (latestParams.current.get('eventId') === variables.eventId && latestParams.current.get('roundId') === variables.roundId) {
-        setMessage(operationError(error));
-      }
-      await queryClient.invalidateQueries({ queryKey: drawKey(variables.userId, variables.eventId, variables.roundId) });
-    },
-  });
-
   const claimMutation = useMutation({
     mutationFn: async ({ claimId, action }: { claimId: string; action: 'verify' | 'reject' }) => {
       const key = getOrCreateIdempotencyKey(claimScope(user.id, claimId, action));
@@ -205,33 +163,7 @@ export function AdminDrawControl() {
     },
   });
 
-  function requestRandom() {
-    if (draw.isPending) return;
-    setMessage('');
-    draw.mutate({ eventId, roundId, userId: user.id, mode: 'RANDOM' });
-  }
-
-  const live = validRound?.status === 'ACTIVE';
   const currentDraw = latest.data?.data.at(-1);
-
-  // Spacebar shortcut to draw next question
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if (
-        e.code === 'Space' &&
-        (e.target as HTMLElement)?.tagName !== 'INPUT' &&
-        (e.target as HTMLElement)?.tagName !== 'SELECT' &&
-        (e.target as HTMLElement)?.tagName !== 'TEXTAREA'
-      ) {
-        if (live && !draw.isPending) {
-          e.preventDefault();
-          requestRandom();
-        }
-      }
-    }
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [live, draw.isPending, eventId, roundId, user.id]);
 
   return (
     <main className={styles.page}>
@@ -287,42 +219,6 @@ export function AdminDrawControl() {
                 <p style={{ margin: 0, fontWeight: 700 }}>No questions have been called in this round yet.</p>
               </div>
             )}
-          </section>
-
-          {/* Controls: Big Call Next Question Button */}
-          <section className={styles.controls} aria-labelledby="draw-actions-title">
-            <div>
-              <p className={styles.eyebrow}>ACTIONS</p>
-              <h2 id="draw-actions-title">Call Next Question</h2>
-              <p>Hit the button below or press <strong>[SPACE]</strong> on your keyboard to draw the next random question.</p>
-            </div>
-            <div className={styles.actionGroup}>
-              {live ? (
-                <>
-                  <button
-                    type="button"
-                    style={{
-                      minHeight: '56px',
-                      fontSize: '16px',
-                      background: '#315c53',
-                      color: '#fff',
-                      boxShadow: '4px 4px 0 var(--ink)',
-                    }}
-                    disabled={draw.isPending}
-                    onClick={requestRandom}
-                  >
-                    {draw.isPending && draw.variables?.mode === 'RANDOM'
-                      ? 'Calling question…'
-                      : 'CALL NEXT QUESTION (RANDOM) [SPACE]'}
-                  </button>
-                </>
-              ) : (
-                <p className={styles.notice} role="status">
-                  Draw commands are available only when the round is ACTIVE. (Current: {validRound.status.replaceAll('_', ' ')}).
-                </p>
-              )}
-              {message && <p className={styles.message} role="status">{message}</p>}
-            </div>
           </section>
 
           {/* Incoming Participant Claims Box */}
