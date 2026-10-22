@@ -231,13 +231,12 @@
 }
 
 .winning {
-  color: var(--ink);
-  background: #e9b0a4;
-  border: 3px double var(--ink) !important;
+  color: #fffaf0;
+  background: #315c53;
 }
 
 .winning .position {
-  color: #1d2421;
+  color: #d3e3da;
 }
 
 .cellContent {
@@ -297,8 +296,8 @@
 }
 
 .winningBox {
-  background: #e9b0a4;
-  color: var(--ink);
+  background: #315c53;
+  color: #fff;
 }
 
 .hintText {
@@ -308,15 +307,10 @@
 }
 
 .winningState {
-  display: block;
-  margin-top: 2px;
-  font: 800 clamp(7px, 1vw, 9px)/1.1 var(--mono);
-  text-transform: uppercase;
+  display: none;
 }
 
 .matched {
-  outline: 3px solid #a2483e;
-  outline-offset: 2px;
   position: relative;
   z-index: 1;
 }

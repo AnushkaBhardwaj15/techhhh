@@ -23,7 +23,7 @@ export function TicketGrid({
   canMark = false,
   pendingCellIds = new Set<string>(),
   uncertainCellIds = new Set<string>(),
-  winningCellIds = new Set<string>(),
+  winningCellIds: _winningCellIds = new Set<string>(),
   onToggleCell,
 }: {
   ticket: Ticket;
@@ -61,23 +61,19 @@ export function TicketGrid({
               <tr key={row}>
                 {Array.from({ length: 9 }, (_, column) => {
                   const cell = cells.get(`${row}:${column}`);
-                  const matched = !!cell && cell.keyValue === revealedKey;
                   const pending = !!cell && pendingCellIds.has(cell.id);
                   const uncertain = !!cell && uncertainCellIds.has(cell.id);
-                  const winning = !!cell && winningCellIds.has(cell.id);
                   return (
                     <td
                       key={column}
-                      ref={matched ? matchRef : undefined}
                       aria-label={
                         cell
-                          ? `Row ${row + 1}, column ${column + 1}: ${cell.keyValue}, ${cell.marked ? 'marked' : 'not marked'}${matched ? ', matches latest revealed key' : ''}${winning ? ', verified winning cell' : ''}`
+                          ? `Row ${row + 1}, column ${column + 1}: ${cell.keyValue}, ${cell.marked ? 'marked' : 'not marked'}`
                           : `Row ${row + 1}, column ${column + 1}: empty`
                       }
-                      className={`${cell ? (cell.marked ? styles.marked : styles.playable) : styles.empty}${matched ? ` ${styles.matched}` : ''}${pending ? ` ${styles.pending}` : ''}${winning ? ` ${styles.winning}` : ''}`}
+                      className={`${cell ? (cell.marked ? styles.marked : styles.playable) : styles.empty}${pending ? ` ${styles.pending}` : ''}`}
                       data-cell-id={cell?.id}
                       data-marked={cell?.marked ?? undefined}
-                      data-winning={winning || undefined}
                       onClick={cell && canMark && !pending && !uncertain ? () => onToggleCell?.(cell) : undefined}
                       role={cell && canMark ? 'button' : undefined}
                       tabIndex={cell && canMark ? 0 : undefined}
@@ -99,7 +95,6 @@ export function TicketGrid({
                             R{row + 1} · C{column + 1}
                           </span>
                           <strong className={styles.cellText}>{cell.keyValue}</strong>
-                          {winning && <span className={styles.winningState}>★ WIN</span>}
                           <div className={styles.cellState}>
                             {pending ? 'Saving…' : uncertain ? 'Check status' : cell.marked ? '✓ Selected' : 'Tap to mark'}
                           </div>
@@ -117,19 +112,15 @@ export function TicketGrid({
       </div>
       <div className={styles.legend}>
         <div className={styles.legendItem}>
+          <span className={`${styles.legendBox} ${styles.playableBox}`} />
+          <span>White: Unmarked (Tap to mark)</span>
+        </div>
+        <div className={styles.legendItem}>
           <span className={`${styles.legendBox} ${styles.markedBox}`}>✓</span>
-          <span>Selected (Tap to unselect)</span>
-        </div>
-        <div className={styles.legendItem}>
-          <span className={`${styles.legendBox} ${styles.playableBox}`}></span>
-          <span>Unselected (Tap to mark)</span>
-        </div>
-        <div className={styles.legendItem}>
-          <span className={`${styles.legendBox} ${styles.winningBox}`}>★</span>
-          <span>Verified Win</span>
+          <span>Green: Selected / Marked</span>
         </div>
       </div>
-      <p className={styles.hintText}>💡 Tap any cell to select or unselect it using your knowledge!</p>
+      <p className={styles.hintText}>💡 Tap any cell to select or unselect it on your ticket!</p>
     </>
   );
 }
