@@ -50,16 +50,6 @@ export function LoginPage() {
     signinMutation.mutate();
   }
 
-  function handleQuickFill(role: 'player' | 'admin') {
-    setValidationError('');
-    if (role === 'player') {
-      setEmail('player@techtombola.internal');
-      setPassword('PlayerPass123!');
-    } else {
-      setEmail('admin@techtombola.internal');
-      setPassword('AdminPass123!');
-    }
-  }
 
   const failure =
     signinMutation.error instanceof ApiError
@@ -136,27 +126,6 @@ export function LoginPage() {
             </button>
           </div>
         </form>
-      </div>
-
-      {/* Helpful 1-click test helpers below */}
-      <div className={styles.demoBox}>
-        <p className={styles.demoTitle}>Local Testing Predefined Logins</p>
-        <div className={styles.demoBtns}>
-          <button
-            type="button"
-            className={styles.demoBtn}
-            onClick={() => handleQuickFill('player')}
-          >
-            👤 Fill Player
-          </button>
-          <button
-            type="button"
-            className={styles.demoBtn}
-            onClick={() => handleQuickFill('admin')}
-          >
-            👑 Fill Admin
-          </button>
-        </div>
       </div>
     </main>
   );

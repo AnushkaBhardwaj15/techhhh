@@ -1,6 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { healthRoutes } from './health.routes.ts';
 import { API_PREFIX } from '../config/constants.ts';
+import { requireAdmin } from '../middleware/auth.ts';
 import { createAuthRoutes } from '../modules/auth/auth.routes.ts';
 import { adminRoutes } from '../modules/admins/admin.routes.ts';
 import { eventRoutes } from '../modules/events/event.routes.ts';
@@ -66,7 +67,7 @@ export function createAppRoutes({
         games: getAllSharedGames(),
       };
     });
-    fastify.post('/api/active-game', async (request) => {
+    fastify.post('/api/active-game', { preHandler: [requireAdmin] }, async (request) => {
       const body = request.body as Record<string, unknown> | null;
       if (body?.code) {
         const game = setSharedActiveGame({
@@ -97,7 +98,7 @@ export function createAppRoutes({
           };
         });
 
-        v1.post('/active-game', async (request) => {
+        v1.post('/active-game', { preHandler: [requireAdmin] }, async (request) => {
           const body = request.body as Record<string, unknown> | null;
           if (body?.code) {
             const game = setSharedActiveGame({
@@ -116,7 +117,7 @@ export function createAppRoutes({
           return { game: getSharedActiveGame(), games: getAllSharedGames() };
         });
 
-        v1.post('/active-game/draw', async (request) => {
+        v1.post('/active-game/draw', { preHandler: [requireAdmin] }, async (request) => {
           const body = request.body as Record<string, unknown> | null;
           if (body && typeof body.questionId === 'number') {
             const draw = recordQuestionDraw({
@@ -145,7 +146,7 @@ export function createAppRoutes({
           return { game: getSharedActiveGame() };
         });
 
-        v1.post('/active-game/reset', async () => {
+        v1.post('/active-game/reset', { preHandler: [requireAdmin] }, async () => {
           resetActiveGameData();
           return { ok: true, game: getSharedActiveGame() };
         });

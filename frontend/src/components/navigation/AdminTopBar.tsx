@@ -8,9 +8,7 @@ interface AdminTopBarProps {
   isLoggingOut?: boolean;
 }
 
-export function AdminTopBar({ user, onLogout, isLoggingOut = false }: AdminTopBarProps) {
-  const isSuper = user.role === 'SUPER_ADMIN';
-
+export function AdminTopBar({ user: _user, onLogout, isLoggingOut = false }: AdminTopBarProps) {
   return (
     <header className={styles.header} role="banner">
       <div className={styles.container}>
@@ -20,10 +18,10 @@ export function AdminTopBar({ user, onLogout, isLoggingOut = false }: AdminTopBa
             <strong>TOMBOLA</strong>
           </Link>
           <span
-            className={isSuper ? styles.superAdminBadge : styles.adminBadge}
-            aria-label={`Role: ${isSuper ? 'Super Admin' : 'Admin'}`}
+            className={styles.roleBanner}
+            aria-label="Role: Admin"
           >
-            {isSuper ? 'SUPER ADMIN' : 'ADMIN OPS'}
+            ADMIN
           </span>
         </div>
 
@@ -38,11 +36,6 @@ export function AdminTopBar({ user, onLogout, isLoggingOut = false }: AdminTopBa
             <span>Live Projector</span>
             <span className={styles.arrow} aria-hidden="true">↗</span>
           </Link>
-
-
-          <span className={styles.userName} title={user.email}>
-            {user.name}
-          </span>
 
           <button
             type="button"

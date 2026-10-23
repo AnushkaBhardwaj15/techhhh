@@ -13,18 +13,10 @@ const adminUser: AuthenticatedUser = {
   status: 'ACTIVE',
 };
 
-const superAdminUser: AuthenticatedUser = {
-  id: 'sa1',
-  email: 'super@example.test',
-  name: 'Ada Lovelace',
-  role: 'SUPER_ADMIN',
-  status: 'ACTIVE',
-};
-
 describe('AdminTopBar', () => {
   afterEach(cleanup);
 
-  it('renders admin branding, live links, and user info for ADMIN', () => {
+  it('renders admin branding, live links, and ADMIN role badge', () => {
     render(
       <MemoryRouter>
         <AdminTopBar user={adminUser} onLogout={vi.fn()} />
@@ -35,20 +27,9 @@ describe('AdminTopBar', () => {
       'href',
       '/admin'
     );
-    expect(screen.getByText('ADMIN OPS')).toBeInTheDocument();
-    expect(screen.getByText('Taylor Swift')).toBeInTheDocument();
+    expect(screen.getByText('ADMIN')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Live Projector/i })).toHaveAttribute('href', '/live');
     expect(screen.getByRole('button', { name: 'Sign out' })).toBeInTheDocument();
-  });
-
-  it('renders SUPER ADMIN badge when role is SUPER_ADMIN', () => {
-    render(
-      <MemoryRouter>
-        <AdminTopBar user={superAdminUser} onLogout={vi.fn()} />
-      </MemoryRouter>
-    );
-
-    expect(screen.getByText('SUPER ADMIN')).toBeInTheDocument();
   });
 
   it('triggers onLogout callback when sign out button is pressed', async () => {

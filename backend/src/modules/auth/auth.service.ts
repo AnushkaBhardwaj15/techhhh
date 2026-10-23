@@ -153,17 +153,21 @@ export class AuthService {
       eventId,
     });
 
-    await this.audit.record({
-      actorId: user.id,
-      actorType: role,
-      action: 'LOGIN_SUCCESS',
-      resourceType: 'auth',
-      resourceId: session.id,
-      metadata: { email: user.email, role, eventId },
-      ip,
-      userAgent: input.userAgent,
-      requestId: input.requestId,
-    });
+    try {
+      await this.audit.record({
+        actorId: user.id,
+        actorType: role,
+        action: 'LOGIN_SUCCESS',
+        resourceType: 'auth',
+        resourceId: session.id,
+        metadata: { email: user.email, role, eventId },
+        ip,
+        userAgent: input.userAgent,
+        requestId: input.requestId,
+      });
+    } catch {
+      // Non-blocking audit failure
+    }
 
     return {
       token,

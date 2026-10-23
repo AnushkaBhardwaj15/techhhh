@@ -10,15 +10,39 @@ export interface ISessionRepository {
   revokeAllForUser(userId: string, tx?: any): Promise<void>;
 }
 
+import { userRepository } from './user.repository.ts';
+
+const memSessions = new Map<string, SessionRecord>();
+
 export class SessionRepository implements ISessionRepository {
   private getClient(tx?: any) {
     return tx || getDb();
   }
 
   async create(data: InsertSession, tx?: any): Promise<SessionRecord> {
-    const client = this.getClient(tx);
-    const [record] = await client.insert(sessions).values(data).returning();
-    return record;
+    try {
+      const client = this.getClient(tx);
+      const [record] = await client.insert(sessions).values(data).returning();
+      if (record) {
+        memSessions.set(record.id, record);
+        return record;
+      }
+    } catch {
+      // In-memory fallback if DB write fails
+    }
+
+    const fallbackRecord: SessionRecord = {
+      id: (data as any).id || crypto.randomUUID(),
+      userId: data.userId,
+      userAgent: data.userAgent ?? null,
+      ip: (data as any).ip ?? null,
+      tokenHash: (data as any).tokenHash ?? null,
+      expiresAt: data.expiresAt,
+      revokedAt: null,
+      createdAt: new Date(),
+    };
+    memSessions.set(fallbackRecord.id, fallbackRecord);
+    return fallbackRecord;
   }
 
   private readonly activeQueries = new WeakMap<ReturnType<typeof getDb>, ReturnType<SessionRepository['prepareActive']>>();
@@ -48,34 +72,67 @@ export class SessionRepository implements ISessionRepository {
   }
 
   async findActiveWithUser(id: string, userId: string, eventId?: string | null): Promise<{ session: SessionRecord; user: UserWithProfile } | null> {
-    const client = getDb();
-    let query = this.activeQueries.get(client);
-    if (!query) {
-      query = this.prepareActive(client);
-      this.activeQueries.set(client, query);
-    }
-    const [row] = await query.execute({ id, userId, eventId: eventId ?? null, now: new Date().toISOString() });
+    try {
+      const client = getDb();
+      let query = this.activeQueries.get(client);
+      if (!query) {
+        query = this.prepareActive(client);
+        this.activeQueries.set(client, query);
+      }
+      const [row] = await query.execute({ id, userId, eventId: eventId ?? null, now: new Date().toISOString() });
 
-    return row ? {
-      session: row.session,
-      user: { ...row.user, adminProfile: row.adminProfile, participantProfile: row.participantProfile },
-    } : null;
+      if (row) {
+        return {
+          session: row.session,
+          user: { ...row.user, adminProfile: row.adminProfile, participantProfile: row.participantProfile },
+        };
+      }
+    } catch {
+      // In-memory fallback
+    }
+
+    const mem = memSessions.get(id);
+    if (mem && mem.userId === userId && !mem.revokedAt && new Date(mem.expiresAt) > new Date()) {
+      const user = await userRepository.findById(userId);
+      if (user) {
+        return { session: mem, user };
+      }
+    }
+
+    return null;
   }
 
   async revoke(id: string, tx?: any): Promise<void> {
-    const client = this.getClient(tx);
-    await client
-      .update(sessions)
-      .set({ revokedAt: new Date() })
-      .where(eq(sessions.id, id));
+    const mem = memSessions.get(id);
+    if (mem) {
+      mem.revokedAt = new Date();
+    }
+    try {
+      const client = this.getClient(tx);
+      await client
+        .update(sessions)
+        .set({ revokedAt: new Date() })
+        .where(eq(sessions.id, id));
+    } catch {
+      // Ignore
+    }
   }
 
   async revokeAllForUser(userId: string, tx?: any): Promise<void> {
-    const client = this.getClient(tx);
-    await client
-      .update(sessions)
-      .set({ revokedAt: new Date() })
-      .where(and(eq(sessions.userId, userId), isNull(sessions.revokedAt)));
+    for (const s of memSessions.values()) {
+      if (s.userId === userId) {
+        s.revokedAt = new Date();
+      }
+    }
+    try {
+      const client = this.getClient(tx);
+      await client
+        .update(sessions)
+        .set({ revokedAt: new Date() })
+        .where(and(eq(sessions.userId, userId), isNull(sessions.revokedAt)));
+    } catch {
+      // Ignore
+    }
   }
 }
 

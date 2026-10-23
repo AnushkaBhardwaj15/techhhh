@@ -10,7 +10,7 @@ export function serializeAuditRecord(record: AuditLogRecord) {
     resourceType: record.resourceType,
     resourceId: record.resourceId,
     metadata: record.metadata === null ? null : redactSensitiveData(record.metadata),
-    createdAt: record.createdAt.toISOString(),
+    createdAt: (record.createdAt instanceof Date ? record.createdAt : new Date(record.createdAt)).toISOString(),
   };
 }
 

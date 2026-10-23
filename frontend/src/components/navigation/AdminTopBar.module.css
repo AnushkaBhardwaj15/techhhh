@@ -44,6 +44,19 @@
   letter-spacing: 0.1em;
 }
 
+.roleBanner {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  padding: 3px 8px;
+  border: 1.5px solid var(--forest);
+  color: var(--forest);
+  background: rgba(49, 92, 83, 0.12);
+  text-transform: uppercase;
+  border-radius: 4px;
+}
+
 .adminBadge {
   font-family: var(--mono);
   font-size: 9px;

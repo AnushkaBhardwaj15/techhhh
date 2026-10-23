@@ -17,6 +17,9 @@ export function ParticipantNav({ user, onLogout, isLoggingOut = false }: Partici
             <span className={styles.badge}>TECH</span>
             <strong>TAMBOLA</strong>
           </Link>
+          <span className={styles.roleBanner} aria-label="Role: Participant">
+            PARTICIPANT
+          </span>
         </div>
 
         {/* User Actions: Profile & Sign out only */}

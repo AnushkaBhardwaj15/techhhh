@@ -47,6 +47,20 @@
   box-shadow: 2px 2px 0 var(--ink);
 }
 
+.roleBanner {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  padding: 3px 8px;
+  border: 1.5px solid var(--ink);
+  color: var(--ink);
+  background: rgba(224, 90, 71, 0.15);
+  box-shadow: 1.5px 1.5px 0 var(--ink);
+  text-transform: uppercase;
+  border-radius: 4px;
+}
+
 .userActions {
   display: flex;
   align-items: center;

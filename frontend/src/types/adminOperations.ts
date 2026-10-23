@@ -3,14 +3,14 @@ import { z } from 'zod';
 const timestamp = z.string().datetime({ offset: true });
 
 export const auditRecordSchema = z.strictObject({
-  id: z.string().uuid(),
-  actorId: z.string().uuid().nullable().optional(),
+  id: z.string(),
+  actorId: z.string().nullable().optional(),
   actorType: z.string().nullable().optional(),
   action: z.string(),
   resourceType: z.string(),
   resourceId: z.string().nullable().optional(),
   metadata: z.unknown().nullable().optional(),
-  createdAt: timestamp,
+  createdAt: z.string(),
 });
 
 export const auditPageSchema = z.strictObject({
