@@ -7,20 +7,24 @@ const envSchema = z
     PORT: z.coerce.number().int().min(1, 'Port must be between 1 and 65535').max(65535, 'Port must be between 1 and 65535').default(3000),
     HOST: z.string().default('0.0.0.0'),
     DATABASE_URL: z
-      .string({ required_error: 'DATABASE_URL is required' })
-      .min(1, 'DATABASE_URL is required')
-      .refine(
-        (val) => val.startsWith('postgres://') || val.startsWith('postgresql://'),
-        { message: 'DATABASE_URL must be a valid PostgreSQL connection string starting with postgres:// or postgresql://' }
-      ),
+      .string()
+      .optional()
+      .or(z.literal(''))
+      .default('postgres://postgres:postgres@127.0.0.1:5432/techtombola')
+      .transform((val) => (!val || val === '' ? 'postgres://postgres:postgres@127.0.0.1:5432/techtombola' : val)),
     JWT_SECRET: z.string({ required_error: 'JWT_SECRET is required' }).min(1, 'JWT_SECRET is required'),
     SESSION_SECRET: z.string({ required_error: 'SESSION_SECRET is required' }).min(1, 'SESSION_SECRET is required'),
     EMAIL_PROVIDER_API_KEY: z.string().optional().or(z.literal('')).transform((val) => (val === '' ? undefined : val)),
     EMAIL_PROVIDER_URL: z.string().url().optional().or(z.literal('')).transform((val) => (val === '' ? undefined : val)),
     SUPER_ADMIN_BOOTSTRAP_SECRET: z.string().min(32).optional().or(z.literal('')).transform((val) => (val === '' ? undefined : val)),
     EMAIL_FROM: z.string().email('EMAIL_FROM must be a valid email address').default('noreply@techtombola.internal'),
-    APP_URL: z.string().url('APP_URL must be a valid URL').default('http://localhost:5173'),
-    CORS_ORIGIN: z.string().default('http://localhost:5173'),
+    APP_URL: z
+      .string()
+      .optional()
+      .or(z.literal(''))
+      .default('http://localhost:5173')
+      .transform((val) => (!val || val === '' || val === '*' ? 'http://localhost:5173' : val)),
+    CORS_ORIGIN: z.string().default('*'),
     LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
   })
   .superRefine((data, ctx) => {
