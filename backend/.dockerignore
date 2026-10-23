@@ -1,7 +1,6 @@
-*
-!package.json
-!bun.lock
-!src/
-!src/**
+node_modules
+dist
+.env
+*.log
 src/**/*.test.ts
-src/**/*.test.tsx
+tests
