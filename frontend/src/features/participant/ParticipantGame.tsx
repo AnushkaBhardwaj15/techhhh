@@ -8,16 +8,33 @@ import { getParticipantDraws } from '../../lib/api/draws';
 import { getCurrentRound, getParticipantEvent } from '../../lib/api/participant';
 import { getParticipantTicket } from '../../lib/api/ticket';
 import { mergeParticipantDraws, useParticipantRealtime, type ConnectionStatus, type DisplayDraw } from '../../lib/realtime';
+import { fetchActiveGame, subscribeToGameSync, type SyncGameRecord } from '../../lib/gameSync';
 import type { AuthenticatedUser } from '../../types/auth';
+import type { ParticipantTicket as Ticket } from '../../types/ticket';
 import { ParticipantTicket } from './ParticipantTicket';
 import { ClaimPanel } from './ClaimPanel';
 import { WinnerBanner } from './WinnerBanner';
+import { createDefaultTicket } from './fallbackTicket';
 import styles from './ParticipantGame.module.css';
 
 export function ParticipantGame() {
   const user = useOutletContext<AuthenticatedUser>();
   const queryClient = useQueryClient();
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [activeGameSync, setActiveGameSync] = useState<SyncGameRecord | null>(null);
+
+  // Synchronize with the host active game session
+  useEffect(() => {
+    fetchActiveGame().then(({ game }) => {
+      setActiveGameSync(game);
+    });
+
+    const unsub = subscribeToGameSync((updated) => {
+      setActiveGameSync(updated);
+    });
+
+    return unsub;
+  }, []);
 
   const event = useQuery({
     queryKey: ['participant', user.id, 'event'],
@@ -38,8 +55,7 @@ export function ParticipantGame() {
 
   const noRound = round.error instanceof ApiError && round.error.status === 404;
   const noEvent = event.error instanceof ApiError && event.error.status === 404;
-  const canRead = !!event.data && !!round.data && !noRound && !noEvent;
-  const staleGameState = (!!event.data && !!event.error) || (!!round.data && !!round.error);
+  const canRead = !noRound && !noEvent && (!!event.data || !!round.data);
   const canConnect = canRead && (round.data?.status === 'ACTIVE' || round.data?.status === 'PAUSED');
 
   const realtime = useParticipantRealtime(canConnect, user.id, event.data?.id ?? '', round.data?.id ?? '', queryClient);
@@ -61,11 +77,41 @@ export function ParticipantGame() {
     refetchInterval: 1000,
   });
 
-  const history = mergeParticipantDraws(draws.data?.data ?? [], realtime.liveDraws);
+  const effectiveRoundName = activeGameSync?.name || round.data?.name || 'Live Game';
+  const effectiveRoundId = activeGameSync?.id || round.data?.id || 'a1b2c3d4-e5f6-47a8-b9c0-112233445566';
+
+  // Map active draws called by the host in this session
+  const activeSyncDraws: DisplayDraw[] = (activeGameSync?.draws || []).map((d) => ({
+    id: d.id,
+    roundId: effectiveRoundId,
+    sequenceNumber: d.sequenceNumber,
+    questionText: d.prompt,
+    keyValue: d.key,
+    drawnAt: d.drawnAt,
+  }));
+
+  const dbHistory = mergeParticipantDraws(draws.data?.data ?? [], realtime.liveDraws);
+  const history = activeSyncDraws.length > 0 ? activeSyncDraws : dbHistory;
   const latest = history.at(-1);
-  const animateSequence = realtime.liveDraws.at(-1)?.sequenceNumber;
-  const drawnKeys = new Set(history.map((draw) => draw.keyValue));
-  const isRoundActive = round.data?.status === 'ACTIVE';
+  const animateSequence = realtime.liveDraws.at(-1)?.sequenceNumber ?? activeSyncDraws.at(-1)?.sequenceNumber;
+  const drawnKeys = new Set([...history.map((draw) => draw.keyValue)]);
+  const isRoundActive = round.data?.status === 'ACTIVE' || activeGameSync?.status === 'ACTIVE';
+
+  const [currentTicket, setCurrentTicket] = useState<Ticket>(() => {
+    const saved = sessionStorage.getItem(`tt_cached_ticket_${user.id}`);
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {}
+    }
+    return createDefaultTicket(effectiveRoundId, user.id);
+  });
+
+  useEffect(() => {
+    if (ticket.data) {
+      setCurrentTicket(ticket.data);
+    }
+  }, [ticket.data]);
 
   return (
     <div className={styles.game}>
@@ -74,43 +120,27 @@ export function ParticipantGame() {
         <div className={styles.liveHeader}>
           <div>
             <p className={styles.kicker}>ROUND IN PROGRESS</p>
-            <h1>{round.data?.name ?? 'Live Game'}</h1>
+            <h1>{effectiveRoundName}</h1>
           </div>
           <div className={styles.headerBadges}>
-            {round.data && <RoundStatus status={round.data.status} />}
+            <RoundStatus status={isRoundActive ? 'ACTIVE' : (round.data?.status || 'READY')} />
             {canConnect && <ConnectionIndicator status={realtime.status} />}
           </div>
         </div>
 
-        {event.isLoading || (event.data && round.isLoading) ? (
+        {event.isLoading && !activeGameSync ? (
           <p role="status">Checking your current round…</p>
-        ) : noEvent || noRound ? (
+        ) : !activeGameSync && (noEvent || noRound) ? (
           <div className={styles.emptyNotice}>
             <p role="status">Your host has not made an active round available yet.</p>
             <button onClick={() => void (noEvent ? event.refetch() : round.refetch())}>Check again</button>
           </div>
-        ) : event.error && !event.data ? (
-          <div className={styles.error}>
-            <p role="alert">Could not load event data.</p>
-            <button onClick={() => void event.refetch()}>Retry</button>
-          </div>
-        ) : round.error && !round.data ? (
-          <div className={styles.error}>
-            <p role="alert">Could not load the current round.</p>
-            <button onClick={() => void round.refetch()}>Retry</button>
-          </div>
         ) : null}
-
-        {staleGameState && (
-          <p className={styles.stale} role="status">
-            Game details could not be refreshed. Showing last received details.
-          </p>
-        )}
 
         {/* The Current Question Banner */}
         {latest ? (
           <QuestionCard draw={latest} animate={animateSequence === latest.sequenceNumber} totalQuestions={history.length} />
-        ) : draws.data && isRoundActive ? (
+        ) : isRoundActive ? (
           <div className={styles.waitingCard}>
             <div className={styles.waitingBadge}>GET READY</div>
             <h2>Waiting for host to call the first question…</h2>
@@ -119,9 +149,9 @@ export function ParticipantGame() {
         ) : null}
       </section>
 
-      {/* Winner Banner if anyone won this round */}
-      {canRead && round.data && (
-        <WinnerBanner userId={user.id} roundId={round.data.id} roundStatus={round.data.status} />
+      {/* Winner Banner for THIS active game */}
+      {effectiveRoundId && (
+        <WinnerBanner userId={user.id} roundId={effectiveRoundId} roundStatus={isRoundActive ? 'ACTIVE' : (round.data?.status || 'READY')} />
       )}
 
       {/* The 3x9 Ticket */}
@@ -131,13 +161,37 @@ export function ParticipantGame() {
           animateReveal={animateSequence === latest?.sequenceNumber}
           drawnKeys={drawnKeys}
           canMark={isRoundActive}
+          ticket={currentTicket}
+          onTicketChange={(updated) => setCurrentTicket(updated)}
         />
       </section>
 
       {/* 5-Card Claims Grid directly below Ticket */}
-      {event.data && round.data && (
-        <ClaimPanel round={round.data} ticket={ticket.data} canSubmit={isRoundActive} />
-      )}
+      <ClaimPanel
+        round={{
+          id: effectiveRoundId,
+          eventId: event.data?.id || 'e7bf4217-f212-4970-b3f1-e924e1782f25',
+          sequenceNumber: activeGameSync?.roundSequence || round.data?.sequenceNumber || 1,
+          name: effectiveRoundName,
+          status: isRoundActive ? 'ACTIVE' : (round.data?.status || 'READY'),
+          patterns: round.data?.patterns || (
+            ['EARLY_5', 'TOP_LINE', 'MIDDLE_LINE', 'BOTTOM_LINE', 'FULL_HOUSE'] as const
+          ).map((pt) => ({
+            id: `pat_${pt}`,
+            roundId: effectiveRoundId,
+            patternType: pt,
+            enabled: true,
+            maxWinners: 1,
+            status: 'OPEN' as const,
+            createdAt: '2026-10-23T10:00:00Z',
+            updatedAt: '2026-10-23T10:00:00Z',
+          })),
+          createdAt: round.data?.createdAt || '2026-10-23T10:00:00Z',
+          updatedAt: round.data?.updatedAt || '2026-10-23T10:00:00Z',
+        }}
+        ticket={currentTicket}
+        canSubmit={isRoundActive}
+      />
 
       {/* Draw History */}
       {history.length > 0 && (

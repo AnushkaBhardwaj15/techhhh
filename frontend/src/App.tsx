@@ -15,10 +15,10 @@ import './styles/global.css';
 
 const LoginPage = lazy(() => import('./features/auth/LoginPage').then((module) => ({ default: module.LoginPage })));
 const AdminDashboard = lazy(() => import('./features/admin/AdminDashboard').then((module) => ({ default: module.AdminDashboard })));
+const AdminGamePage = lazy(() => import('./features/admin/AdminGamePage').then((module) => ({ default: module.AdminGamePage })));
 const AdminLayout = lazy(() => import('./features/admin/AdminLayout').then((module) => ({ default: module.AdminLayout })));
 const AdminQuestions = lazy(() => import('./features/admin/AdminQuestions').then((module) => ({ default: module.AdminQuestions })));
 const AdminParticipants = lazy(() => import('./features/admin/AdminParticipants').then((module) => ({ default: module.AdminParticipants })));
-const AdminDrawControl = lazy(() => import('./features/admin/AdminDrawControl').then((module) => ({ default: module.AdminDrawControl })));
 const AdminClaims = lazy(() => import('./features/admin/AdminClaims').then((module) => ({ default: module.AdminClaims })));
 const AdminWinners = lazy(() => import('./features/admin/AdminWinners').then((module) => ({ default: module.AdminWinners })));
 const AdminAdministrators = lazy(() => import('./features/admin/AdminAdministrators').then((module) => ({ default: module.AdminAdministrators })));
@@ -121,7 +121,8 @@ function AppRoutes() {
         <Route path="/signin" element={<LoginPage />} />
         <Route path="/play" element={<Navigate to="/participant/game" replace />} />
         <Route path="/lobby" element={<Navigate to="/participant/lobby" replace />} />
-        <Route path="/host" element={<Navigate to="/admin/draw-control" replace />} />
+        <Route path="/host" element={<Navigate to="/admin" replace />} />
+        <Route path="/admin/dashboard" element={<Navigate to="/admin" replace />} />
         <Route element={<ProtectedLayout allowed={['PARTICIPANT']} />}>
           <Route path="/participant" element={<Navigate to="/lobby" replace />} />
           <Route path="/participant/lobby" element={<ParticipantLobby />} />
@@ -135,14 +136,17 @@ function AppRoutes() {
           <Route path="/participant/profile" element={<ParticipantProfile />} />
         </Route>
         <Route element={<ProtectedLayout allowed={['ADMIN', 'SUPER_ADMIN']} />}>
+          <Route path="/game" element={<AdminGamePage />} />
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />
+            <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="game" element={<Navigate to="/game" replace />} />
             <Route path="event" element={<Navigate to="/admin" replace />} />
             <Route path="events" element={<Navigate to="/admin" replace />} />
             <Route path="rounds" element={<Navigate to="/admin" replace />} />
             <Route path="questions" element={<AdminQuestions />} />
             <Route path="participants" element={<AdminParticipants />} />
-            <Route path="draw-control" element={<AdminDrawControl />} />
+            <Route path="draw-control" element={<Navigate to="/admin" replace />} />
             <Route path="claims" element={<AdminClaims />} />
             <Route path="winners" element={<AdminWinners />} />
             <Route path="audit" element={<AdminAudit />} />

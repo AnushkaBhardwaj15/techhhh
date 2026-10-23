@@ -1,24 +1,31 @@
 import { useEffect, useState, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useNavigate, useOutletContext } from 'react-router-dom';
+import { useNavigate, useOutletContext, useSearchParams } from 'react-router-dom';
 import { ApiError } from '../../lib/api/client';
 import { getCurrentRound, getParticipantEvent } from '../../lib/api/participant';
 import { getParticipantTicket } from '../../lib/api/ticket';
 import { formatTicketCode } from '../../types/ticket';
 import { SampleTicketDemo } from '../landing/components/SampleTicketDemo';
 import { useAuthUiStore } from '../auth/authStore';
+import { QRCodeSvg } from '../../components/QRCodeSvg';
+import {
+  fetchActiveGame,
+  subscribeToGameSync,
+  validateGameCode,
+  type SyncGameRecord,
+} from '../../lib/gameSync';
 import type { AuthenticatedUser } from '../../types/auth';
 import styles from './ParticipantLobby.module.css';
 
 export function ParticipantLobby() {
   const user = useOutletContext<AuthenticatedUser>();
   const navigate = useNavigate();
+  const [params] = useSearchParams();
   const queryClient = useQueryClient();
   const identityChanged = useAuthUiStore((state) => state.identityChanged);
 
-  // 6 slots for the 6-character game code
-  const [codeSlots, setCodeSlots] = useState<string[]>(['', '', '', '', '', '']);
-  const slotRefs = useRef<(HTMLInputElement | null)[]>([]);
+  // Synchronized Active Game State across Admin and Participant
+  const [activeGame, setActiveGame] = useState<SyncGameRecord | null>(null);
 
   // 1. Participant Event Query
   const event = useQuery({
@@ -56,7 +63,21 @@ export function ParticipantLobby() {
     return sessionStorage.getItem(`tt_verified_code_${user.id}`) || assignedCode;
   });
   const [errorMsg, setErrorMsg] = useState('');
-  const [redirecting, setRedirecting] = useState(false);
+  const [customCode, setCustomCode] = useState('');
+  const hasRedirected = useRef(false);
+
+  // Subscribe to real-time active game sync (from backend & broadcast)
+  useEffect(() => {
+    fetchActiveGame().then(({ game }) => {
+      setActiveGame(game);
+    });
+
+    const unsubscribe = subscribeToGameSync((updated) => {
+      setActiveGame(updated);
+    });
+
+    return unsubscribe;
+  }, []);
 
   // Session check
   useEffect(() => {
@@ -67,144 +88,162 @@ export function ParticipantLobby() {
     }
   }, [event.error, currentRound.error, identityChanged, navigate, queryClient]);
 
-  // Requirement B: "now as the admin starts the game- the user should be automatically redirected to /play"
-  const isRoundActive = currentRound.data?.status === 'ACTIVE';
+  // Requirement 3: Instant redirection as soon as admin starts the game
+  const isRoundActive = currentRound.data?.status === 'ACTIVE' || activeGame?.status === 'ACTIVE';
 
   useEffect(() => {
-    if (isRoundActive && isVerified && !redirecting) {
-      setRedirecting(true);
-      const timer = setTimeout(() => {
-        // Redirect directly to /play as specified
-        navigate('/play', { replace: true });
-      }, 700);
-      return () => clearTimeout(timer);
+    if (isRoundActive && isVerified && !hasRedirected.current) {
+      hasRedirected.current = true;
+      // Immediately navigate without cancelable setTimeout delay
+      navigate('/participant/game', { replace: true });
     }
-  }, [isRoundActive, isVerified, redirecting, navigate]);
+  }, [isRoundActive, isVerified, navigate]);
 
-  // Handle slot input changes
-  function handleSlotChange(index: number, value: string) {
-    const char = value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(-1);
-    const newSlots = [...codeSlots];
-    newSlots[index] = char;
-    setCodeSlots(newSlots);
-    setErrorMsg('');
-
-    // Auto-focus next input
-    if (char && index < 5) {
-      slotRefs.current[index + 1]?.focus();
+  // Handle QR scan auto-join via ?code= query parameter
+  useEffect(() => {
+    const codeParam = params.get('code');
+    if (codeParam && codeParam.trim().length === 6) {
+      const clean = codeParam.trim().toUpperCase();
+      setCustomCode(clean);
+      verifyCode(clean);
     }
-  }
+  }, [params]);
 
-  function handleKeyDown(index: number, e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === 'Backspace' && !codeSlots[index] && index > 0) {
-      slotRefs.current[index - 1]?.focus();
-    }
-  }
-
-  function handlePaste(e: React.ClipboardEvent<HTMLInputElement>) {
-    e.preventDefault();
-    const paste = e.clipboardData.getData('text').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
-    if (!paste) return;
-    const newSlots = [...codeSlots];
-    for (let i = 0; i < 6; i++) {
-      newSlots[i] = paste[i] || '';
-    }
-    setCodeSlots(newSlots);
-    setErrorMsg('');
-    if (paste.length === 6) {
-      slotRefs.current[5]?.focus();
-    }
-  }
-
-  function verifyCode(codeToVerify: string) {
+  async function verifyCode(codeToVerify: string) {
     setErrorMsg('');
     const clean = codeToVerify.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
 
     if (clean.length < 6) {
-      setErrorMsg('Please enter all 6 digits/characters of your game code.');
+      setErrorMsg('Please enter a valid 6-character game code.');
       return;
     }
 
-    // Determine the expected valid ticket code(s) for this participant
-    const validCodes: string[] = ['8679DE'];
-    if (ticket.data?.id) {
-      validCodes.push(formatTicketCode(ticket.data.id).toUpperCase());
-    }
+    // Validate against server shared game store, active games, assigned ticket, and seed
+    const result = await validateGameCode(clean, assignedCode);
 
-    const matches = validCodes.includes(clean);
-
-    if (!matches) {
-      // Reject invalid ticket code explicitly
-      setErrorMsg(`Invalid ticket code "${clean}". This code does not match your assigned ticket for this round. Please check your code and try again.`);
+    if (!result.valid) {
+      setErrorMsg(
+        result.message ||
+          `Invalid ticket code "${clean}". This code does not match the active game session. Please check your code and try again.`
+      );
       setIsVerified(false);
       sessionStorage.removeItem(`tt_verified_ticket_${user.id}`);
       sessionStorage.removeItem(`tt_verified_code_${user.id}`);
       return;
     }
 
-    // Valid ticket: mark verified and store session
+    // Valid code: mark verified and store session
     const ticketId = ticket.data?.id || '8679def1-0919-4cfc-b2cd-9d23961b5a5f';
     sessionStorage.setItem(`tt_verified_ticket_${user.id}`, ticketId);
     sessionStorage.setItem(`tt_verified_code_${user.id}`, clean);
     setVerifiedCode(clean);
     setIsVerified(true);
     setErrorMsg('');
-  }
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    verifyCode(codeSlots.join(''));
-  }
-
-  function handleUsePredefined(code: string) {
-    const chars = code.split('').slice(0, 6);
-    const newSlots = [...codeSlots];
-    for (let i = 0; i < 6; i++) {
-      newSlots[i] = chars[i] || '';
+    // If host already started the game, immediately enter game arena
+    if (isRoundActive && !hasRedirected.current) {
+      hasRedirected.current = true;
+      navigate('/participant/game', { replace: true });
     }
-    setCodeSlots(newSlots);
-    verifyCode(code);
   }
+
+  function handleQuickJoin() {
+    verifyCode(activeGameCode);
+  }
+
+  function handleCustomSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    verifyCode(customCode);
+  }
+
+  const activeGameCode = activeGame?.code || assignedCode;
+  const activeGameJoinUrl = `${window.location.origin}/lobby?code=${activeGameCode}`;
 
   return (
     <main className={styles.page}>
       <div className={styles.outerCard}>
-        {/* SECTION 1: ENTER THE GAME CODE TO BEGIN */}
+        {/* SYNCHRONIZED QR & CODE BLOCK: SAME ON ADMIN & USER PAGE */}
+        <div className={styles.activeGameCard}>
+          <div className={styles.activeGameHeader}>
+            <span className={styles.activeGameLiveBadge}>
+              <span className={styles.pulseDotGreen}>●</span> ACTIVE GAME SESSION
+            </span>
+            <span className={styles.activeGameTitle}>
+              {activeGame?.name || 'Tech Tombola Live Arena'}
+            </span>
+          </div>
+
+          <div className={styles.activeGameContent}>
+            {/* The SAME QR CODE as Admin Page */}
+            <div className={styles.qrCol}>
+              <div className={styles.qrWrapper}>
+                <QRCodeSvg
+                  value={activeGameJoinUrl}
+                  size={150}
+                  title={`QR Code for Game ${activeGameCode}`}
+                />
+              </div>
+              <span className={styles.qrAnnotation}>Scan with phone to join</span>
+            </div>
+
+            {/* The SAME GAME CODE as Admin Page */}
+            <div className={styles.codeCol}>
+              <span className={styles.codeBadgeTitle}>OFFICIAL GAME CODE</span>
+              <div className={styles.activeCodeDisplay}>
+                <strong className={styles.activeCodeValue}>{activeGameCode}</strong>
+                <button
+                  type="button"
+                  className={styles.copyActiveBtn}
+                  onClick={() => navigator.clipboard.writeText(activeGameCode)}
+                  title="Copy code"
+                >
+                  📋 Copy
+                </button>
+              </div>
+
+              {/* Requirement 1: Single button to join via respective code given on screen */}
+              <button
+                type="button"
+                className={styles.primaryJoinBtn}
+                onClick={handleQuickJoin}
+              >
+                ⚡ JOIN GAME WITH CODE #{activeGameCode}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* SECTION 1: TICKET VERIFICATION & ACCESS */}
         <p className={styles.kicker}>TICKET VERIFICATION &amp; ACCESS</p>
         <div className={styles.sectionHeader}>
-          <span className={styles.sectionBadge}>STEP 1</span>
-          <h2 className={styles.sectionTitle}>ENTER THE GAME CODE TO BEGIN-</h2>
+          <span className={styles.sectionBadge}>ACCESS</span>
+          <h2 className={styles.sectionTitle}>GAME ENTRY &amp; VERIFICATION</h2>
         </div>
 
         <div className={styles.box}>
-          <p className={styles.codePrompt}>
-            enter 6-digit game code sent to you via email <span className={styles.coralStar}>*</span>
-          </p>
-
-          <form onSubmit={handleSubmit} className={styles.inputGroup}>
-            <div className={styles.codeSlotsContainer}>
-              {codeSlots.map((slot, index) => (
-                <input
-                  key={index}
-                  ref={(el) => {
-                    slotRefs.current[index] = el;
-                  }}
-                  type="text"
-                  maxLength={1}
-                  value={slot}
-                  onChange={(e) => handleSlotChange(index, e.target.value)}
-                  onKeyDown={(e) => handleKeyDown(index, e)}
-                  onPaste={index === 0 ? handlePaste : undefined}
-                  className={`${styles.codeSlot} ${errorMsg ? styles.codeSlotError : ''}`}
-                  autoCapitalize="characters"
-                  autoComplete="off"
-                />
-              ))}
+          {/* Custom code fallback input */}
+          <form onSubmit={handleCustomSubmit} className={styles.customCodeForm}>
+            <label htmlFor="customGameCode" className={styles.customCodeLabel}>
+              Enter or confirm 6-character game code:
+            </label>
+            <div className={styles.customCodeRow}>
+              <input
+                id="customGameCode"
+                type="text"
+                maxLength={8}
+                value={customCode}
+                onChange={(e) => {
+                  setCustomCode(e.target.value.toUpperCase());
+                  setErrorMsg('');
+                }}
+                placeholder={`e.g. ${activeGameCode}`}
+                className={styles.customCodeInput}
+                autoCapitalize="characters"
+              />
+              <button type="submit" className={styles.verifyCustomBtn}>
+                VERIFY &amp; JOIN
+              </button>
             </div>
-
-            <button type="submit" className={styles.joinBtn}>
-              JOIN-GAME
-            </button>
           </form>
 
           {errorMsg && (
@@ -213,20 +252,6 @@ export function ParticipantLobby() {
               <span>{errorMsg}</span>
             </div>
           )}
-
-          {/* Local testing helper with predefined codes */}
-          <div className={styles.helperBox}>
-            <span className={styles.helperText}>
-              Predefined Test Ticket: <strong className={styles.helperCode}>#{assignedCode}</strong>
-            </span>
-            <button
-              type="button"
-              className={styles.helperBtn}
-              onClick={() => handleUsePredefined(assignedCode)}
-            >
-              Fill &amp; Verify #{assignedCode}
-            </button>
-          </div>
         </div>
 
         {/* SECTION 2: YOUR TICKET HAS BEEN VERIFIED! */}

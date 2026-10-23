@@ -39,16 +39,6 @@ export function AdminTopBar({ user, onLogout, isLoggingOut = false }: AdminTopBa
             <span className={styles.arrow} aria-hidden="true">↗</span>
           </Link>
 
-          <Link
-            to="/"
-            target="_blank"
-            rel="noreferrer"
-            className={styles.homeLink}
-            title="Open public event overview"
-          >
-            <span>Event Landing</span>
-            <span className={styles.arrow} aria-hidden="true">↗</span>
-          </Link>
 
           <span className={styles.userName} title={user.email}>
             {user.name}

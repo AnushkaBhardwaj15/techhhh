@@ -38,7 +38,6 @@ describe('AdminTopBar', () => {
     expect(screen.getByText('ADMIN OPS')).toBeInTheDocument();
     expect(screen.getByText('Taylor Swift')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Live Projector/i })).toHaveAttribute('href', '/live');
-    expect(screen.getByRole('link', { name: /Event Landing/i })).toHaveAttribute('href', '/');
     expect(screen.getByRole('button', { name: 'Sign out' })).toBeInTheDocument();
   });
 
