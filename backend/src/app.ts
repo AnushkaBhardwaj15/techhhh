@@ -220,8 +220,12 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   const recoveryService = options.recoveryService ?? new RecoveryService(undefined, undefined, undefined, undefined, realtimeConnectionManager);
   const operationsService = new OperationsService(new OperationsRepository(), realtimeConnectionManager);
   app.addHook('onReady', async () => {
-    const roundIds = (await recoveryService.markInterruptedRounds()) ?? [];
-    app.log.info({ event: 'recovery_state', roundIds, recoveryRequired: roundIds.length }, 'Startup recovery check complete');
+    try {
+      const roundIds = (await recoveryService.markInterruptedRounds()) ?? [];
+      app.log.info({ event: 'recovery_state', roundIds, recoveryRequired: roundIds.length }, 'Startup recovery check complete');
+    } catch (err: any) {
+      app.log.warn({ err: err?.message || err }, 'Startup recovery check skipped (database offline or unreachable)');
+    }
   });
   const liveReadService = options.liveReadService ?? new LiveReadService(new LiveReadRepository());
   await app.register(createAppRoutes({ realtimeConnectionManager, realtimeSubscriptionService, winnerService, liveReadService, recoveryService, operationsService }));
