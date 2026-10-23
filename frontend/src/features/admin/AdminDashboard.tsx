@@ -592,8 +592,8 @@ export function AdminDashboard() {
         <p className={styles.updated}>
           {dashboard.dataUpdatedAt
             ? `Updated ${new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit' }).format(
-                dashboard.dataUpdatedAt
-              )}`
+              dashboard.dataUpdatedAt
+            )}`
             : 'Live operational snapshot'}
         </p>
       </header>

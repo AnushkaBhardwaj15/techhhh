@@ -13,9 +13,9 @@ export function ParticipantNav({ user, onLogout, isLoggingOut = false }: Partici
     <header className={styles.header} role="banner">
       <div className={styles.topRow}>
         <div className={styles.brandGroup}>
-          <Link to="/participant/lobby" className={styles.wordmark} aria-label="Tech Tombola home page">
+          <Link to="/lobby" className={styles.wordmark} aria-label="Tech Tombola home page">
             <span className={styles.badge}>TECH</span>
-            <strong>TOMBOLA</strong>
+            <strong>TAMBOLA</strong>
           </Link>
         </div>
 

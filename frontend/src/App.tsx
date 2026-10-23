@@ -120,13 +120,16 @@ function AppRoutes() {
         <Route path="/sign-in" element={<LoginPage />} />
         <Route path="/signin" element={<LoginPage />} />
         <Route path="/play" element={<Navigate to="/participant/game" replace />} />
+        <Route path="/lobby" element={<Navigate to="/participant/lobby" replace />} />
         <Route path="/host" element={<Navigate to="/admin/draw-control" replace />} />
         <Route element={<ProtectedLayout allowed={['PARTICIPANT']} />}>
-          <Route path="/participant" element={<Navigate to="/participant/lobby" replace />} />
+          <Route path="/participant" element={<Navigate to="/lobby" replace />} />
           <Route path="/participant/lobby" element={<ParticipantLobby />} />
+          <Route path="/lobby" element={<ParticipantLobby />} />
           <Route path="/participant/ticket-entry" element={<ParticipantTicketEntry />} />
           <Route path="/participant/ticket" element={<ParticipantTicket />} />
           <Route path="/participant/game" element={<ParticipantGame />} />
+          <Route path="/play" element={<ParticipantGame />} />
           <Route path="/participant/claims" element={<ParticipantClaims />} />
           <Route path="/participant/results" element={<ParticipantResults />} />
           <Route path="/participant/profile" element={<ParticipantProfile />} />

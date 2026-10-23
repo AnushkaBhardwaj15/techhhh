@@ -1,5 +1,6 @@
 .header {
   background: var(--cream);
+  border-top: 3px solid var(--coral);
   border-bottom: 2px solid var(--ink);
   position: sticky;
   top: 0;
@@ -35,13 +36,15 @@
 }
 
 .badge {
-  background: var(--ink);
-  color: var(--cream);
+  background: var(--coral);
+  color: var(--ink);
   padding: 3px 6px;
   font-size: 10px;
   font-family: var(--mono);
-  font-weight: 800;
+  font-weight: 900;
   letter-spacing: 0.1em;
+  border: 1.5px solid var(--ink);
+  box-shadow: 2px 2px 0 var(--ink);
 }
 
 .userActions {
@@ -62,13 +65,15 @@
   font-size: 11px;
   font-weight: 800;
   text-decoration: none;
-  border-radius: 2px;
+  border-radius: 4px;
   transition: all 0.12s ease;
 }
 
 .profileButton:hover {
-  background: var(--ink);
-  color: var(--cream);
+  background: var(--coral);
+  color: var(--ink);
+  border-color: var(--ink);
+  box-shadow: 2px 2px 0 var(--ink);
 }
 
 .logoutButton {
@@ -81,11 +86,12 @@
   font-size: 11px;
   font-weight: 800;
   cursor: pointer;
-  border-radius: 2px;
-  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  border-radius: 4px;
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.12s ease;
 }
 
 .logoutButton:hover:not(:disabled) {
+  background: #ffffff;
   transform: translate(-1px, -1px);
   box-shadow: 3px 3px 0 var(--ink);
 }
@@ -93,4 +99,10 @@
 .logoutButton:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+  .topRow {
+    padding: 10px 16px;
+  }
 }

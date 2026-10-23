@@ -188,28 +188,24 @@ These invariants are enforced server-side and tested at all layer boundaries:
 
 ---
 
-## 🚀 Deployment (Docker Compose on VPS)
+## 🚀 Running with Bun (Pure Bun Architecture)
 
-The complete application (Frontend, Backend, and PostgreSQL) can be deployed to any Linux VPS using Docker Compose in a few minutes:
+Tech Tombola is engineered to run natively with Bun without requiring Docker containers:
 
 ```bash
-# 1. Clone the repository
-git clone https://github.com/saransh-sh/TechTombola-muacm.git
-cd TechTombola-muacm
+# 1. Backend (Fastify + TypeScript on Bun)
+cd backend
+bun install
+bun run db:migrate   # Applies database migrations
+bun run db:seed      # Seeds default tech questions, admin, and round
+bun run dev          # Starts backend on http://localhost:3000
 
-# 2. Configure environment
-cp .env.example .env
-nano .env   # Generate secrets with: openssl rand -hex 24
-
-# 3. Launch all services
-docker compose up -d --build
-
-# 4. Check status & readiness
-docker compose ps
-curl http://localhost/ready
+# 2. Frontend (Vite + React on Bun)
+cd ../frontend
+bun install
+bun run dev          # Starts frontend on http://localhost:5173
 ```
 
-See the full [VPS Deployment & Operations Guide](docs/vps-deployment-guide.md) for SSL setup, database backup/restore, and Super Admin account bootstrapping instructions.
 
 ---
 

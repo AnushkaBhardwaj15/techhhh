@@ -1,279 +1,356 @@
 .page {
-  max-width: 1040px;
-  margin: 0 auto;
-  padding: clamp(24px, 6vw, 64px) clamp(18px, 5vw, 48px);
-  display: grid;
-  gap: 20px;
+  min-height: calc(100vh - 65px);
+  background-color: var(--cream);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 32px 16px 64px;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  box-sizing: border-box;
+  color: var(--ink);
 }
 
-.welcome {
-  max-width: 690px;
-  padding-bottom: 20px;
-}
-
-.kicker,
-.label {
-  font: 700 11px/1.2 var(--mono);
-  letter-spacing: .13em;
+.outerCard {
+  width: 100%;
+  max-width: 860px;
+  background-color: #ffffff;
+  border: 2.5px solid var(--ink);
+  border-top: 6px solid var(--coral);
+  border-radius: 16px;
+  padding: clamp(20px, 4vw, 36px);
+  box-sizing: border-box;
+  box-shadow: 6px 6px 0 var(--ink);
 }
 
 .kicker {
-  color: #a2483e;
+  margin: 0 0 6px;
+  color: var(--coral);
+  font: 800 11px/1.2 var(--mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
-.welcome h1 {
-  margin: 12px 0;
-  font-size: clamp(38px, 8vw, 72px);
-  line-height: .98;
-  letter-spacing: -.06em;
-}
-
-.welcome h1 em {
-  color: #a2483e;
-  font-family: Georgia, serif;
-  font-weight: 500;
-}
-
-.welcome>p:last-child {
-  max-width: 540px;
-  line-height: 1.6;
-}
-
-.eventCard,
-.roundCard,
-.help {
-  background: #fffaf0;
-  border: 2px solid var(--ink);
-  box-shadow: 5px 5px 0 var(--ink);
-  padding: clamp(20px, 4vw, 32px);
-}
-
-.roundCard {
-  background: #dfe9dd;
-}
-
-.cardHead {
+.sectionHeader {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 22px;
+  gap: 10px;
+  margin-bottom: 14px;
 }
 
-.signals {
-  display: grid;
-  gap: 5px;
-  text-align: right;
-  font: 700 9px/1 var(--mono);
-  letter-spacing: .04em;
-  color: #315c53;
+.sectionBadge {
+  background: var(--coral);
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 950;
+  padding: 3px 9px;
+  border: 2px solid var(--ink);
+  box-shadow: 2.5px 2.5px 0 var(--ink);
+  letter-spacing: 0.06em;
 }
 
-.eventCard h2,
-.roundCard h2,
-.help h2 {
-  margin: 0 0 10px;
-  font-size: clamp(24px, 4vw, 36px);
-  letter-spacing: -.04em;
+.sectionTitle {
+  font-size: 19px;
+  font-weight: 950;
+  color: var(--ink);
+  margin: 0;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
-.eventCard p,
-.roundCard p,
-.help p {
-  line-height: 1.55;
+.box {
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  padding: 24px 22px;
+  background-color: #fffdf8;
+  box-shadow: 3px 3px 0 var(--ink);
+  box-sizing: border-box;
+  margin-bottom: 24px;
 }
 
-.status {
+.codePrompt {
+  margin: 0 0 16px;
+  font-size: 14.5px;
+  color: #3f4743;
+  font-weight: 600;
+}
+
+.coralStar {
+  color: var(--coral);
+  font-weight: 900;
+}
+
+.inputGroup {
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  width: 100%;
+}
+
+.codeSlotsContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   gap: 10px;
 }
 
-.status span {
-  border: 1px solid var(--ink);
-  padding: 5px 8px;
-  font: 700 10px var(--mono);
+.codeSlot {
+  width: 48px;
+  height: 56px;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  background-color: #ffffff;
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 26px;
+  font-weight: 950;
+  text-align: center;
+  text-transform: uppercase;
+  outline: none;
+  box-sizing: border-box;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
 }
 
-.schedule,
-.ticketNote {
-  font: 12px var(--mono);
+.codeSlot:focus {
+  border-color: var(--coral);
+  box-shadow: 0 0 0 3.5px rgba(239, 128, 118, 0.4);
 }
 
-.gameLink,
-.eventCard button,
-.roundCard button {
-  display: inline-flex;
-  gap: 12px;
-  align-items: center;
-  margin-top: 12px;
+.codeSlotError {
+  border-color: #dc2626 !important;
+  background-color: #fff5f5 !important;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.25) !important;
+}
+
+.joinBtn {
+  background-color: var(--coral);
+  color: var(--ink);
+  border: 2.5px solid var(--ink);
+  border-radius: 10px;
+  padding: 11px 44px;
+  font-size: 18px;
+  font-weight: 950;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  text-transform: uppercase;
+  box-shadow: 4px 4px 0 var(--ink);
+  transition: background-color 0.12s ease, transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.joinBtn:hover:not(:disabled) {
+  background-color: #ff9d92;
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 var(--ink);
+}
+
+.joinBtn:active:not(:disabled) {
+  background-color: #e56e64;
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 var(--ink);
+}
+
+.joinBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.errorBox {
+  margin-top: 14px;
   padding: 12px 16px;
+  border: 2px solid #b91c1c;
+  border-radius: 8px;
+  background-color: #fee2e2;
+  color: #991b1b;
+  font-size: 13.5px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 2px 2px 0 #991b1b;
+}
+
+.errorIcon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.helperBox {
+  margin-top: 16px;
+  padding: 10px 14px;
+  border: 1.5px dashed rgba(239, 128, 118, 0.6);
+  border-radius: 8px;
+  background: #fff5f3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.helperText {
+  font-size: 12px;
+  color: var(--ink);
+  font-family: var(--mono);
+  margin: 0;
+}
+
+.helperCode {
+  color: #d9483b;
+  background: rgba(239, 128, 118, 0.18);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.helperBtn {
   background: var(--coral);
   color: var(--ink);
-  border: 2px solid var(--ink);
-  box-shadow: 3px 3px 0 var(--ink);
-  font-weight: 800;
-  text-decoration: none;
-  cursor: pointer;
-}
-
-.gameLink:focus-visible,
-.eventCard button:focus-visible,
-.roundCard button:focus-visible {
-  outline: 3px solid #315c53;
-  outline-offset: 4px;
-}
-
-.help {
-  background: #f3dfad;
-}
-
-.help h2 {
-  max-width: 600px;
-}
-
-.ticketNote {
-  margin-top: 20px;
-}
-
-.ticketBadge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
+  border: 1.5px solid var(--ink);
+  border-radius: 6px;
   padding: 6px 14px;
-  background: var(--ink);
-  color: #fde047;
-  border: 1.5px solid var(--ink);
-  font: 800 13px/1 var(--mono);
-  letter-spacing: 0.08em;
-  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.2);
-  margin-top: 10px;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 var(--ink);
+  transition: all 0.12s ease;
 }
 
-.practiceSection {
-  background: #fbf8ee;
-  border: 2px solid var(--ink);
-  box-shadow: 6px 6px 0 var(--ink);
-  padding: clamp(20px, 4vw, 36px);
-  margin-top: 10px;
-}
-
-.practiceHeader {
-  margin-bottom: 24px;
-  border-bottom: 2px solid var(--ink);
-  padding-bottom: 18px;
-}
-
-.practiceHeader h2 {
-  margin: 8px 0 10px;
-  font-size: clamp(24px, 4vw, 34px);
-  letter-spacing: -0.03em;
-  font-weight: 850;
-  line-height: 1.1;
-}
-
-.practiceDesc {
-  max-width: 760px;
-  font-size: 14px;
-  line-height: 1.6;
-  color: #2b332f;
-  margin: 0;
-}
-
-.rulesList {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 14px;
-  margin: 18px 0 24px;
-  padding: 0;
-  list-style: none;
-}
-
-.ruleItem {
-  padding: 14px 16px;
-  background: #fff;
-  border: 1.5px solid var(--ink);
+.helperBtn:hover {
+  background: #ff9d92;
+  transform: translate(-1px, -1px);
   box-shadow: 3px 3px 0 var(--ink);
 }
 
-.ruleStep {
-  display: inline-block;
-  font: 800 11px/1 var(--mono);
-  color: #a2483e;
-  letter-spacing: 0.1em;
-  margin-bottom: 6px;
+.verifiedBox {
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  padding: 22px;
+  background-color: #f7fdf8;
+  margin-bottom: 24px;
+  box-shadow: 3px 3px 0 var(--ink);
 }
 
-.ruleTitle {
-  display: block;
-  font-weight: 800;
+.verifiedHeading {
+  font-size: 18px;
+  font-weight: 950;
+  color: #1b5e20;
+  margin: 0 0 6px;
+  letter-spacing: 0.03em;
+}
+
+.verifiedSub {
   font-size: 14px;
-  margin-bottom: 4px;
-}
-
-.ruleText {
-  font-size: 12px;
-  line-height: 1.45;
-  color: #555;
+  color: #2e7d32;
+  font-weight: 700;
   margin: 0;
+  letter-spacing: 0.02em;
 }
 
-.liveBanner {
+.verifiedTagRow {
+  margin-top: 12px;
+}
+
+.verifiedTag {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  color: var(--ink);
+  background-color: var(--coral);
+  font-weight: 950;
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 2px solid var(--ink);
+  box-shadow: 3px 3px 0 var(--ink);
+  letter-spacing: 0.04em;
+}
+
+.unverifiedPrompt {
+  margin: 0;
+  color: #64748b;
+  font-style: italic;
+  font-size: 14px;
+  text-align: center;
+}
+
+.activeRoundNotice {
+  margin-top: 14px;
+  background: #1b5e20;
+  color: #ffffff;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-weight: 900;
+  font-size: 13.5px;
+  letter-spacing: 0.03em;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 16px;
-  padding: 18px 22px;
-  background: #dcfce7;
-  border: 2px solid #166534;
-  box-shadow: 4px 4px 0 #166534;
-  margin-top: 18px;
+  gap: 10px;
+  box-shadow: 3px 3px 0 var(--ink);
 }
 
-.liveBannerText strong {
-  display: block;
-  font: 800 13px/1.2 var(--mono);
-  color: #14532d;
-  letter-spacing: 0.05em;
-  margin-bottom: 4px;
+.pulseDot {
+  animation: pulse 1s infinite alternate;
 }
 
-.liveBannerText p {
-  margin: 0;
-  font-size: 13px;
-  color: #166534;
+@keyframes pulse {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
 }
 
-.waitingBanner {
-  padding: 16px 20px;
-  background: #fef3c7;
-  border: 2px solid #b45309;
-  box-shadow: 4px 4px 0 #b45309;
-  margin-top: 18px;
+.simulationBox {
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  padding: 22px;
+  background-color: #ffffff;
+  box-shadow: 3px 3px 0 var(--ink);
 }
 
-.waitingBanner strong {
-  display: block;
-  font: 800 12px/1.2 var(--mono);
-  color: #78350f;
+.simHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.simBadge {
+  background: var(--coral);
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 950;
+  padding: 3px 8px;
+  border: 1.5px solid var(--ink);
+  box-shadow: 2px 2px 0 var(--ink);
   letter-spacing: 0.06em;
-  margin-bottom: 4px;
 }
 
-.waitingBanner p {
+.simTitle {
+  font-size: 16px;
+  font-weight: 950;
+  color: var(--ink);
   margin: 0;
-  font-size: 13px;
-  color: #92400e;
+  letter-spacing: 0.02em;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    scroll-behavior: auto !important;
-    animation-duration: .01ms !important;
-    transition-duration: .01ms !important;
+@media (max-width: 600px) {
+  .codeSlot {
+    width: 38px;
+    height: 48px;
+    font-size: 20px;
+  }
+  .codeSlotsContainer {
+    gap: 6px;
+  }
+  .outerCard {
+    padding: 16px 12px;
   }
 }
