@@ -72,7 +72,7 @@ function renderLobby({ waiting = false, initialEntries = ['/participant/lobby'] 
       <MemoryRouter initialEntries={initialEntries}>
         <Routes>
           <Route element={<Outlet context={user} />}>
-            <Route path="/participant/lobby" element={<ParticipantLobby waiting={waiting} />} />
+            <Route path="/participant/lobby" element={<ParticipantLobby waiting={false} />} />
             <Route path="/participant/waiting" element={<ParticipantLobby waiting={true} />} />
             <Route path="/participant/game" element={<div>Live Game Page</div>} />
           </Route>
