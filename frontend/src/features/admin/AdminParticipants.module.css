@@ -4,7 +4,7 @@
   margin: 24px auto;
   min-height: 0;
   padding: clamp(20px, 3vw, 36px);
-  background: var(--ice);
+  background: var(--color-parchment, #F0E8D9);
   color: var(--ink);
   border-radius: 16px;
 }
@@ -37,7 +37,7 @@
 
 .heading p {
   margin: 0.6rem 0 0;
-  color: #3f4943;
+  color: var(--color-text-secondary, #62584C);
 }
 
 .heading button,
@@ -190,7 +190,8 @@
 }
 
 .list button[aria-current="true"] {
-  background: var(--cyan-soft);
+  background: var(--color-sandstone, #DCD0BD);
+  border-left: 3px solid var(--color-oxblood, #8C4545);
   box-shadow: none;
 }
 

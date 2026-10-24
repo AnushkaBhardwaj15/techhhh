@@ -1,9 +1,9 @@
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(4, 8, 18, 0.78);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  background: rgba(36, 31, 26, 0.72);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -18,63 +18,71 @@
 }
 
 .modal {
-  background: var(--color-surface, #0d1322);
-  border: 1px solid var(--color-border, #1f2c4a);
-  border-radius: var(--radius-lg, 12px);
-  max-width: 620px;
+  background: var(--color-paper, #FAF7F0);
+  border: 2px solid #302820;
+  border-color: var(--color-espresso, #302820);
+  border-radius: var(--radius-sm, 4px);
+  max-width: 640px;
   width: 100%;
   max-height: 90vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.65);
-  color: var(--color-text, #f0f4fc);
+  box-shadow: 6px 6px 0px var(--color-espresso, #302820);
+  color: var(--color-espresso, #302820);
   overflow: hidden;
 }
 
 .header {
-  padding: 18px 22px;
-  border-bottom: 1px solid var(--color-border, #1f2c4a);
+  padding: 16px 22px;
+  border-bottom: 2px solid #302820;
+  border-bottom-color: var(--color-espresso, #302820);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--color-sandstone, #DCD0BD);
 }
 
 .titleGroup h2 {
+  font-family: var(--display);
   font-size: 1.15rem;
-  font-weight: 700;
+  font-weight: 800;
   margin: 0;
   display: flex;
   align-items: center;
   gap: 8px;
+  color: var(--color-espresso, #302820);
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
 }
 
 .titleGroup p {
   font-size: 0.8rem;
-  color: var(--color-text-secondary, #94a3b8);
+  color: var(--color-text-secondary, #62584C);
   margin: 4px 0 0;
+  font-family: var(--mono);
 }
 
 .closeButton {
-  background: transparent;
-  border: 1px solid var(--color-border, #1f2c4a);
-  color: var(--color-text-secondary, #94a3b8);
+  background: var(--color-paper, #FAF7F0);
+  border: 1.5px solid #302820;
+  border-color: var(--color-espresso, #302820);
+  color: var(--color-espresso, #302820);
   font-size: 1.25rem;
   line-height: 1;
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-xs, 2px);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.15s ease;
+  box-shadow: 1px 1px 0px var(--color-espresso, #302820);
 }
 
 .closeButton:hover {
-  color: #fff;
-  border-color: var(--color-accent, #6366f1);
-  background: rgba(99, 102, 241, 0.1);
+  background: var(--color-oxblood, #8C4545);
+  color: var(--color-paper, #FAF7F0);
 }
 
 .body {
@@ -85,12 +93,14 @@
   gap: 20px;
   font-size: 0.9rem;
   line-height: 1.5;
+  background: var(--color-paper, #FAF7F0);
 }
 
 .ruleAlert {
-  background: rgba(245, 158, 11, 0.08);
-  border: 1px solid rgba(245, 158, 11, 0.3);
-  border-radius: 8px;
+  background: rgba(140, 69, 69, 0.08);
+  border: 1.5px solid #8C4545;
+  border-color: var(--color-oxblood, #8C4545);
+  border-radius: var(--radius-xs, 2px);
   padding: 12px 14px;
   display: flex;
   gap: 10px;
@@ -98,22 +108,24 @@
 }
 
 .ruleAlert strong {
-  color: #fbbf24;
+  color: var(--color-oxblood, #8C4545);
+  font-family: var(--mono);
 }
 
 .ruleAlert p {
   margin: 0;
-  color: #fef3c7;
+  color: var(--color-espresso, #302820);
   font-size: 0.85rem;
 }
 
 .stepsSection h3,
 .patternsSection h3 {
+  font-family: var(--mono);
   font-size: 0.95rem;
-  font-weight: 700;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--color-accent-light, #818cf8);
+  letter-spacing: 0.08em;
+  color: var(--color-oxblood, #8C4545);
   margin: 0 0 10px;
 }
 
@@ -130,33 +142,36 @@
 }
 
 .stepCard {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--color-border, #1f2c4a);
-  border-radius: 8px;
+  background: var(--color-sandstone, #DCD0BD);
+  border: 1.5px solid #302820;
+  border-color: var(--color-espresso, #302820);
+  border-radius: var(--radius-xs, 2px);
   padding: 12px;
 }
 
 .stepNumber {
   display: inline-block;
+  font-family: var(--mono);
   font-size: 0.7rem;
   font-weight: 800;
-  color: var(--color-accent, #6366f1);
-  background: rgba(99, 102, 241, 0.15);
+  color: var(--color-paper, #FAF7F0);
+  background: var(--color-oxblood, #8C4545);
   padding: 2px 6px;
-  border-radius: 4px;
+  border-radius: var(--radius-xs, 2px);
   margin-bottom: 6px;
 }
 
 .stepCard h4 {
   margin: 0 0 4px;
-  font-size: 0.85rem;
-  color: #fff;
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: var(--color-espresso, #302820);
 }
 
 .stepCard p {
   margin: 0;
   font-size: 0.78rem;
-  color: var(--color-text-secondary, #94a3b8);
+  color: var(--color-text-secondary, #62584C);
 }
 
 .patternList {
@@ -166,9 +181,10 @@
 }
 
 .patternCard {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid var(--color-border, #1f2c4a);
-  border-radius: 8px;
+  background: var(--color-sandstone, #DCD0BD);
+  border: 1.5px solid #302820;
+  border-color: var(--color-espresso, #302820);
+  border-radius: var(--radius-xs, 2px);
   padding: 10px 14px;
   display: flex;
   align-items: center;
@@ -183,41 +199,51 @@
 }
 
 .patternBadge {
+  font-family: var(--mono);
   font-size: 0.72rem;
-  font-weight: 700;
-  background: rgba(99, 102, 241, 0.12);
-  color: var(--color-accent, #6366f1);
+  font-weight: 800;
+  background: var(--color-oxblood, #8C4545);
+  color: var(--color-paper, #FAF7F0);
   padding: 3px 8px;
-  border-radius: 4px;
+  border-radius: var(--radius-xs, 2px);
   white-space: nowrap;
 }
 
 .patternDesc {
   margin: 0;
   font-size: 0.82rem;
-  color: var(--color-text-secondary, #94a3b8);
+  font-weight: 600;
+  color: var(--color-espresso, #302820);
 }
 
 .footer {
   padding: 14px 22px;
-  border-top: 1px solid var(--color-border, #1f2c4a);
+  border-top: 2px solid #302820;
+  border-top-color: var(--color-espresso, #302820);
   display: flex;
   justify-content: flex-end;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--color-sandstone, #DCD0BD);
 }
 
 .gotItBtn {
-  background: var(--color-accent, #6366f1);
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  padding: 8px 18px;
+  background: var(--color-oxblood, #8C4545);
+  color: var(--color-paper, #FAF7F0);
+  border: 1.5px solid #302820;
+  border-color: var(--color-espresso, #302820);
+  border-radius: var(--radius-xs, 2px);
+  padding: 9px 20px;
+  font-family: var(--mono);
   font-size: 0.85rem;
-  font-weight: 600;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   cursor: pointer;
-  transition: opacity 0.15s ease;
+  box-shadow: 2px 2px 0px var(--color-espresso, #302820);
+  transition: all 0.12s ease;
 }
 
 .gotItBtn:hover {
-  opacity: 0.9;
+  background: #733737;
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px var(--color-espresso, #302820);
 }

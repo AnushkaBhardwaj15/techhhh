@@ -4,7 +4,7 @@
   margin: 24px auto;
   min-height: 0;
   padding: clamp(20px, 3vw, 36px);
-  background: var(--ice);
+  background: var(--color-parchment, #F0E8D9);
   color: var(--ink);
   border-radius: 16px;
 }
@@ -39,10 +39,12 @@
 .state button,
 .pagination button {
   min-height: 44px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--cyan);
-  color: var(--ink);
+  border: 1.5px solid #302820;
+  border-color: var(--color-espresso, #302820);
+  border-radius: var(--radius-xs, 2px);
+  background: var(--color-oxblood, #8C4545);
+  color: var(--color-paper, #FAF7F0);
+  box-shadow: 2px 2px 0 var(--color-espresso, #302820);
   font:
     700 14px/1.2 system-ui,
     sans-serif;
@@ -58,7 +60,7 @@
 }
 .panel {
   border: 1px solid var(--border);
-  background: var(--ice);
+  background: var(--color-paper, #FAF7F0);
 }
 .panelHeader {
   display: flex;
@@ -94,8 +96,8 @@
   overflow-x: auto;
 }
 .tableWrap:focus-visible {
-  outline: 3px solid var(--cyan);
-  outline-offset: 3px;
+  outline: 2px solid var(--color-oxblood, #8C4545);
+  outline-offset: 2px;
 }
 .scrollHint {
   display: none;
@@ -162,7 +164,7 @@ td code {
 .pagination button {
   min-height: 38px;
   padding: 0 10px;
-  background: var(--ice);
+  background: var(--color-paper, #FAF7F0);
   box-shadow: none;
 }
 .pagination button:disabled,
@@ -174,8 +176,8 @@ td code {
 .heading a:focus-visible,
 .panel button:focus-visible,
 .pagination button:focus-visible {
-  outline: 3px solid var(--cyan);
-  outline-offset: 3px;
+  outline: 2px solid var(--color-oxblood, #8C4545);
+  outline-offset: 2px;
 }
 .visuallyHidden {
   position: absolute;

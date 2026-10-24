@@ -234,8 +234,8 @@ export function AdminGamePage() {
                   <span
                     className={styles.statusBadge}
                     style={{
-                      background: "rgba(0, 229, 255, 0.15)",
-                      color: "#00e5ff",
+                      background: "rgba(140, 69, 69, 0.12)",
+                      color: "var(--color-oxblood, #8C4545)",
                       fontSize: "0.8rem",
                       padding: "0.2rem 0.6rem",
                     }}
@@ -320,11 +320,11 @@ export function AdminGamePage() {
                     key={draw.id}
                     style={{
                       borderLeft: isSelected
-                        ? "3px solid #00e5ff"
-                        : "3px solid transparent",
+                        ? "4px solid var(--color-oxblood, #8C4545)"
+                        : "4px solid transparent",
                       cursor: "pointer",
                       background: isSelected
-                        ? "rgba(0, 229, 255, 0.08)"
+                        ? "var(--color-sandstone, #DCD0BD)"
                         : undefined,
                     }}
                     onClick={() => setViewingIndex(drawIndex)}
@@ -399,7 +399,7 @@ export function AdminGamePage() {
                       <strong style={{ display: 'block', fontSize: '13px', color: p.closed ? '#a3ff4b' : '#fff' }}>
                         {patternLabels[p.pattern] ?? p.pattern}
                       </strong>
-                      <span style={{ fontSize: '11px', color: p.closed ? '#a3ff4b' : '#94a3b8' }}>
+                      <span style={{ fontSize: '11px', color: p.closed ? '#a3ff4b' : 'var(--color-sandstone, #DCD0BD)' }}>
                         {p.closed ? '✓ Awarded' : '○ Still available'}
                       </span>
                     </div>
@@ -408,7 +408,7 @@ export function AdminGamePage() {
               </div>
               {game.standings.length ? (
                 <div>
-                  <h3 style={{ fontSize: '14px', color: '#00e5ff', margin: '0 0 8px 0' }}>Verified Winners:</h3>
+                  <h3 style={{ fontSize: '14px', color: 'var(--color-oxblood, #8C4545)', margin: '0 0 8px 0' }}>Verified Winners:</h3>
                   {game.standings.map((row, index) => (
                     <p key={index} style={{ margin: '4px 0', fontSize: '13px' }}>
                       🏆 <strong>{row.name}</strong>

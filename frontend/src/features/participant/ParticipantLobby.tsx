@@ -264,9 +264,9 @@ export function ParticipantLobby({ waiting = false }: { waiting?: boolean }) {
         <h1>Welcome, <em>{user?.name ? user.name.split(' ')[0] : 'Ari'}.</em></h1>
         {event.data && (
           <div className={styles.eventCard} aria-label="Your event" style={{ marginTop: "10px" }}>
-            <span className={styles.label} style={{ fontSize: "11px", fontWeight: "bold", color: "var(--coral, #f97316)" }}>YOUR EVENT</span>
+            <span className={styles.label} style={{ fontSize: "11px", fontWeight: "bold", color: "var(--color-oxblood, #8C4545)" }}>YOUR EVENT</span>
             <h2 style={{ margin: "4px 0", fontSize: "20px" }}>{event.data.title}</h2>
-            {event.data.description && <p style={{ margin: 0, fontSize: "14px", color: "var(--cream, #fff)" }}>{event.data.description}</p>}
+            {event.data.description && <p style={{ margin: 0, fontSize: "14px", color: "var(--color-text-secondary, #62584C)" }}>{event.data.description}</p>}
           </div>
         )}
       </section>

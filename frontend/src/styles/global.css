@@ -40,26 +40,26 @@
   --lime: #a3ff4b;
   --lime-soft: #e5f6d6;
   --ice: #e6f3f3;
-  --surface: #f8fcfb;
-  --surface-muted: #dce9ec;
-  --ink: #081220;
-  --muted: #48616d;
-  --muted-dark: #a6bfcc;
-  --border: #b5ccd2;
-  --border-dark: #35536a;
-  --accent-ink: #076f7d;
+  --surface: var(--color-paper, #FAF7F0);
+  --surface-muted: var(--color-sandstone, #DCD0BD);
+  --ink: var(--color-espresso, #302820);
+  --muted: var(--color-text-secondary, #62584C);
+  --muted-dark: #747665;
+  --border: var(--color-border-muted, #BFB29F);
+  --border-dark: var(--color-espresso-deep, #241F1A);
+  --accent-ink: var(--color-oxblood, #8C4545);
   --success-ink: #315e18;
   --danger-soft: #fce7e8;
   --warning-soft: #fff2cb;
   --mono: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
   --display: "Segoe UI", system-ui, sans-serif;
-  --forest: var(--navy);
-  --cream: var(--ice);
-  --coral: var(--cyan);
+  --forest: var(--color-espresso, #302820);
+  --cream: var(--color-parchment, #F0E8D9);
+  --coral: var(--color-oxblood, #8C4545);
   --serif: var(--display);
 
-  color: var(--ink);
-  background: var(--navy);
+  color: var(--color-espresso, #302820);
+  background: var(--color-parchment, #F0E8D9);
   font-variant-numeric: tabular-nums;
 }
 
@@ -73,6 +73,8 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100dvh;
+  background: var(--color-parchment, #F0E8D9);
+  color: var(--color-espresso, #302820);
 }
 button,
 input,
@@ -116,8 +118,8 @@ svg {
   padding: 32px;
   display: grid;
   place-content: center;
-  color: var(--ice);
-  background: var(--navy);
+  color: var(--color-espresso, #302820);
+  background: var(--color-parchment, #F0E8D9);
   text-align: center;
 }
 .feedback h1 {
@@ -128,8 +130,8 @@ svg {
 }
 .role-page {
   min-height: 100dvh;
-  background: var(--navy);
-  color: var(--ice);
+  background: var(--color-parchment, #F0E8D9);
+  color: var(--color-espresso, #302820);
 }
 .role-page > header {
   display: block;
@@ -176,11 +178,11 @@ svg {
   max-width: calc(100% - 32px);
   border: 1px solid var(--border);
   border-radius: 16px;
-  background: var(--ice);
+  background: var(--color-paper, #FAF7F0);
   color: var(--ink);
 }
 .role-page :where(dialog)::backdrop {
-  background: rgb(8 18 32 / 70%);
+  background: rgba(36, 31, 26, 0.7);
 }
 .session-error {
   padding: 12px 20px;

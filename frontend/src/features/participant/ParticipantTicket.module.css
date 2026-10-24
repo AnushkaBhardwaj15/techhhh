@@ -2,6 +2,9 @@
   max-width: 1100px;
   margin: 0 auto;
   padding: clamp(20px, 5vw, 56px) clamp(14px, 4vw, 40px) 64px;
+  background: var(--color-parchment, #F0E8D9);
+  color: var(--color-espresso, #302820);
+  min-height: 100vh;
 }
 
 .intro {
@@ -12,16 +15,15 @@
 .back {
   display: inline-block;
   margin-bottom: 28px;
-  color: var(--accent-ink);
+  color: var(--color-oxblood, #8C4545);
   font-weight: 750;
-  text-decoration-thickness: 2px;
-  text-underline-offset: 4px;
+  text-decoration: none;
 }
 
 .kicker,
 .label {
   margin: 0;
-  color: var(--accent-ink);
+  color: var(--color-oxblood, #8C4545);
   font: 700 11px/1.2 var(--mono);
   letter-spacing: 0.13em;
 }
@@ -31,10 +33,11 @@
   font-size: clamp(42px, 9vw, 78px);
   line-height: 0.94;
   letter-spacing: -0.065em;
+  color: var(--color-espresso, #302820);
 }
 
 .intro h1 em {
-  color: var(--accent-ink);
+  color: var(--color-oxblood, #8C4545);
   font-family: Georgia, serif;
   font-weight: 500;
 }
@@ -42,6 +45,7 @@
 .intro > p:last-child {
   max-width: 550px;
   line-height: 1.6;
+  color: var(--color-text-secondary, #62584C);
 }
 
 .roundHeading {
@@ -98,7 +102,7 @@
 }
 
 .serverMark {
-  color: var(--accent-ink);
+  color: var(--color-text-secondary, #62584C);
   text-align: right;
   font: 700 9px/1.4 var(--mono);
   letter-spacing: 0.04em;
@@ -440,10 +444,14 @@
   }
 }
 .ticket {
-  background: var(--ice);
-  color: var(--ink);
-  border-radius: 12px;
-  border-top: 3px solid var(--cyan);
+  background: var(--color-paper, #FAF7F0);
+  color: var(--color-espresso, #302820);
+  border: 2px solid #302820;
+  border-color: var(--color-espresso, #302820);
+  border-top: 4px solid #8C4545;
+  border-top-color: var(--color-oxblood, #8C4545);
+  border-radius: var(--radius-sm, 4px);
+  box-shadow: 3px 3px 0 var(--color-espresso, #302820);
 }
 .ticketHead {
   flex-wrap: wrap;
@@ -453,25 +461,26 @@
   border-spacing: 4px;
 }
 .grid td {
-  border-color: var(--border);
-  border-radius: 6px;
+  border-color: var(--color-border-muted, #BFB29F);
+  border-radius: var(--radius-xs, 2px);
 }
 .playable {
-  background: var(--surface);
+  background: var(--color-paper, #FAF7F0);
 }
 .marked,
 .winning {
-  background: var(--lime);
-  color: var(--navy);
+  background: #C4D6B0;
+  color: var(--color-espresso, #302820);
+  border-color: #3D6B4F;
 }
 .marked .position,
 .winning .position {
-  color: var(--success-ink);
+  color: #3D6B4F;
 }
 .markedBox,
 .winningBox {
-  background: var(--lime);
-  color: var(--navy);
+  background: #C4D6B0;
+  color: var(--color-espresso, #302820);
 }
 .legend {
   border: 0;

@@ -4,7 +4,7 @@
   margin: 24px auto;
   min-height: 0;
   padding: clamp(20px, 3vw, 36px);
-  background: var(--ice);
+  background: var(--color-parchment, #F0E8D9);
   color: var(--ink);
   border-radius: 16px;
 }
@@ -156,7 +156,7 @@
   min-height: 42px;
   padding: 8px 10px;
   border: 1px solid var(--border);
-  background: var(--ice);
+  background: var(--color-paper, #FAF7F0);
   color: var(--ink);
   font:
     15px/1.3 system-ui,

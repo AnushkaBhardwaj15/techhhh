@@ -56,7 +56,7 @@
   margin: 14px 0;
   padding: 10px;
   border: 1px solid var(--ink);
-  background: var(--ice);
+  background: var(--color-paper, #FAF7F0);
 }
 .allocation div {
   display: grid;
@@ -75,12 +75,12 @@
 }
 .cancel {
   margin-top: 12px;
-  background: var(--ice) !important;
+  background: var(--color-paper, #FAF7F0) !important;
 }
 .recovery {
   padding: 11px;
   border-left: 5px solid var(--coral);
-  background: var(--ice);
+  background: var(--color-paper, #FAF7F0);
 }
 .report {
   display: grid;
@@ -91,7 +91,7 @@
 .report div {
   padding: 9px;
   border: 1px solid var(--ink);
-  background: var(--ice);
+  background: var(--color-paper, #FAF7F0);
 }
 .report dt {
   font: 10px/1.4 var(--mono);
@@ -105,7 +105,7 @@
   margin: 13px 0 0;
   padding: 10px;
   border-left: 5px solid var(--coral);
-  background: var(--ice);
+  background: var(--color-paper, #FAF7F0);
 }
 @media (max-width: 560px) {
   .report {

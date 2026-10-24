@@ -4,7 +4,7 @@
   margin: 24px auto;
   min-height: 0;
   padding: clamp(20px, 3vw, 36px);
-  background: var(--ice);
+  background: var(--color-parchment, #F0E8D9);
   color: var(--ink);
   border-radius: 16px;
 }
@@ -25,7 +25,7 @@
 }
 .heading p {
   max-width: 65ch;
-  color: #49534d;
+  color: var(--color-text-secondary, #62584C);
   line-height: 1.55;
 }
 .notice,

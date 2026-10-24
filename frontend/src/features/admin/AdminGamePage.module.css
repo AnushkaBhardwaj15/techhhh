@@ -149,12 +149,12 @@
 }
 
 .lobbyTag {
-  background: var(--cyan-soft);
-  color: var(--accent-ink);
+  background: var(--color-sandstone, #DCD0BD);
+  color: var(--color-espresso, #302820);
   font-family: var(--mono);
   font-weight: 800;
   padding: 2px 7px;
-  border-radius: 4px;
+  border-radius: var(--radius-xs, 2px);
 }
 
 .controlsBar {
@@ -411,10 +411,10 @@
   font-family: var(--mono);
   font-size: 11px;
   font-weight: 900;
-  color: var(--forest);
-  background: rgba(8, 123, 139, 0.1);
+  color: var(--color-espresso, #302820);
+  background: var(--color-sandstone, #DCD0BD);
   padding: 2px 6px;
-  border-radius: 4px;
+  border-radius: var(--radius-xs, 2px);
 }
 
 .qPrompt {
@@ -471,10 +471,11 @@
   font-family: var(--mono);
   font-size: 11px;
   font-weight: 900;
-  color: #1e3a8a;
-  background: #dbeafe;
+  color: var(--color-oxblood, #8C4545);
+  background: var(--color-sandstone, #DCD0BD);
+  border: 1px solid var(--color-border-muted, #BFB29F);
   padding: 2px 6px;
-  border-radius: 4px;
+  border-radius: var(--radius-xs, 2px);
 }
 
 .callBtn {
@@ -492,7 +493,8 @@
 }
 
 .callBtn:hover:not(:disabled) {
-  background: var(--cyan-hover);
+  background: #733737;
+  color: var(--color-paper, #FAF7F0);
   transform: none;
   box-shadow: none;
 }
@@ -530,22 +532,26 @@
   flex-wrap: wrap;
 }
 .gameCodePill {
-  background: var(--navy);
-  border-color: var(--border-dark);
+  background: var(--color-sandstone, #DCD0BD);
+  border: 1.5px solid #302820;
+  border-color: var(--color-espresso, #302820);
+  border-radius: var(--radius-xs, 2px);
   max-width: 100%;
   flex-wrap: wrap;
   justify-content: center;
 }
 .gameCodeLabel {
-  color: var(--muted-dark);
+  color: var(--color-espresso, #302820);
 }
 .gameCodeValue {
-  color: var(--cyan);
+  color: var(--color-oxblood, #8C4545);
 }
 .copyBtn {
-  background: var(--navy-raised);
-  color: var(--ice);
-  border-color: var(--border-dark);
+  background: var(--color-paper, #FAF7F0);
+  color: var(--color-espresso, #302820);
+  border: 1px solid #302820;
+  border-color: var(--color-espresso, #302820);
+  border-radius: var(--radius-xs, 2px);
 }
 .qrFrame {
   border: 1px solid var(--border);

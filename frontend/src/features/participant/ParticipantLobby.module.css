@@ -20,13 +20,15 @@
 .outerCard {
   width: 100%;
   max-width: 860px;
-  background-color: var(--surface);
-  border: 1px solid var(--border);
-  border-top: 3px solid var(--cyan);
-  border-radius: 16px;
+  background-color: var(--color-paper, #FAF7F0);
+  border: 2px solid #302820;
+  border-color: var(--color-espresso, #302820);
+  border-top: 4px solid #8C4545;
+  border-top-color: var(--color-oxblood, #8C4545);
+  border-radius: var(--radius-sm, 4px);
   padding: clamp(20px, 4vw, 36px);
   box-sizing: border-box;
-  box-shadow: none;
+  box-shadow: 4px 4px 0 var(--color-espresso, #302820);
 }
 
 .kicker {
@@ -153,13 +155,13 @@
 }
 
 .joinBtn:hover:not(:disabled) {
-  background-color: var(--cyan-hover);
+  background-color: #733737;
   transform: none;
   box-shadow: none;
 }
 
 .joinBtn:active:not(:disabled) {
-  background-color: var(--cyan-hover);
+  background-color: #733737;
   transform: none;
   box-shadow: none;
 }
@@ -192,9 +194,9 @@
 .helperBox {
   margin-top: 16px;
   padding: 10px 14px;
-  border: 1.5px dashed rgba(0, 161, 181, 0.6);
+  border: 1.5px dashed var(--color-border-muted, #BFB29F);
   border-radius: 8px;
-  background: var(--cyan-soft);
+  background: var(--color-sandstone, #DCD0BD);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -211,7 +213,8 @@
 
 .helperCode {
   color: var(--accent-ink);
-  background: rgba(0, 161, 181, 0.18);
+  background: var(--color-paper, #FAF7F0);
+  border: 1px solid var(--color-border-muted, #BFB29F);
   padding: 2px 6px;
   border-radius: 4px;
 }
@@ -231,7 +234,8 @@
 }
 
 .helperBtn:hover {
-  background: var(--cyan-hover);
+  background: #733737;
+  color: #fff;
   transform: none;
   box-shadow: none;
 }
@@ -534,7 +538,7 @@
 .primaryJoinBtn:hover {
   transform: none;
   box-shadow: none;
-  background-color: var(--cyan-hover);
+  background-color: #733737;
 }
 
 .customCodeForm {
@@ -599,13 +603,19 @@
   color: var(--ink);
 }
 .page {
-  background: var(--navy);
+  background: var(--color-parchment, #F0E8D9);
+  color: var(--color-espresso, #302820);
   padding: 24px 16px 48px;
 }
 .outerCard {
   max-width: 960px;
-  background: var(--ice);
-  border-radius: 16px;
+  background: var(--color-paper, #FAF7F0);
+  border: 2px solid #302820;
+  border-color: var(--color-espresso, #302820);
+  border-top: 4px solid #8C4545;
+  border-top-color: var(--color-oxblood, #8C4545);
+  border-radius: var(--radius-sm, 4px);
+  box-shadow: 4px 4px 0 var(--color-espresso, #302820);
 }
 .box,
 .simulationBox,
@@ -616,31 +626,36 @@
   background: var(--surface);
 }
 .activeGameCard {
-  border-left: 3px solid var(--cyan);
+  border-left: 4px solid #8C4545;
+  border-left-color: var(--color-oxblood, #8C4545);
 }
 .activeGameTitle {
-  color: var(--accent-ink);
+  color: var(--color-espresso, #302820);
 }
 .sectionTitle {
   font-size: clamp(17px, 3vw, 23px);
   letter-spacing: -0.02em;
 }
 .activeCodeDisplay {
-  background: var(--navy);
-  border-color: var(--border-dark);
+  background: var(--color-espresso-deep, #241F1A);
+  border-color: var(--color-espresso, #302820);
 }
 .activeCodeValue {
-  color: var(--cyan);
+  color: var(--color-oxblood, #8C4545);
 }
 .activeRoundNotice {
-  background: var(--lime-soft);
-  color: var(--success-ink);
-  border-color: #a0bf85;
+  background: var(--color-sandstone, #DCD0BD);
+  color: var(--color-espresso, #302820);
+  border-color: var(--color-espresso, #302820);
 }
 .primaryJoinBtn,
 .joinBtn {
-  background: var(--cyan);
-  border-color: var(--accent-ink);
+  background: var(--color-oxblood, #8C4545);
+  color: var(--color-paper, #FAF7F0);
+  border: 2px solid #302820;
+  border-color: var(--color-espresso, #302820);
+  border-radius: var(--radius-xs, 2px);
+  box-shadow: 2px 2px 0 var(--color-espresso, #302820);
   min-height: 48px;
 }
 .pulseDot,
@@ -710,7 +725,7 @@
 }
 
 .backToParticipation:hover {
-  background: var(--cyan-soft);
+  background: var(--color-sandstone, #DCD0BD);
 }
 .backToParticipation:focus-visible {
   outline: 3px solid var(--accent-ink);
@@ -736,29 +751,33 @@
   gap: 14px;
   margin: 24px 0;
   padding: 20px;
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--lime);
-  border-radius: 10px;
-  background: var(--navy);
-  color: var(--ice);
+  border: 2px solid #302820;
+  border-color: var(--color-espresso, #302820);
+  border-left: 4px solid #8C4545;
+  border-left-color: var(--color-oxblood, #8C4545);
+  border-radius: var(--radius-sm, 4px);
+  background: var(--color-paper, #FAF7F0);
+  color: var(--color-espresso, #302820);
+  box-shadow: 3px 3px 0 var(--color-espresso, #302820);
 }
 .waitingStatus strong {
   font-size: 17px;
+  color: var(--color-espresso, #302820);
 }
 .waitingStatus p {
   margin: 6px 0 0;
-  color: var(--muted-dark);
+  color: var(--color-text-secondary, #62584C);
   font: 12px/1.5 var(--mono);
 }
 .waitingStatus b {
-  color: var(--cyan);
+  color: var(--color-oxblood, #8C4545);
   letter-spacing: 0.1em;
 }
 .waitingDot {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: var(--lime);
+  background: var(--color-oxblood, #8C4545);
   flex: none;
 }
 
@@ -767,17 +786,24 @@
   align-items: center;
   gap: 8px;
   padding: 10px 18px;
-  background: var(--color-primary-cyan, #00e5ff);
-  color: #060d17;
+  background: var(--color-oxblood, #8C4545);
+  color: var(--color-paper, #FAF7F0);
+  border: 1.5px solid #302820;
+  border-color: var(--color-espresso, #302820);
+  border-radius: var(--radius-xs, 2px);
+  box-shadow: 2px 2px 0 var(--color-espresso, #302820);
   font-family: var(--mono, ui-monospace, monospace);
   font-size: 13px;
   font-weight: 800;
   text-decoration: none;
-  border-radius: 8px;
-  border: 1px solid var(--color-primary-cyan, #00e5ff);
+}
+.gameLink:hover {
+  background: #733737;
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 var(--color-espresso, #302820);
 }
 .gameLink:focus-visible {
-  outline: 3px solid #00e5ff;
-  outline-offset: 3px;
+  outline: 2px solid var(--color-oxblood, #8C4545);
+  outline-offset: 2px;
 }
 

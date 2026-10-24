@@ -4,7 +4,7 @@
   margin: 24px auto;
   min-height: 0;
   padding: clamp(20px, 3vw, 36px);
-  background: var(--ice);
+  background: var(--color-parchment, #F0E8D9);
   color: var(--ink);
   border-radius: 16px;
 }
@@ -39,10 +39,12 @@
 .actions button,
 .pagination button {
   min-height: 44px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--cyan);
-  color: var(--ink);
+  border: 1.5px solid #302820;
+  border-color: var(--color-espresso, #302820);
+  border-radius: var(--radius-xs, 2px);
+  background: var(--color-oxblood, #8C4545);
+  color: var(--color-paper, #FAF7F0);
+  box-shadow: 2px 2px 0 var(--color-espresso, #302820);
   font:
     700 14px/1.2 system-ui,
     sans-serif;
@@ -66,7 +68,7 @@
 .detail {
   min-width: 0;
   border: 1px solid var(--border);
-  background: var(--ice);
+  background: var(--color-paper, #FAF7F0);
 }
 .queueHeader,
 .detailHeader {
@@ -112,8 +114,8 @@
 .actions button:focus-visible,
 .pagination button:focus-visible,
 .retry:focus-visible {
-  outline: 3px solid var(--cyan);
-  outline-offset: 3px;
+  outline: 2px solid var(--color-oxblood, #8C4545);
+  outline-offset: 2px;
 }
 .claimTitle {
   font-size: 16px;
@@ -155,7 +157,7 @@
   min-height: 40px;
   padding: 0 12px;
   border: 1px solid var(--ink);
-  background: var(--ice);
+  background: var(--color-paper, #FAF7F0);
   font-weight: 700;
   cursor: pointer;
 }
@@ -176,7 +178,7 @@
 .pagination button {
   min-height: 38px;
   padding: 0 10px;
-  background: var(--ice);
+  background: var(--color-paper, #FAF7F0);
   box-shadow: none;
 }
 .pagination button:disabled,

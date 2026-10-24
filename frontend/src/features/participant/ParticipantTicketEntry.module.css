@@ -6,7 +6,7 @@
   margin: 24px auto;
   min-height: 0;
   padding: clamp(20px, 3vw, 36px);
-  background: var(--ice);
+  background: var(--color-parchment, #F0E8D9);
   color: var(--ink);
   border-radius: 16px;
 }
@@ -228,21 +228,24 @@
 }
 
 .proceedButton {
-  background: var(--coral);
-  color: var(--navy);
-  border: 1.5px solid var(--ink);
-  box-shadow: none;
+  background: var(--color-oxblood, #8C4545);
+  color: var(--color-paper, #FAF7F0);
+  border: 1.5px solid #302820;
+  border-color: var(--color-espresso, #302820);
+  border-radius: var(--radius-xs, 2px);
+  box-shadow: 2px 2px 0 var(--color-espresso, #302820);
   padding: 10px 18px;
   font-family: var(--mono);
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 850;
   cursor: pointer;
-  transition: transform 0.1s ease;
+  transition: all 0.12s ease;
 }
 
 .proceedButton:hover {
-  transform: none;
-  box-shadow: none;
+  background: #733737;
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 var(--color-espresso, #302820);
 }
 
 .gridWrap {
@@ -257,16 +260,24 @@
 }
 
 .proceedButtonLarge {
-  background: var(--coral);
-  color: var(--navy);
-  border: 1px solid var(--border);
-  box-shadow: none;
+  background: var(--color-oxblood, #8C4545);
+  color: var(--color-paper, #FAF7F0);
+  border: 2px solid #302820;
+  border-color: var(--color-espresso, #302820);
+  border-radius: var(--radius-xs, 2px);
+  box-shadow: 2px 2px 0 var(--color-espresso, #302820);
   padding: 14px 28px;
   font-family: var(--mono);
   font-size: 14px;
-  font-weight: 900;
+  font-weight: 850;
   cursor: pointer;
-  transition: transform 0.1s ease;
+  transition: all 0.12s ease;
+}
+
+.proceedButtonLarge:hover {
+  background: #733737;
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 var(--color-espresso, #302820);
 }
 
 .proceedButtonLarge:hover {
@@ -329,5 +340,5 @@
 
 .proceedButton,
 .proceedButtonLarge {
-  color: var(--navy);
+  color: var(--color-paper, #FAF7F0);
 }

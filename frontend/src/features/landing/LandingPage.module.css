@@ -60,7 +60,7 @@
   letter-spacing: 0.12em;
   color: var(--forest);
   padding: 3px 6px;
-  border: 1px solid rgba(8, 123, 139, 0.4);
+  border: 1px solid var(--color-border-muted, #BFB29F);
 }
 
 .navLinks {
@@ -97,11 +97,11 @@
   color: var(--forest);
   padding: 4px 8px;
   border: 1px dashed var(--forest);
-  background: rgba(8, 123, 139, 0.06);
+  background: var(--color-sandstone, #DCD0BD);
 }
 
 .navLiveItem:hover {
-  background: rgba(8, 123, 139, 0.14);
+  background: var(--color-border-muted, #BFB29F);
 }
 
 .livePulse {
@@ -245,15 +245,17 @@
   gap: 12px;
   min-height: 52px;
   padding: 0 24px;
-  background: var(--coral);
-  color: var(--ink);
+  background: var(--color-oxblood, #8C4545);
+  color: var(--color-paper, #FAF7F0);
   text-decoration: none;
   font-family: var(--mono);
   font-size: 13px;
   font-weight: 900;
   letter-spacing: 0.08em;
-  border: 1px solid var(--border);
-  box-shadow: none;
+  border: 2px solid #302820;
+  border-color: var(--color-espresso, #302820);
+  border-radius: var(--radius-xs, 2px);
+  box-shadow: 2px 2px 0 var(--color-espresso, #302820);
   cursor: pointer;
   transition:
     transform 100ms ease,
@@ -262,12 +264,14 @@
 }
 
 .primaryButton:hover {
-  background: var(--cyan-hover);
+  background: #733737;
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 var(--color-espresso, #302820);
 }
 
 .primaryButton:active {
-  transform: translate(3px, 3px);
-  box-shadow: none;
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 var(--color-espresso, #302820);
 }
 
 .buttonArrow {
@@ -476,10 +480,10 @@
   font-size: 9px;
   font-weight: 800;
   letter-spacing: 0.1em;
-  color: var(--forest);
-  background: rgba(8, 123, 139, 0.1);
+  color: var(--color-espresso, #302820);
+  background: var(--color-sandstone, #DCD0BD);
   padding: 3px 6px;
-  border: 1px solid rgba(8, 123, 139, 0.3);
+  border: 1px solid var(--color-border-muted, #BFB29F);
 }
 
 .fullHousePill {
@@ -487,10 +491,10 @@
   font-size: 9px;
   font-weight: 800;
   letter-spacing: 0.1em;
-  color: var(--navy);
-  background: var(--coral);
+  color: var(--color-paper, #FAF7F0);
+  background: var(--color-oxblood, #8C4545);
   padding: 3px 6px;
-  border: 1px solid var(--ink);
+  border: 1px solid var(--color-espresso, #302820);
 }
 
 .patternRuleCard h3 {
@@ -615,7 +619,8 @@
 }
 
 .projectorButton:hover {
-  background: var(--cyan-hover);
+  background: #733737;
+  color: var(--color-paper, #FAF7F0);
 }
 
 .projectorButton:active {

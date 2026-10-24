@@ -99,7 +99,7 @@
 .cardPoints {
   font: 800 11px var(--mono);
   padding: 2px 6px;
-  background: var(--ice);
+  background: var(--color-sandstone, #DCD0BD);
   border: 1px solid var(--border);
   color: var(--accent-ink);
 }
@@ -132,7 +132,7 @@
 }
 
 .claimBtn:hover:not(:disabled) {
-  background: #23433c;
+  background: #733737;
 }
 
 .claimBtn:disabled {

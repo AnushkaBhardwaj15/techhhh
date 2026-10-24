@@ -6,7 +6,7 @@
   margin: 24px auto;
   min-height: 0;
   padding: clamp(20px, 3vw, 36px);
-  background: var(--ice);
+  background: var(--color-parchment, #F0E8D9);
   color: var(--ink);
   border-radius: 16px;
 }
@@ -50,7 +50,7 @@
   padding: 4px 8px;
   border: 1px solid var(--forest);
   color: var(--forest);
-  background: rgba(8, 123, 139, 0.08);
+  background: var(--color-sandstone, #DCD0BD);
 }
 
 .header {

@@ -4,7 +4,7 @@
   margin: 24px auto;
   min-height: 0;
   padding: clamp(20px, 3vw, 36px);
-  background: var(--ice);
+  background: var(--color-parchment, #F0E8D9);
   color: var(--ink);
   border-radius: 16px;
 }
@@ -53,7 +53,7 @@
   padding: 8px;
   border: 1px solid var(--border);
   border-radius: 8px;
-  background: var(--ice);
+  background: var(--color-paper, #FAF7F0);
   color: var(--ink);
   font:
     14px system-ui,
@@ -65,10 +65,12 @@
 .pagination button {
   min-height: 42px;
   padding: 0 14px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--cyan);
-  color: var(--ink);
+  border: 1.5px solid #302820;
+  border-color: var(--color-espresso, #302820);
+  border-radius: var(--radius-xs, 2px);
+  background: var(--color-oxblood, #8C4545);
+  color: var(--color-paper, #FAF7F0);
+  box-shadow: 2px 2px 0 var(--color-espresso, #302820);
   font:
     700 13px system-ui,
     sans-serif;
@@ -83,8 +85,8 @@
 .filters :focus-visible,
 .panel button:focus-visible,
 .panel summary:focus-visible {
-  outline: 3px solid var(--cyan);
-  outline-offset: 3px;
+  outline: 2px solid var(--color-oxblood, #8C4545);
+  outline-offset: 2px;
 }
 .error {
   margin: -8px 0 18px;
@@ -93,7 +95,7 @@
 }
 .panel {
   border: 1px solid var(--border);
-  background: var(--ice);
+  background: var(--color-paper, #FAF7F0);
 }
 .panelHeader {
   display: flex;
@@ -124,8 +126,8 @@
   overflow-x: auto;
 }
 .tableWrap:focus-visible {
-  outline: 3px solid var(--cyan);
-  outline-offset: 3px;
+  outline: 2px solid var(--color-oxblood, #8C4545);
+  outline-offset: 2px;
 }
 .scrollHint {
   display: none;
@@ -200,7 +202,7 @@ td pre {
 }
 .pagination button {
   min-height: 38px;
-  background: var(--ice);
+  background: var(--color-paper, #FAF7F0);
   box-shadow: none;
 }
 .pagination button:disabled,
