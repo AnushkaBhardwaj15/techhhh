@@ -52,9 +52,7 @@ export type CodeValidation =
   | { valid: false; message: string; matchedCode: string };
 export async function validateGameCode(
   code: string,
-  _assignedTicketCode?: string,
 ): Promise<CodeValidation> {
-  void _assignedTicketCode;
   const clean = code.trim().toUpperCase();
   try {
     const game = await joinPlayRound(clean);

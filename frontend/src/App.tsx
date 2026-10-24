@@ -118,7 +118,6 @@ function AppRoutes() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/sign-in" element={<LoginPage />} />
         <Route path="/signin" element={<LoginPage />} />
-        <Route path="/play" element={<Navigate to="/participant/game" replace />} />
         <Route path="/host" element={<Navigate to="/admin" replace />} />
         <Route path="/admin/dashboard" element={<Navigate to="/admin" replace />} />
         <Route element={<ProtectedLayout allowed={['PARTICIPANT']} />}>

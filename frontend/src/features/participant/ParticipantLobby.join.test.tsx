@@ -158,7 +158,7 @@ describe("code entry and waiting lobby", () => {
     expect(
       screen.queryByRole("button", { name: "VERIFY & JOIN" }),
     ).not.toBeInTheDocument();
-    expect(validateGameCode).toHaveBeenCalledWith("ABC123", "8679DE");
+    expect(validateGameCode).toHaveBeenCalledWith("ABC123");
     expect(sessionStorage.getItem(`tt_joined_game_${user.id}`)).toBe(game.id);
   });
 
