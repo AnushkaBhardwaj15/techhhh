@@ -68,10 +68,10 @@ export function ParticipantLobby({ waiting = false }: { waiting?: boolean }) {
     retry: 1,
   });
 
-  // Calculate predefined code from server ticket if available, else default to '8679DE'
+  // Calculate predefined code from server ticket if available
   const assignedCode = ticket.data
     ? formatTicketCode(ticket.data.id)
-    : "8679DE";
+    : "";
 
   const [verifiedCode, setVerifiedCode] = useState(
     () => sessionStorage.getItem(`tt_verified_code_${user.id}`) || "",
@@ -150,7 +150,7 @@ export function ParticipantLobby({ waiting = false }: { waiting?: boolean }) {
       joinInFlight.current = true;
       setJoining(true);
       try {
-        const result = await validateGameCode(clean, assignedCode);
+        const result = await validateGameCode(clean);
         if (!result.valid) {
           setErrorMsg(
             result.message ||
@@ -180,7 +180,7 @@ export function ParticipantLobby({ waiting = false }: { waiting?: boolean }) {
         setJoining(false);
       }
     },
-    [assignedCode, ticket.data?.id, user.id, navigate],
+    [ticket.data?.id, user.id, navigate],
   );
 
   // Preserve scanned links; process a given query code only once per page visit.

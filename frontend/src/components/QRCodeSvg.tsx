@@ -64,7 +64,7 @@ function calculateErrorCorrection(data: number[], ecCount: number): number[] {
 }
 
 // Generate QR Code Matrix for URL or code
-export function generateQrMatrix(text: string): boolean[][] {
+function generateQrMatrix(text: string): boolean[][] {
   const utf8Bytes = new TextEncoder().encode(text);
   const len = utf8Bytes.length;
 

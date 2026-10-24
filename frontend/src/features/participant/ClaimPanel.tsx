@@ -53,7 +53,7 @@ const CLAIM_CARDS: {
   },
 ];
 
-export interface PatternCheckResult {
+interface PatternCheckResult {
   valid: boolean;
   markedCount: number;
   requiredCount: number;
@@ -61,7 +61,7 @@ export interface PatternCheckResult {
   warning?: string;
 }
 
-export function checkPatternBoxes(pattern: ClaimPattern, ticket?: Ticket | null): PatternCheckResult {
+function checkPatternBoxes(pattern: ClaimPattern, ticket?: Ticket | null): PatternCheckResult {
   if (!ticket || !ticket.cells || ticket.cells.length === 0) {
     return {
       valid: true,
