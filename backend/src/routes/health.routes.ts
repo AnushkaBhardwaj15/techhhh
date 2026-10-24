@@ -4,6 +4,16 @@ import { checkDbHealth } from '../db/client.ts';
 import { ServiceUnavailableError } from '../shared/errors/app-error.ts';
 
 export const healthRoutes: FastifyPluginAsync = async (fastify) => {
+  fastify.get('/', async () => {
+    return {
+      name: 'Tech Tombola API',
+      status: 'online',
+      health: '/health',
+      ready: '/ready',
+      version: '1.0.0',
+    };
+  });
+
   fastify.get('/health', async () => {
     return {
       status: 'ok',
