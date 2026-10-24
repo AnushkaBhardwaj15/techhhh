@@ -16,6 +16,7 @@ const credentialsSchema = z.object({
 export function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [validationError, setValidationError] = useState('');
   const location = useLocation();
   const navigate = useNavigate();
@@ -50,6 +51,11 @@ export function LoginPage() {
     signinMutation.mutate();
   }
 
+  function handleSelectPreset(presetEmail: string, presetPassword: string) {
+    setEmail(presetEmail);
+    setPassword(presetPassword);
+    setValidationError('');
+  }
 
   const failure =
     signinMutation.error instanceof ApiError
@@ -76,6 +82,63 @@ export function LoginPage() {
           SIGN TO <span className={styles.coralText}>TECH-TAMBOLA</span>
         </h1>
 
+        {/* 1-Click Demo Accounts */}
+        <div className={styles.presetSection}>
+          <div className={styles.presetGroup}>
+            <span className={styles.presetHeading}>PARTICIPANTS (CLICK TO FILL)</span>
+            <div className={styles.presetRow}>
+              <button
+                type="button"
+                className={`${styles.presetBtn} ${email === 'player1@techtombola.internal' ? styles.presetActive : ''}`}
+                onClick={() => handleSelectPreset('player1@techtombola.internal', 'PlayerPass123!')}
+              >
+                Player 1
+              </button>
+              <button
+                type="button"
+                className={`${styles.presetBtn} ${email === 'player2@techtombola.internal' ? styles.presetActive : ''}`}
+                onClick={() => handleSelectPreset('player2@techtombola.internal', 'PlayerPass123!')}
+              >
+                Player 2
+              </button>
+              <button
+                type="button"
+                className={`${styles.presetBtn} ${email === 'player3@techtombola.internal' ? styles.presetActive : ''}`}
+                onClick={() => handleSelectPreset('player3@techtombola.internal', 'PlayerPass123!')}
+              >
+                Player 3
+              </button>
+            </div>
+          </div>
+
+          <div className={styles.presetGroup}>
+            <span className={styles.presetHeading}>ADMINS (CLICK TO FILL)</span>
+            <div className={styles.presetRow}>
+              <button
+                type="button"
+                className={`${styles.presetBtn} ${styles.presetAdmin} ${email === 'admin1@techtombola.internal' ? styles.presetActive : ''}`}
+                onClick={() => handleSelectPreset('admin1@techtombola.internal', 'AdminPass123!')}
+              >
+                Admin 1
+              </button>
+              <button
+                type="button"
+                className={`${styles.presetBtn} ${styles.presetAdmin} ${email === 'admin2@techtombola.internal' ? styles.presetActive : ''}`}
+                onClick={() => handleSelectPreset('admin2@techtombola.internal', 'AdminPass123!')}
+              >
+                Admin 2
+              </button>
+              <button
+                type="button"
+                className={`${styles.presetBtn} ${styles.presetAdmin} ${email === 'admin3@techtombola.internal' ? styles.presetActive : ''}`}
+                onClick={() => handleSelectPreset('admin3@techtombola.internal', 'AdminPass123!')}
+              >
+                Admin 3
+              </button>
+            </div>
+          </div>
+        </div>
+
         {(validationError || failure) && (
           <div className={styles.errorBox} role="alert">
             {validationError || failure}
@@ -93,7 +156,7 @@ export function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className={styles.input}
-              placeholder="e.g. player@techtombola.internal"
+              placeholder="e.g. player1@techtombola.internal"
               autoComplete="email"
               autoCapitalize="none"
               required
@@ -101,12 +164,21 @@ export function LoginPage() {
           </div>
 
           <div className={styles.field}>
-            <label htmlFor="password" className={styles.label}>
-              password <span className={styles.requiredStar}>*</span>
-            </label>
+            <div className={styles.labelRow}>
+              <label htmlFor="password" className={styles.label}>
+                password <span className={styles.requiredStar}>*</span>
+              </label>
+              <button
+                type="button"
+                className={styles.toggleVisibilityBtn}
+                onClick={() => setShowPassword((prev) => !prev)}
+              >
+                {showPassword ? 'HIDE' : 'SHOW'}
+              </button>
+            </div>
             <input
               id="password"
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className={styles.input}

@@ -41,33 +41,33 @@ export async function seed() {
   const db = getDb();
   const sql = getSqlClient();
 
-  // 1. Seed Super Admin
-  const adminEmail = 'admin@techtombola.internal';
-  const adminPassword = 'AdminPass123!';
-  const existingAdmin = await db.select().from(users).where(eq(users.email, adminEmail));
-  let adminId: string;
+  // 1. Seed 3 Admin Accounts
+  const adminAccounts = [
+    { email: 'admin1@techtombola.internal', password: 'AdminPass123!', name: 'Admin 1', role: 'SUPER_ADMIN' },
+    { email: 'admin2@techtombola.internal', password: 'AdminPass123!', name: 'Admin 2', role: 'ADMIN' },
+    { email: 'admin3@techtombola.internal', password: 'AdminPass123!', name: 'Admin 3', role: 'ADMIN' },
+    { email: 'admin@techtombola.internal', password: 'AdminPass123!', name: 'Tombola Super Admin', role: 'SUPER_ADMIN' },
+  ];
 
-  if (existingAdmin.length === 0) {
-    const passwordHash = await hashPassword(adminPassword);
-    const [created] = await db.insert(users).values({
-      email: adminEmail,
-      passwordHash,
-      name: 'Tombola Super Admin',
-      status: 'ACTIVE',
-    }).returning({ id: users.id });
-    adminId = created.id;
-
-    await db.insert(adminProfiles).values({
-      userId: adminId,
-      role: 'SUPER_ADMIN',
-    });
-    console.log(`Created Super Admin: ${adminEmail} (password: ${adminPassword})`);
-  } else {
-    adminId = existingAdmin[0].id;
-    // ensure password is set to AdminPass123!
-    const passwordHash = await hashPassword(adminPassword);
-    await db.update(users).set({ passwordHash, status: 'ACTIVE' }).where(eq(users.id, adminId));
-    console.log(`Updated Super Admin password: ${adminEmail} (password: ${adminPassword})`);
+  for (const acc of adminAccounts) {
+    const existing = await db.select().from(users).where(eq(users.email, acc.email));
+    const passwordHash = await hashPassword(acc.password);
+    if (existing.length === 0) {
+      const [created] = await db.insert(users).values({
+        email: acc.email,
+        passwordHash,
+        name: acc.name,
+        status: 'ACTIVE',
+      }).returning({ id: users.id });
+      await db.insert(adminProfiles).values({
+        userId: created.id,
+        role: acc.role,
+      });
+      console.log(`Created Admin: ${acc.email} (password: ${acc.password})`);
+    } else {
+      await db.update(users).set({ passwordHash, status: 'ACTIVE' }).where(eq(users.id, existing[0].id));
+      console.log(`Updated Admin password: ${acc.email}`);
+    }
   }
 
   // 2. Seed Default Event
@@ -87,46 +87,59 @@ export async function seed() {
     console.log(`Found existing Event (id: ${eventId}), ensured status LIVE`);
   }
 
-  // 3. Seed Participant
-  const playerEmail = 'player@techtombola.internal';
-  const playerPassword = 'PlayerPass123!';
-  const existingPlayer = await db.select().from(users).where(eq(users.email, playerEmail));
-  let playerId: string;
-  let participantProfileId: string;
+  // 3. Seed 3 Participant / Player Accounts
+  const playerAccounts = [
+    { email: 'player1@techtombola.internal', password: 'PlayerPass123!', name: 'Player 1' },
+    { email: 'player2@techtombola.internal', password: 'PlayerPass123!', name: 'Player 2' },
+    { email: 'player3@techtombola.internal', password: 'PlayerPass123!', name: 'Player 3' },
+    { email: 'player@techtombola.internal', password: 'PlayerPass123!', name: 'Alex Player' },
+  ];
 
-  if (existingPlayer.length === 0) {
-    const passwordHash = await hashPassword(playerPassword);
-    const [createdUser] = await db.insert(users).values({
-      email: playerEmail,
-      passwordHash,
-      name: 'Alex Player',
-      status: 'ACTIVE',
-    }).returning({ id: users.id });
-    playerId = createdUser.id;
+  let playerId: string = '';
+  let participantProfileId: string = '';
 
-    const [createdProfile] = await db.insert(participantProfiles).values({
-      userId: playerId,
-      eventId,
-      status: 'ACTIVE',
-    }).returning({ id: participantProfiles.id });
-    participantProfileId = createdProfile.id;
-    console.log(`Created Player: ${playerEmail} (password: ${playerPassword})`);
-  } else {
-    playerId = existingPlayer[0].id;
-    const profiles = await db.select().from(participantProfiles).where(eq(participantProfiles.userId, playerId));
-    if (profiles.length === 0) {
+  for (const acc of playerAccounts) {
+    const existing = await db.select().from(users).where(eq(users.email, acc.email));
+    const passwordHash = await hashPassword(acc.password);
+    let currentUserId: string;
+
+    if (existing.length === 0) {
+      const [createdUser] = await db.insert(users).values({
+        email: acc.email,
+        passwordHash,
+        name: acc.name,
+        status: 'ACTIVE',
+      }).returning({ id: users.id });
+      currentUserId = createdUser.id;
+
       const [createdProfile] = await db.insert(participantProfiles).values({
-        userId: playerId,
+        userId: currentUserId,
         eventId,
         status: 'ACTIVE',
       }).returning({ id: participantProfiles.id });
-      participantProfileId = createdProfile.id;
+
+      if (!participantProfileId) {
+        participantProfileId = createdProfile.id;
+        playerId = currentUserId;
+      }
+      console.log(`Created Player: ${acc.email} (password: ${acc.password})`);
     } else {
-      participantProfileId = profiles[0].id;
+      currentUserId = existing[0].id;
+      await db.update(users).set({ passwordHash, status: 'ACTIVE' }).where(eq(users.id, currentUserId));
+      const profiles = await db.select().from(participantProfiles).where(eq(participantProfiles.userId, currentUserId));
+      if (profiles.length === 0) {
+        const [createdProfile] = await db.insert(participantProfiles).values({
+          userId: currentUserId,
+          eventId,
+          status: 'ACTIVE',
+        }).returning({ id: participantProfiles.id });
+        if (!participantProfileId) participantProfileId = createdProfile.id;
+      } else if (!participantProfileId) {
+        participantProfileId = profiles[0].id;
+      }
+      if (!playerId) playerId = currentUserId;
+      console.log(`Updated Player password: ${acc.email}`);
     }
-    const passwordHash = await hashPassword(playerPassword);
-    await db.update(users).set({ passwordHash, status: 'ACTIVE' }).where(eq(users.id, playerId));
-    console.log(`Updated Player password: ${playerEmail} (password: ${playerPassword})`);
   }
 
   // 4. Seed Questions & Keys for Event
