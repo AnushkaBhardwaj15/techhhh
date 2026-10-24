@@ -1,9 +1,14 @@
 .page {
-  padding: 40px 24px 80px;
-  background-color: var(--cream);
-  min-height: calc(100vh - 65px);
   display: flex;
   justify-content: center;
+  width: calc(100% - 32px);
+  max-width: 1200px;
+  margin: 24px auto;
+  min-height: 0;
+  padding: clamp(20px, 3vw, 36px);
+  background: var(--ice);
+  color: var(--ink);
+  border-radius: 16px;
 }
 
 .container {
@@ -20,7 +25,7 @@
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.12em;
-  color: var(--coral);
+  color: var(--accent-ink);
   margin-bottom: 8px;
   text-transform: uppercase;
 }
@@ -37,14 +42,14 @@
 .subhead {
   font-size: 15px;
   line-height: 1.5;
-  color: #555;
+  color: var(--muted);
   margin: 0;
   max-width: 600px;
 }
 
 .detectedBanner {
-  background: #f0f7f4;
-  border: 1.5px solid #2d6a4f;
+  background: var(--lime-soft);
+  border: 1.5px solid var(--success-ink);
   border-radius: 4px;
   padding: 18px 24px;
   margin-bottom: 24px;
@@ -65,7 +70,7 @@
   font-family: var(--mono);
   font-size: 11px;
   font-weight: 800;
-  color: #1b4332;
+  color: var(--success-ink);
   letter-spacing: 0.05em;
 }
 
@@ -78,7 +83,7 @@
 .detectedCode {
   font-family: var(--mono);
   font-size: 12px;
-  background: #d8f3dc;
+  background: var(--lime-soft);
   padding: 2px 6px;
   border-radius: 3px;
   width: fit-content;
@@ -86,8 +91,8 @@
 }
 
 .useDetectedButton {
-  background: #2d6a4f;
-  color: #fff;
+  background: var(--success-ink);
+  color: var(--surface);
   border: none;
   padding: 10px 20px;
   font-family: var(--mono);
@@ -103,9 +108,9 @@
 }
 
 .formCard {
-  background: #fff;
-  border: 2px solid var(--ink);
-  box-shadow: 4px 4px 0 var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: none;
   padding: 28px;
   margin-bottom: 32px;
 }
@@ -143,7 +148,7 @@
 
 .input:focus {
   border-color: var(--coral);
-  box-shadow: 0 0 0 2px rgba(224, 90, 71, 0.2);
+  box-shadow: none;
 }
 
 .verifyButton {
@@ -165,14 +170,14 @@
 
 .helpText {
   font-size: 12px;
-  color: #666;
+  color: var(--muted);
   margin-top: 4px;
 }
 
 .error {
   color: #9e2a2b;
   background: #fdf0ed;
-  border: 1px solid #e07a5f;
+  border: 1px solid var(--accent-ink);
   padding: 10px 14px;
   font-size: 13px;
   margin-top: 14px;
@@ -180,8 +185,8 @@
 }
 
 .success {
-  color: #1b4332;
-  background: #d8f3dc;
+  color: var(--success-ink);
+  background: var(--lime-soft);
   border: 1px solid #74c69d;
   padding: 10px 14px;
   font-size: 13px;
@@ -191,9 +196,9 @@
 }
 
 .ticketPreviewSection {
-  background: #fff;
-  border: 2px solid var(--ink);
-  box-shadow: 4px 4px 0 var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: none;
   padding: 28px;
   margin-top: 24px;
 }
@@ -202,7 +207,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1.5px solid #eee;
+  border-bottom: 1.5px solid var(--border);
   padding-bottom: 16px;
   margin-bottom: 20px;
 }
@@ -218,15 +223,15 @@
 .previewHeader p {
   font-family: var(--mono);
   font-size: 12px;
-  color: #666;
+  color: var(--muted);
   margin: 0;
 }
 
 .proceedButton {
   background: var(--coral);
-  color: #fff;
+  color: var(--navy);
   border: 1.5px solid var(--ink);
-  box-shadow: 2px 2px 0 var(--ink);
+  box-shadow: none;
   padding: 10px 18px;
   font-family: var(--mono);
   font-size: 12px;
@@ -236,8 +241,8 @@
 }
 
 .proceedButton:hover {
-  transform: translate(-1px, -1px);
-  box-shadow: 3px 3px 0 var(--ink);
+  transform: none;
+  box-shadow: none;
 }
 
 .gridWrap {
@@ -253,9 +258,9 @@
 
 .proceedButtonLarge {
   background: var(--coral);
-  color: #fff;
-  border: 2px solid var(--ink);
-  box-shadow: 3px 3px 0 var(--ink);
+  color: var(--navy);
+  border: 1px solid var(--border);
+  box-shadow: none;
   padding: 14px 28px;
   font-family: var(--mono);
   font-size: 14px;
@@ -265,20 +270,20 @@
 }
 
 .proceedButtonLarge:hover {
-  transform: translate(-1px, -1px);
-  box-shadow: 4px 4px 0 var(--ink);
+  transform: none;
+  box-shadow: none;
 }
 
 .fallbackAction {
   padding: 24px;
-  background: #fff;
+  background: var(--surface);
   border: 1px dashed #aaa;
   text-align: center;
 }
 
 .fallbackAction p {
   font-size: 14px;
-  color: #555;
+  color: var(--muted);
   margin: 0 0 12px;
 }
 
@@ -295,4 +300,34 @@
 
 .secondaryButton:hover {
   background: var(--cream);
+}
+.header h1 {
+  font-size: clamp(28px, 5vw, 42px);
+}
+@media (max-width: 600px) {
+  .formCard,
+  .ticketPreviewSection {
+    padding: 16px;
+    border-radius: 12px;
+  }
+  .inputRow {
+    flex-direction: column;
+  }
+  .input {
+    width: 100%;
+    min-width: 0;
+    font-size: 16px;
+  }
+  .verifyButton {
+    width: 100%;
+  }
+  .previewHeader {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+}
+
+.proceedButton,
+.proceedButtonLarge {
+  color: var(--navy);
 }

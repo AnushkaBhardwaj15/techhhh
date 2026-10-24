@@ -30,9 +30,9 @@ describe('Round Domain Logic and Pattern Invariants', () => {
     }
   });
 
-  it('generates valid default pattern configuration with all 5 MVP patterns', () => {
+  it('generates valid default pattern configuration with all seven reference patterns', () => {
     const defaults = getDefaultPatternConfigs();
-    expect(defaults.length).toBe(5);
+    expect(defaults.length).toBe(7);
 
     const types = defaults.map((p) => p.patternType);
     for (const expectedType of PATTERN_TYPES) {

@@ -70,6 +70,9 @@ export class ClaimService {
       throw new NotFoundError('Round not found');
     }
     if (round.eventId !== eventId) throw new NotFoundError('Round not found');
+    if (await this.roundRepo.isReferenceRound?.(roundId)) {
+      throw new ConflictError('Use this round’s live claim controls so saved marks are checked.');
+    }
     validateRoundActiveForClaim(round.status);
 
     // 3. Fetch Pattern Configuration & Assert Enabled and OPEN

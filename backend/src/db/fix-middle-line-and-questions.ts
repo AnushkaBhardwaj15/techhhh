@@ -41,7 +41,7 @@ async function main() {
     console.log(`\nConfiguring Round: ${r.name} (${roundId})`);
 
     // 1. Ensure all 5 patterns exist and are OPEN (or keep existing verified status if closed)
-    const patterns = ['EARLY_5', 'TOP_LINE', 'MIDDLE_LINE', 'BOTTOM_LINE', 'FULL_HOUSE'];
+    const patterns = ['EARLY_5', 'FOUR_CORNERS', 'TOP_LINE', 'MIDDLE_LINE', 'BOTTOM_LINE', 'FULL_HOUSE', 'SECOND_FULL_HOUSE'];
     for (const pt of patterns) {
       const existing = await sql`SELECT id, status FROM round_patterns WHERE round_id = ${roundId} AND pattern_type = ${pt}`;
       if (existing.length === 0) {

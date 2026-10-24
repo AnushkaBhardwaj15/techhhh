@@ -107,7 +107,7 @@ describe('Winner Evaluation and Pattern Domain Logic (Pure Unit Tests)', () => {
 
     it('throws ConflictError on unknown pattern type', () => {
       expect(() =>
-        evaluatePattern('FOUR_CORNERS' as any, sampleTicketCells, new Set())
+        evaluatePattern('UNKNOWN' as any, sampleTicketCells, new Set())
       ).toThrow(ConflictError);
     });
   });

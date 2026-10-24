@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
+import { ActionButton } from '../ActionButton';
 import type { AuthenticatedUser } from '../../types/auth';
-import styles from './AdminTopBar.module.css';
+import styles from './Navigation.module.css';
 
 interface AdminTopBarProps {
   user: AuthenticatedUser;
@@ -8,14 +9,14 @@ interface AdminTopBarProps {
   isLoggingOut?: boolean;
 }
 
-export function AdminTopBar({ user: _user, onLogout, isLoggingOut = false }: AdminTopBarProps) {
+export function AdminTopBar({ onLogout, isLoggingOut = false }: AdminTopBarProps) {
   return (
     <header className={styles.header} role="banner">
       <div className={styles.container}>
         <div className={styles.brandCol}>
           <Link to="/admin" className={styles.wordmark} aria-label="Admin operations dashboard">
             <span className={styles.badge}>TECH</span>
-            <strong>TOMBOLA</strong>
+            <strong>TAMBOLA</strong>
           </Link>
           <span
             className={styles.roleBanner}
@@ -37,15 +38,14 @@ export function AdminTopBar({ user: _user, onLogout, isLoggingOut = false }: Adm
             <span className={styles.arrow} aria-hidden="true">↗</span>
           </Link>
 
-          <button
+          <ActionButton
             type="button"
             className={styles.logoutButton}
             onClick={onLogout}
-            disabled={isLoggingOut}
-            aria-busy={isLoggingOut}
+            busy={isLoggingOut}
           >
             {isLoggingOut ? 'Signing out…' : 'Sign out'}
-          </button>
+          </ActionButton>
         </div>
       </div>
     </header>

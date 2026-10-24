@@ -1,322 +1,376 @@
-import { useState, useEffect, useMemo } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { QRCodeSvg } from '../../components/QRCodeSvg';
-import { ALL_90_QUESTIONS } from './questionsData';
-import {
-  fetchActiveGame,
-  postGameStatus,
-  postQuestionDraw,
-  subscribeToGameSync,
-  type SyncGameRecord,
-} from '../../lib/gameSync';
-import styles from './AdminGamePage.module.css';
-
+import { useEffect, useRef, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { ApiError } from "../../lib/api/client";
+import { listPlayRounds, commandPlayRound } from "../../lib/api/play";
+import { usePlayState } from "../participant/usePlayState";
+import { QRCodeSvg } from "../../components/QRCodeSvg";
+import { ActionButton } from "../../components/ActionButton";
+import styles from "./AdminGamePage.module.css";
+import playStyles from "../participant/ReferencePlay.module.css";
 export function AdminGamePage() {
-  const navigate = useNavigate();
   const [params] = useSearchParams();
-  const gameIdParam = params.get('gameId');
-
-  const [game, setGame] = useState<SyncGameRecord | null>(null);
-  const [selectedDomain, setSelectedDomain] = useState<string>('ALL');
-  const [searchQuery, setSearchQuery] = useState<string>('');
-  const [drawnQuestions, setDrawnQuestions] = useState<number[]>(() => {
-    try {
-      const stored = localStorage.getItem(`tt_drawn_questions_${gameIdParam || 'active'}`);
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
+  const client = useQueryClient();
+  const rounds = useQuery({
+    queryKey: ["play-rounds"],
+    queryFn: ({ signal }) => listPlayRounds(signal),
   });
-
-  // Load and subscribe to game sync
-  useEffect(() => {
-    fetchActiveGame().then(({ game: active, games: all }) => {
-      if (gameIdParam) {
-        const found = all.find((g) => g.id === gameIdParam);
-        if (found) {
-          setGame(found);
-          if (found.draws && found.draws.length > 0) {
-            setDrawnQuestions(found.draws.map((d) => d.questionId));
-          }
-          return;
-        }
-      }
-      setGame(active);
-      if (active.draws && active.draws.length > 0) {
-        setDrawnQuestions(active.draws.map((d) => d.questionId));
-      }
-    });
-
-    const unsubscribe = subscribeToGameSync((updated) => {
-      if (!gameIdParam || updated.id === gameIdParam) {
-        setGame(updated);
-        if (updated.draws && updated.draws.length > 0) {
-          setDrawnQuestions(updated.draws.map((d) => d.questionId));
-        }
-      }
-    });
-
-    return unsubscribe;
-  }, [gameIdParam]);
-
-  // Handle Game Status Transitions
-  async function handleStatusChange(newStatus: SyncGameRecord['status']) {
-    if (!game) return;
-    const updated = { ...game, status: newStatus };
-    setGame(updated);
-    await postGameStatus(game.id, newStatus);
-  }
-
-  // Draw / Call question - posts to backend so participant game receives the live question
-  async function handleCallQuestion(questionId: number) {
-    const q = ALL_90_QUESTIONS.find((item) => item.id === questionId);
-    if (!q) return;
-
-    if (!drawnQuestions.includes(questionId)) {
-      const updated = [...drawnQuestions, questionId];
-      setDrawnQuestions(updated);
-      localStorage.setItem(`tt_drawn_questions_${game?.id || 'active'}`, JSON.stringify(updated));
-
-      // Post to backend sync store so participant game receives it instantly
-      await postQuestionDraw({
-        questionId: q.id,
-        prompt: q.prompt,
-        answer: q.answer,
-        key: q.key,
-        domain: q.domain,
-      });
-    }
-  }
-
-  // Robust Search and Filter for Image 1:
-  // If user types a search query (e.g. "dev"), search across text, prompt, key, answer, and domain.
-  // If no matches in selected domain, search across all domains so the user is never stuck on an empty screen.
-  const filteredQuestions = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
-
-    if (!query) {
-      return ALL_90_QUESTIONS.filter((q) => {
-        return (
-          selectedDomain === 'ALL' ||
-          q.domain === selectedDomain ||
-          (selectedDomain === 'CLOUD' && (q.domain === 'CLOUD' || q.domain === 'NETWORKING'))
-        );
-      });
-    }
-
-    // 1. Try matching within the selected domain
-    const inDomain = ALL_90_QUESTIONS.filter((q) => {
-      const matchesDomain =
-        selectedDomain === 'ALL' ||
-        q.domain === selectedDomain ||
-        (selectedDomain === 'CLOUD' && (q.domain === 'CLOUD' || q.domain === 'NETWORKING'));
-      const matchesText =
-        q.prompt.toLowerCase().includes(query) ||
-        q.answer.toLowerCase().includes(query) ||
-        q.key.toLowerCase().includes(query) ||
-        q.domain.toLowerCase().includes(query);
-      return matchesDomain && matchesText;
-    });
-
-    if (inDomain.length > 0) {
-      return inDomain;
-    }
-
-    // 2. If 0 matches in selected domain, search across all domains so user finds what they're looking for
-    return ALL_90_QUESTIONS.filter((q) => {
-      return (
-        q.prompt.toLowerCase().includes(query) ||
-        q.answer.toLowerCase().includes(query) ||
-        q.key.toLowerCase().includes(query) ||
-        q.domain.toLowerCase().includes(query)
+  const id = params.get("gameId") ?? rounds.data?.games[0]?.id ?? "";
+  const state = usePlayState(id);
+  const game = state.data;
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState("");
+  const [viewingIndex, setViewingIndex] = useState<number | null>(null);
+  const busy = useRef(false);
+  const retry = useRef<{
+    command: Parameters<typeof commandPlayRound>[1];
+    key: string;
+  } | null>(null);
+  async function run(
+    command: Parameters<typeof commandPlayRound>[1],
+    retrySame = false,
+  ) {
+    if (busy.current) return;
+    busy.current = true;
+    setPending(true);
+    setError("");
+    const attempt =
+      retrySame && retry.current
+        ? retry.current
+        : { command, key: crypto.randomUUID() };
+    retry.current = attempt;
+    try {
+      const next = await commandPlayRound(id, attempt.command, attempt.key);
+      retry.current = null;
+      client.setQueryData(["reference-play", "private", id], next);
+      await client.invalidateQueries({ queryKey: ["reference-play"] });
+    } catch (error) {
+      if (
+        error instanceof ApiError &&
+        error.status >= 400 &&
+        error.status < 500
+      )
+        retry.current = null;
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Could not complete this action. Refresh the game before retrying.",
       );
-    });
-  }, [selectedDomain, searchQuery]);
+    } finally {
+      busy.current = false;
+      setPending(false);
+    }
+  }
+  const draws = game?.draws ?? [];
+  const totalCalls = draws.length;
+  const effectiveIndex =
+    totalCalls === 0
+      ? null
+      : viewingIndex !== null && viewingIndex >= 0 && viewingIndex < totalCalls
+        ? viewingIndex
+        : totalCalls - 1;
+  const currentDraw = effectiveIndex !== null ? draws[effectiveIndex] : null;
+  const isViewingHistory =
+    effectiveIndex !== null && effectiveIndex < totalCalls - 1;
 
-  const gameCode = game ? game.code : '8679DE';
-  const joinUrl = `${window.location.origin}/lobby?code=${gameCode}`;
+  function handlePrevious() {
+    if (effectiveIndex !== null && effectiveIndex > 0) {
+      setViewingIndex(effectiveIndex - 1);
+    }
+  }
 
+  function handleNext() {
+    if (isViewingHistory && effectiveIndex !== null) {
+      setViewingIndex(effectiveIndex + 1);
+    } else {
+      if (game?.status === "ACTIVE" && totalCalls < 90) {
+        setViewingIndex(null);
+        void run({ action: "call" });
+      }
+    }
+  }
+
+  useEffect(() => {
+    function key(event: KeyboardEvent) {
+      const target = event.target;
+      if (
+        event.code === "Space" &&
+        !(
+          target instanceof HTMLElement &&
+          target.closest(
+            "input,textarea,select,button,a,[contenteditable=true]",
+          )
+        )
+      ) {
+        if (isViewingHistory && effectiveIndex !== null) {
+          event.preventDefault();
+          setViewingIndex(effectiveIndex + 1);
+        } else if (game?.status === "ACTIVE" && totalCalls < 90) {
+          event.preventDefault();
+          setViewingIndex(null);
+          void run({ action: "call" });
+        }
+      }
+    }
+    window.addEventListener("keydown", key);
+    return () => window.removeEventListener("keydown", key);
+  });
   return (
     <main className={styles.page}>
       <div className={styles.gameContainer}>
-        {/* Top Navigation Row: ← Dashboard button (Point 3) */}
         <div className={styles.navRow}>
-          <button
-            type="button"
-            className={styles.dashboardBackBtn}
-            onClick={() => navigate('/admin')}
-            title="Return to Admin Dashboard"
-          >
+          <Link className={styles.dashboardBackBtn} to="/admin">
             ← Dashboard
-          </button>
-          <span className={styles.gameTitleHeading}>
-            {game?.name || 'Tech Tombola - Live Game Arena'}
-          </span>
+          </Link>
+          <h1 className={styles.gameTitleHeading}>
+            {game?.name ?? "Game control"}
+          </h1>
         </div>
-
-        {/* MAIN GAME CONTAINER: IMAGE 2 */}
-        <div className={styles.mainCard}>
-          {/* CENTER BLOCK: GAME CODE + QR CODE */}
-          <div className={styles.qrSection}>
-            {/* Shows the game code */}
-            <div className={styles.gameCodePill}>
-              <span className={styles.gameCodeLabel}>GAME CODE:</span>
-              <strong className={styles.gameCodeValue}>{gameCode}</strong>
-              <button
-                type="button"
-                className={styles.copyBtn}
-                onClick={() => navigator.clipboard.writeText(gameCode)}
-                title="Copy Game Code"
-              >
-                📋 Copy
+        {state.isPending && <p role="status">Loading the saved game…</p>}
+        {(error || state.isError || rounds.isError) && (
+          <p className={playStyles.warning} role="alert">
+            {error || "Could not load the game. Check your connection."}{" "}
+            {retry.current && (
+              <button onClick={() => void run(retry.current!.command, true)}>
+                Retry the same action
               </button>
-            </div>
-
-            {/* QR Code */}
-            <div className={styles.qrFrame}>
-              <QRCodeSvg
-                value={joinUrl}
-                size={220}
-                title={`QR Code for Game ${gameCode}`}
-              />
-            </div>
-
-            {/* Instruction annotation matching Image 2 */}
-            <p className={styles.qrInstruction}>
-              participant can either join by scanning the qr or by entering the game code in{' '}
-              <span className={styles.lobbyTag}>/lobby</span>
-            </p>
-
-            {/* Host Quick Controls */}
-            <div className={styles.controlsBar}>
-              <div className={styles.statusGroup}>
-                <span className={styles.statusLabel}>STATUS:</span>
-                <span
-                  className={`${styles.statusBadge} ${
-                    styles[`status_${game?.status || 'READY'}`] || ''
-                  }`}
-                >
-                  {game?.status || 'READY'}
-                </span>
+            )}
+          </p>
+        )}
+        {game && (
+          <div className={styles.mainCard}>
+            <div className={styles.qrSection}>
+              <div className={styles.gameCodePill}>
+                <span className={styles.gameCodeLabel}>GAME CODE</span>
+                <strong className={styles.gameCodeValue}>{game.code}</strong>
               </div>
-
-              <div className={styles.actionsGroup}>
-                {game?.status !== 'ACTIVE' ? (
-                  <button
-                    type="button"
-                    className={styles.startBtn}
-                    onClick={() => handleStatusChange('ACTIVE')}
-                  >
-                    ▶ START GAME
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    className={styles.pauseBtn}
-                    onClick={() => handleStatusChange('PAUSED')}
-                  >
-                    ⏸ PAUSE GAME
-                  </button>
-                )}
-
-                {game?.status === 'ACTIVE' && (
-                  <button
-                    type="button"
-                    className={styles.finishBtn}
-                    onClick={() => handleStatusChange('COMPLETED')}
-                  >
-                    🏁 FINISH GAME
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* SECTION: QUESTION → (IMAGE 2 & IMAGE 3) */}
-          <div className={styles.questionSection}>
-            <div className={styles.questionHeader}>
-              <div className={styles.questionTitleRow}>
-                <h3 className={styles.questionTitle}>QUESTION →</h3>
-                <span className={styles.questionBadge}>
-                  ALL 90 QUESTIONS ASKED TO BE ASKED IN THAT ROUND
-                </span>
-              </div>
-
-              {/* Domain Filter Pills and Search */}
-              <div className={styles.filterBar}>
-                <div className={styles.domainPills}>
-                  {[
-                    'ALL',
-                    'FRONTEND',
-                    'BACKEND',
-                    'DATABASE',
-                    'DEVOPS',
-                    'CLOUD',
-                    'SECURITY',
-                    'SYSTEMS',
-                  ].map((dom) => (
-                    <button
-                      key={dom}
-                      type="button"
-                      className={`${styles.domainPill} ${
-                        selectedDomain === dom ? styles.domainPillActive : ''
-                      }`}
-                      onClick={() => setSelectedDomain(dom)}
-                    >
-                      {dom}
-                    </button>
-                  ))}
-                </div>
-
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search 90 questions by keyword or key…"
-                  className={styles.searchInput}
+              <div className={styles.qrFrame}>
+                <QRCodeSvg
+                  value={`${location.origin}/lobby?code=${game.code}`}
+                  size={180}
+                  title={`Join game ${game.code}`}
                 />
               </div>
+              <p className={styles.qrInstruction}>
+                Participants join with this code and wait in the lobby.
+              </p>
+              <div className={styles.controlsBar}>
+                <span className={styles.statusBadge}>
+                  {game.status}
+                  {game.closingSequence !== null ? " · CLOSING" : ""}
+                </span>
+                {game.status === "READY" && (
+                  <ActionButton
+                    busy={pending}
+                    onClick={() => void run({ action: "start" })}
+                  >
+                    Start game
+                  </ActionButton>
+                )}
+                {game.status === "ACTIVE" && (
+                  <ActionButton
+                    busy={pending}
+                    onClick={() => void run({ action: "pause" })}
+                  >
+                    Pause
+                  </ActionButton>
+                )}
+                {game.status === "PAUSED" && (
+                  <ActionButton
+                    busy={pending}
+                    onClick={() => void run({ action: "resume" })}
+                  >
+                    Resume
+                  </ActionButton>
+                )}
+                {["ACTIVE", "PAUSED"].includes(game.status) && (
+                  <ActionButton
+                    busy={pending}
+                    onClick={() => {
+                      if (
+                        window.confirm(
+                          "End this game? Its draws and winners will remain saved.",
+                        )
+                      )
+                        void run({ action: "end" });
+                    }}
+                  >
+                    End game
+                  </ActionButton>
+                )}
+              </div>
             </div>
-
-            {/* LIST OF ALL 90 QUESTIONS: IMAGE 3 FORMAT */}
-            <div className={styles.questionsList}>
-              {filteredQuestions.map((q) => {
-                const isDrawn = drawnQuestions.includes(q.id);
+            <section className={playStyles.clue}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: "0.5rem",
+                  flexWrap: "wrap",
+                  gap: "0.5rem",
+                }}
+              >
+                <p className={playStyles.kicker}>
+                  CALL {currentDraw?.sequence ?? 0} / 90
+                </p>
+                {isViewingHistory && (
+                  <span
+                    className={styles.statusBadge}
+                    style={{
+                      background: "rgba(0, 229, 255, 0.15)",
+                      color: "#00e5ff",
+                      fontSize: "0.8rem",
+                      padding: "0.2rem 0.6rem",
+                    }}
+                  >
+                    Viewing history (#{currentDraw?.sequence} of {totalCalls})
+                  </span>
+                )}
+              </div>
+              <h2>{currentDraw?.prompt ?? "Ready for the first clue"}</h2>
+              {currentDraw?.codeSnippet && <pre>{currentDraw.codeSnippet}</pre>}
+              {currentDraw && (
+                <p className={playStyles.answer}>
+                  Admin answer: {currentDraw.answer} ·{" "}
+                  {currentDraw.revealed ? (
+                    <span style={{ color: "var(--color-accent-lime, #a3ff4b)" }}>
+                      Revealed to participants
+                    </span>
+                  ) : (
+                    <span style={{ color: "#ffb74d" }}>
+                      Not revealed to participants
+                    </span>
+                  )}
+                </p>
+              )}
+              <div className={playStyles.actions}>
+                <ActionButton
+                  busy={pending}
+                  disabled={effectiveIndex === null || effectiveIndex <= 0}
+                  onClick={handlePrevious}
+                >
+                  <span aria-hidden="true">←</span> Previous question
+                </ActionButton>
+                <ActionButton
+                  busy={pending}
+                  disabled={
+                    isViewingHistory
+                      ? false
+                      : game.status !== "ACTIVE" || totalCalls >= 90
+                  }
+                  onClick={handleNext}
+                >
+                  {isViewingHistory ? "Next question →" : "Call next question →"}
+                </ActionButton>
+                {currentDraw && !currentDraw.revealed && (
+                  <ActionButton
+                    busy={pending}
+                    disabled={
+                      !["ACTIVE", "PAUSED", "COMPLETED"].includes(game.status)
+                    }
+                    onClick={() =>
+                      void run({
+                        action: "reveal",
+                        sequences: [currentDraw.sequence],
+                      })
+                    }
+                  >
+                    Reveal this answer
+                  </ActionButton>
+                )}
+                {game.draws.some((d) => !d.revealed) && (
+                  <ActionButton
+                    busy={pending}
+                    disabled={
+                      !["ACTIVE", "PAUSED", "COMPLETED"].includes(game.status)
+                    }
+                    onClick={() => void run({ action: "reveal" })}
+                  >
+                    Reveal all pending answers
+                  </ActionButton>
+                )}
+              </div>
+            </section>
+            <section className={playStyles.panel}>
+              <h2>Called questions ({totalCalls})</h2>
+              {!totalCalls && <p>No questions called yet.</p>}
+              {[...game.draws].reverse().map((draw, i) => {
+                const drawIndex = totalCalls - 1 - i;
+                const isSelected = effectiveIndex === drawIndex;
                 return (
                   <div
-                    key={q.id}
-                    className={`${styles.questionItem} ${isDrawn ? styles.questionItemDrawn : ''}`}
+                    className={playStyles.historyRow}
+                    key={draw.id}
+                    style={{
+                      borderLeft: isSelected
+                        ? "3px solid #00e5ff"
+                        : "3px solid transparent",
+                      cursor: "pointer",
+                      background: isSelected
+                        ? "rgba(0, 229, 255, 0.08)"
+                        : undefined,
+                    }}
+                    onClick={() => setViewingIndex(drawIndex)}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`View call #${draw.sequence}: ${draw.prompt}`}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setViewingIndex(drawIndex);
+                      }
+                    }}
                   >
-                    {/* Top Row: Q: WHAT IS REACT USED TO BUILD? and [ FRONTEND ] */}
-                    <div className={styles.itemHeader}>
-                      <div className={styles.promptCol}>
-                        <span className={styles.qIndex}>#{q.id}</span>
-                        <h4 className={styles.qPrompt}>Q: {q.prompt}</h4>
-                      </div>
-                      <span className={styles.domainBadge}>{q.domain}</span>
+                    <div>
+                      <strong>
+                        #{draw.sequence} {draw.prompt}
+                        {isSelected ? " (viewing)" : ""}
+                      </strong>
+                      <p>
+                        {draw.answer} ·{" "}
+                        {draw.revealed
+                          ? "Revealed"
+                          : "Not revealed to participants"}
+                      </p>
                     </div>
-
-                    {/* Bottom Row: components & ui functionalities. */}
-                    <div className={styles.itemFooter}>
-                      <p className={styles.qAnswer}>{q.answer}</p>
-                      <div className={styles.qActionCol}>
-                        <span className={styles.keyTag}>KEY: {q.key}</span>
-                        <button
-                          type="button"
-                          className={`${styles.callBtn} ${isDrawn ? styles.callBtnDrawn : ''}`}
-                          onClick={() => handleCallQuestion(q.id)}
-                          disabled={isDrawn}
-                        >
-                          {isDrawn ? '✓ CALLED' : '🎯 CALL QUESTION'}
-                        </button>
-                      </div>
-                    </div>
+                    {!draw.revealed && (
+                      <ActionButton
+                        busy={pending}
+                        disabled={
+                          !["ACTIVE", "PAUSED", "COMPLETED"].includes(
+                            game.status,
+                          )
+                        }
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          void run({
+                            action: "reveal",
+                            sequences: [draw.sequence],
+                          });
+                        }}
+                      >
+                        Reveal
+                      </ActionButton>
+                    )}
                   </div>
                 );
               })}
-            </div>
+            </section>
+            <section className={playStyles.panel}>
+              <h2>Winners and points</h2>
+              {game.standings.length ? (
+                game.standings.map((row, index) => (
+                  <p key={index}>
+                    {row.name} — {row.points} points
+                  </p>
+                ))
+              ) : (
+                <p>No prizes awarded yet.</p>
+              )}
+            </section>
           </div>
-        </div>
+        )}
       </div>
     </main>
   );

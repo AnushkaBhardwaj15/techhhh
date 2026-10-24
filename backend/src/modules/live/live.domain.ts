@@ -31,7 +31,7 @@ export function serializeLiveWinner(winner: LiveWinnerRecord): PublicLiveWinnerD
 }
 
 export function groupWinnersByPattern(winners: LiveWinnerRecord[]): PublicWinnersByPattern {
-  const grouped: PublicWinnersByPattern = { EARLY_5: [], TOP_LINE: [], MIDDLE_LINE: [], BOTTOM_LINE: [], FULL_HOUSE: [] };
+  const grouped: PublicWinnersByPattern = { EARLY_5: [], FOUR_CORNERS: [], SECOND_FULL_HOUSE: [], TOP_LINE: [], MIDDLE_LINE: [], BOTTOM_LINE: [], FULL_HOUSE: [] };
   for (const winner of winners) grouped[winner.patternType].push(serializeLiveWinner(winner));
   return grouped;
 }

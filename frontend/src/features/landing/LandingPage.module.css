@@ -12,7 +12,7 @@
   top: 0;
   z-index: 100;
   background: var(--cream);
-  border-bottom: 2px solid var(--ink);
+  border-bottom: 1px solid var(--border);
   width: 100%;
 }
 
@@ -60,7 +60,7 @@
   letter-spacing: 0.12em;
   color: var(--forest);
   padding: 3px 6px;
-  border: 1px solid rgba(49, 92, 83, 0.4);
+  border: 1px solid rgba(8, 123, 139, 0.4);
 }
 
 .navLinks {
@@ -97,11 +97,11 @@
   color: var(--forest);
   padding: 4px 8px;
   border: 1px dashed var(--forest);
-  background: rgba(49, 92, 83, 0.06);
+  background: rgba(8, 123, 139, 0.06);
 }
 
 .navLiveItem:hover {
-  background: rgba(49, 92, 83, 0.14);
+  background: rgba(8, 123, 139, 0.14);
 }
 
 .livePulse {
@@ -109,7 +109,7 @@
   height: 6px;
   border-radius: 50%;
   background: var(--coral);
-  box-shadow: 0 0 6px var(--coral);
+  box-shadow: none;
 }
 
 .navActions {
@@ -130,8 +130,10 @@
   font-weight: 800;
   letter-spacing: 0.08em;
   border: 1.5px solid var(--ink);
-  box-shadow: 3px 3px 0 var(--coral);
-  transition: transform 100ms ease, box-shadow 100ms ease;
+  box-shadow: none;
+  transition:
+    transform 100ms ease,
+    box-shadow 100ms ease;
 }
 
 .navCta:hover {
@@ -140,7 +142,7 @@
 
 .navCta:active {
   transform: translate(2px, 2px);
-  box-shadow: 1px 1px 0 var(--coral);
+  box-shadow: none;
 }
 
 .navItem:focus-visible,
@@ -159,7 +161,7 @@
   background: var(--forest);
   color: var(--cream);
   padding: clamp(48px, 9vw, 96px) clamp(20px, 5vw, 64px);
-  border-bottom: 2px solid var(--ink);
+  border-bottom: 1px solid var(--border);
 }
 
 .heroContent {
@@ -184,7 +186,7 @@
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.14em;
-  color: var(--coral);
+  color: var(--accent-ink);
 }
 
 .badgeRule {
@@ -210,7 +212,7 @@
 
 .heroHeadline em {
   font-style: normal;
-  color: var(--coral);
+  color: var(--accent-ink);
 }
 
 .heroSubtitle {
@@ -222,7 +224,7 @@
 }
 
 .heroSubtitle strong {
-  color: #ffffff;
+  color: var(--surface);
   text-decoration: underline;
   text-decoration-color: var(--coral);
   text-underline-offset: 4px;
@@ -250,19 +252,22 @@
   font-size: 13px;
   font-weight: 900;
   letter-spacing: 0.08em;
-  border: 2px solid var(--ink);
-  box-shadow: 4px 4px 0 var(--ink);
+  border: 1px solid var(--border);
+  box-shadow: none;
   cursor: pointer;
-  transition: transform 100ms ease, box-shadow 100ms ease, background 100ms ease;
+  transition:
+    transform 100ms ease,
+    box-shadow 100ms ease,
+    background 100ms ease;
 }
 
 .primaryButton:hover {
-  background: #ffa094;
+  background: var(--cyan-hover);
 }
 
 .primaryButton:active {
   transform: translate(3px, 3px);
-  box-shadow: 1px 1px 0 var(--ink);
+  box-shadow: none;
 }
 
 .buttonArrow {
@@ -296,7 +301,7 @@
   height: 8px;
   border-radius: 50%;
   background: var(--coral);
-  box-shadow: 0 0 6px var(--coral);
+  box-shadow: none;
 }
 
 /* Stats Strip */
@@ -347,7 +352,7 @@
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.14em;
-  color: #a2483e;
+  color: var(--accent-ink);
   margin: 0 0 8px;
 }
 
@@ -381,8 +386,8 @@
 /* Steps Section */
 .stepsSection {
   background: #fbf7ee;
-  border-top: 2px solid var(--ink);
-  border-bottom: 2px solid var(--ink);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
   padding: clamp(48px, 8vw, 80px) clamp(20px, 5vw, 64px);
 }
 
@@ -401,9 +406,9 @@
 
 .stepCard {
   background: var(--cream);
-  border: 2px solid var(--ink);
+  border: 1px solid var(--border);
   padding: 24px 20px;
-  box-shadow: 4px 4px 0 var(--ink);
+  box-shadow: none;
   display: flex;
   flex-direction: column;
 }
@@ -412,7 +417,7 @@
   font-family: var(--mono);
   font-size: 13px;
   font-weight: 900;
-  color: var(--coral);
+  color: var(--accent-ink);
   margin-bottom: 12px;
 }
 
@@ -445,9 +450,9 @@
 }
 
 .patternRuleCard {
-  background: #fffaf0;
-  border: 2px solid var(--ink);
-  box-shadow: 4px 4px 0 var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: none;
   padding: 20px;
   display: flex;
   flex-direction: column;
@@ -456,7 +461,7 @@
 .fullHouseCard {
   background: #fdf5ea;
   border-color: var(--forest);
-  box-shadow: 4px 4px 0 var(--forest);
+  box-shadow: none;
 }
 
 .patternCardHeader {
@@ -472,9 +477,9 @@
   font-weight: 800;
   letter-spacing: 0.1em;
   color: var(--forest);
-  background: rgba(49, 92, 83, 0.1);
+  background: rgba(8, 123, 139, 0.1);
   padding: 3px 6px;
-  border: 1px solid rgba(49, 92, 83, 0.3);
+  border: 1px solid rgba(8, 123, 139, 0.3);
 }
 
 .fullHousePill {
@@ -482,7 +487,7 @@
   font-size: 9px;
   font-weight: 800;
   letter-spacing: 0.1em;
-  color: #fffaf0;
+  color: var(--navy);
   background: var(--coral);
   padding: 3px 6px;
   border: 1px solid var(--ink);
@@ -527,7 +532,7 @@
   font-size: 9px;
   font-weight: 800;
   border: 1px solid rgba(29, 36, 33, 0.2);
-  background: #fffdf8;
+  background: var(--surface);
   color: #8c938c;
 }
 
@@ -547,8 +552,8 @@
 .liveDisplayTeaser {
   background: var(--forest);
   color: var(--cream);
-  border-top: 2px solid var(--ink);
-  border-bottom: 2px solid var(--ink);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
   padding: clamp(48px, 8vw, 80px) clamp(20px, 5vw, 64px);
 }
 
@@ -563,7 +568,7 @@
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.14em;
-  color: var(--coral);
+  color: var(--accent-ink);
   display: inline-block;
   margin-bottom: 8px;
 }
@@ -601,18 +606,21 @@
   font-size: 13px;
   font-weight: 900;
   letter-spacing: 0.08em;
-  border: 2px solid var(--ink);
-  box-shadow: 4px 4px 0 var(--ink);
-  transition: transform 100ms ease, box-shadow 100ms ease, background 100ms ease;
+  border: 1px solid var(--border);
+  box-shadow: none;
+  transition:
+    transform 100ms ease,
+    box-shadow 100ms ease,
+    background 100ms ease;
 }
 
 .projectorButton:hover {
-  background: #ffa094;
+  background: var(--cyan-hover);
 }
 
 .projectorButton:active {
   transform: translate(3px, 3px);
-  box-shadow: 1px 1px 0 var(--ink);
+  box-shadow: none;
 }
 
 /* Footer */

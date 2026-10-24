@@ -30,7 +30,7 @@ function DrawCard({ draw, current = false }: { draw: AdminDraw; current?: boolea
       </div>
       <p className={styles.question}>{draw.questionText}</p>
       <div style={{ marginTop: '8px' }}>
-        <span style={{ fontSize: '11px', fontFamily: 'var(--mono)', fontWeight: 700, color: '#315c53' }}>ANSWER KEY: </span>
+        <span style={{ fontSize: '11px', fontFamily: 'var(--mono)', fontWeight: 700, color: 'var(--accent-ink)' }}>ANSWER KEY: </span>
         <p className={styles.key}>{draw.keyValue}</p>
       </div>
     </article>
@@ -226,7 +226,7 @@ export function AdminDrawControl() {
             style={{
               marginTop: '24px',
               padding: '18px',
-              background: '#fffaf0',
+              background: 'var(--surface)',
               border: '2px solid var(--ink)',
               boxShadow: '4px 4px 0 var(--ink)',
             }}
@@ -236,19 +236,19 @@ export function AdminDrawControl() {
                 <p className={styles.eyebrow} style={{ margin: 0 }}>LIVE CLAIMS</p>
                 <h2 style={{ margin: '4px 0 0', fontSize: '20px' }}>Incoming Participant Claims</h2>
               </div>
-              <span style={{ font: '700 11px var(--mono)', padding: '2px 8px', background: '#e9dfc5' }}>
+              <span style={{ font: '700 11px var(--mono)', padding: '2px 8px', background: 'var(--surface-muted)' }}>
                 {pendingClaims.length} Pending
               </span>
             </div>
 
             {claimFeedback && (
-              <p style={{ margin: '0 0 12px', padding: '6px 10px', background: '#edf4e9', color: '#315c53', font: '700 11px var(--mono)' }}>
+              <p style={{ margin: '0 0 12px', padding: '6px 10px', background: 'var(--lime-soft)', color: 'var(--accent-ink)', font: '700 11px var(--mono)' }}>
                 {claimFeedback}
               </p>
             )}
 
             {pendingClaims.length === 0 ? (
-              <p style={{ margin: 0, fontSize: '13px', color: '#666' }}>
+              <p style={{ margin: 0, fontSize: '13px', color: 'var(--muted)' }}>
                 No pending claims from participants. When participants claim Early 5, Top Line, etc., they will appear here.
               </p>
             ) : (
@@ -263,17 +263,17 @@ export function AdminDrawControl() {
                       justifyContent: 'space-between',
                       gap: '10px',
                       padding: '10px 14px',
-                      background: '#fff',
+                      background: 'var(--surface)',
                       border: '1px solid var(--ink)',
                     }}
                   >
                     <div>
-                      <strong style={{ fontSize: '14px', color: '#315c53' }}>{claim.participantName}</strong>
+                      <strong style={{ fontSize: '14px', color: 'var(--accent-ink)' }}>{claim.participantName}</strong>
                       <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
-                      <span style={{ font: '700 12px var(--mono)', color: '#a2483e' }}>
+                      <span style={{ font: '700 12px var(--mono)', color: 'var(--accent-ink)' }}>
                         {claim.patternType.replaceAll('_', ' ')}
                       </span>
-                      <span style={{ display: 'block', fontSize: '11px', color: '#777', marginTop: '2px' }}>
+                      <span style={{ display: 'block', fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>
                         Claimed at {new Date(claim.createdAt).toLocaleTimeString()}
                       </span>
                     </div>
@@ -283,8 +283,8 @@ export function AdminDrawControl() {
                         type="button"
                         style={{
                           padding: '6px 14px',
-                          background: '#315c53',
-                          color: '#fff',
+                          background: 'var(--accent-ink)',
+                          color: 'var(--surface)',
                           border: '1px solid var(--ink)',
                           font: '700 11px var(--mono)',
                           cursor: 'pointer',
@@ -298,7 +298,7 @@ export function AdminDrawControl() {
                         type="button"
                         style={{
                           padding: '6px 12px',
-                          background: '#fee2e2',
+                          background: 'var(--danger-soft)',
                           color: '#b91c1c',
                           border: '1px solid var(--ink)',
                           font: '700 11px var(--mono)',

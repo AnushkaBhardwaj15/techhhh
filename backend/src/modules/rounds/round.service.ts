@@ -154,6 +154,7 @@ export class RoundService {
     input: UpdateRoundInput,
     context?: { ip?: string; userAgent?: string; requestId?: string }
   ): Promise<RoundSummary> {
+    if(await this.repo.isReferenceRound?.(id))throw new ConflictError('Use this round’s reference controls.');
     const existing = await this.getRoundById(id);
 
     // Assert that configuration can only be changed while DRAFT
@@ -215,6 +216,8 @@ export class RoundService {
     roundId: string,
     context?: { ip?: string; userAgent?: string; requestId?: string }
   ): Promise<RoundSummary> {
+    if(await this.repo.isReferenceRound?.(roundId))throw new ConflictError('Use this round’s reference controls.');
+
     const db = getDb();
     let updated: RoundSummary;
 
@@ -267,6 +270,8 @@ export class RoundService {
     idempotencyKey?: string,
     context?: { ip?: string; userAgent?: string; requestId?: string }
   ): Promise<{ round: RoundSummary }> {
+    if(await this.repo.isReferenceRound?.(roundId))throw new ConflictError('Use this round’s reference controls.');
+
     if (!idempotencyKey || !idempotencyKey.trim()) {
       throw new ValidationError('Idempotency-Key header is required for round start');
     }
@@ -383,6 +388,8 @@ export class RoundService {
     roundId: string,
     context?: { ip?: string; userAgent?: string; requestId?: string }
   ): Promise<{ round: RoundSummary }> {
+    if(await this.repo.isReferenceRound?.(roundId))throw new ConflictError('Use this round’s reference controls.');
+
     const db = getDb();
     let updatedRound: RoundSummary;
 
@@ -438,6 +445,8 @@ export class RoundService {
     idempotencyKey?: string,
     context?: { ip?: string; userAgent?: string; requestId?: string }
   ): Promise<{ round: RoundSummary }> {
+    if(await this.repo.isReferenceRound?.(roundId))throw new ConflictError('Use this round’s reference controls.');
+
     if (!idempotencyKey || !idempotencyKey.trim()) {
       throw new ValidationError('Idempotency-Key header is required for round resume');
     }
@@ -527,6 +536,8 @@ export class RoundService {
     roundId: string,
     context?: { ip?: string; userAgent?: string; requestId?: string }
   ): Promise<{ round: RoundSummary }> {
+    if(await this.repo.isReferenceRound?.(roundId))throw new ConflictError('Use this round’s reference controls.');
+
     const db = getDb();
     let updatedRound: RoundSummary;
 
@@ -581,6 +592,8 @@ export class RoundService {
     roundId: string,
     context?: { ip?: string; userAgent?: string; requestId?: string }
   ): Promise<{ round: RoundSummary }> {
+    if(await this.repo.isReferenceRound?.(roundId))throw new ConflictError('Use this round’s reference controls.');
+
     const db = getDb();
     let updatedRound: RoundSummary;
 

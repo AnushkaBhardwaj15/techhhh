@@ -29,7 +29,7 @@ export function useParticipantClaims(userId: string, page = 1) {
   return claims;
 }
 
-export const patternNames: Record<ClaimPattern, string> = { EARLY_5: 'Early 5', TOP_LINE: 'Top Line', MIDDLE_LINE: 'Middle Line', BOTTOM_LINE: 'Bottom Line', FULL_HOUSE: 'Full House' };
+export const patternNames: Record<ClaimPattern, string> = { EARLY_5: 'Early 5', FOUR_CORNERS: 'Four Corners', SECOND_FULL_HOUSE: 'Second Full House', TOP_LINE: 'Top Line', MIDDLE_LINE: 'Middle Line', BOTTOM_LINE: 'Bottom Line', FULL_HOUSE: 'Full House' };
 export function claimStatusText(status: ParticipantClaim['status']) {
   if (status === 'PENDING_VERIFICATION') return 'Waiting for verification.';
   if (status === 'VERIFIED') return 'Claim verified.';

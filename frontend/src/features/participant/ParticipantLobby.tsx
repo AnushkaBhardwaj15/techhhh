@@ -1,23 +1,33 @@
-import { useEffect, useState, useRef } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useNavigate, useOutletContext, useSearchParams } from 'react-router-dom';
-import { ApiError } from '../../lib/api/client';
-import { getCurrentRound, getParticipantEvent } from '../../lib/api/participant';
-import { getParticipantTicket } from '../../lib/api/ticket';
-import { formatTicketCode } from '../../types/ticket';
-import { SampleTicketDemo } from '../landing/components/SampleTicketDemo';
-import { useAuthUiStore } from '../auth/authStore';
-import { QRCodeSvg } from '../../components/QRCodeSvg';
+import { useCallback, useEffect, useState, useRef } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  Navigate,
+  Link,
+  useNavigate,
+  useOutletContext,
+  useSearchParams,
+} from "react-router-dom";
+import { ApiError } from "../../lib/api/client";
+import {
+  getCurrentRound,
+  getParticipantEvent,
+} from "../../lib/api/participant";
+import { getParticipantTicket } from "../../lib/api/ticket";
+import { formatTicketCode } from "../../types/ticket";
+import { SampleTicketDemo } from "../landing/components/SampleTicketDemo";
+import { useAuthUiStore } from "../auth/authStore";
+import { ActionButton } from "../../components/ActionButton";
+import { QRCodeSvg } from "../../components/QRCodeSvg";
 import {
   fetchActiveGame,
   subscribeToGameSync,
   validateGameCode,
   type SyncGameRecord,
-} from '../../lib/gameSync';
-import type { AuthenticatedUser } from '../../types/auth';
-import styles from './ParticipantLobby.module.css';
+} from "../../lib/gameSync";
+import type { AuthenticatedUser } from "../../types/auth";
+import styles from "./ParticipantLobby.module.css";
 
-export function ParticipantLobby() {
+export function ParticipantLobby({ waiting = false }: { waiting?: boolean }) {
   const user = useOutletContext<AuthenticatedUser>();
   const navigate = useNavigate();
   const [params] = useSearchParams();
@@ -29,123 +39,159 @@ export function ParticipantLobby() {
 
   // 1. Participant Event Query
   const event = useQuery({
-    queryKey: ['participant', user.id, 'event'],
+    queryKey: ["participant", user.id, "event"],
     queryFn: ({ signal }) => getParticipantEvent(signal),
-    refetchOnWindowFocus: 'always',
+    refetchOnWindowFocus: "always",
   });
 
   // 2. Current Round Query (polls every 1500ms for instant detection of game start)
   const currentRound = useQuery({
-    queryKey: ['participant', user.id, 'round', event.data?.id],
+    queryKey: ["participant", user.id, "round", event.data?.id],
     queryFn: ({ signal }) => getCurrentRound(signal),
     enabled: !!event.data,
     refetchInterval: 1500,
-    refetchOnWindowFocus: 'always',
+    refetchOnWindowFocus: "always",
   });
 
   // 3. Ticket Query
   const ticket = useQuery({
-    queryKey: ['participant', user.id, 'ticket', event.data?.id, currentRound.data?.id],
-    queryFn: ({ signal }) => getParticipantTicket(currentRound.data!.id, event.data!.id, signal),
+    queryKey: [
+      "participant",
+      user.id,
+      "ticket",
+      event.data?.id,
+      currentRound.data?.id,
+    ],
+    queryFn: ({ signal }) =>
+      getParticipantTicket(currentRound.data!.id, event.data!.id, signal),
     enabled: !!event.data?.id && !!currentRound.data?.id,
     retry: 1,
   });
 
   // Calculate predefined code from server ticket if available, else default to '8679DE'
-  const assignedCode = ticket.data ? formatTicketCode(ticket.data.id) : '8679DE';
+  const assignedCode = ticket.data
+    ? formatTicketCode(ticket.data.id)
+    : "8679DE";
 
-  const [isVerified, setIsVerified] = useState<boolean>(() => {
-    const savedCode = sessionStorage.getItem(`tt_verified_code_${user.id}`);
-    const validCodes = ['8679DE', assignedCode.toUpperCase()];
-    return Boolean(savedCode && validCodes.includes(savedCode));
-  });
-  const [verifiedCode, setVerifiedCode] = useState<string>(() => {
-    return sessionStorage.getItem(`tt_verified_code_${user.id}`) || assignedCode;
-  });
-  const [errorMsg, setErrorMsg] = useState('');
-  const [customCode, setCustomCode] = useState('');
-  const hasRedirected = useRef(false);
+  const [verifiedCode, setVerifiedCode] = useState(
+    () => sessionStorage.getItem(`tt_verified_code_${user.id}`) || "",
+  );
+  const [joinedGameId, setJoinedGameId] = useState(
+    () => sessionStorage.getItem(`tt_joined_game_${user.id}`) || "",
+  );
+  const [errorMsg, setErrorMsg] = useState("");
+  const [customCode, setCustomCode] = useState("");
+  const [joining, setJoining] = useState(false);
+  const joinInFlight = useRef(false);
+  const scannedCode = useRef("");
+  const isVerified =
+    /^[A-Z0-9]{6}$/.test(verifiedCode) &&
+    !!joinedGameId &&
+    sessionStorage.getItem(`tt_verified_code_${user.id}`) === verifiedCode &&
+    sessionStorage.getItem(`tt_joined_game_${user.id}`) === joinedGameId;
 
-  // Subscribe to real-time active game sync (from backend & broadcast)
+  // A newer status update must not be overwritten by an older initial response.
   useEffect(() => {
-    fetchActiveGame().then(({ game }) => {
-      setActiveGame(game);
-    });
-
+    let stopped = false;
+    let receivedUpdate = false;
     const unsubscribe = subscribeToGameSync((updated) => {
-      setActiveGame(updated);
+      receivedUpdate = true;
+      if (!stopped) setActiveGame(updated);
     });
-
-    return unsubscribe;
+    void fetchActiveGame()
+      .then(({ game }) => {
+        if (!stopped && !receivedUpdate) setActiveGame(game);
+      })
+      .catch(() => {
+        if (!stopped)
+          setErrorMsg(
+            "Game status is temporarily unavailable. Please try again.",
+          );
+      });
+    return () => {
+      stopped = true;
+      unsubscribe();
+    };
   }, []);
 
   // Session check
   useEffect(() => {
-    if ([event.error, currentRound.error].some((err) => err instanceof ApiError && err.status === 401)) {
+    if (
+      [event.error, currentRound.error].some(
+        (err) => err instanceof ApiError && err.status === 401,
+      )
+    ) {
       queryClient.clear();
       identityChanged();
-      navigate('/login', { replace: true });
+      navigate("/login", { replace: true });
     }
   }, [event.error, currentRound.error, identityChanged, navigate, queryClient]);
 
-  // Requirement 3: Instant redirection as soon as admin starts the game
-  const isRoundActive = currentRound.data?.status === 'ACTIVE' || activeGame?.status === 'ACTIVE';
+  // The joined game's server-reported state controls the transition into play.
+  const isRoundActive =
+    (currentRound.data?.id === joinedGameId &&
+      currentRound.data.status === "ACTIVE") ||
+    (activeGame?.id === joinedGameId && activeGame.status === "ACTIVE");
 
   useEffect(() => {
-    if (isRoundActive && isVerified && !hasRedirected.current) {
-      hasRedirected.current = true;
-      // Immediately navigate without cancelable setTimeout delay
-      navigate('/participant/game', { replace: true });
-    }
-  }, [isRoundActive, isVerified, navigate]);
+    if (waiting && isVerified && isRoundActive)
+      navigate("/participant/game", { replace: true });
+  }, [waiting, isVerified, isRoundActive, navigate]);
 
-  // Handle QR scan auto-join via ?code= query parameter
+  const verifyCode = useCallback(
+    async (codeToVerify: string) => {
+      if (joinInFlight.current) return;
+      setErrorMsg("");
+      const clean = codeToVerify.trim().toUpperCase();
+      if (!/^[A-Z0-9]{6}$/.test(clean)) {
+        setErrorMsg("Please enter a valid 6-character game code.");
+        return;
+      }
+      joinInFlight.current = true;
+      setJoining(true);
+      try {
+        const result = await validateGameCode(clean, assignedCode);
+        if (!result.valid) {
+          setErrorMsg(
+            result.message ||
+              "This code does not match an available game. Check the code and try again.",
+          );
+          return;
+        }
+        if (ticket.data?.id)
+          sessionStorage.setItem(
+            `tt_verified_ticket_${user.id}`,
+            ticket.data.id,
+          );
+        sessionStorage.setItem(`tt_verified_code_${user.id}`, clean);
+        sessionStorage.setItem(
+          `tt_joined_game_${user.id}`,
+          result.activeGame.id,
+        );
+        setVerifiedCode(clean);
+        setJoinedGameId(result.activeGame.id);
+        navigate("/participant/waiting", { replace: true });
+      } catch {
+        setErrorMsg(
+          "We could not join the game. Check your connection and try again.",
+        );
+      } finally {
+        joinInFlight.current = false;
+        setJoining(false);
+      }
+    },
+    [assignedCode, ticket.data?.id, user.id, navigate],
+  );
+
+  // Preserve scanned links; process a given query code only once per page visit.
   useEffect(() => {
-    const codeParam = params.get('code');
-    if (codeParam && codeParam.trim().length === 6) {
-      const clean = codeParam.trim().toUpperCase();
-      setCustomCode(clean);
-      verifyCode(clean);
+    const code = params.get("code");
+    if (!waiting && code && scannedCode.current !== code) {
+      scannedCode.current = code;
+      setCustomCode(code.toUpperCase());
+      void verifyCode(code);
     }
-  }, [params]);
-
-  async function verifyCode(codeToVerify: string) {
-    setErrorMsg('');
-    const clean = codeToVerify.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
-
-    if (clean.length < 6) {
-      setErrorMsg('Please enter a valid 6-character game code.');
-      return;
-    }
-
-    // Validate against server shared game store, active games, assigned ticket, and seed
-    const result = await validateGameCode(clean, assignedCode);
-
-    if (!result.valid) {
-      setErrorMsg(
-        result.message ||
-          `Invalid ticket code "${clean}". This code does not match the active game session. Please check your code and try again.`
-      );
-      setIsVerified(false);
-      sessionStorage.removeItem(`tt_verified_ticket_${user.id}`);
-      sessionStorage.removeItem(`tt_verified_code_${user.id}`);
-      return;
-    }
-
-    // Valid code: mark verified and store session
-    const ticketId = ticket.data?.id || '8679def1-0919-4cfc-b2cd-9d23961b5a5f';
-    sessionStorage.setItem(`tt_verified_ticket_${user.id}`, ticketId);
-    sessionStorage.setItem(`tt_verified_code_${user.id}`, clean);
-    setVerifiedCode(clean);
-    setIsVerified(true);
-    setErrorMsg('');
-
-    // If host already started the game, immediately enter game arena
-    if (isRoundActive && !hasRedirected.current) {
-      hasRedirected.current = true;
-      navigate('/participant/game', { replace: true });
-    }
-  }
+  }, [params, waiting, verifyCode]);
 
   function handleQuickJoin() {
     verifyCode(activeGameCode);
@@ -159,6 +205,59 @@ export function ParticipantLobby() {
   const activeGameCode = activeGame?.code || assignedCode;
   const activeGameJoinUrl = `${window.location.origin}/lobby?code=${activeGameCode}`;
 
+  if (waiting && !isVerified)
+    return <Navigate to="/participant/lobby" replace />;
+
+  if (waiting)
+    return (
+      <main className={styles.page}>
+        <div className={styles.outerCard}>
+          <Link to="/participant/lobby" className={styles.backToParticipation}>
+            <span aria-hidden="true">←</span> Back to participation
+          </Link>
+          <p className={styles.kicker}>YOU’RE IN THE LOBBY</p>
+          <h1 className={styles.waitingTitle}>
+            You’re in. Make yourself ready.
+          </h1>
+          <p className={styles.waitingCopy}>
+            The game will start when the admin starts your game. We’ll take you
+            there automatically.
+          </p>
+          <div className={styles.waitingStatus} role="status">
+            <span className={styles.waitingDot} aria-hidden="true" />
+            <div>
+              <strong>Waiting for the admin</strong>
+              <p>
+                Joined with code <b>{verifiedCode}</b>
+              </p>
+            </div>
+          </div>
+          {(event.isError || currentRound.isError || errorMsg) && (
+            <p className={styles.waitingCopy} role="alert">
+              Game status is temporarily unavailable. We’re checking again;
+              stay on this page.
+            </p>
+          )}
+          <section
+            className={styles.simulationBox}
+            aria-labelledby="practice-title"
+          >
+            <div className={styles.simHeader}>
+              <span className={styles.simBadge}>PRACTICE</span>
+              <h2 id="practice-title" className={styles.simTitle}>
+                Interactive Ticket Simulation
+              </h2>
+            </div>
+            <p className={styles.waitingCopy}>
+              Try the sample ticket while you wait. Practice marks don’t change
+              your real ticket.
+            </p>
+            <SampleTicketDemo />
+          </section>
+        </div>
+      </main>
+    );
+
   return (
     <main className={styles.page}>
       <div className={styles.outerCard}>
@@ -166,10 +265,11 @@ export function ParticipantLobby() {
         <div className={styles.activeGameCard}>
           <div className={styles.activeGameHeader}>
             <span className={styles.activeGameLiveBadge}>
-              <span className={styles.pulseDotGreen}>●</span> ACTIVE GAME SESSION
+              <span className={styles.pulseDotGreen}>●</span> ACTIVE GAME
+              SESSION
             </span>
             <span className={styles.activeGameTitle}>
-              {activeGame?.name || 'Tech Tombola Live Arena'}
+              {activeGame?.name || "Tech Tombola Live Arena"}
             </span>
           </div>
 
@@ -183,14 +283,18 @@ export function ParticipantLobby() {
                   title={`QR Code for Game ${activeGameCode}`}
                 />
               </div>
-              <span className={styles.qrAnnotation}>Scan with phone to join</span>
+              <span className={styles.qrAnnotation}>
+                Scan with phone to join
+              </span>
             </div>
 
             {/* The SAME GAME CODE as Admin Page */}
             <div className={styles.codeCol}>
               <span className={styles.codeBadgeTitle}>OFFICIAL GAME CODE</span>
               <div className={styles.activeCodeDisplay}>
-                <strong className={styles.activeCodeValue}>{activeGameCode}</strong>
+                <strong className={styles.activeCodeValue}>
+                  {activeGameCode}
+                </strong>
                 <button
                   type="button"
                   className={styles.copyActiveBtn}
@@ -202,13 +306,16 @@ export function ParticipantLobby() {
               </div>
 
               {/* Requirement 1: Single button to join via respective code given on screen */}
-              <button
+              <ActionButton
                 type="button"
+                busy={joining}
                 className={styles.primaryJoinBtn}
                 onClick={handleQuickJoin}
               >
-                ⚡ JOIN GAME WITH CODE #{activeGameCode}
-              </button>
+                {joining
+                  ? "JOINING…"
+                  : `JOIN GAME WITH CODE #${activeGameCode}`}
+              </ActionButton>
             </div>
           </div>
         </div>
@@ -217,7 +324,7 @@ export function ParticipantLobby() {
         <p className={styles.kicker}>TICKET VERIFICATION &amp; ACCESS</p>
         <div className={styles.sectionHeader}>
           <span className={styles.sectionBadge}>ACCESS</span>
-          <h2 className={styles.sectionTitle}>GAME ENTRY &amp; VERIFICATION</h2>
+          <h1 className={styles.sectionTitle}>GAME ENTRY &amp; VERIFICATION</h1>
         </div>
 
         <div className={styles.box}>
@@ -230,19 +337,23 @@ export function ParticipantLobby() {
               <input
                 id="customGameCode"
                 type="text"
-                maxLength={8}
+                maxLength={6}
                 value={customCode}
                 onChange={(e) => {
                   setCustomCode(e.target.value.toUpperCase());
-                  setErrorMsg('');
+                  setErrorMsg("");
                 }}
                 placeholder={`e.g. ${activeGameCode}`}
                 className={styles.customCodeInput}
                 autoCapitalize="characters"
               />
-              <button type="submit" className={styles.verifyCustomBtn}>
-                VERIFY &amp; JOIN
-              </button>
+              <ActionButton
+                type="submit"
+                busy={joining}
+                className={styles.verifyCustomBtn}
+              >
+                {joining ? "JOINING…" : "VERIFY & JOIN"}
+              </ActionButton>
             </div>
           </form>
 
@@ -252,44 +363,6 @@ export function ParticipantLobby() {
               <span>{errorMsg}</span>
             </div>
           )}
-        </div>
-
-        {/* SECTION 2: YOUR TICKET HAS BEEN VERIFIED! */}
-        <div className={styles.verifiedBox}>
-          {isVerified ? (
-            <>
-              <h3 className={styles.verifiedHeading}>✓ YOUR TICKET HAS BEEN VERIFIED!</h3>
-              <p className={styles.verifiedSub}>
-                WAIT AND ENJOY THE SIMULATION TILL THE HOST STARTS THE GAME
-              </p>
-              <div className={styles.verifiedTagRow}>
-                <span className={styles.verifiedTag}>
-                  🎟️ TICKET #{verifiedCode} READY FOR ROUND
-                </span>
-              </div>
-            </>
-          ) : (
-            <p className={styles.unverifiedPrompt}>
-              Enter your 6-digit code above and click JOIN-GAME to verify ticket
-            </p>
-          )}
-
-          {/* Realtime detection alert when host starts the game */}
-          {isRoundActive && isVerified && (
-            <div className={styles.activeRoundNotice}>
-              <span className={styles.pulseDot}>🟢</span>
-              <span>THE HOST HAS STARTED THE GAME! REDIRECTING TO GAME ARENA NOW…</span>
-            </div>
-          )}
-        </div>
-
-        {/* SECTION 3: SIMULATION PRACTICE */}
-        <div className={styles.simulationBox}>
-          <div className={styles.simHeader}>
-            <span className={styles.simBadge}>PRACTICE</span>
-            <h3 className={styles.simTitle}>Interactive Ticket Simulation</h3>
-          </div>
-          <SampleTicketDemo />
         </div>
       </div>
     </main>

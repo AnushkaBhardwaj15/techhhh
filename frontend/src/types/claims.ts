@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const claimPatternSchema = z.enum(['EARLY_5', 'TOP_LINE', 'MIDDLE_LINE', 'BOTTOM_LINE', 'FULL_HOUSE']);
+export const claimPatternSchema = z.enum(['EARLY_5', 'FOUR_CORNERS', 'TOP_LINE', 'MIDDLE_LINE', 'BOTTOM_LINE', 'FULL_HOUSE', 'SECOND_FULL_HOUSE']);
 export const participantClaimSchema = z.object({
   id: z.string(), roundId: z.string(), participantId: z.string(), ticketId: z.string(),
   patternType: claimPatternSchema,

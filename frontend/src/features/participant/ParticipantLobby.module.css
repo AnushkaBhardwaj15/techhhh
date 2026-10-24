@@ -1,12 +1,18 @@
 .page {
-  min-height: calc(100vh - 65px);
+  min-height: calc(100dvh - 65px);
   background-color: var(--cream);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
   padding: 32px 16px 64px;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
   box-sizing: border-box;
   color: var(--ink);
 }
@@ -14,18 +20,18 @@
 .outerCard {
   width: 100%;
   max-width: 860px;
-  background-color: #ffffff;
-  border: 2.5px solid var(--ink);
-  border-top: 6px solid var(--coral);
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--cyan);
   border-radius: 16px;
   padding: clamp(20px, 4vw, 36px);
   box-sizing: border-box;
-  box-shadow: 6px 6px 0 var(--ink);
+  box-shadow: none;
 }
 
 .kicker {
   margin: 0 0 6px;
-  color: var(--coral);
+  color: var(--accent-ink);
   font: 800 11px/1.2 var(--mono);
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -45,8 +51,8 @@
   font-size: 11px;
   font-weight: 950;
   padding: 3px 9px;
-  border: 2px solid var(--ink);
-  box-shadow: 2.5px 2.5px 0 var(--ink);
+  border: 1px solid var(--border);
+  box-shadow: none;
   letter-spacing: 0.06em;
 }
 
@@ -60,11 +66,11 @@
 }
 
 .box {
-  border: 2px solid var(--ink);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 24px 22px;
-  background-color: #fffdf8;
-  box-shadow: 3px 3px 0 var(--ink);
+  background-color: var(--surface);
+  box-shadow: none;
   box-sizing: border-box;
   margin-bottom: 24px;
 }
@@ -72,12 +78,12 @@
 .codePrompt {
   margin: 0 0 16px;
   font-size: 14.5px;
-  color: #3f4743;
+  color: var(--muted);
   font-weight: 600;
 }
 
 .coralStar {
-  color: var(--coral);
+  color: var(--accent-ink);
   font-weight: 900;
 }
 
@@ -99,9 +105,9 @@
 .codeSlot {
   width: 48px;
   height: 56px;
-  border: 2px solid var(--ink);
+  border: 1px solid var(--border);
   border-radius: 8px;
-  background-color: #ffffff;
+  background-color: var(--surface);
   color: var(--ink);
   font-family: var(--mono);
   font-size: 26px;
@@ -110,25 +116,28 @@
   text-transform: uppercase;
   outline: none;
   box-sizing: border-box;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
-  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+  box-shadow: none;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    background-color 0.15s ease;
 }
 
 .codeSlot:focus {
   border-color: var(--coral);
-  box-shadow: 0 0 0 3.5px rgba(239, 128, 118, 0.4);
+  box-shadow: none;
 }
 
 .codeSlotError {
   border-color: #dc2626 !important;
-  background-color: #fff5f5 !important;
-  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.25) !important;
+  background-color: var(--danger-soft) !important;
+  box-shadow: none;
 }
 
 .joinBtn {
   background-color: var(--coral);
   color: var(--ink);
-  border: 2.5px solid var(--ink);
+  border: 1px solid var(--border);
   border-radius: 10px;
   padding: 11px 44px;
   font-size: 18px;
@@ -136,20 +145,23 @@
   letter-spacing: 0.06em;
   cursor: pointer;
   text-transform: uppercase;
-  box-shadow: 4px 4px 0 var(--ink);
-  transition: background-color 0.12s ease, transform 0.1s ease, box-shadow 0.1s ease;
+  box-shadow: none;
+  transition:
+    background-color 0.12s ease,
+    transform 0.1s ease,
+    box-shadow 0.1s ease;
 }
 
 .joinBtn:hover:not(:disabled) {
-  background-color: #ff9d92;
-  transform: translate(-2px, -2px);
-  box-shadow: 6px 6px 0 var(--ink);
+  background-color: var(--cyan-hover);
+  transform: none;
+  box-shadow: none;
 }
 
 .joinBtn:active:not(:disabled) {
-  background-color: #e56e64;
-  transform: translate(2px, 2px);
-  box-shadow: 2px 2px 0 var(--ink);
+  background-color: var(--cyan-hover);
+  transform: none;
+  box-shadow: none;
 }
 
 .joinBtn:disabled {
@@ -162,14 +174,14 @@
   padding: 12px 16px;
   border: 2px solid #b91c1c;
   border-radius: 8px;
-  background-color: #fee2e2;
+  background-color: var(--danger-soft);
   color: #991b1b;
   font-size: 13.5px;
   font-weight: 700;
   display: flex;
   align-items: center;
   gap: 10px;
-  box-shadow: 2px 2px 0 #991b1b;
+  box-shadow: none;
 }
 
 .errorIcon {
@@ -180,9 +192,9 @@
 .helperBox {
   margin-top: 16px;
   padding: 10px 14px;
-  border: 1.5px dashed rgba(239, 128, 118, 0.6);
+  border: 1.5px dashed rgba(0, 161, 181, 0.6);
   border-radius: 8px;
-  background: #fff5f3;
+  background: var(--cyan-soft);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -198,8 +210,8 @@
 }
 
 .helperCode {
-  color: #d9483b;
-  background: rgba(239, 128, 118, 0.18);
+  color: var(--accent-ink);
+  background: rgba(0, 161, 181, 0.18);
   padding: 2px 6px;
   border-radius: 4px;
 }
@@ -214,36 +226,36 @@
   font-size: 12px;
   font-weight: 900;
   cursor: pointer;
-  box-shadow: 2px 2px 0 var(--ink);
+  box-shadow: none;
   transition: all 0.12s ease;
 }
 
 .helperBtn:hover {
-  background: #ff9d92;
-  transform: translate(-1px, -1px);
-  box-shadow: 3px 3px 0 var(--ink);
+  background: var(--cyan-hover);
+  transform: none;
+  box-shadow: none;
 }
 
 .verifiedBox {
-  border: 2px solid var(--ink);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 22px;
-  background-color: #f7fdf8;
+  background-color: var(--lime-soft);
   margin-bottom: 24px;
-  box-shadow: 3px 3px 0 var(--ink);
+  box-shadow: none;
 }
 
 .verifiedHeading {
   font-size: 18px;
   font-weight: 950;
-  color: #1b5e20;
+  color: var(--success-ink);
   margin: 0 0 6px;
   letter-spacing: 0.03em;
 }
 
 .verifiedSub {
   font-size: 14px;
-  color: #2e7d32;
+  color: var(--success-ink);
   font-weight: 700;
   margin: 0;
   letter-spacing: 0.02em;
@@ -262,14 +274,14 @@
   font-weight: 950;
   padding: 6px 14px;
   border-radius: 6px;
-  border: 2px solid var(--ink);
-  box-shadow: 3px 3px 0 var(--ink);
+  border: 1px solid var(--border);
+  box-shadow: none;
   letter-spacing: 0.04em;
 }
 
 .unverifiedPrompt {
   margin: 0;
-  color: #64748b;
+  color: var(--muted);
   font-style: italic;
   font-size: 14px;
   text-align: center;
@@ -277,9 +289,9 @@
 
 .activeRoundNotice {
   margin-top: 14px;
-  background: #1b5e20;
-  color: #ffffff;
-  border: 2px solid var(--ink);
+  background: var(--success-ink);
+  color: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 12px 16px;
   font-weight: 900;
@@ -288,7 +300,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  box-shadow: 3px 3px 0 var(--ink);
+  box-shadow: none;
 }
 
 .pulseDot {
@@ -307,11 +319,11 @@
 }
 
 .simulationBox {
-  border: 2px solid var(--ink);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 22px;
-  background-color: #ffffff;
-  box-shadow: 3px 3px 0 var(--ink);
+  background-color: var(--surface);
+  box-shadow: none;
 }
 
 .simHeader {
@@ -329,7 +341,7 @@
   font-weight: 950;
   padding: 3px 8px;
   border: 1.5px solid var(--ink);
-  box-shadow: 2px 2px 0 var(--ink);
+  box-shadow: none;
   letter-spacing: 0.06em;
 }
 
@@ -357,12 +369,12 @@
 
 /* Synchronized Active Game QR & Code Card */
 .activeGameCard {
-  border: 2px solid var(--ink);
+  border: 1px solid var(--border);
   border-radius: 12px;
-  background-color: #ffffff;
+  background-color: var(--surface);
   padding: 18px 20px;
   margin-bottom: 22px;
-  box-shadow: 3px 3px 0 var(--ink);
+  box-shadow: none;
 }
 
 .activeGameHeader {
@@ -378,9 +390,9 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background-color: #e8f5e9;
-  color: #1b5e20;
-  border: 1.5px solid #1b5e20;
+  background-color: var(--lime-soft);
+  color: var(--success-ink);
+  border: 1.5px solid var(--success-ink);
   border-radius: 6px;
   padding: 3px 8px;
   font-family: var(--mono);
@@ -390,7 +402,7 @@
 }
 
 .pulseDotGreen {
-  color: #2e7d32;
+  color: var(--success-ink);
   font-size: 10px;
   animation: pulse 1s infinite alternate;
 }
@@ -418,17 +430,17 @@
 }
 
 .qrWrapper {
-  background: #ffffff;
+  background: var(--surface);
   padding: 8px;
-  border: 2px solid var(--ink);
+  border: 1px solid var(--border);
   border-radius: 8px;
-  box-shadow: 2px 2px 0 var(--ink);
+  box-shadow: none;
   display: inline-flex;
 }
 
 .qrAnnotation {
   font-size: 11.5px;
-  color: #64748b;
+  color: var(--muted);
   font-weight: 600;
   font-family: var(--mono);
 }
@@ -444,7 +456,7 @@
   font-family: var(--mono);
   font-size: 11px;
   font-weight: 800;
-  color: #4b5563;
+  color: var(--muted);
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -454,75 +466,75 @@
   align-items: center;
   gap: 10px;
   background: var(--cream);
-  border: 2px solid var(--ink);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 6px 16px;
-  box-shadow: 2px 2px 0 var(--ink);
+  box-shadow: none;
 }
 
 .activeCodeValue {
   font-family: var(--mono);
   font-size: 26px;
   font-weight: 950;
-  color: var(--coral);
+  color: var(--accent-ink);
   letter-spacing: 0.12em;
 }
 
 .copyActiveBtn {
-  background: #ffffff;
+  background: var(--surface);
   border: 1.5px solid var(--ink);
   border-radius: 4px;
   padding: 4px 8px;
   font-size: 11px;
   font-weight: 800;
   cursor: pointer;
-  box-shadow: 1px 1px 0 var(--ink);
+  box-shadow: none;
 }
 
 .copyActiveBtn:hover {
   background: var(--ink);
-  color: #ffffff;
+  color: var(--surface);
 }
 
 .useActiveCodeBtn {
   background-color: var(--coral);
   color: var(--ink);
-  border: 2px solid var(--ink);
+  border: 1px solid var(--border);
   border-radius: 6px;
   padding: 8px 16px;
   font-size: 13px;
   font-weight: 950;
   font-family: var(--mono);
   cursor: pointer;
-  box-shadow: 2px 2px 0 var(--ink);
+  box-shadow: none;
   transition: all 0.1s ease;
 }
 
 .useActiveCodeBtn:hover {
-  transform: translate(-1px, -1px);
-  box-shadow: 3px 3px 0 var(--ink);
+  transform: none;
+  box-shadow: none;
 }
 
 .primaryJoinBtn {
   background-color: var(--coral);
   color: var(--ink);
-  border: 2.5px solid var(--ink);
+  border: 1px solid var(--border);
   border-radius: 10px;
   padding: 12px 28px;
   font-size: 16px;
   font-weight: 950;
   font-family: var(--mono);
   cursor: pointer;
-  box-shadow: 3.5px 3.5px 0 var(--ink);
+  box-shadow: none;
   transition: all 0.12s ease;
   letter-spacing: 0.04em;
   margin-top: 6px;
 }
 
 .primaryJoinBtn:hover {
-  transform: translate(-1.5px, -1.5px);
-  box-shadow: 5px 5px 0 var(--ink);
-  background-color: #f87171;
+  transform: none;
+  box-shadow: none;
+  background-color: var(--cyan-hover);
 }
 
 .customCodeForm {
@@ -535,7 +547,7 @@
   font-family: var(--mono);
   font-size: 12.5px;
   font-weight: 700;
-  color: #4b5563;
+  color: var(--muted);
 }
 
 .customCodeRow {
@@ -549,7 +561,7 @@
   max-width: 240px;
   height: 44px;
   padding: 0 14px;
-  border: 2px solid var(--ink);
+  border: 1px solid var(--border);
   border-radius: 8px;
   font-family: var(--mono);
   font-size: 18px;
@@ -557,20 +569,20 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   outline: none;
-  background: #ffffff;
+  background: var(--surface);
   color: var(--ink);
-  box-shadow: 2px 2px 0 var(--ink);
+  box-shadow: none;
 }
 
 .customCodeInput:focus {
   border-color: var(--coral);
-  box-shadow: 0 0 0 3px rgba(239, 128, 118, 0.35);
+  box-shadow: none;
 }
 
 .verifyCustomBtn {
   background: var(--ink);
-  color: #ffffff;
-  border: 2px solid var(--ink);
+  color: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 0 20px;
   height: 44px;
@@ -578,11 +590,174 @@
   font-size: 13px;
   font-weight: 950;
   cursor: pointer;
-  box-shadow: 2.5px 2.5px 0 var(--ink);
+  box-shadow: none;
   transition: all 0.1s ease;
 }
 
 .verifyCustomBtn:hover {
   background: var(--coral);
   color: var(--ink);
+}
+.page {
+  background: var(--navy);
+  padding: 24px 16px 48px;
+}
+.outerCard {
+  max-width: 960px;
+  background: var(--ice);
+  border-radius: 16px;
+}
+.box,
+.simulationBox,
+.verifiedBox,
+.activeGameCard {
+  border-radius: 12px;
+  border-color: var(--border);
+  background: var(--surface);
+}
+.activeGameCard {
+  border-left: 3px solid var(--cyan);
+}
+.activeGameTitle {
+  color: var(--accent-ink);
+}
+.sectionTitle {
+  font-size: clamp(17px, 3vw, 23px);
+  letter-spacing: -0.02em;
+}
+.activeCodeDisplay {
+  background: var(--navy);
+  border-color: var(--border-dark);
+}
+.activeCodeValue {
+  color: var(--cyan);
+}
+.activeRoundNotice {
+  background: var(--lime-soft);
+  color: var(--success-ink);
+  border-color: #a0bf85;
+}
+.primaryJoinBtn,
+.joinBtn {
+  background: var(--cyan);
+  border-color: var(--accent-ink);
+  min-height: 48px;
+}
+.pulseDot,
+.pulseDotGreen {
+  animation: none;
+}
+.customCodeInput {
+  min-width: 0;
+  width: 100%;
+  max-width: none;
+}
+.codeSlotsContainer {
+  width: 100%;
+  gap: 6px;
+}
+.codeSlot {
+  min-width: 0;
+  width: min(48px, 12vw);
+}
+@media (max-width: 600px) {
+  .page {
+    padding: 16px 12px 36px;
+  }
+  .outerCard {
+    padding: 20px 14px;
+  }
+  .activeGameCard,
+  .box,
+  .simulationBox,
+  .verifiedBox {
+    padding: 16px 12px;
+  }
+  .activeGameHeader {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .activeGameContent {
+    gap: 18px;
+  }
+  .customCodeRow {
+    flex-wrap: wrap;
+  }
+  .customCodeInput {
+    flex-basis: 100%;
+  }
+  .verifyCustomBtn {
+    width: 100%;
+  }
+  .sectionHeader {
+    flex-wrap: wrap;
+  }
+}
+
+.backToParticipation {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  margin-bottom: 20px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--ink);
+  font: 700 12px/1.5 var(--mono);
+  text-decoration: none;
+}
+
+.backToParticipation:hover {
+  background: var(--cyan-soft);
+}
+.backToParticipation:focus-visible {
+  outline: 3px solid var(--accent-ink);
+  outline-offset: 3px;
+}
+
+.waitingTitle {
+  margin: 10px 0 16px;
+  font-size: clamp(28px, 5vw, 42px);
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+}
+.waitingCopy {
+  max-width: 65ch;
+  margin: 0 0 20px;
+  color: var(--muted);
+  line-height: 1.6;
+  font-size: 15px;
+}
+.waitingStatus {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 24px 0;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--lime);
+  border-radius: 10px;
+  background: var(--navy);
+  color: var(--ice);
+}
+.waitingStatus strong {
+  font-size: 17px;
+}
+.waitingStatus p {
+  margin: 6px 0 0;
+  color: var(--muted-dark);
+  font: 12px/1.5 var(--mono);
+}
+.waitingStatus b {
+  color: var(--cyan);
+  letter-spacing: 0.1em;
+}
+.waitingDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--lime);
+  flex: none;
 }

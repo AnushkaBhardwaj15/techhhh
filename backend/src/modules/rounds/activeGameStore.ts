@@ -82,11 +82,6 @@ export async function syncDatabaseRounds(activeGame: ActiveGameData): Promise<vo
   }
 }
 
-// Trigger initial sync on startup
-setTimeout(() => {
-  syncDatabaseRounds(currentActiveGame).catch(() => {});
-}, 100);
-
 export function getSharedActiveGame(): ActiveGameData {
   return {
     ...currentActiveGame,

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const winnerPatternSchema = z.enum(['EARLY_5', 'TOP_LINE', 'MIDDLE_LINE', 'BOTTOM_LINE', 'FULL_HOUSE']);
+export const winnerPatternSchema = z.enum(['EARLY_5', 'FOUR_CORNERS', 'TOP_LINE', 'MIDDLE_LINE', 'BOTTOM_LINE', 'FULL_HOUSE', 'SECOND_FULL_HOUSE']);
 const timestamp = z.string().datetime({ offset: true });
 export const eligibleCellIdsSchema = z.array(z.string().uuid()).min(5).max(15)
   .refine((cellIds) => new Set(cellIds).size === cellIds.length, 'Eligible cell IDs must be unique');

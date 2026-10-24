@@ -1,24 +1,119 @@
-.panel { margin-top:24px; padding:18px; border:2px solid var(--ink); background:#d3ddcf; box-shadow:4px 4px 0 var(--ink); }
-.eyebrow { margin:0 0 6px; color:#315c53; font:700 10px/1.4 var(--mono); letter-spacing:.14em; }
-.panel h4 { margin:0 0 10px; font-size:22px; }
-.panel p { line-height:1.5; }
-.authority { font:12px/1.6 var(--mono); }
-.actions { display:flex; flex-wrap:wrap; gap:10px; }
-.panel button { min-height:42px; padding:9px 13px; border:2px solid var(--ink); background:var(--coral); box-shadow:3px 3px 0 var(--ink); color:var(--ink); font-weight:750; cursor:pointer; }
-.panel button:disabled { opacity:.55; cursor:not-allowed; }
-.panel button:focus-visible { outline:2px solid var(--ink); outline-offset:3px; }
-.panel button:active:not(:disabled) { transform:translate(2px,2px); box-shadow:1px 1px 0 var(--ink); }
-.allocation { display:flex; flex-wrap:wrap; align-items:center; gap:14px; margin:14px 0; padding:10px; border:1px solid var(--ink); background:#f4ecd6; }
-.allocation div { display:grid; gap:3px; }
-.allocation span { font:10px/1.4 var(--mono); text-transform:uppercase; }
-.allocation strong { font-size:20px; }
-.allocation button { padding:6px 9px; font-size:11px; }
-.cancel { margin-top:12px; background:#f4ecd6 !important; }
-.recovery { padding:11px; border-left:5px solid var(--coral); background:#f4ecd6; }
-.report { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin:16px 0 0; }
-.report div { padding:9px; border:1px solid var(--ink); background:#f4ecd6; }
-.report dt { font:10px/1.4 var(--mono); }
-.report dd { margin:3px 0 0; font-size:20px; font-weight:800; }
-.message { margin:13px 0 0; padding:10px; border-left:5px solid var(--coral); background:#f4ecd6; }
-@media(max-width:560px) { .report { grid-template-columns:repeat(2,minmax(0,1fr)); } }
-@media(prefers-reduced-motion:reduce) { .panel button:active:not(:disabled) { transform:none; } }
+.panel {
+  margin-top: 24px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  background: var(--border);
+  box-shadow: none;
+}
+.eyebrow {
+  margin: 0 0 6px;
+  color: var(--accent-ink);
+  font: 700 10px/1.4 var(--mono);
+  letter-spacing: 0.14em;
+}
+.panel h4 {
+  margin: 0 0 10px;
+  font-size: 22px;
+}
+.panel p {
+  line-height: 1.5;
+}
+.authority {
+  font: 12px/1.6 var(--mono);
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.panel button {
+  min-height: 42px;
+  padding: 9px 13px;
+  border: 1px solid var(--border);
+  background: var(--coral);
+  box-shadow: none;
+  color: var(--ink);
+  font-weight: 750;
+  cursor: pointer;
+}
+.panel button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.panel button:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+.panel button:active:not(:disabled) {
+  transform: none;
+  box-shadow: none;
+}
+.allocation {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  margin: 14px 0;
+  padding: 10px;
+  border: 1px solid var(--ink);
+  background: var(--ice);
+}
+.allocation div {
+  display: grid;
+  gap: 3px;
+}
+.allocation span {
+  font: 10px/1.4 var(--mono);
+  text-transform: uppercase;
+}
+.allocation strong {
+  font-size: 20px;
+}
+.allocation button {
+  padding: 6px 9px;
+  font-size: 11px;
+}
+.cancel {
+  margin-top: 12px;
+  background: var(--ice) !important;
+}
+.recovery {
+  padding: 11px;
+  border-left: 5px solid var(--coral);
+  background: var(--ice);
+}
+.report {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin: 16px 0 0;
+}
+.report div {
+  padding: 9px;
+  border: 1px solid var(--ink);
+  background: var(--ice);
+}
+.report dt {
+  font: 10px/1.4 var(--mono);
+}
+.report dd {
+  margin: 3px 0 0;
+  font-size: 20px;
+  font-weight: 800;
+}
+.message {
+  margin: 13px 0 0;
+  padding: 10px;
+  border-left: 5px solid var(--coral);
+  background: var(--ice);
+}
+@media (max-width: 560px) {
+  .report {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .panel button:active:not(:disabled) {
+    transform: none;
+  }
+}

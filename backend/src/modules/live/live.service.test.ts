@@ -61,7 +61,7 @@ describe('LiveReadService', () => {
     expect(response.roundId).toBe(round.id);
     expect(response.data).toEqual({
       EARLY_5: [{ id: 'winner-1', roundId: 'round-public', pattern: 'EARLY_5', participantName: 'Asha', verifiedAt: '2026-01-01T00:04:00.000Z' }],
-      TOP_LINE: [],
+      FOUR_CORNERS: [], SECOND_FULL_HOUSE: [], TOP_LINE: [],
       MIDDLE_LINE: [],
       BOTTOM_LINE: [],
       FULL_HOUSE: [{ id: 'winner-2', roundId: 'round-public', pattern: 'FULL_HOUSE', participantName: 'Dev', verifiedAt: '2026-01-01T00:05:00.000Z' }],

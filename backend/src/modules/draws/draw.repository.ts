@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, gt, inArray, isNull, placeholder, sql } from 'drizzle-orm';
+import { getTableColumns, and, asc, count, desc, eq, gt, inArray, isNull, placeholder, sql } from 'drizzle-orm';
 import { getDb } from '../../db/client.ts';
 import { draws, type DrawRecord, type InsertDraw } from '../../db/schema/draws.ts';
 import { roundQuestions, eventKeys } from '../../db/schema/questions.ts';
@@ -118,7 +118,7 @@ export class DrawRepository implements IDrawRepository {
     const orderDirection = options.order === 'DESC' ? desc(draws.sequenceNumber) : asc(draws.sequenceNumber);
 
     const rows = await db
-      .select({ draw: draws, total: sql<number>`count(*) over()` })
+      .select({ draw: { ...getTableColumns(draws), keyValue: sql<string>`CASE WHEN draws.answer_revealed THEN ${draws.keyValue} ELSE '' END` }, total: sql<number>`count(*) over()` })
       .from(draws)
       .where(eq(draws.roundId, roundId))
       .orderBy(orderDirection)
@@ -157,7 +157,7 @@ export class DrawRepository implements IDrawRepository {
             'sequenceNumber', ${draws.sequenceNumber},
             'drawMode', ${draws.drawMode},
             'questionText', ${draws.questionText},
-            'keyValue', ${draws.keyValue},
+            'keyValue', CASE WHEN draws.answer_revealed THEN ${draws.keyValue} ELSE '' END,
             'drawnAt', ${draws.drawnAt}
             ) AS payload
             FROM ${draws}

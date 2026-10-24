@@ -19,7 +19,7 @@ vi.mock('gsap', () => ({ gsap: {
 const user: AuthenticatedUser = { id: 'user-1', email: 'ari@example.test', name: 'Ari Patel', role: 'PARTICIPANT', status: 'ACTIVE' };
 const ownWins = { data: [] as { id: string; claimId: string; participantId: string; roundId: string; eventId: string; patternType: 'EARLY_5'; verifiedAt: string }[], total: 0, page: 1, limit: 50 };
 const noClaims = { data: [], total: 0, page: 1, limit: 50 };
-const publicWinners = { roundId: 'round-1', data: { EARLY_5: [{ id: 'winner-1', roundId: 'round-1', pattern: 'EARLY_5' as const, participantName: 'Ari Patel', verifiedAt: '2026-10-17T14:00:00.000Z' }], TOP_LINE: [], MIDDLE_LINE: [], BOTTOM_LINE: [], FULL_HOUSE: [] } };
+const publicWinners = { roundId: 'round-1', data: { EARLY_5: [{ id: 'winner-1', roundId: 'round-1', pattern: 'EARLY_5' as const, participantName: 'Ari Patel', verifiedAt: '2026-10-17T14:00:00.000Z' }], FOUR_CORNERS: [], SECOND_FULL_HOUSE: [], TOP_LINE: [], MIDDLE_LINE: [], BOTTOM_LINE: [], FULL_HOUSE: [] } };
 
 function renderAt(path: '/participant/results' | '/participant/game', children: React.ReactNode) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, staleTime: 0 } } });

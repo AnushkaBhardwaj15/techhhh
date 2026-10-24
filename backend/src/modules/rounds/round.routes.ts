@@ -171,7 +171,7 @@ export function createRoundRoutes(deps: RoundRoutesDependencies = {}): FastifyPl
         // Fallback to shared active game store
       }
       const active = getSharedActiveGame();
-      const patternTypes = ['EARLY_5', 'TOP_LINE', 'MIDDLE_LINE', 'BOTTOM_LINE', 'FULL_HOUSE'] as const;
+      const patternTypes = ['EARLY_5', 'FOUR_CORNERS', 'TOP_LINE', 'MIDDLE_LINE', 'BOTTOM_LINE', 'FULL_HOUSE', 'SECOND_FULL_HOUSE'] as const;
       return {
         round: {
           id: active.id,

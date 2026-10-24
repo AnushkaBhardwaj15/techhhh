@@ -1,0 +1,15 @@
+{
+  "name": "Tech Tambola — Midnight Circuit",
+  "decisions": [
+    "Use the user-selected navy, cyan, lime, and ice palette across every existing route.",
+    "Prioritize 320px mobile layouts, readable inputs, 44px controls, and contained table/ticket scrolling.",
+    "Adapt Aceternity Stateful Button to existing CSS Modules and caller-controlled request state.",
+    "Keep existing API, authentication, game-state, and WebSocket behavior."
+  ],
+  "colors": {
+    "navy": "#081220",
+    "cyan": "#00e5ff",
+    "lime": "#a3ff4b",
+    "ice": "#e6f3f3"
+  }
+}

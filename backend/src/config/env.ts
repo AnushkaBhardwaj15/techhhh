@@ -8,10 +8,8 @@ const envSchema = z
     HOST: z.string().default('0.0.0.0'),
     DATABASE_URL: z
       .string()
-      .optional()
-      .or(z.literal(''))
-      .default('postgres://postgres:postgres@127.0.0.1:5432/techtombola')
-      .transform((val) => (!val || val === '' ? 'postgres://postgres:postgres@127.0.0.1:5432/techtombola' : val)),
+      .min(1, 'DATABASE_URL is required')
+      .regex(/^postgres(?:ql)?:\/\//, 'DATABASE_URL must be a valid PostgreSQL URL'),
     JWT_SECRET: z.string({ required_error: 'JWT_SECRET is required' }).min(1, 'JWT_SECRET is required'),
     SESSION_SECRET: z.string({ required_error: 'SESSION_SECRET is required' }).min(1, 'SESSION_SECRET is required'),
     EMAIL_PROVIDER_API_KEY: z.string().optional().or(z.literal('')).transform((val) => (val === '' ? undefined : val)),
