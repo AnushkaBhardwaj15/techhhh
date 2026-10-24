@@ -7,10 +7,10 @@
 .live {
   margin: 0 0 20px;
   padding: clamp(16px, 2.5vw, 24px);
-  border: 2px solid var(--ink);
-  background: #1a2a26;
-  color: #fffaf0;
-  box-shadow: 4px 4px 0 var(--ink);
+  border: 1px solid var(--border);
+  background: var(--navy);
+  color: var(--surface);
+  box-shadow: none;
 }
 
 .liveHeader {
@@ -21,21 +21,21 @@
   gap: 12px;
   margin-bottom: 16px;
   padding-bottom: 12px;
-  border-bottom: 1px solid #324943;
+  border-bottom: 1px solid var(--border-dark);
 }
 
 .kicker {
   margin: 0;
-  color: #e28b73;
+  color: var(--cyan);
   font: 700 10px/1.2 var(--mono);
-  letter-spacing: .12em;
+  letter-spacing: 0.12em;
 }
 
 .liveHeader h1 {
   margin: 4px 0 0;
   font-size: clamp(22px, 4vw, 32px);
   line-height: 1.1;
-  color: #fffaf0;
+  color: var(--surface);
 }
 
 .headerBadges {
@@ -46,8 +46,8 @@
 
 .roundStatus {
   padding: 4px 8px;
-  border: 1px solid #758a83;
-  color: #fffaf0;
+  border: 1px solid var(--muted-dark);
+  color: var(--surface);
   font: 700 10px var(--mono);
   text-transform: uppercase;
 }
@@ -60,7 +60,7 @@
 
 .connOnline {
   background: rgba(46, 125, 50, 0.35);
-  color: #81c784;
+  color: var(--lime);
   border: 1px solid #4caf50;
 }
 
@@ -71,10 +71,10 @@
 }
 
 .questionCard {
-  background: #233732;
-  border: 2px solid #4a635c;
+  background: var(--navy-raised);
+  border: 2px solid var(--border-dark);
   padding: clamp(16px, 3vw, 24px);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  box-shadow: none;
 }
 
 .questionMeta {
@@ -86,7 +86,7 @@
 }
 
 .callBadge {
-  background: #f2c86d;
+  background: var(--lime);
   color: var(--ink);
   font: 800 11px var(--mono);
   padding: 4px 8px;
@@ -94,7 +94,7 @@
 }
 
 .solveNotice {
-  color: #a7d1b6;
+  color: var(--muted-dark);
   font: 700 10px var(--mono);
   letter-spacing: 0.08em;
 }
@@ -104,18 +104,18 @@
   font-size: clamp(20px, 3.5vw, 30px);
   line-height: 1.25;
   font-weight: 750;
-  color: #fffaf0;
+  color: var(--surface);
 }
 
 .questionSubhint {
   margin: 0;
   font: 500 12px/1.4 var(--mono);
-  color: #c5d4ce;
+  color: var(--muted-dark);
 }
 
 .waitingCard {
-  background: #233732;
-  border: 1px dashed #4a635c;
+  background: var(--navy-raised);
+  border: 1px dashed var(--border-dark);
   padding: 24px;
   text-align: center;
 }
@@ -123,7 +123,7 @@
 .waitingBadge {
   display: inline-block;
   padding: 4px 10px;
-  background: #e28b73;
+  background: var(--cyan);
   color: var(--ink);
   font: 800 10px var(--mono);
   margin-bottom: 10px;
@@ -132,13 +132,13 @@
 .waitingCard h2 {
   margin: 0 0 8px;
   font-size: 20px;
-  color: #fffaf0;
+  color: var(--surface);
 }
 
 .waitingCard p {
   margin: 0;
   font-size: 13px;
-  color: #c5d4ce;
+  color: var(--muted-dark);
 }
 
 .ticketSection {
@@ -147,10 +147,10 @@
 
 .historySection {
   margin-top: 24px;
-  background: #fff;
-  border: 2px solid var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--border);
   padding: 16px;
-  box-shadow: 3px 3px 0 var(--ink);
+  box-shadow: none;
 }
 
 .historyHeader {
@@ -190,13 +190,13 @@
   gap: 10px;
   align-items: baseline;
   padding: 8px 6px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--border);
   font-size: 12px;
 }
 
 .historyNumber {
   font: 800 11px var(--mono);
-  color: #315c53;
+  color: var(--accent-ink);
 }
 
 .historyText {
@@ -205,7 +205,7 @@
 
 .historyItem time {
   font: 700 9px var(--mono);
-  color: #888;
+  color: var(--muted);
 }
 
 .emptyNotice,
@@ -213,7 +213,7 @@
   padding: 12px;
   margin-bottom: 12px;
   background: rgba(255, 255, 255, 0.08);
-  border: 1px solid #4a635c;
+  border: 1px solid var(--border-dark);
   display: flex;
   align-items: center;
   gap: 10px;
@@ -222,7 +222,7 @@
 .emptyNotice button,
 .error button {
   padding: 4px 8px;
-  background: #f2c86d;
+  background: var(--lime);
   color: var(--ink);
   border: 1px solid var(--ink);
   font: 700 10px var(--mono);
@@ -231,6 +231,53 @@
 
 .stale {
   font: 700 10px var(--mono);
-  color: #e28b73;
+  color: var(--cyan);
   margin: 8px 0 0;
+}
+.game {
+  color: var(--ice);
+  padding-top: 24px;
+}
+.live {
+  border-color: var(--border-dark);
+  border-radius: 16px;
+  border-top: 3px solid var(--cyan);
+}
+.kicker {
+  color: var(--cyan);
+}
+.questionCard,
+.waitingCard {
+  border-radius: 10px;
+}
+.historySection {
+  background: var(--ice);
+  color: var(--ink);
+  border-radius: 12px;
+}
+.historyToggle {
+  color: var(--ink);
+  min-height: 44px;
+}
+.callBadge {
+  background: var(--lime);
+}
+.emptyNotice,
+.error {
+  color: var(--ice);
+  border-radius: 7px;
+}
+@media (max-width: 600px) {
+  .historyItem {
+    grid-template-columns: 28px minmax(0, 1fr);
+  }
+  .historyItem time {
+    grid-column: 2;
+  }
+  .headerBadges {
+    flex-wrap: wrap;
+  }
+  .liveHeader {
+    align-items: flex-start;
+  }
 }
