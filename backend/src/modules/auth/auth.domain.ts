@@ -70,11 +70,12 @@ export function verifyAuthToken(token: string): AuthJwtPayload {
 
 export function getSessionCookieOptions() {
   const env = getEnv();
+  const isProduction = env.NODE_ENV === 'production';
   return {
     path: '/',
     httpOnly: true,
-    secure: env.NODE_ENV === 'production',
-    sameSite: 'lax' as const,
+    secure: isProduction,
+    sameSite: isProduction ? ('none' as const) : ('lax' as const),
     maxAge: SESSION_DURATION_HOURS * 60 * 60, // in seconds
   };
 }

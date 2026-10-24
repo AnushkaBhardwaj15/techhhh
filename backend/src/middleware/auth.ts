@@ -33,7 +33,10 @@ export function verifyMutationOrigin(request: FastifyRequest): void {
         env.APP_URL.trim(),
       ];
 
-      if (!allowed.includes('*') && !allowed.includes(origin)) {
+      const isVercel = origin.endsWith('.vercel.app');
+      const isLocalhost = origin.includes('localhost') || origin.includes('127.0.0.1');
+
+      if (!allowed.includes(origin) && !isVercel && !isLocalhost) {
         throw new ForbiddenError(`Invalid request origin: '${origin}'`);
       }
     }

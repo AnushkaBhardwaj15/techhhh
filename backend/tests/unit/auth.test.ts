@@ -137,7 +137,7 @@ describe('Session cookie security flags', () => {
     try {
       process.env.NODE_ENV = 'production';
       resetCachedEnv();
-      expect(getSessionCookieOptions()).toMatchObject({ httpOnly: true, secure: true, sameSite: 'lax', path: '/' });
+      expect(getSessionCookieOptions()).toMatchObject({ httpOnly: true, secure: true, sameSite: 'none', path: '/' });
 
       process.env.NODE_ENV = 'test';
       resetCachedEnv();
