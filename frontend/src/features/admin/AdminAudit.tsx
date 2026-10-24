@@ -1,7 +1,7 @@
 import { useState } from 'react';
+import { z } from 'zod';
 import { useQuery } from '@tanstack/react-query';
 import { useOutletContext } from 'react-router-dom';
-import { z } from 'zod';
 import { ApiError } from '../../lib/api/client';
 import { listAdminAudit } from '../../lib/api/adminOperations';
 import type { AuditFilters } from '../../lib/api/adminOperations';
@@ -10,11 +10,10 @@ import { ErrorMessage, LoadingMessage } from '../../components/Feedback';
 import styles from './AdminAudit.module.css';
 
 const PAGE_SIZE = 20;
-const auditActor = z.string().uuid();
 
 export function AdminAudit() {
   const user = useOutletContext<AuthenticatedUser>();
-  const [draft, setDraft] = useState({ actorId: '', action: '', from: '', to: '' });
+  const [draft, setDraft] = useState({ search: '', actorId: '', action: '', from: '', to: '' });
   const [filters, setFilters] = useState<AuditFilters>({});
   const [cursors, setCursors] = useState<Array<string | null>>([null]);
   const [filterError, setFilterError] = useState('');
@@ -26,11 +25,12 @@ export function AdminAudit() {
 
   function applyFilters(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const actorId = draft.actorId.trim();
-    if (actorId && !auditActor.safeParse(actorId).success) {
-      setFilterError('Enter a valid Actor ID or leave the field empty.');
+    const actorIdInput = draft.actorId.trim();
+    if (actorIdInput && !z.string().uuid().safeParse(actorIdInput).success) {
+      setFilterError('Enter a valid Actor ID (36-character UUID) or leave blank.');
       return;
     }
+    const search = draft.search.trim();
     const from = draft.from ? new Date(draft.from) : undefined;
     const to = draft.to ? new Date(draft.to) : undefined;
     if ((from && !Number.isFinite(from.getTime())) || (to && !Number.isFinite(to.getTime()))) {
@@ -44,7 +44,8 @@ export function AdminAudit() {
     setFilterError('');
     setCursors([null]);
     setFilters({
-      ...(actorId ? { actorId } : {}),
+      ...(actorIdInput ? { actorId: actorIdInput } : {}),
+      ...(search ? { search } : {}),
       ...(draft.action.trim() ? { action: draft.action.trim() } : {}),
       ...(from ? { from: from.toISOString() } : {}),
       ...(to ? { to: to.toISOString() } : {}),
@@ -55,12 +56,34 @@ export function AdminAudit() {
     ? 'Your account cannot view the audit log.'
     : audit.error instanceof ApiError ? audit.error.message : 'We could not read the audit response.';
 
+  function getActionBadge(action: string) {
+    const actionLabels: Record<string, string> = {
+      WIN_CLAIM_CREATED: 'Claim Submitted',
+      WIN_VERIFIED: 'Winner Verified',
+      WIN_CLAIM_REJECTED: 'Claim Rejected',
+      MARK_CREATED: 'Cell Marked',
+      MARK_REMOVED: 'Cell Unmarked',
+      ROUND_STARTED: 'Round Started',
+      ROUND_PAUSED: 'Round Paused',
+      ROUND_RESUMED: 'Round Resumed',
+      ROUND_COMPLETED: 'Round Completed',
+      DRAW_CREATED: 'Clue Drawn',
+      MANUAL_DRAW_CREATED: 'Manual Draw',
+      LOGIN_SUCCESS: 'Login Success',
+      LOGIN_FAILED: 'Login Failed',
+      PARTICIPANT_CREATED: 'Participant Created',
+      PARTICIPANT_IMPORTED: 'Participants Imported',
+    };
+    return actionLabels[action] ?? action;
+  }
+
   return <main className={styles.page}>
-    <p className={styles.eyebrow}>EVENT OPERATIONS / RECORDS</p>
-    <header className={styles.heading}><div><h1>Audit log</h1><p>Read-only records returned by the server. Sensitive request details are not included in this view.</p></div></header>
+    <p className={styles.eyebrow}>OPERATIONS / RECORDS</p>
+    <header className={styles.heading}><div><h1>Audit log</h1><p>Human-readable operational records. Tracks participant interactions, host commands, claims, and game lifecycle.</p></div></header>
     <form className={styles.filters} onSubmit={applyFilters} aria-label="Filter audit records">
-      <label>Actor ID<input inputMode="text" value={draft.actorId} onChange={(event) => setDraft((current) => ({ ...current, actorId: event.target.value }))} /></label>
-      <label>Action<input value={draft.action} maxLength={100} onChange={(event) => setDraft((current) => ({ ...current, action: event.target.value }))} /></label>
+      <label>Search (User Email, Event, Keyword)<input inputMode="text" placeholder="e.g. alice@example.com or Tech Tombola" value={draft.search} onChange={(event) => setDraft((current) => ({ ...current, search: event.target.value }))} /></label>
+      <label>Actor ID<input placeholder="e.g. 9a453a90-d858-477c-9af0-cda050464bc1" value={draft.actorId} onChange={(event) => setDraft((current) => ({ ...current, actorId: event.target.value }))} /></label>
+      <label>Action<input placeholder="e.g. WIN_CLAIM or MARK" value={draft.action} maxLength={100} onChange={(event) => setDraft((current) => ({ ...current, action: event.target.value }))} /></label>
       <label>From<input type="datetime-local" value={draft.from} onChange={(event) => setDraft((current) => ({ ...current, from: event.target.value }))} /></label>
       <label>To<input type="datetime-local" value={draft.to} onChange={(event) => setDraft((current) => ({ ...current, to: event.target.value }))} /></label>
       <button type="submit">Apply filters</button>
@@ -73,12 +96,23 @@ export function AdminAudit() {
       {audit.data && audit.data.items.length === 0 && <p className={styles.state}>No audit records match these filters.</p>}
       {audit.data && audit.data.items.length > 0 && <div className={styles.tableWrap} role="region" aria-label="Audit record table; scroll horizontally" tabIndex={0}>
         <p className={styles.scrollHint}>Scroll horizontally to read all record fields.</p>
-        <table><caption className={styles.visuallyHidden}>Audit records, newest first</caption><thead><tr><th scope="col">Time</th><th scope="col">Actor</th><th scope="col">Action</th><th scope="col">Resource</th><th scope="col">Details</th></tr></thead><tbody>{audit.data.items.map((record) => <tr key={record.id}>
+        <table><caption className={styles.visuallyHidden}>Audit records, newest first</caption><thead><tr><th scope="col">Time</th><th scope="col">User / Actor</th><th scope="col">Action</th><th scope="col">Target / Event</th><th scope="col">Details</th></tr></thead><tbody>{audit.data.items.map((record) => <tr key={record.id}>
           <td><time dateTime={record.createdAt}>{new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(record.createdAt))}</time></td>
-          <td><span>{record.actorType ?? 'Unknown'}</span><code>{record.actorId ?? '—'}</code></td>
-          <td><strong>{record.action}</strong></td>
-          <td><span>{record.resourceType}</span><code>{record.resourceId ?? '—'}</code></td>
-          <td>{record.metadata === null ? '—' : <details><summary>View metadata</summary><pre>{JSON.stringify(record.metadata, null, 2)}</pre></details>}</td>
+          <td>
+            {record.actorEmail ? <div><strong style={{ display: 'block', fontSize: '13px' }}>{record.actorEmail}</strong><small style={{ color: 'var(--color-stone-olive, #747665)' }}>{record.actorType ?? 'User'}</small></div> : <div><strong>{record.actorType ?? 'System'}</strong></div>}
+          </td>
+          <td>
+            <span style={{ display: 'inline-block', padding: '3px 8px', borderRadius: '4px', background: 'var(--color-sandstone, #DCD0BD)', color: 'var(--color-espresso, #302820)', fontWeight: 650, fontSize: '12px' }}>{getActionBadge(record.action)}</span>
+            <div style={{ fontSize: '11px', color: 'var(--color-stone-olive, #747665)', marginTop: '2px' }}>{record.action}</div>
+          </td>
+          <td>
+            <div>
+              <strong style={{ display: 'block', fontSize: '13px' }}>{record.eventName ?? record.resourceName ?? record.resourceId ?? record.resourceType}</strong>
+              {record.resourceName && record.eventName && <small style={{ color: 'var(--color-stone-olive, #747665)' }}>{record.resourceName}</small>}
+              {record.resourceId && (record.eventName || record.resourceName) && <span style={{ display: 'block', fontSize: '11px', color: 'var(--color-text-secondary, #62584C)' }}>{record.resourceId}</span>}
+            </div>
+          </td>
+          <td>{record.metadata === null ? '—' : <details><summary>View details</summary><pre>{JSON.stringify(record.metadata, null, 2)}</pre></details>}</td>
         </tr>)}</tbody></table>
       </div>}
       {audit.data && (cursors.length > 1 || audit.data.hasMore) && <nav className={styles.pagination} aria-label="Audit log pages"><button type="button" disabled={cursors.length <= 1 || audit.isFetching} onClick={() => setCursors((current) => current.slice(0, -1))}>Previous</button><span>Page {cursors.length}</span><button type="button" disabled={!audit.data.hasMore || !audit.data.nextCursor || audit.isFetching} onClick={() => setCursors((current) => [...current, audit.data!.nextCursor])}>Next</button></nav>}

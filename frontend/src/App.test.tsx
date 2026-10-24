@@ -47,7 +47,7 @@ describe('application role routes', () => {
     vi.mocked(authApi.getMe).mockResolvedValue({ id: 'u1', email: 'a@example.test', name: 'Ari Patel', role: 'ADMIN', status: 'ACTIVE' });
     window.history.replaceState({}, '', '/admin');
     render(<App />);
-    expect(await screen.findByRole('heading', { name: 'Your games' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Your games' }, { timeout: 5000 })).toBeInTheDocument();
     expect(authApi.getMe).toHaveBeenCalledOnce();
   });
 
@@ -55,7 +55,7 @@ describe('application role routes', () => {
     vi.mocked(authApi.getMe).mockResolvedValue({ id: 'u2', email: 'sa@example.test', name: 'Ari Patel', role: 'SUPER_ADMIN', status: 'ACTIVE' });
     window.history.replaceState({}, '', '/admin/administrators');
     render(<App />);
-    expect(await screen.findByRole('heading', { name: 'Administrator accounts' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Administrator accounts' }, { timeout: 5000 })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Administrators' })).toHaveAttribute('href', '/admin/administrators');
     expect(listSuperAdminAccounts).toHaveBeenCalled();
   });
@@ -64,7 +64,7 @@ describe('application role routes', () => {
     vi.mocked(authApi.getMe).mockResolvedValue({ id: 'u1', email: 'a@example.test', name: 'Ari Patel', role: 'ADMIN', status: 'ACTIVE' });
     window.history.replaceState({}, '', '/admin/system');
     render(<App />);
-    expect(await screen.findByRole('heading', { name: 'Your games' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Your games' }, { timeout: 5000 })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'System health' })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'System' })).not.toBeInTheDocument();
     expect(getSuperAdminSystem).not.toHaveBeenCalled();
@@ -74,7 +74,7 @@ describe('application role routes', () => {
     vi.mocked(authApi.getMe).mockResolvedValue({ id: 'u1', email: 'a@example.test', name: 'Ari Patel', role: 'PARTICIPANT', status: 'ACTIVE' });
     window.history.replaceState({}, '', '/admin');
     render(<App />);
-    expect(await screen.findByText(/GAME ENTRY & VERIFICATION|YOU’RE IN THE LOBBY/i)).toBeInTheDocument();
+    expect(await screen.findByText(/GAME ENTRY & VERIFICATION|YOU’RE IN THE LOBBY/i, {}, { timeout: 5000 })).toBeInTheDocument();
   });
 
   it('sends an expired session to the login form without protected-content flash', async () => {

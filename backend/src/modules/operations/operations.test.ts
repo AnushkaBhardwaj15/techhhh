@@ -109,10 +109,13 @@ describe('Operations read models', () => {
     expect(serialized).toEqual({
       id: auditRow.id,
       actorId: auditRow.actorId,
+      actorEmail: null,
       actorType: 'ADMIN',
       action: 'ROUND_STARTED',
       resourceType: 'round',
       resourceId: 'round-1',
+      eventName: null,
+      resourceName: null,
       metadata: { reason: 'operator', password: '***', nested: { apiKey: '***' } },
       createdAt: timestamp.toISOString(),
     });

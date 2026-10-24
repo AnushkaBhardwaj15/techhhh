@@ -6,10 +6,10 @@ import { draws } from '../../db/schema/draws.ts';
 import { events } from '../../db/schema/events.ts';
 import { rounds } from '../../db/schema/rounds.ts';
 import { schemaMigrations } from '../../db/schema/foundation.ts';
-import { participantProfiles } from '../../db/schema/users.ts';
+import { participantProfiles, users } from '../../db/schema/users.ts';
 import type { AuditQuery } from './operations.schemas.ts';
 
-export interface AuditFilters extends Pick<AuditQuery, 'actorId' | 'action' | 'from' | 'to'> {
+export interface AuditFilters extends Pick<AuditQuery, 'actorId' | 'action' | 'from' | 'to' | 'actorEmail' | 'search'> {
   limit: number;
   cursor?: { createdAt: string; id: string };
 }
@@ -30,7 +30,7 @@ export interface SystemReadModel {
 
 export interface IOperationsRepository {
   getDashboard(): Promise<DashboardReadModel>;
-  listAudit(filters: AuditFilters): Promise<Array<AuditLogRecord & { cursorCreatedAt?: string }>>;
+  listAudit(filters: AuditFilters): Promise<Array<AuditLogRecord & { cursorCreatedAt?: string; actorEmail?: string | null }>>;
   getSystemReadModel(): Promise<SystemReadModel>;
 }
 
@@ -95,21 +95,42 @@ export class OperationsRepository implements IOperationsRepository {
     }
   }
 
-  async listAudit(filters: AuditFilters): Promise<Array<AuditLogRecord & { cursorCreatedAt?: string }>> {
+  async listAudit(filters: AuditFilters): Promise<Array<AuditLogRecord & { cursorCreatedAt?: string; actorEmail?: string | null }>> {
     try {
       const conditions = [];
       if (filters.actorId) conditions.push(eq(auditLogs.actorId, filters.actorId));
       if (filters.action) conditions.push(eq(auditLogs.action, filters.action));
       if (filters.from) conditions.push(gte(auditLogs.createdAt, filters.from));
       if (filters.to) conditions.push(lte(auditLogs.createdAt, filters.to));
+      if (filters.actorEmail) {
+        conditions.push(or(
+          sql`${users.email} ILIKE ${'%' + filters.actorEmail + '%'}`,
+          sql`${auditLogs.metadata}->>'actorEmail' ILIKE ${'%' + filters.actorEmail + '%'}`
+        )!);
+      }
+      if (filters.search) {
+        const pattern = `%${filters.search}%`;
+        conditions.push(or(
+          sql`${users.email} ILIKE ${pattern}`,
+          sql`${auditLogs.metadata}->>'actorEmail' ILIKE ${pattern}`,
+          sql`${auditLogs.metadata}->>'eventName' ILIKE ${pattern}`,
+          sql`${auditLogs.action} ILIKE ${pattern}`,
+          sql`${auditLogs.resourceType} ILIKE ${pattern}`
+        )!);
+      }
       if (filters.cursor) conditions.push(or(
         sql`${auditLogs.createdAt} < ${filters.cursor.createdAt}::timestamptz`,
         and(sql`${auditLogs.createdAt} = ${filters.cursor.createdAt}::timestamptz`, lt(auditLogs.id, filters.cursor.id)),
       )!);
 
       return await this.databaseProvider()
-        .select({ ...getTableColumns(auditLogs), cursorCreatedAt: sql<string>`to_char(${auditLogs.createdAt} AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"')` })
+        .select({
+          ...getTableColumns(auditLogs),
+          actorEmail: users.email,
+          cursorCreatedAt: sql<string>`to_char(${auditLogs.createdAt} AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"')`
+        })
         .from(auditLogs)
+        .leftJoin(users, eq(auditLogs.actorId, users.id))
         .where(conditions.length ? and(...conditions) : undefined)
         .orderBy(desc(auditLogs.createdAt), desc(auditLogs.id))
         .limit(filters.limit + 1);
@@ -117,6 +138,19 @@ export class OperationsRepository implements IOperationsRepository {
       let filtered = [...memAuditLogs];
       if (filters.actorId) filtered = filtered.filter(l => l.actorId === filters.actorId);
       if (filters.action) filtered = filtered.filter(l => l.action.toLowerCase().includes(filters.action!.toLowerCase()));
+      if (filters.actorEmail) {
+        const q = filters.actorEmail.toLowerCase();
+        filtered = filtered.filter(l => (l.metadata as any)?.actorEmail?.toLowerCase().includes(q));
+      }
+      if (filters.search) {
+        const q = filters.search.toLowerCase();
+        filtered = filtered.filter(l =>
+          l.action.toLowerCase().includes(q) ||
+          l.resourceType.toLowerCase().includes(q) ||
+          (l.metadata as any)?.actorEmail?.toLowerCase().includes(q) ||
+          (l.metadata as any)?.eventName?.toLowerCase().includes(q)
+        );
+      }
       return filtered.slice(0, filters.limit + 1);
     }
   }

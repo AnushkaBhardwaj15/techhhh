@@ -127,6 +127,22 @@ export function AdminGamePage() {
           </h1>
         </div>
         {state.isPending && <p role="status">Loading the saved game…</p>}
+        {!state.isPending && !game && !error && (
+          <div className={styles.mainCard} style={{ textAlign: 'center', padding: '48px 24px' }}>
+            <h2 style={{ fontSize: '22px', marginBottom: '12px' }}>No Active Game Loaded</h2>
+            <p style={{ color: 'var(--color-text-secondary, #62584C)', maxWidth: '460px', margin: '0 auto 24px', lineHeight: 1.5 }}>
+              There is currently no active game round selected. You can start a round from the Host Dashboard or choose from existing game rounds.
+            </p>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+              <Link className={styles.dashboardBackBtn} to="/admin" style={{ textDecoration: 'none' }}>
+                Return to Dashboard
+              </Link>
+              <Link className={styles.dashboardBackBtn} to="/admin/rounds" style={{ textDecoration: 'none' }}>
+                Manage Rounds
+              </Link>
+            </div>
+          </div>
+        )}
         {(error || state.isError || rounds.isError) && (
           <p className={playStyles.warning} role="alert">
             {error || "Could not load the game. Check your connection."}{" "}

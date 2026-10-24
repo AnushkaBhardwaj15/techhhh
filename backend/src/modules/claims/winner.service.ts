@@ -167,6 +167,7 @@ export class WinnerService {
             patternType: claim.patternType,
             participantId: claim.participantId,
             participantName: context.participantName,
+            resourceName: `Verified: ${claim.patternType}`,
           },
         },
         tx
@@ -251,6 +252,7 @@ export class WinnerService {
             patternType: claim.patternType,
             rejectionReason,
             participantId: claim.participantId,
+            resourceName: `Rejected: ${claim.patternType}`,
           },
         },
         tx

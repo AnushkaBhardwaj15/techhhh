@@ -119,6 +119,7 @@
 .claimBtn {
   width: 100%;
   min-height: 44px;
+  flex-shrink: 0;
   padding: 10px 8px;
   background: var(--accent-ink);
   color: var(--surface);
@@ -397,6 +398,7 @@
 .chooseBtn {
   width: 100%;
   min-height: 44px;
+  flex-shrink: 0;
   padding: 8px 6px;
   background: var(--surface);
   color: var(--ink);

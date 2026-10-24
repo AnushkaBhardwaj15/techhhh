@@ -139,6 +139,8 @@ export class ClaimService {
             ticketId: ticket.id,
             participantId: profile.id,
             participantName: profile.name,
+            actorEmail: (profile as any).email ?? null,
+            resourceName: `Pattern: ${pattern}`,
           },
         },
         tx

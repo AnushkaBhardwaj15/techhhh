@@ -88,6 +88,8 @@ export class MarkService {
           cellId,
           roundId: round.id,
           keyId: cell.keyId,
+          actorEmail: profile.email,
+          resourceName: 'Ticket cell mark',
         },
       });
     }
@@ -157,6 +159,8 @@ export class MarkService {
           ticketId,
           cellId,
           roundId: round.id,
+          actorEmail: profile.email,
+          resourceName: 'Ticket cell mark removed',
         },
       });
     }

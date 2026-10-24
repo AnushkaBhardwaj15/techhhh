@@ -3,6 +3,8 @@ import { auditPageSchema, systemStatusSchema } from '../../types/adminOperations
 
 export interface AuditFilters {
   actorId?: string;
+  actorEmail?: string;
+  search?: string;
   action?: string;
   from?: string;
   to?: string;
@@ -12,7 +14,7 @@ export interface AuditFilters {
 
 export async function listAdminAudit(filters: AuditFilters = {}, signal?: AbortSignal) {
   const query = new URLSearchParams({ limit: String(filters.limit ?? 20) });
-  for (const key of ['actorId', 'action', 'from', 'to', 'cursor'] as const) {
+  for (const key of ['actorId', 'actorEmail', 'search', 'action', 'from', 'to', 'cursor'] as const) {
     const value = filters[key];
     if (value) query.set(key, value);
   }

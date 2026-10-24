@@ -44,8 +44,6 @@ export function TicketGrid({
   const scrollHintId = useId();
   const cells = new Map(ticket.cells.map((cell) => [`${cell.rowIndex}:${cell.colIndex}`, cell]));
 
-  const [viewMode, setViewMode] = useState<'vertical' | 'grid'>('grid');
-
   useEffect(() => {
     const preference = window.matchMedia?.('(prefers-reduced-motion: reduce)');
     if (!animateReveal || !revealedKey || !matchRef.current || preference?.matches) return;
@@ -57,31 +55,11 @@ export function TicketGrid({
 
   return (
     <>
-      <div className={styles.viewModeBar}>
-        <div className={styles.viewModeToggle} role="group" aria-label="Ticket layout">
-          <button
-            type="button"
-            className={`${styles.viewModeBtn} ${viewMode === 'vertical' ? styles.viewModeBtnActive : ''}`}
-            onClick={() => setViewMode('vertical')}
-            aria-pressed={viewMode === 'vertical'}
-          >
-            📱 Mobile Cards (Vertical)
-          </button>
-          <button
-            type="button"
-            className={`${styles.viewModeBtn} ${viewMode === 'grid' ? styles.viewModeBtnActive : ''}`}
-            onClick={() => setViewMode('grid')}
-            aria-pressed={viewMode === 'grid'}
-          >
-            🖥️ Full Grid
-          </button>
-        </div>
-      </div>
-      <p className={styles.gridScrollHint} id={scrollHintId} style={viewMode === 'vertical' ? { display: 'none' } : undefined}>
+      <p className={styles.gridScrollHint} id={scrollHintId}>
         If needed, scroll horizontally to see all nine columns.
       </p>
       <div className={styles.gridViewport} role="region" aria-label="Ticket grid" aria-describedby={scrollHintId} tabIndex={0}>
-        <table className={`${styles.grid} ${viewMode === 'vertical' ? styles.verticalGrid : ''}`} aria-label="Your Tombola ticket">
+        <table className={styles.grid} aria-label="Your Tombola ticket">
           <tbody>
             {Array.from({ length: 3 }, (_, row) => (
               <tr

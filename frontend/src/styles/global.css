@@ -1,7 +1,37 @@
 :root {
-  font-family: "Segoe UI", system-ui, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
+
+  /* Parchment Brutalism Core Palette */
+  --color-parchment: #F0E8D9;
+  --color-espresso: #302820;
+  --color-oxblood: #8C4545;
+  --color-sandstone: #DCD0BD;
+  --color-stone-olive: #747665;
+  --color-paper: #FAF7F0;
+
+  /* Supporting Tokens */
+  --color-espresso-deep: #241F1A;
+  --color-text-secondary: #62584C;
+  --color-border-muted: #BFB29F;
+  --color-border-subtle: #D2C6B5;
+  --color-disabled: #E4DED3;
+  --color-white: #FFFFFF;
+
+  /* Semantic State Tokens */
+  --color-success: #3D6B4F;
+  --color-warning: #946824;
+  --color-danger: #8C4545;
+  --color-info: #48616D;
+
+  /* Tactile Brutalist Borders & Radii */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --shadow-brutal-sm: 2px 2px 0px var(--color-espresso);
+  --shadow-brutal-md: 4px 4px 0px var(--color-espresso);
+
   --navy: #081220;
   --navy-raised: #122438;
   --cyan: #00e5ff;
@@ -23,11 +53,11 @@
   --warning-soft: #fff2cb;
   --mono: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
   --display: "Segoe UI", system-ui, sans-serif;
-  /* Compatibility aliases keep existing components on the shared palette. */
   --forest: var(--navy);
   --cream: var(--ice);
   --coral: var(--cyan);
   --serif: var(--display);
+
   color: var(--ink);
   background: var(--navy);
   font-variant-numeric: tabular-nums;
@@ -64,13 +94,14 @@ button:disabled {
   cursor: not-allowed;
 }
 :focus-visible {
-  outline: 3px solid var(--accent-ink);
-  outline-offset: 3px;
+  outline: 2px solid var(--color-oxblood);
+  outline-offset: 2px;
 }
 h1,
 h2,
 h3 {
   text-wrap: balance;
+  color: var(--color-espresso);
 }
 p {
   text-wrap: pretty;
@@ -98,6 +129,7 @@ svg {
 .role-page {
   min-height: 100dvh;
   background: var(--navy);
+  color: var(--ice);
 }
 .role-page > header {
   display: block;
@@ -114,14 +146,14 @@ svg {
 .role-page
   :where(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
   max-width: 100%;
-  border-radius: 7px;
-  border: 1px solid var(--border);
-  color: var(--ink);
-  background: var(--surface);
+  border-radius: var(--radius-sm, 4px);
+  border: 1px solid var(--color-border-muted);
+  color: var(--color-espresso);
+  background: var(--color-paper);
   font-size: 16px;
 }
 .role-page :where(button) {
-  border-radius: 7px;
+  border-radius: var(--radius-sm, 4px);
 }
 .role-page :where(h1) {
   font-family: var(--display);
