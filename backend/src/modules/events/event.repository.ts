@@ -77,20 +77,11 @@ export class EventRepository implements IEventRepository {
       const client = this.getClient(tx);
       const [record] = await client.select().from(events).where(eq(events.status, 'LIVE')).limit(1);
       if (record) return this.mapRecord(record);
+      return null;
     } catch {
-      // Database not reachable, use fallback
+      // Database not reachable
+      return null;
     }
-    return {
-      id: 'e7bf4217-f212-4970-b3f1-e924e1782f25',
-      title: 'Tech Tombola Championship 2026',
-      description: 'Annual Technical Tambola Tournament',
-      status: 'LIVE',
-      scheduledAt: new Date('2026-10-23T10:00:00.000Z'),
-      startedAt: new Date('2026-10-23T10:00:00.000Z'),
-      completedAt: null,
-      createdAt: new Date('2026-10-23T10:00:00.000Z'),
-      updatedAt: new Date('2026-10-23T10:00:00.000Z'),
-    };
   }
 
   async list(

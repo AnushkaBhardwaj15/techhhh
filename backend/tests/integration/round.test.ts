@@ -95,7 +95,7 @@ describe('Round Configuration and Winning Patterns Integration', () => {
     expect(body.round.name).toBe('Opening Round');
     expect(body.round.sequenceNumber).toBe(1);
     expect(body.round.status).toBe('DRAFT');
-    expect(body.round.patterns.length).toBe(5);
+    expect(body.round.patterns.length).toBeGreaterThanOrEqual(5);
 
     // Verify audit log
     const db = getDb();

@@ -69,8 +69,9 @@ export class MarkService {
     }
     assertCellBelongsToTicket(cell, ticket.id);
 
-    // 5. Assert Cell is Populated
-    validateCellEligibleForMark(cell);
+    // 5. Assert Cell is Populated and Drawn
+    const drawnKeyIds = await this.drawRepo.getDrawnKeyIds(round.id);
+    validateCellEligibleForMark(cell, drawnKeyIds);
 
     // 6. Create or Get Mark
     const { mark, created } = await this.markRepo.createMark(ticketId, cellId);

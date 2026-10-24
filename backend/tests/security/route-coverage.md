@@ -1,12 +1,13 @@
 # Runtime route coverage
 
-Generated from Fastify route registration. 68 declared operations/channels; implicit HEAD and CORS OPTIONS aliases are excluded.
+Generated from Fastify route registration. 81 declared operations/channels; implicit HEAD and CORS OPTIONS aliases are excluded.
 
 | Registered operation | Access class | Auth checks | Owner/Event scope evidence |
 |---|---|---|---|
 | `DELETE /api/v1/admin/questions/:id` | admin | 401 unauthenticated; 403 wrong role | cross-Event Key/Question association — question integration tests |
 | `DELETE /api/v1/participant/tickets/:ticketId/marks/:cellId` | participant | 401 unauthenticated; 403 wrong role | session-owned Ticket/Cell and cross-Event Round 404 — ticket + mark-persistence integration tests |
 | `DELETE /api/v1/super-admin/admins/:id` | super-admin | 401 unauthenticated; 403 wrong role | N/A — role-global administrator operation |
+| `GET /` | public | public access | Public endpoint or public WebSocket channel |
 | `GET /api/v1/admin/audit` | admin | 401 unauthenticated; 403 wrong role | N/A — role-global administrator operation |
 | `GET /api/v1/admin/claims` | admin | 401 unauthenticated; 403 wrong role | N/A — role-global administrator operation |
 | `GET /api/v1/admin/dashboard` | admin | 401 unauthenticated; 403 wrong role | N/A — role-global administrator operation |
@@ -25,6 +26,7 @@ Generated from Fastify route registration. 68 declared operations/channels; impl
 | `GET /api/v1/admin/winners` | admin | 401 unauthenticated; 403 wrong role | N/A — role-global administrator operation |
 | `GET /api/v1/live/draws` | public | public access | Public endpoint or public WebSocket channel |
 | `GET /api/v1/live/event` | public | public access | Public endpoint or public WebSocket channel |
+| `GET /api/v1/live/play` | public | public access | Public endpoint or public WebSocket channel |
 | `GET /api/v1/live/round` | public | public access | Public endpoint or public WebSocket channel |
 | `GET /api/v1/live/winners` | public | public access | Public endpoint or public WebSocket channel |
 | `GET /api/v1/live/ws [websocket]` | public | public access | Public endpoint or public WebSocket channel |
@@ -36,6 +38,9 @@ Generated from Fastify route registration. 68 declared operations/channels; impl
 | `GET /api/v1/participant/ticket` | participant | 401 unauthenticated; 403 wrong role | session-owned Ticket/Cell and cross-Event Round 404 — ticket + mark-persistence integration tests |
 | `GET /api/v1/participant/wins` | participant | 401 unauthenticated; 403 wrong role | session-owned Claims/Winners, cross-Event claim 404, and Event isolation — claim-submission integration tests |
 | `GET /api/v1/ping` | public | public access | Public endpoint or public WebSocket channel |
+| `GET /api/v1/play/current` | public | public access | Public endpoint or public WebSocket channel |
+| `GET /api/v1/play/rounds` | public | public access | Public endpoint or public WebSocket channel |
+| `GET /api/v1/play/rounds/:id` | public | public access | Public endpoint or public WebSocket channel |
 | `GET /api/v1/super-admin/admins` | super-admin | 401 unauthenticated; 403 wrong role | N/A — role-global administrator operation |
 | `GET /api/v1/super-admin/admins/:id` | super-admin | 401 unauthenticated; 403 wrong role | N/A — role-global administrator operation |
 | `GET /api/v1/super-admin/system` | super-admin | 401 unauthenticated; 403 wrong role | N/A — role-global administrator operation |
@@ -54,7 +59,11 @@ Generated from Fastify route registration. 68 declared operations/channels; impl
 | `POST /api/v1/admin/keys` | admin | 401 unauthenticated; 403 wrong role | cross-Event Key/Question association — question integration tests |
 | `POST /api/v1/admin/participants` | admin | 401 unauthenticated; 403 wrong role | Event-scoped participant Profiles — participant + admin integration tests |
 | `POST /api/v1/admin/participants/import` | admin | 401 unauthenticated; 403 wrong role | Event-scoped participant Profiles — participant + admin integration tests |
+| `POST /api/v1/admin/play/rounds` | admin | 401 unauthenticated; 403 wrong role | N/A — role-global administrator operation |
+| `POST /api/v1/admin/play/rounds/:id/commands` | admin | 401 unauthenticated; 403 wrong role | N/A — role-global administrator operation |
+| `POST /api/v1/admin/play/validate-bank` | admin | 401 unauthenticated; 403 wrong role | N/A — role-global administrator operation |
 | `POST /api/v1/admin/questions` | admin | 401 unauthenticated; 403 wrong role | cross-Event Key/Question association — question integration tests |
+| `POST /api/v1/admin/quick-setup-game` | admin | 401 unauthenticated; 403 wrong role | N/A — role-global administrator operation |
 | `POST /api/v1/admin/rounds` | admin | 401 unauthenticated; 403 wrong role | Round/Event relation and Draw scope — round-operation + draw-engine integration tests |
 | `POST /api/v1/admin/rounds/:id/cancel` | admin | 401 unauthenticated; 403 wrong role | Round/Event relation and Draw scope — round-operation + draw-engine integration tests |
 | `POST /api/v1/admin/rounds/:id/complete` | admin | 401 unauthenticated; 403 wrong role | Round/Event relation and Draw scope — round-operation + draw-engine integration tests |
@@ -69,8 +78,12 @@ Generated from Fastify route registration. 68 declared operations/channels; impl
 | `POST /api/v1/auth/bootstrap-super-admin` | public | public access | Public endpoint or public WebSocket channel |
 | `POST /api/v1/auth/login` | public | public access | Public endpoint or public WebSocket channel |
 | `POST /api/v1/auth/logout` | public | public access | Public endpoint or public WebSocket channel |
+| `POST /api/v1/auth/quick-join` | public | public access | Public endpoint or public WebSocket channel |
 | `POST /api/v1/participant/claims` | participant | 401 unauthenticated; 403 wrong role | session-owned Claims/Winners, cross-Event claim 404, and Event isolation — claim-submission integration tests |
+| `POST /api/v1/participant/play/join` | participant | 401 unauthenticated; 403 wrong role | Public endpoint or public WebSocket channel |
+| `POST /api/v1/participant/play/rounds/:id/claims` | participant | 401 unauthenticated; 403 wrong role | Public endpoint or public WebSocket channel |
 | `POST /api/v1/participant/tickets/:ticketId/marks` | participant | 401 unauthenticated; 403 wrong role | session-owned Ticket/Cell and cross-Event Round 404 — ticket + mark-persistence integration tests |
 | `POST /api/v1/super-admin/admins` | super-admin | 401 unauthenticated; 403 wrong role | N/A — role-global administrator operation |
+| `PUT /api/v1/participant/play/rounds/:id/marks` | participant | 401 unauthenticated; 403 wrong role | Public endpoint or public WebSocket channel |
 
 Scenario suite: `bun run test:security`. Role checks run against every protected route; object ownership and Event boundaries are exercised by the named integration suites for scoped resources. `N/A` means the resource is intentionally global and has no per-Participant owner boundary.

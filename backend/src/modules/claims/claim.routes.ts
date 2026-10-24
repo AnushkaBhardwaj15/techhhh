@@ -30,27 +30,15 @@ export function createClaimRoutes(winnerService: WinnerService): FastifyPluginAs
     const round = await roundRepository.findById(body.roundId);
     const eventId = round?.eventId || request.user!.eventId || 'e7bf4217-f212-4970-b3f1-e924e1782f25';
 
-    try {
-      const result = await claimService.submitClaim({
-        userId: request.user!.id,
-        eventId,
-        roundId: body.roundId,
-        pattern: body.pattern,
-      });
+    const result = await claimService.submitClaim({
+      userId: request.user!.id,
+      eventId,
+      roundId: body.roundId,
+      pattern: body.pattern,
+    });
 
-      reply.status(200);
-      return result;
-    } catch {
-      reply.status(200);
-      return {
-        id: crypto.randomUUID(),
-        roundId: body.roundId,
-        participantId: request.user!.id,
-        pattern: body.pattern,
-        status: 'PENDING',
-        createdAt: new Date().toISOString(),
-      };
-    }
+    reply.status(200);
+    return result;
   });
 
   // Participant: List own claims

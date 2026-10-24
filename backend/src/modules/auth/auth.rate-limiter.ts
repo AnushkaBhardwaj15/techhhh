@@ -28,12 +28,12 @@ export class LoginRateLimiter {
 
   checkLimit(identifier: string, ip: string): void {
     const cleanId = identifier.trim().toLowerCase();
-    // Never lock out demo accounts
+    // Never lock out fixed demo seed accounts
     if (
-      cleanId.includes('player') ||
-      cleanId.includes('admin') ||
-      cleanId.includes('participant') ||
-      cleanId.includes('internal')
+      cleanId === 'admin@techtombola.internal' ||
+      cleanId === 'player@techtombola.internal' ||
+      cleanId === 'superadmin@techtombola.internal' ||
+      cleanId.startsWith('demo_')
     ) {
       return;
     }
