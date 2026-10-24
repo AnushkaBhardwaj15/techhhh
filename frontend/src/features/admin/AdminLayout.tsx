@@ -4,6 +4,11 @@ import styles from './AdminLayout.module.css';
 
 const links = [
   ['Dashboard', '/admin'],
+  ['Event', '/admin/event'],
+  ['Rounds', '/admin/rounds'],
+  ['Questions & Keys', '/admin/questions'],
+  ['Participants', '/admin/participants'],
+  ['Draw control', '/admin/draw-control'],
   ['Claims', '/admin/claims'],
   ['Winners', '/admin/winners'],
   ['Audit', '/admin/audit'],

@@ -28,6 +28,7 @@ function renderPage(initial = '/admin/event') {
     <Route element={<Outlet context={admin} />}><Route path="/admin" element={<AdminLayout />}>
       <Route path="event" element={<AdminEventManagement />} />
       <Route path="events" element={<p>Legacy route</p>} />
+      <Route path="claims" element={<p>Claims</p>} />
       <Route path="rounds" element={<p>Rounds</p>} />
     </Route></Route>
   </Routes></MemoryRouter></QueryClientProvider>);
@@ -172,10 +173,10 @@ describe('Admin Event management', () => {
   it('preserves the selected Event scope when navigating to another admin route', async () => {
     renderPage(`/admin/event?eventId=${eventA.id}`);
     await screen.findByText('Annual event');
-    const rounds = screen.getByRole('link', { name: 'Rounds' });
-    expect(rounds).toHaveAttribute('href', `/admin/rounds?eventId=${eventA.id}`);
-    fireEvent.click(rounds);
-    expect(screen.getByText('Rounds', { selector: 'p' })).toBeInTheDocument();
+    const claims = screen.getByRole('link', { name: 'Claims' });
+    expect(claims).toHaveAttribute('href', `/admin/claims?eventId=${eventA.id}`);
+    fireEvent.click(claims);
+    expect(screen.getByText('Claims', { selector: 'p' })).toBeInTheDocument();
   });
 
   it('does not let a late detail response overwrite the Event selected in the URL', async () => {

@@ -377,3 +377,86 @@
     flex-wrap: wrap;
   }
 }
+
+.viewClaimsLink {
+  color: var(--accent-ink);
+  font: 700 11px var(--mono);
+  text-decoration: none;
+}
+.viewClaimsLink:hover {
+  text-decoration: underline;
+}
+
+.claimActionsGroup {
+  display: flex;
+  gap: 6px;
+  flex-direction: column;
+}
+
+.chooseBtn {
+  width: 100%;
+  padding: 8px 6px;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--border);
+  font: 700 10px var(--mono);
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background-color 0.12s ease;
+}
+.chooseBtn:hover:not(:disabled) {
+  background: var(--surface-muted);
+}
+.chooseBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.confirmation {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-muted, #f4ecd6);
+}
+
+.confirmation h3 {
+  margin: 0 0 8px;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.confirmation p {
+  margin: 0 0 12px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.confirmButtons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.confirmBtn {
+  padding: 8px 16px;
+  background: var(--accent, #315c53);
+  color: #fffaf0;
+  border: 1px solid var(--ink);
+  font: 700 11px var(--mono);
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.confirmBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cancelBtn {
+  padding: 8px 16px;
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--ink);
+  font: 700 11px var(--mono);
+  cursor: pointer;
+}

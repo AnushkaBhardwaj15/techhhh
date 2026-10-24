@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 import { createPlayRound, validatePlayBank } from '../../lib/api/play';
-import { useNavigate } from 'react-router-dom';
+import type { AuthenticatedUser } from '../../types/auth';
+import { useAdminDashboard } from './useAdminDashboard';
 import {
   fetchActiveGame,
   subscribeToGameSync,
@@ -16,8 +18,23 @@ interface ImportedQuestion {
   codeSnippet?: string | null;
 }
 
+function statusName(value: string) {
+  return value.toLowerCase().replaceAll('_', ' ');
+}
+
+function Metric({ label, value }: { label: string; value: number }) {
+  return (
+    <div className={styles.metric}>
+      <dt>{label}</dt>
+      <dd>{value.toLocaleString()}</dd>
+    </div>
+  );
+}
+
 export function AdminDashboard() {
   const navigate = useNavigate();
+  const user = useOutletContext<AuthenticatedUser | undefined>();
+  const dashboard = useAdminDashboard(user?.id ?? 'admin');
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState('');
   const [creationKey] = useState(() => crypto.randomUUID());
@@ -78,10 +95,63 @@ export function AdminDashboard() {
 
   return (
     <main className={styles.page}>
+      <header className={styles.heading}>
+        <div>
+          <p className={styles.eyebrow}>OPERATIONS / OVERVIEW</p>
+          <h1 className={styles.titleGamesPlayed}>Operations dashboard</h1>
+        </div>
+        <p className={styles.updated}>
+          {dashboard.dataUpdatedAt
+            ? `Updated ${new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit' }).format(dashboard.dataUpdatedAt)}`
+            : 'Live operational snapshot'}
+        </p>
+      </header>
+
+      {dashboard.data && (
+        <section aria-label="Operational metrics">
+          {dashboard.data.recoveryRequired && (
+            <p className={styles.recovery} role="alert">
+              Recovery is required for the active Round. Review the Round before resuming operations.
+            </p>
+          )}
+          <div className={styles.summary} aria-label="Event and active Round">
+            <article className={styles.event}>
+              <h2>EVENT STATUS</h2>
+              <p className={styles.eventName}>{dashboard.data.event?.title ?? 'No live event'}</p>
+              <div className={styles.eventMeta}>
+                <span className={styles.status}>{statusName(dashboard.data.event?.status ?? 'UNAVAILABLE')}</span>
+                {dashboard.data.event && <span>Event ID {dashboard.data.event.id}</span>}
+              </div>
+            </article>
+            <article className={styles.event}>
+              <h2>CURRENT ROUND</h2>
+              <p className={styles.eventName}>{dashboard.data.round?.name ?? 'No active Round'}</p>
+              <div className={styles.eventMeta}>
+                {dashboard.data.round ? (
+                  <>
+                    <span>Round {dashboard.data.round.sequenceNumber}</span>
+                    <span className={styles.status}>{statusName(dashboard.data.round.status)}</span>
+                  </>
+                ) : (
+                  <span>Round information is unavailable.</span>
+                )}
+              </div>
+            </article>
+          </div>
+          <dl className={styles.metrics} aria-label="Operational metrics">
+            <Metric label="Participants" value={dashboard.data.participants} />
+            <Metric label="Connected users" value={dashboard.data.connectedConnections} />
+            <Metric label="Draw count" value={dashboard.data.drawCount} />
+            <Metric label="Pending claims" value={dashboard.data.pendingClaims} />
+            <Metric label="Verified winners" value={dashboard.data.verifiedWinners} />
+          </dl>
+        </section>
+      )}
+
       <div className={styles.dashboardCard}>
         {/* Top Header Row matching Image 1: Left: Games played till now-, Right: +Create Game & Import */}
         <div className={styles.headerRow}>
-          <h1 className={styles.titleGamesPlayed}>Your games</h1>
+          <h1 className={styles.titleGamesPlayed} style={{ margin: 0, fontSize: '22px' }}>Your games</h1>
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
             <button
               type="button"
@@ -223,7 +293,7 @@ export function AdminDashboard() {
           </section>
         )}
 
-        {error && <p role="alert">{error}</p>}
+        {!dashboard.data && error && <p role="alert">{error}</p>}
         {/* Saved rounds */}
         {games.length > 0 ? (
           <div className={styles.gamesList}>

@@ -12,7 +12,7 @@ export const participantWinSchema = z.object({
 });
 export const participantWinsPageSchema = z.object({ data: z.array(participantWinSchema), total: z.number().int().nonnegative(), page: z.number().int().positive(), limit: z.number().int().positive() });
 export const publicLiveWinnerSchema = z.object({ id: z.string(), roundId: z.string(), pattern: winnerPatternSchema, participantName: z.string(), verifiedAt: timestamp });
-const publicWinnersByPatternSchema = z.record(winnerPatternSchema, z.array(publicLiveWinnerSchema));
+const publicWinnersByPatternSchema = z.partialRecord(winnerPatternSchema, z.array(publicLiveWinnerSchema));
 export const liveWinnersSchema = z.union([
   z.object({ roundId: z.null(), data: z.array(z.never()) }),
   z.object({ roundId: z.string(), data: publicWinnersByPatternSchema }),

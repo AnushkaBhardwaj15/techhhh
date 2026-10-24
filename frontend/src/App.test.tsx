@@ -11,11 +11,18 @@ import { listSuperAdminAccounts } from './lib/api/adminAccounts';
 import { getSuperAdminSystem, listAdminAudit } from './lib/api/adminOperations';
 import { useAuthUiStore } from './features/auth/authStore';
 
+import * as gameSync from './lib/gameSync';
+
 vi.mock('./lib/api/auth', () => ({ getMe: vi.fn(), login: vi.fn(), logout: vi.fn() }));
 vi.mock('./lib/api/participant', () => ({ getParticipantEvent: vi.fn(), getCurrentRound: vi.fn() }));
 vi.mock('./lib/api/adminDashboard', () => ({ getAdminDashboard: vi.fn() }));
 vi.mock('./lib/api/adminAccounts', () => ({ listSuperAdminAccounts: vi.fn() }));
 vi.mock('./lib/api/adminOperations', () => ({ getSuperAdminSystem: vi.fn(), listAdminAudit: vi.fn() }));
+vi.mock('./lib/gameSync', () => ({
+  fetchActiveGame: vi.fn(),
+  subscribeToGameSync: vi.fn(() => () => {}),
+  validateGameCode: vi.fn(),
+}));
 
 const emptyDashboard = {
   event: null, round: null, participants: 0, connectedConnections: 0, drawCount: 0,
@@ -33,13 +40,14 @@ describe('application role routes', () => {
     vi.mocked(getSuperAdminSystem).mockResolvedValue({ version: '1.0.0', readiness: { status: 'ready', dependencies: {} }, recoveryRequiredRounds: 0, latestMigration: null });
     vi.mocked(listAdminAudit).mockResolvedValue({ items: [], limit: 20, hasMore: false, nextCursor: null });
     vi.mocked(participantApi.getParticipantEvent).mockRejectedValue(new ApiError(404, 'No event associated'));
+    vi.mocked(gameSync.fetchActiveGame).mockResolvedValue({ game: null, games: [] });
   });
 
   it('restores an admin session before showing the protected surface', async () => {
     vi.mocked(authApi.getMe).mockResolvedValue({ id: 'u1', email: 'a@example.test', name: 'Ari Patel', role: 'ADMIN', status: 'ACTIVE' });
     window.history.replaceState({}, '', '/admin');
     render(<App />);
-    expect(await screen.findByRole('heading', { name: 'Operations dashboard' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Your games' })).toBeInTheDocument();
     expect(authApi.getMe).toHaveBeenCalledOnce();
   });
 
@@ -56,7 +64,7 @@ describe('application role routes', () => {
     vi.mocked(authApi.getMe).mockResolvedValue({ id: 'u1', email: 'a@example.test', name: 'Ari Patel', role: 'ADMIN', status: 'ACTIVE' });
     window.history.replaceState({}, '', '/admin/system');
     render(<App />);
-    expect(await screen.findByRole('heading', { name: 'Operations dashboard' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Your games' })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'System health' })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'System' })).not.toBeInTheDocument();
     expect(getSuperAdminSystem).not.toHaveBeenCalled();
@@ -66,7 +74,7 @@ describe('application role routes', () => {
     vi.mocked(authApi.getMe).mockResolvedValue({ id: 'u1', email: 'a@example.test', name: 'Ari Patel', role: 'PARTICIPANT', status: 'ACTIVE' });
     window.history.replaceState({}, '', '/admin');
     render(<App />);
-    expect(await screen.findByRole('heading', { name: 'No event assigned yet' })).toBeInTheDocument();
+    expect(await screen.findByText(/GAME ENTRY & VERIFICATION|YOU’RE IN THE LOBBY/i)).toBeInTheDocument();
   });
 
   it('sends an expired session to the login form without protected-content flash', async () => {
@@ -74,7 +82,7 @@ describe('application role routes', () => {
     window.history.replaceState({}, '', '/admin/rounds');
     render(<App />);
     expect(await screen.findByRole('button', { name: /sign in/i })).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: 'Operations dashboard' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Your games' })).not.toBeInTheDocument();
     expect(authApi.getMe).toHaveBeenCalled();
   });
 
@@ -100,7 +108,7 @@ describe('application role routes', () => {
     queryClient.setQueryData(['private', 'test'], 'sensitive');
     window.history.replaceState({}, '', '/admin');
     render(<App />);
-    await screen.findByRole('heading', { name: 'Operations dashboard' });
+    await screen.findByRole('heading', { name: 'Your games' });
     screen.getByRole('button', { name: 'Sign out' }).click();
     await waitFor(() => expect(queryClient.getQueryData(['private', 'test'])).toBeUndefined());
     expect(authApi.logout).toHaveBeenCalledOnce();

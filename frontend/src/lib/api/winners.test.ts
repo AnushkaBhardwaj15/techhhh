@@ -15,7 +15,7 @@ describe('winner API', () => {
   });
 
   it('parses the public grouped winner snapshot and empty live state', async () => {
-    const groups = Object.fromEntries(['EARLY_5', 'TOP_LINE', 'MIDDLE_LINE', 'BOTTOM_LINE', 'FULL_HOUSE'].map((pattern) => [pattern, pattern === 'EARLY_5' ? [{ id: 'winner-1', roundId: 'round-1', pattern: 'EARLY_5', participantName: 'Ari Patel', verifiedAt: '2026-10-17T14:00:00.000Z' }] : []]));
+    const groups = Object.fromEntries(['EARLY_5', 'FOUR_CORNERS', 'TOP_LINE', 'MIDDLE_LINE', 'BOTTOM_LINE', 'FULL_HOUSE', 'SECOND_FULL_HOUSE'].map((pattern) => [pattern, pattern === 'EARLY_5' ? [{ id: 'winner-1', roundId: 'round-1', pattern: 'EARLY_5', participantName: 'Ari Patel', verifiedAt: '2026-10-17T14:00:00.000Z' }] : []]));
     const fetchMock = vi.fn().mockResolvedValueOnce(new Response(JSON.stringify({ roundId: 'round-1', data: groups }), { headers: { 'content-type': 'application/json' } })).mockResolvedValueOnce(new Response(JSON.stringify({ roundId: null, data: [] }), { headers: { 'content-type': 'application/json' } }));
     vi.stubGlobal('fetch', fetchMock);
     await expect(getLiveWinners()).resolves.toMatchObject({ roundId: 'round-1', data: { EARLY_5: [{ participantName: 'Ari Patel' }] } });

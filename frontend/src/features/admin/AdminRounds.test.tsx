@@ -20,7 +20,7 @@ const admin: AuthenticatedUser = { id: 'admin-1', email: 'admin@example.test', n
 const eventA = '91c16f5c-7285-4fc2-9954-7043a0d6e5b4';
 const eventB = 'd68649b9-04ac-46fa-bae0-7694cdd042f4';
 const roundId = '0d3aa3e6-4c58-4c36-b363-d5f11640ba52';
-const patternTypes: PatternType[] = ['EARLY_5', 'TOP_LINE', 'MIDDLE_LINE', 'BOTTOM_LINE', 'FULL_HOUSE'];
+const patternTypes: PatternType[] = ['EARLY_5', 'FOUR_CORNERS', 'TOP_LINE', 'MIDDLE_LINE', 'BOTTOM_LINE', 'FULL_HOUSE', 'SECOND_FULL_HOUSE'];
 const makeRound = (overrides: Partial<AdminRound> = {}): AdminRound => ({
   id: roundId, eventId: eventA, sequenceNumber: 1, name: 'Opening round', status: 'DRAFT',
   patterns: patternTypes.map((patternType, index) => ({ id: `5c15e548-2bf0-4b12-8e8b-7d2c7cd9187${index}`, roundId, patternType, enabled: true, maxWinners: 1, status: 'OPEN', createdAt: '2026-10-17T10:00:00.000Z', updatedAt: '2026-10-17T10:00:00.000Z' })),
@@ -113,7 +113,7 @@ describe('Admin Rounds and Pattern configuration', () => {
     renderPage(`/admin/rounds?eventId=${eventA}&roundId=${roundId}`);
     await screen.findByText('1. Opening round');
     expect(screen.getByText('Enabled · up to 3 winners · CLOSED')).toBeInTheDocument();
-    expect(screen.getAllByText('Enabled · up to 1 winner · OPEN')).toHaveLength(4);
+    expect(screen.getAllByText('Enabled · up to 1 winner · OPEN')).toHaveLength(patternTypes.length - 1);
   });
 
   it.each(['READY', 'ACTIVE', 'PAUSED', 'RECOVERY_REQUIRED', 'COMPLETED', 'CANCELLED'] as const)('keeps %s Round configuration read only', async (status) => {

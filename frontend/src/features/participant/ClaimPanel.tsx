@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { useOutletContext } from 'react-router-dom';
+import { Link, useOutletContext } from 'react-router-dom';
 import { ApiError } from '../../lib/api/client';
 import { type ClaimPattern } from '../../types/claims';
 import type { AuthenticatedUser } from '../../types/auth';
@@ -165,6 +165,7 @@ export function ClaimPanel({
   const queryClient = useQueryClient();
   const submission = useParticipantClaimSubmission(user.id, round);
   const { claims, currentRoundClaims, pendingPatterns, pending, uncertainPattern, feedback } = submission;
+  const [selectedPattern, setSelectedPattern] = useState<ClaimPattern>();
   const [validationWarning, setValidationWarning] = useState<string | null>(null);
 
   const effectiveTicket =
@@ -198,7 +199,12 @@ export function ClaimPanel({
           <p className={styles.kicker}>WINNING PATTERNS</p>
           <h2 id="claim-panel-title">Claim Pattern</h2>
         </div>
-        <span className={styles.autoCheckBadge}>Server Verified</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <span className={styles.autoCheckBadge}>Server Verified</span>
+          <Link to="/participant/claims" className={styles.viewClaimsLink}>
+            View all claims <span aria-hidden="true">↗</span>
+          </Link>
+        </div>
       </div>
 
       <p className={styles.guidance}>
@@ -304,20 +310,71 @@ export function ClaimPanel({
                 ) : !isConfigOpen || !isEnabled ? (
                   <span className={styles.statusClosed}>CLOSED</span>
                 ) : (
-                  <button
-                    type="button"
-                    className={styles.claimBtn}
-                    disabled={!canClick}
-                    onClick={() => void handleClaim(card.pattern)}
-                  >
-                    {pending ? 'Submitting…' : `Claim ${card.title}`}
-                  </button>
+                  <div className={styles.claimActionsGroup}>
+                    <button
+                      type="button"
+                      className={styles.chooseBtn}
+                      disabled={!canClick}
+                      aria-pressed={selectedPattern === card.pattern}
+                      onClick={() => {
+                        setSelectedPattern(card.pattern);
+                        submission.clearFeedback();
+                      }}
+                    >
+                      {selectedPattern === card.pattern ? 'Selected' : 'Choose pattern'}
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.claimBtn}
+                      disabled={!canClick}
+                      onClick={() => void handleClaim(card.pattern)}
+                    >
+                      {pending ? 'Submitting…' : `Claim ${card.title}`}
+                    </button>
+                  </div>
                 )}
               </div>
             </div>
           );
         })}
       </div>
+
+      {selectedPattern && !uncertainPattern && (
+        <div className={styles.confirmation} aria-labelledby="claim-confirm-title">
+          <h3 id="claim-confirm-title">Confirm your claim</h3>
+          <p>
+            Submit <strong>{patternNames[selectedPattern]}</strong> for <strong>{round.name}</strong>?
+          </p>
+          <div className={styles.confirmButtons}>
+            <button
+              type="button"
+              className={styles.confirmBtn}
+              onClick={() =>
+                void submission.submit(selectedPattern).then((recorded) => {
+                  if (recorded) setSelectedPattern(undefined);
+                })
+              }
+              disabled={
+                pending ||
+                round.status !== 'ACTIVE' ||
+                !canSubmit ||
+                !!uncertainPattern ||
+                pendingPatterns.has(selectedPattern)
+              }
+            >
+              {pending ? 'Submitting claim…' : 'Confirm claim'}
+            </button>
+            <button
+              type="button"
+              className={styles.cancelBtn}
+              onClick={() => setSelectedPattern(undefined)}
+              disabled={pending}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
 
       {uncertainPattern && (
         <button type="button" className={styles.checkButton} onClick={() => void submission.checkStatus()}>

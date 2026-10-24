@@ -55,7 +55,7 @@ describe('LoginPage', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Unable to reach Tech Tombola');
   });
   it.each([
-    ['PARTICIPANT', '/lobby', 'Participant surface'],
+    ['PARTICIPANT', '/participant/lobby', 'Participant surface'],
     ['ADMIN', '/admin', 'Admin surface'],
     ['SUPER_ADMIN', '/admin', 'Super Admin surface'],
   ] as const)('routes a %s account to its role surface', async (role, path, label) => {

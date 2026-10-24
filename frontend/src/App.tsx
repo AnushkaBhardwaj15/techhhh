@@ -16,6 +16,9 @@ import './styles/global.css';
 const LoginPage = lazy(() => import('./features/auth/LoginPage').then((module) => ({ default: module.LoginPage })));
 const AdminDashboard = lazy(() => import('./features/admin/AdminDashboard').then((module) => ({ default: module.AdminDashboard })));
 const AdminGamePage = lazy(() => import('./features/admin/AdminGamePage').then((module) => ({ default: module.AdminGamePage })));
+const AdminEventManagement = lazy(() => import('./features/admin/AdminEventManagement').then((module) => ({ default: module.AdminEventManagement })));
+const AdminRounds = lazy(() => import('./features/admin/AdminRounds').then((module) => ({ default: module.AdminRounds })));
+const AdminDrawControl = lazy(() => import('./features/admin/AdminDrawControl').then((module) => ({ default: module.AdminDrawControl })));
 const AdminLayout = lazy(() => import('./features/admin/AdminLayout').then((module) => ({ default: module.AdminLayout })));
 const AdminQuestions = lazy(() => import('./features/admin/AdminQuestions').then((module) => ({ default: module.AdminQuestions })));
 const AdminParticipants = lazy(() => import('./features/admin/AdminParticipants').then((module) => ({ default: module.AdminParticipants })));
@@ -26,6 +29,7 @@ const AdminAudit = lazy(() => import('./features/admin/AdminAudit').then((module
 const AdminSystem = lazy(() => import('./features/admin/AdminSystem').then((module) => ({ default: module.AdminSystem })));
 const ParticipantLobby = lazy(() => import('./features/participant/ParticipantLobby').then((module) => ({ default: module.ParticipantLobby })));
 const ParticipantTicketEntry = lazy(() => import('./features/participant/ParticipantTicketEntry').then((module) => ({ default: module.ParticipantTicketEntry })));
+const ParticipantTicket = lazy(() => import('./features/participant/ParticipantTicket').then((module) => ({ default: module.ParticipantTicket })));
 const ParticipantGame = lazy(() => import('./features/participant/ParticipantGame').then((module) => ({ default: module.ParticipantGame })));
 const ParticipantClaims = lazy(() => import('./features/participant/ParticipantClaims').then((module) => ({ default: module.ParticipantClaims })));
 const ParticipantResults = lazy(() => import('./features/participant/ParticipantResults').then((module) => ({ default: module.ParticipantResults })));
@@ -115,9 +119,9 @@ function AppRoutes() {
         <Route path="/display" element={<LiveDisplay />} />
         <Route path="/display/round" element={<LiveDisplay />} />
         <Route path="/display/winner" element={<LiveDisplay />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/sign-in" element={<LoginPage />} />
-        <Route path="/signin" element={<LoginPage />} />
+        <Route path="/login" element={<LoginRoute />} />
+        <Route path="/sign-in" element={<LoginRoute />} />
+        <Route path="/signin" element={<LoginRoute />} />
         <Route path="/host" element={<Navigate to="/admin" replace />} />
         <Route path="/admin/dashboard" element={<Navigate to="/admin" replace />} />
         <Route element={<ProtectedLayout allowed={['PARTICIPANT']} />}>
@@ -126,7 +130,7 @@ function AppRoutes() {
           <Route path="/participant/waiting" element={<ParticipantLobby waiting />} />
           <Route path="/lobby" element={<ParticipantLobby />} />
           <Route path="/participant/ticket-entry" element={<ParticipantTicketEntry />} />
-          <Route path="/participant/ticket" element={<ParticipantGame />} />
+          <Route path="/participant/ticket" element={<ParticipantTicket />} />
           <Route path="/participant/game" element={<ParticipantGame />} />
           <Route path="/play" element={<ParticipantGame />} />
           <Route path="/participant/claims" element={<ParticipantClaims />} />
@@ -139,12 +143,12 @@ function AppRoutes() {
             <Route index element={<AdminDashboard />} />
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="game" element={<Navigate to="/game" replace />} />
-            <Route path="event" element={<Navigate to="/admin" replace />} />
-            <Route path="events" element={<Navigate to="/admin" replace />} />
-            <Route path="rounds" element={<Navigate to="/admin" replace />} />
+            <Route path="event" element={<AdminEventManagement />} />
+            <Route path="events" element={<AdminEventManagement />} />
+            <Route path="rounds" element={<AdminRounds />} />
             <Route path="questions" element={<AdminQuestions />} />
             <Route path="participants" element={<AdminParticipants />} />
-            <Route path="draw-control" element={<Navigate to="/admin" replace />} />
+            <Route path="draw-control" element={<AdminDrawControl />} />
             <Route path="claims" element={<AdminClaims />} />
             <Route path="winners" element={<AdminWinners />} />
             <Route path="audit" element={<AdminAudit />} />

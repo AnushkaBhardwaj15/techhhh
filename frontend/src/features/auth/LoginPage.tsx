@@ -33,8 +33,7 @@ export function LoginPage() {
       identityChanged();
       queryClient.clear();
       const returnTo = (location.state as { returnTo?: unknown } | null)?.returnTo;
-      // Participant lands directly in /lobby as specified in requirement A
-      const target = user.role === 'PARTICIPANT' ? '/lobby' : (safeReturnPath(returnTo) ?? roleHomePath(user.role));
+      const target = safeReturnPath(returnTo) ?? roleHomePath(user.role);
       navigate(target, { replace: true });
     },
   });
@@ -79,9 +78,9 @@ export function LoginPage() {
         <p className={styles.tagline}>PLAY · LEARN · WIN</p>
       </header>
       <div className={styles.card}>
-        <p className={styles.eyebrow}>YOUR NEXT ROUND STARTS HERE</p>
-        <h1 className={styles.title}>
-          <span className={styles.signInLabel}>Sign in to</span>
+        <p className={styles.eyebrow}>THE GAME IS ON</p>
+        <h1 id="login-title" className={styles.title}>
+          <span className={styles.signInLabel}>Find your <em>winning line</em> at </span>
           <span className={styles.titleAccent}>Tech Tambola</span>
         </h1>
 
@@ -175,12 +174,12 @@ export function LoginPage() {
               <button
                 type="button"
                 className={styles.toggleVisibilityBtn}
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
                 aria-pressed={showPassword}
                 aria-controls="password"
                 onClick={() => setShowPassword((prev) => !prev)}
               >
-                {showPassword ? 'HIDE' : 'SHOW'}
+                <span className={styles.srOnly}>{showPassword ? 'Hide password' : 'Show password'}</span>
+                <span aria-hidden="true">{showPassword ? 'HIDE' : 'SHOW'}</span>
               </button>
             </div>
             <input

@@ -1,283 +1,31 @@
-.game {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 16px clamp(12px, 3vw, 32px) 64px;
-}
-
-.live {
-  margin: 0 0 20px;
-  padding: clamp(16px, 2.5vw, 24px);
-  border: 1px solid var(--border);
-  background: var(--navy);
-  color: var(--surface);
-  box-shadow: none;
-}
-
-.liveHeader {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--border-dark);
-}
-
-.kicker {
-  margin: 0;
-  color: var(--cyan);
-  font: 700 10px/1.2 var(--mono);
-  letter-spacing: 0.12em;
-}
-
-.liveHeader h1 {
-  margin: 4px 0 0;
-  font-size: clamp(22px, 4vw, 32px);
-  line-height: 1.1;
-  color: var(--surface);
-}
-
-.headerBadges {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.roundStatus {
-  padding: 4px 8px;
-  border: 1px solid var(--muted-dark);
-  color: var(--surface);
-  font: 700 10px var(--mono);
-  text-transform: uppercase;
-}
-
-.connBadge {
-  padding: 4px 8px;
-  font: 700 10px var(--mono);
-  border-radius: 2px;
-}
-
-.connOnline {
-  background: rgba(46, 125, 50, 0.35);
-  color: var(--lime);
-  border: 1px solid #4caf50;
-}
-
-.connOffline {
-  background: rgba(211, 47, 47, 0.35);
-  color: #e57373;
-  border: 1px solid #f44336;
-}
-
-.questionCard {
-  background: var(--navy-raised);
-  border: 2px solid var(--border-dark);
-  padding: clamp(16px, 3vw, 24px);
-  box-shadow: none;
-}
-
-.questionMeta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.callBadge {
-  background: var(--lime);
-  color: var(--ink);
-  font: 800 11px var(--mono);
-  padding: 4px 8px;
-  letter-spacing: 0.06em;
-}
-
-.solveNotice {
-  color: var(--muted-dark);
-  font: 700 10px var(--mono);
-  letter-spacing: 0.08em;
-}
-
-.questionText {
-  margin: 0 0 12px;
-  font-size: clamp(20px, 3.5vw, 30px);
-  line-height: 1.25;
-  font-weight: 750;
-  color: var(--surface);
-}
-
-.questionSubhint {
-  margin: 0;
-  font: 500 12px/1.4 var(--mono);
-  color: var(--muted-dark);
-}
-
-.waitingCard {
-  background: var(--navy-raised);
-  border: 1px dashed var(--border-dark);
-  padding: 24px;
-  text-align: center;
-}
-
-.waitingBadge {
-  display: inline-block;
-  padding: 4px 10px;
-  background: var(--cyan);
-  color: var(--ink);
-  font: 800 10px var(--mono);
-  margin-bottom: 10px;
-}
-
-.waitingCard h2 {
-  margin: 0 0 8px;
-  font-size: 20px;
-  color: var(--surface);
-}
-
-.waitingCard p {
-  margin: 0;
-  font-size: 13px;
-  color: var(--muted-dark);
-}
-
-.ticketSection {
-  margin-top: 20px;
-}
-
-.historySection {
-  margin-top: 24px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  padding: 16px;
-  box-shadow: none;
-}
-
-.historyHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.historyHeader h3 {
-  margin: 0;
-  font: 700 12px var(--mono);
-  text-transform: uppercase;
-  color: var(--ink);
-}
-
-.historyToggle {
-  background: transparent;
-  border: 1px solid var(--ink);
-  padding: 4px 10px;
-  font: 700 10px var(--mono);
-  cursor: pointer;
-}
-
-.historyList {
-  list-style: none;
-  padding: 0;
-  margin: 12px 0 0;
-  display: grid;
-  gap: 6px;
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-.historyItem {
-  display: grid;
-  grid-template-columns: 40px minmax(0, 1fr) auto;
-  gap: 10px;
-  align-items: baseline;
-  padding: 8px 6px;
-  border-bottom: 1px solid var(--border);
-  font-size: 12px;
-}
-
-.historyNumber {
-  font: 800 11px var(--mono);
-  color: var(--accent-ink);
-}
-
-.historyText {
-  color: var(--ink);
-}
-
-.historyItem time {
-  font: 700 9px var(--mono);
-  color: var(--muted);
-}
-
-.emptyNotice,
-.error {
-  padding: 12px;
-  margin-bottom: 12px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid var(--border-dark);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.emptyNotice button,
-.error button {
-  padding: 4px 8px;
-  background: var(--lime);
-  color: var(--ink);
-  border: 1px solid var(--ink);
-  font: 700 10px var(--mono);
-  cursor: pointer;
-}
-
-.stale {
-  font: 700 10px var(--mono);
-  color: var(--cyan);
-  margin: 8px 0 0;
-}
-.game {
-  color: var(--ice);
-  padding-top: 24px;
-}
-.live {
-  border-color: var(--border-dark);
-  border-radius: 16px;
-  border-top: 3px solid var(--cyan);
-}
-.kicker {
-  color: var(--cyan);
-}
-.questionCard,
-.waitingCard {
-  border-radius: 10px;
-}
-.historySection {
-  background: var(--ice);
-  color: var(--ink);
-  border-radius: 12px;
-}
-.historyToggle {
-  color: var(--ink);
-  min-height: 44px;
-}
-.callBadge {
-  background: var(--lime);
-}
-.emptyNotice,
-.error {
-  color: var(--ice);
-  border-radius: 7px;
-}
-@media (max-width: 600px) {
-  .historyItem {
-    grid-template-columns: 28px minmax(0, 1fr);
-  }
-  .historyItem time {
-    grid-column: 2;
-  }
-  .headerBadges {
-    flex-wrap: wrap;
-  }
-  .liveHeader {
-    align-items: flex-start;
-  }
-}
+.game { max-width:1100px; margin:0 auto; padding:0 clamp(14px,4vw,40px) 48px; }
+.live { margin:0 0 28px; padding:clamp(16px,3vw,28px); border:2px solid var(--ink); background:#162522; color:#fffaf0; box-shadow:5px 5px 0 var(--ink); }
+.liveHeader { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; }
+.kicker,.label { margin:0; color:#e28b73; font:700 10px/1.3 var(--mono); letter-spacing:.12em; }
+.liveHeader h1 { margin:6px 0 16px; font-size:clamp(25px,5vw,38px); line-height:1.05; }
+.roundStatus { padding:6px 9px; border:1px solid #d6cdb9; color:#fffaf0; font:700 10px var(--mono); text-transform:uppercase; }
+.connection { display:flex; flex-wrap:wrap; align-items:center; gap:8px 14px; margin:0 0 18px; color:#d6cdb9; font:700 10px var(--mono); }
+.connectionNote { margin:0 0 18px; color:#d6cdb9; font:700 10px/1.5 var(--mono); }
+.connection p { margin:0; }
+.connection [data-connection="CONNECTED"] { color:#a7d1b6; }
+.connection [data-connection="DISCONNECTED"] { color:#f2a18c; }
+.connection button,.error button { padding:7px 10px; border:1px solid currentColor; background:transparent; color:inherit; font:700 10px var(--mono); cursor:pointer; }
+.questionCard { display:grid; grid-template-columns:minmax(0,1.25fr) minmax(150px,.75fr); gap:12px; }
+.questionCard > div { min-height:118px; padding:16px; border:1px solid #63736d; background:#20322e; }
+.question { margin:12px 0 0; font-size:clamp(19px,3.2vw,27px); line-height:1.25; }
+.keyReveal { display:flex; flex-direction:column; justify-content:space-between; background:#fffaf0 !important; color:var(--ink); }
+.keyReveal .label { color:#a2483e; }
+.key { margin:10px 0 0; color:#315c53; font-size:clamp(22px,4vw,36px); font-weight:850; line-height:1.1; overflow-wrap:anywhere; }
+.history { margin-top:20px; }
+.history h2 { margin:0 0 10px; font:700 11px var(--mono); letter-spacing:.08em; text-transform:uppercase; }
+.history ol { display:grid; gap:6px; margin:0; padding:0; list-style:none; }
+.history li { display:grid; grid-template-columns:36px minmax(0,1fr) auto; gap:4px 10px; align-items:baseline; padding:9px 0; border-top:1px solid #53625d; font-size:13px; }
+.history li > span:first-child,.history time { color:#c5d2ca; font:700 9px var(--mono); }
+.history strong { color:#a7d1b6; font:800 12px var(--mono); }
+.history time { grid-column:2 / -1; }
+.empty,.stale { color:#d6cdb9; line-height:1.5; }
+.stale { font:700 10px var(--mono); }
+.error { display:flex; flex-wrap:wrap; align-items:center; gap:8px; color:#f2a18c; }
+.error p { margin:0; }
+@media(max-width:520px) { .questionCard { grid-template-columns:1fr; } .questionCard > div { min-height:92px; } .history li { grid-template-columns:30px minmax(0,1fr) auto; } }
+@media(prefers-reduced-motion:reduce) { *,*::before,*::after { scroll-behavior:auto !important; animation-duration:.01ms !important; transition-duration:.01ms !important; } }

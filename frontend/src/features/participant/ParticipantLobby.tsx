@@ -129,8 +129,7 @@ export function ParticipantLobby({ waiting = false }: { waiting?: boolean }) {
 
   // The joined game's server-reported state controls the transition into play.
   const isRoundActive =
-    (currentRound.data?.id === joinedGameId &&
-      currentRound.data.status === "ACTIVE") ||
+    currentRound.data?.status === "ACTIVE" ||
     (activeGame?.id === joinedGameId && activeGame.status === "ACTIVE");
 
   useEffect(() => {
@@ -260,6 +259,25 @@ export function ParticipantLobby({ waiting = false }: { waiting?: boolean }) {
 
   return (
     <main className={styles.page}>
+      <section className={styles.welcome} style={{ marginBottom: "20px" }}>
+        <p className={styles.kicker}>PARTICIPANT LOBBY</p>
+        <h1>Welcome, <em>{user?.name ? user.name.split(' ')[0] : 'Ari'}.</em></h1>
+        {event.data && (
+          <div className={styles.eventCard} aria-label="Your event" style={{ marginTop: "10px" }}>
+            <span className={styles.label} style={{ fontSize: "11px", fontWeight: "bold", color: "var(--coral, #f97316)" }}>YOUR EVENT</span>
+            <h2 style={{ margin: "4px 0", fontSize: "20px" }}>{event.data.title}</h2>
+            {event.data.description && <p style={{ margin: 0, fontSize: "14px", color: "var(--cream, #fff)" }}>{event.data.description}</p>}
+          </div>
+        )}
+      </section>
+
+      {isRoundActive && (
+        <div style={{ marginBottom: "16px" }}>
+          <Link className={styles.gameLink} to="/participant/game">
+            Open live game <span aria-hidden="true">↗</span>
+          </Link>
+        </div>
+      )}
       <div className={styles.outerCard}>
         {/* SYNCHRONIZED QR & CODE BLOCK: SAME ON ADMIN & USER PAGE */}
         <div className={styles.activeGameCard}>
