@@ -5,8 +5,8 @@ import { getEnv } from '../config/env.ts';
 
 export async function runMigrations(overrideUrl?: string): Promise<{ applied: string[]; total: number }> {
   const env = getEnv();
-  const url = overrideUrl || env.DATABASE_URL;
-  const sql = postgres(url, { max: 1, connect_timeout: 5 });
+  const url = overrideUrl || process.env.DATABASE_URL_UNPOOLED || env.DATABASE_URL;
+  const sql = postgres(url, { max: 1, connect_timeout: 10, ssl: 'require' });
 
   try {
     await sql`

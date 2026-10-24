@@ -233,10 +233,10 @@ export async function seed() {
 
   console.log('--- Database Seed Complete! ---');
   console.log('Summary:');
-  console.log(`- Admin: ${adminEmail} / ${adminPassword}`);
-  console.log(`- Player: ${playerEmail} / ${playerPassword}`);
-  console.log(`- Event: Tech Tombola 2026 (status: LIVE)`);
-  console.log(`- Round: Round 1 - Technology Pioneers (status: ACTIVE)`);
+  console.log(`- 3 Admin Accounts seeded (admin1..admin3@techtombola.internal / AdminPass123!)`);
+  console.log(`- 3 Player Accounts seeded (player1..player3@techtombola.internal / PlayerPass123!)`);
+  console.log(`- Event: Tech Tombola 2026 (status: LIVE, id: ${eventId})`);
+  console.log(`- Round: Round 1 - Technology Pioneers (status: ACTIVE, id: ${roundId})`);
 }
 
 if (import.meta.main) {
