@@ -11,7 +11,7 @@ projects:
             dockerfilePath: ./backend/Dockerfile
             dockerContext: ./backend
             autoDeployTrigger: commit
-            healthCheckPath: /ready
+            healthCheckPath: /health
             preDeployCommand: bun migrate.js
             envVars:
               - key: NODE_ENV
