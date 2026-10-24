@@ -1,9 +1,10 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { readPlayRound, readPublicPlay } from "../../lib/api/play";
 import { socketUrl } from "../../lib/websocket/socketUrl";
 export function usePlayState(roundId: string, publicView = false) {
   const client = useQueryClient();
+  const [wsConnected, setWsConnected] = useState(false);
   const query = useQuery({
     queryKey: ["reference-play", publicView ? "public" : "private", roundId],
     queryFn: ({ signal }) =>
@@ -11,7 +12,10 @@ export function usePlayState(roundId: string, publicView = false) {
         ? readPublicPlay(signal).then((result) => result.game)
         : readPlayRound(roundId, signal),
     enabled: publicView || !!roundId,
-    refetchInterval: 1500,
+    refetchInterval: (q) => {
+      if (q.state.data?.status === 'COMPLETED') return false;
+      return wsConnected ? 5000 : 1500;
+    },
     refetchOnWindowFocus: "always",
   });
   const id = query.data?.id;
@@ -37,15 +41,20 @@ export function usePlayState(roundId: string, publicView = false) {
           new URLSearchParams({ roundId: id!, eventId: eventId! }),
         ),
       );
-      socket.onopen = refresh;
+      socket.onopen = () => {
+        setWsConnected(true);
+        refresh();
+      };
       socket.onmessage = refresh;
       socket.onclose = (event) => {
+        setWsConnected(false);
         if (!stopped && event.code !== 1008) timer = setTimeout(connect, 2000);
       };
     }
     connect();
     return () => {
       stopped = true;
+      setWsConnected(false);
       clearTimeout(timer);
       if (socket) {
         socket.onclose = null;

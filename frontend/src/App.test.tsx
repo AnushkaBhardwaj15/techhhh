@@ -39,7 +39,7 @@ describe('application role routes', () => {
     vi.mocked(authApi.getMe).mockResolvedValue({ id: 'u1', email: 'a@example.test', name: 'Ari Patel', role: 'ADMIN', status: 'ACTIVE' });
     window.history.replaceState({}, '', '/admin');
     render(<App />);
-    expect(await screen.findByRole('heading', { name: 'Operations dashboard' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Your games' })).toBeInTheDocument();
     expect(authApi.getMe).toHaveBeenCalledOnce();
   });
 
@@ -56,7 +56,7 @@ describe('application role routes', () => {
     vi.mocked(authApi.getMe).mockResolvedValue({ id: 'u1', email: 'a@example.test', name: 'Ari Patel', role: 'ADMIN', status: 'ACTIVE' });
     window.history.replaceState({}, '', '/admin/system');
     render(<App />);
-    expect(await screen.findByRole('heading', { name: 'Operations dashboard' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Your games' })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'System health' })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'System' })).not.toBeInTheDocument();
     expect(getSuperAdminSystem).not.toHaveBeenCalled();
@@ -74,7 +74,7 @@ describe('application role routes', () => {
     window.history.replaceState({}, '', '/admin/rounds');
     render(<App />);
     expect(await screen.findByRole('button', { name: /sign in/i })).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: 'Operations dashboard' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Your games' })).not.toBeInTheDocument();
     expect(authApi.getMe).toHaveBeenCalled();
   });
 
@@ -100,7 +100,7 @@ describe('application role routes', () => {
     queryClient.setQueryData(['private', 'test'], 'sensitive');
     window.history.replaceState({}, '', '/admin');
     render(<App />);
-    await screen.findByRole('heading', { name: 'Operations dashboard' });
+    await screen.findByRole('heading', { name: 'Your games' });
     screen.getByRole('button', { name: 'Sign out' }).click();
     await waitFor(() => expect(queryClient.getQueryData(['private', 'test'])).toBeUndefined());
     expect(authApi.logout).toHaveBeenCalledOnce();

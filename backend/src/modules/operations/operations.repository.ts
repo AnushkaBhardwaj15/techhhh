@@ -6,10 +6,10 @@ import { draws } from '../../db/schema/draws.ts';
 import { events } from '../../db/schema/events.ts';
 import { rounds } from '../../db/schema/rounds.ts';
 import { schemaMigrations } from '../../db/schema/foundation.ts';
-import { participantProfiles } from '../../db/schema/users.ts';
+import { participantProfiles, users } from '../../db/schema/users.ts';
 import type { AuditQuery } from './operations.schemas.ts';
 
-export interface AuditFilters extends Pick<AuditQuery, 'actorId' | 'action' | 'from' | 'to'> {
+export interface AuditFilters extends Pick<AuditQuery, 'roundId' | 'actorId' | 'action' | 'from' | 'to'> {
   limit: number;
   cursor?: { createdAt: string; id: string };
 }
@@ -30,7 +30,7 @@ export interface SystemReadModel {
 
 export interface IOperationsRepository {
   getDashboard(): Promise<DashboardReadModel>;
-  listAudit(filters: AuditFilters): Promise<Array<AuditLogRecord & { cursorCreatedAt?: string }>>;
+  listAudit(filters: AuditFilters): Promise<Array<AuditLogRecord & { actorEmail?: string | null; actorName?: string | null; cursorCreatedAt?: string }>>;
   getSystemReadModel(): Promise<SystemReadModel>;
 }
 
@@ -95,9 +95,18 @@ export class OperationsRepository implements IOperationsRepository {
     }
   }
 
-  async listAudit(filters: AuditFilters): Promise<Array<AuditLogRecord & { cursorCreatedAt?: string }>> {
+  async listAudit(filters: AuditFilters): Promise<Array<AuditLogRecord & { actorEmail?: string | null; actorName?: string | null; cursorCreatedAt?: string }>> {
     try {
       const conditions = [];
+      if (filters.roundId) {
+        conditions.push(
+          or(
+            and(eq(auditLogs.resourceType, 'round'), eq(auditLogs.resourceId, filters.roundId)),
+            eq(auditLogs.resourceId, filters.roundId),
+            sql`${auditLogs.metadata}->>'roundId' = ${filters.roundId}`
+          )!
+        );
+      }
       if (filters.actorId) conditions.push(eq(auditLogs.actorId, filters.actorId));
       if (filters.action) conditions.push(eq(auditLogs.action, filters.action));
       if (filters.from) conditions.push(gte(auditLogs.createdAt, filters.from));
@@ -108,13 +117,20 @@ export class OperationsRepository implements IOperationsRepository {
       )!);
 
       return await this.databaseProvider()
-        .select({ ...getTableColumns(auditLogs), cursorCreatedAt: sql<string>`to_char(${auditLogs.createdAt} AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"')` })
+        .select({
+          ...getTableColumns(auditLogs),
+          actorEmail: users.email,
+          actorName: users.name,
+          cursorCreatedAt: sql<string>`to_char(${auditLogs.createdAt} AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"')`,
+        })
         .from(auditLogs)
+        .leftJoin(users, eq(users.id, auditLogs.actorId))
         .where(conditions.length ? and(...conditions) : undefined)
         .orderBy(desc(auditLogs.createdAt), desc(auditLogs.id))
         .limit(filters.limit + 1);
     } catch {
-      let filtered = [...memAuditLogs];
+      let filtered = [...memAuditLogs] as Array<AuditLogRecord & { actorEmail?: string | null; actorName?: string | null }>;
+      if (filters.roundId) filtered = filtered.filter(l => l.resourceId === filters.roundId || (l.metadata as any)?.roundId === filters.roundId);
       if (filters.actorId) filtered = filtered.filter(l => l.actorId === filters.actorId);
       if (filters.action) filtered = filtered.filter(l => l.action.toLowerCase().includes(filters.action!.toLowerCase()));
       return filtered.slice(0, filters.limit + 1);

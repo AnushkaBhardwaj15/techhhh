@@ -9,6 +9,8 @@ import type { AuthenticatedUser } from '../../types/auth';
 import { ErrorMessage, LoadingMessage } from '../../components/Feedback';
 import styles from './AdminAudit.module.css';
 
+import { formatAuditAction, formatAuditActor, formatAuditResource } from './auditFormatters';
+
 const PAGE_SIZE = 20;
 const auditActor = z.string().uuid();
 
@@ -73,13 +75,25 @@ export function AdminAudit() {
       {audit.data && audit.data.items.length === 0 && <p className={styles.state}>No audit records match these filters.</p>}
       {audit.data && audit.data.items.length > 0 && <div className={styles.tableWrap} role="region" aria-label="Audit record table; scroll horizontally" tabIndex={0}>
         <p className={styles.scrollHint}>Scroll horizontally to read all record fields.</p>
-        <table><caption className={styles.visuallyHidden}>Audit records, newest first</caption><thead><tr><th scope="col">Time</th><th scope="col">Actor</th><th scope="col">Action</th><th scope="col">Resource</th><th scope="col">Details</th></tr></thead><tbody>{audit.data.items.map((record) => <tr key={record.id}>
-          <td><time dateTime={record.createdAt}>{new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(record.createdAt))}</time></td>
-          <td><span>{record.actorType ?? 'Unknown'}</span><code>{record.actorId ?? '—'}</code></td>
-          <td><strong>{record.action}</strong></td>
-          <td><span>{record.resourceType}</span><code>{record.resourceId ?? '—'}</code></td>
-          <td>{record.metadata === null ? '—' : <details><summary>View metadata</summary><pre>{JSON.stringify(record.metadata, null, 2)}</pre></details>}</td>
-        </tr>)}</tbody></table>
+        <table><caption className={styles.visuallyHidden}>Audit records, newest first</caption><thead><tr><th scope="col">Time</th><th scope="col">Actor</th><th scope="col">Action</th><th scope="col">Resource</th><th scope="col">Details</th></tr></thead><tbody>{audit.data.items.map((record) => {
+          const actorInfo = formatAuditActor(record);
+          const resourceInfo = formatAuditResource(record);
+          return (
+            <tr key={record.id}>
+              <td><time dateTime={record.createdAt}>{new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(record.createdAt))}</time></td>
+              <td>
+                <span style={{ fontWeight: 600, color: 'var(--color-primary-cyan, #00e5ff)', display: 'block' }}>{actorInfo.primary}</span>
+                <span style={{ fontSize: '12px', color: '#94a3b8' }}>{actorInfo.secondary}</span>
+              </td>
+              <td><strong>{formatAuditAction(record.action, record.metadata)}</strong></td>
+              <td>
+                <span style={{ fontWeight: 500, display: 'block' }}>{resourceInfo.primary}</span>
+                <span style={{ fontSize: '12px', color: '#94a3b8' }}>{resourceInfo.secondary}</span>
+              </td>
+              <td>{record.metadata === null ? '—' : <details><summary>View metadata</summary><pre>{JSON.stringify(record.metadata, null, 2)}</pre></details>}</td>
+            </tr>
+          );
+        })}</tbody></table>
       </div>}
       {audit.data && (cursors.length > 1 || audit.data.hasMore) && <nav className={styles.pagination} aria-label="Audit log pages"><button type="button" disabled={cursors.length <= 1 || audit.isFetching} onClick={() => setCursors((current) => current.slice(0, -1))}>Previous</button><span>Page {cursors.length}</span><button type="button" disabled={!audit.data.hasMore || !audit.data.nextCursor || audit.isFetching} onClick={() => setCursors((current) => [...current, audit.data!.nextCursor])}>Next</button></nav>}
     </section>

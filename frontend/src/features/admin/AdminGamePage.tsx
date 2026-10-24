@@ -6,6 +6,7 @@ import { listPlayRounds, commandPlayRound } from "../../lib/api/play";
 import { usePlayState } from "../participant/usePlayState";
 import { QRCodeSvg } from "../../components/QRCodeSvg";
 import { ActionButton } from "../../components/ActionButton";
+import { recoverRound } from "../../lib/api/adminOperations";
 import styles from "./AdminGamePage.module.css";
 import playStyles from "../participant/ReferencePlay.module.css";
 export function AdminGamePage() {
@@ -19,6 +20,7 @@ export function AdminGamePage() {
   const state = usePlayState(id);
   const game = state.data;
   const [pending, setPending] = useState(false);
+  const [recovering, setRecovering] = useState(false);
   const [error, setError] = useState("");
   const [viewingIndex, setViewingIndex] = useState<number | null>(null);
   const busy = useRef(false);
@@ -115,6 +117,22 @@ export function AdminGamePage() {
     window.addEventListener("keydown", key);
     return () => window.removeEventListener("keydown", key);
   });
+
+  async function handleRecover() {
+    if (recovering) return;
+    setRecovering(true);
+    setError("");
+    try {
+      await recoverRound(id);
+      await client.invalidateQueries({ queryKey: ["reference-play"] });
+      await client.invalidateQueries({ queryKey: ["play-rounds"] });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Recovery failed");
+    } finally {
+      setRecovering(false);
+    }
+  }
+
   return (
     <main className={styles.page}>
       <div className={styles.gameContainer}>
@@ -159,6 +177,14 @@ export function AdminGamePage() {
                   {game.status}
                   {game.closingSequence !== null ? " · CLOSING" : ""}
                 </span>
+                {game.status === "RECOVERY_REQUIRED" && (
+                  <ActionButton
+                    busy={recovering}
+                    onClick={() => void handleRecover()}
+                  >
+                    Recover Round
+                  </ActionButton>
+                )}
                 {game.status === "READY" && (
                   <ActionButton
                     busy={pending}

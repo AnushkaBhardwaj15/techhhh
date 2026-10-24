@@ -109,6 +109,8 @@ describe('Operations read models', () => {
     expect(serialized).toEqual({
       id: auditRow.id,
       actorId: auditRow.actorId,
+      actorEmail: null,
+      actorName: null,
       actorType: 'ADMIN',
       action: 'ROUND_STARTED',
       resourceType: 'round',

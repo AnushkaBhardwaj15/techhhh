@@ -4,7 +4,6 @@ import styles from './AdminLayout.module.css';
 
 const links = [
   ['Dashboard', '/admin'],
-  ['Claims', '/admin/claims'],
   ['Winners', '/admin/winners'],
   ['Audit', '/admin/audit'],
 ] as const;

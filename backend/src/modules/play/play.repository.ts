@@ -24,6 +24,7 @@ import {
 type Executor = Pick<postgres.Sql, "unsafe">;
 const iso = (value: string | Date) => new Date(value).toISOString();
 export class PlayRepository implements PlayStore {
+  private readonly bankCache = new Map<string, PlayQuestion[]>();
   constructor(private readonly connection = getSqlClient) {}
   async list(actor?: PlayActor): Promise<PlaySummary[]> {
     if (actor?.role === "PARTICIPANT" && !actor.eventId)
@@ -36,30 +37,43 @@ export class PlayRepository implements PlayStore {
   }
   async findCode(code: string, actor: PlayActor) {
     return this.connection().begin(async (tx) => {
-      const rows = await tx.unsafe<
-        { id: string; event_id: string; status: string; profile_id: string }[]
-      >(
-        `SELECT r.id, r.event_id, r.status, p.id AS profile_id FROM rounds r JOIN participant_profiles p ON p.event_id=r.event_id WHERE r.game_code=$1 AND p.user_id=$2 AND p.event_id=$3 AND p.status='ACTIVE'`,
-        [code, actor.userId, actor.eventId ?? null],
+      const rounds = await tx.unsafe<{ id: string; event_id: string; status: string }[]>(
+        `SELECT id, event_id, status FROM rounds WHERE game_code=$1`,
+        [code],
       );
-      if (!rows[0])
+      if (!rounds[0])
         throw new NotFoundError(
           "This code is not available for your participant account.",
         );
-      const round = rows[0];
-      if (
-        round.status === "READY" ||
-        round.status === "ACTIVE" ||
-        round.status === "PAUSED"
-      ) {
-        const hasTicket = await tx.unsafe<{ id: string }[]>(
-          `SELECT id FROM tickets WHERE participant_id=$1 AND round_id=$2`,
-          [round.profile_id, round.id],
+      const round = rounds[0];
+      if (actor.role === "PARTICIPANT") {
+        let [profile] = await tx.unsafe<{ id: string }[]>(
+          `SELECT id FROM participant_profiles WHERE user_id=$1 AND event_id=$2 AND status='ACTIVE'`,
+          [actor.userId, round.event_id],
         );
-        if (!hasTicket.length) {
-          await this.allocateTickets(tx, round.id, round.event_id, [
-            round.profile_id,
-          ]);
+        if (!profile) {
+          await tx.unsafe(
+            `INSERT INTO participant_profiles(id, user_id, event_id, status) VALUES(gen_random_uuid(), $1, $2, 'ACTIVE') ON CONFLICT DO NOTHING`,
+            [actor.userId, round.event_id],
+          );
+          [profile] = await tx.unsafe<{ id: string }[]>(
+            `SELECT id FROM participant_profiles WHERE user_id=$1 AND event_id=$2`,
+            [actor.userId, round.event_id],
+          );
+        }
+        if (
+          profile &&
+          (round.status === "READY" ||
+            round.status === "ACTIVE" ||
+            round.status === "PAUSED")
+        ) {
+          const hasTicket = await tx.unsafe<{ id: string }[]>(
+            `SELECT id FROM tickets WHERE participant_id=$1 AND round_id=$2`,
+            [profile.id, round.id],
+          );
+          if (!hasTicket.length) {
+            await this.allocateTickets(tx, round.id, round.event_id, [profile.id]);
+          }
         }
       }
       return round.id;
@@ -179,7 +193,11 @@ export class PlayRepository implements PlayStore {
           layout,
         );
       }
-      await this.audit(tx, actor, id, "REFERENCE_ROUND_CREATED");
+      await this.audit(tx, actor, id, "ROUND_CREATED", {
+        roundName: `Tech Tambola — Game ${sequence!.n}`,
+        gameCode: code,
+        roundId: id,
+      });
       return id;
     });
   }
@@ -288,6 +306,24 @@ export class PlayRepository implements PlayStore {
               [state.ticket.id, cell.id],
             );
         }
+      const patternActionMap: Record<string, string> = {
+        EARLY_FIVE: "CLAIM_EARLY_FIVE",
+        FOUR_CORNERS: "CLAIM_FOUR_CORNERS",
+        TOP_LINE: "CLAIM_TOP_LINE",
+        MIDDLE_LINE: "CLAIM_MIDDLE_LINE",
+        BOTTOM_LINE: "CLAIM_BOTTOM_LINE",
+        FULL_HOUSE: "CLAIM_FULL_HOUSE",
+        SECOND_FULL_HOUSE: "CLAIM_SECOND_FULL_HOUSE",
+      };
+      const patternNameMap: Record<string, string> = {
+        EARLY_FIVE: "Early 5",
+        FOUR_CORNERS: "Four Corners",
+        TOP_LINE: "Top Row",
+        MIDDLE_LINE: "Middle Row",
+        BOTTOM_LINE: "Bottom Row",
+        FULL_HOUSE: "Full House",
+        SECOND_FULL_HOUSE: "Second Full House",
+      };
       for (const win of state.wins.slice(before.wins.length)) {
         await tx.unsafe(
           `INSERT INTO claims(id,round_id,participant_id,ticket_id,pattern_type,status,verified_by,verified_at) VALUES($1,$2,$3,$4,$5,'VERIFIED',$6,$7)`,
@@ -323,8 +359,67 @@ export class PlayRepository implements PlayStore {
           [actor.userId],
         );
         win.name = person!.name;
+
+        await this.audit(
+          tx,
+          actor,
+          id,
+          patternActionMap[win.pattern] ?? `CLAIM_${win.pattern}`,
+          {
+            pattern: win.pattern,
+            patternName: patternNameMap[win.pattern] ?? win.pattern,
+            participantId: win.participantId,
+            roundId: id,
+            roundName: state.name,
+            gameCode: state.code,
+          },
+        );
       }
-      await this.audit(tx, actor, id, "REFERENCE_ROUND_ACTION");
+      if (before.status !== state.status) {
+        const statusAction =
+          state.status === "ACTIVE" && before.status === "READY"
+            ? "ROUND_STARTED"
+            : state.status === "PAUSED"
+              ? "ROUND_PAUSED"
+              : state.status === "ACTIVE" && before.status === "PAUSED"
+                ? "ROUND_RESUMED"
+                : state.status === "COMPLETED"
+                  ? "ROUND_COMPLETED"
+                  : `ROUND_${state.status}`;
+        await this.audit(tx, actor, id, statusAction, {
+          roundId: id,
+          roundName: state.name,
+          gameCode: state.code,
+          fromStatus: before.status,
+          toStatus: state.status,
+        });
+      }
+      for (const draw of state.draws.slice(before.draws.length)) {
+        await this.audit(tx, actor, id, "DRAW_CALLED", {
+          sequence: draw.sequence,
+          number: draw.number,
+          term: draw.answer,
+          prompt: draw.prompt,
+          roundId: id,
+          roundName: state.name,
+          gameCode: state.code,
+        });
+      }
+      for (const draw of state.draws) {
+        if (
+          draw.revealed &&
+          !before.draws.find((d) => d.id === draw.id)?.revealed
+        ) {
+          await this.audit(tx, actor, id, "ANSWER_REVEALED", {
+            sequence: draw.sequence,
+            number: draw.number,
+            term: draw.answer,
+            roundId: id,
+            roundName: state.name,
+            gameCode: state.code,
+          });
+        }
+      }
       if (replay)
         await tx.unsafe(
           `INSERT INTO idempotency_keys(key,resource_type,response_payload) VALUES($1,'reference_command',$2::text::jsonb)`,
@@ -351,10 +446,14 @@ export class PlayRepository implements PlayStore {
     if (!round) throw new NotFoundError("Round not found.");
     if (actor?.role === "PARTICIPANT" && actor.eventId !== round.eventId)
       throw new NotFoundError("Round not found.");
-    const bank = await sql.unsafe<PlayQuestion[]>(
-      `SELECT q.id,q.key_id AS "keyId",k.item_number AS number,k.value AS term,q.question_text AS clue,COALESCE(q.category,'General') AS category,q.code_snippet AS "codeSnippet" FROM round_questions q JOIN event_keys k ON k.id=q.key_id WHERE q.round_id=$1 ORDER BY k.item_number`,
-      [id],
-    );
+    let bank = this.bankCache.get(id);
+    if (!bank) {
+      bank = await sql.unsafe<PlayQuestion[]>(
+        `SELECT q.id,q.key_id AS "keyId",k.item_number AS number,k.value AS term,q.question_text AS clue,COALESCE(q.category,'General') AS category,q.code_snippet AS "codeSnippet" FROM round_questions q JOIN event_keys k ON k.id=q.key_id WHERE q.round_id=$1 ORDER BY k.item_number`,
+        [id],
+      );
+      this.bankCache.set(id, bank);
+    }
     const draws = await sql.unsafe<PlayDraw[]>(
       `SELECT d.id,d.sequence_number AS sequence,d.question_id AS "questionId",d.key_id AS "keyId",k.item_number AS number,d.question_text AS prompt,d.key_value AS answer,COALESCE(d.category,'General') AS category,d.code_snippet AS "codeSnippet",d.answer_revealed AS revealed,d.drawn_at AS "drawnAt" FROM draws d JOIN event_keys k ON k.id=d.key_id WHERE d.round_id=$1 ORDER BY d.sequence_number`,
       [id],
@@ -365,18 +464,64 @@ export class PlayRepository implements PlayStore {
     );
     let ticket: PlayState["ticket"] = null;
     if (actor?.role === "PARTICIPANT") {
-      const [profile] = await sql.unsafe<{ id: string }[]>(
+      let [profile] = await sql.unsafe<{ id: string }[]>(
         `SELECT p.id FROM participant_profiles p JOIN users u ON u.id=p.user_id WHERE p.user_id=$1 AND p.event_id=$2 AND p.status='ACTIVE' AND u.status='ACTIVE'`,
         [actor.userId, round.eventId],
       );
+      if (!profile) {
+        const [inserted] = await sql.unsafe<{ id: string }[]>(
+          `INSERT INTO participant_profiles(id, user_id, event_id, status) VALUES(gen_random_uuid(), $1, $2, 'ACTIVE') ON CONFLICT DO NOTHING RETURNING id`,
+          [actor.userId, round.eventId],
+        );
+        profile = inserted ?? (await sql.unsafe<{ id: string }[]>(
+          `SELECT id FROM participant_profiles WHERE user_id=$1 AND event_id=$2`,
+          [actor.userId, round.eventId],
+        ))[0];
+      }
       if (!profile)
         throw new ForbiddenError(
           "Participant account is not active in this Event.",
         );
-      const [row] = await sql.unsafe<{ id: string }[]>(
+      let [row] = await sql.unsafe<{ id: string }[]>(
         "SELECT id FROM tickets WHERE participant_id=$1 AND round_id=$2",
         [profile.id, id],
       );
+      if (!row && ["READY", "ACTIVE", "PAUSED"].includes(round.status)) {
+        const ticketId = crypto.randomUUID();
+        await sql.unsafe(
+          `INSERT INTO tickets(id, participant_id, round_id, event_id) VALUES($1, $2, $3, $4) ON CONFLICT DO NOTHING`,
+          [ticketId, profile.id, id, round.eventId],
+        );
+        const [assigned] = await sql.unsafe<{ id: string }[]>(
+          "SELECT id FROM tickets WHERE participant_id=$1 AND round_id=$2",
+          [profile.id, id],
+        );
+        if (assigned) {
+          row = assigned;
+          const existingCells = await sql.unsafe<{ id: string }[]>(
+            "SELECT id FROM ticket_cells WHERE ticket_id=$1 LIMIT 1",
+            [row.id],
+          );
+          if (!existingCells.length) {
+            const cells = generateReferenceCells(
+              bank.map((q) => ({ keyId: q.keyId, number: q.number, term: q.term })),
+              () => randomInt(2 ** 32) / 2 ** 32,
+              () => crypto.randomUUID(),
+            );
+            const cellRows = cells.map((cell) => ({
+              id: cell.id,
+              ticket_id: row!.id,
+              key_id: cell.keyId,
+              row_index: cell.row,
+              col_index: cell.column,
+            }));
+            await sql.unsafe(
+              `INSERT INTO ticket_cells(id,ticket_id,key_id,row_index,col_index) SELECT id,ticket_id,key_id,row_index,col_index FROM jsonb_to_recordset($1::text::jsonb) AS x(id uuid,ticket_id uuid,key_id uuid,row_index integer,col_index integer)`,
+              [JSON.stringify(cellRows)],
+            );
+          }
+        }
+      }
       if (row) {
         const cells = await sql.unsafe<PlayCell[]>(
           `SELECT c.id,c.key_id AS "keyId",k.item_number AS number,k.value AS term,c.row_index AS row,c.col_index AS column,(m.id IS NOT NULL) AS marked FROM ticket_cells c JOIN event_keys k ON k.id=c.key_id LEFT JOIN ticket_marks m ON m.ticket_id=c.ticket_id AND m.cell_id=c.id WHERE c.ticket_id=$1 ORDER BY c.row_index,c.col_index`,
@@ -403,10 +548,11 @@ export class PlayRepository implements PlayStore {
     actor: PlayActor,
     id: string,
     action: string,
+    metadata?: Record<string, unknown>,
   ) {
     await sql.unsafe(
-      `INSERT INTO audit_logs(actor_id,actor_type,action,resource_type,resource_id) VALUES($1,$2,$3,'round',$4)`,
-      [actor.userId, actor.role, action, id],
+      `INSERT INTO audit_logs(id,actor_id,actor_type,action,resource_type,resource_id,metadata,created_at) VALUES(gen_random_uuid(),$1,$2,$3,'round',$4,$5,now())`,
+      [actor.userId, actor.role, action, id, metadata ? JSON.stringify(metadata) : null],
     );
   }
   private async allocateTickets(

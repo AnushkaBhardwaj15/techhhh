@@ -3,6 +3,7 @@ import { z } from 'zod';
 export const auditQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(20),
   cursor: z.string().min(1).max(256).regex(/^[A-Za-z0-9_-]+$/).optional(),
+  roundId: z.string().uuid().optional(),
   actorId: z.string().uuid().optional(),
   action: z.string().trim().min(1).max(100).optional(),
   from: z.coerce.date().optional(),

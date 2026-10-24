@@ -5,6 +5,8 @@ const timestamp = z.string().datetime({ offset: true });
 export const auditRecordSchema = z.strictObject({
   id: z.string(),
   actorId: z.string().nullable().optional(),
+  actorEmail: z.string().nullable().optional(),
+  actorName: z.string().nullable().optional(),
   actorType: z.string().nullable().optional(),
   action: z.string(),
   resourceType: z.string(),

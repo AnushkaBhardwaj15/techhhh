@@ -68,7 +68,7 @@ export function ParticipantLobby({ waiting = false }: { waiting?: boolean }) {
     retry: 1,
   });
 
-  // Calculate predefined code from server ticket if available
+  // Calculate predefined code from server ticket if available, else empty string
   const assignedCode = ticket.data
     ? formatTicketCode(ticket.data.id)
     : "";

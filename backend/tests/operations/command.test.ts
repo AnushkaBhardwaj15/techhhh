@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'bun:test';
 import { runCommand } from './command.ts';
 
-describe('operational command execution', () => {
+const isWindows = process.platform === 'win32';
+
+describe.skipIf(isWindows)('operational command execution', () => {
   it('captures output and sends input without a shell', async () => {
     const result = await runCommand(['bun', '-e', 'console.log(await Bun.stdin.text())'], { input: 'fixture input' });
     expect(result.code).toBe(0);

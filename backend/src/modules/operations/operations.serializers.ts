@@ -1,10 +1,14 @@
 import type { AuditLogRecord } from '../../db/schema/audit.ts';
 import { redactSensitiveData } from '../../shared/utils/redaction.ts';
 
-export function serializeAuditRecord(record: AuditLogRecord) {
+export function serializeAuditRecord(
+  record: AuditLogRecord & { actorEmail?: string | null; actorName?: string | null }
+) {
   return {
     id: record.id,
     actorId: record.actorId,
+    actorEmail: record.actorEmail ?? (record.metadata as Record<string, unknown> | null)?.email ?? null,
+    actorName: record.actorName ?? (record.metadata as Record<string, unknown> | null)?.name ?? null,
     actorType: record.actorType,
     action: record.action,
     resourceType: record.resourceType,
