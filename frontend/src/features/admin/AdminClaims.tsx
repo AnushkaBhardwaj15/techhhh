@@ -46,9 +46,10 @@ export function AdminClaims() {
   const selected = claims.data?.data.find((claim) => claim.id === selectedId);
 
   const command = useMutation({
-    mutationFn: async ({ claimId, action }: { claimId: string; action: 'verify' | 'reject' }) => {
+    mutationFn: async ({ claimId, action, reason }: { claimId: string; action: 'verify' | 'reject'; reason?: string }) => {
       const key = getOrCreateIdempotencyKey(commandScope(user.id, claimId, action));
       if (action === 'verify') await verifyAdminClaim(claimId, key);
+      else if (reason) await rejectAdminClaim(claimId, key, reason);
       else await rejectAdminClaim(claimId, key);
     },
     onSuccess: async (_result, variables) => {

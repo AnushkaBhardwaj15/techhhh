@@ -12,3 +12,13 @@ export const listClaimsQuerySchema = z.object({
 
 export const claimIdParamsSchema = z.object({ id: z.string().uuid() });
 export const listWinnersQuerySchema = listClaimsQuerySchema;
+
+export const rejectClaimBodySchema = z.object({
+  reason: z.enum([
+    'ALREADY_CLAIMED',
+    'INVALID_MARKS',
+    'FALSE_CLAIM',
+    'DISQUALIFIED',
+    'ADMIN_REJECTED'
+  ]).optional().default('ADMIN_REJECTED'),
+}).optional();

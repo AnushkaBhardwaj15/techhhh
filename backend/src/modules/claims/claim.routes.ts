@@ -5,6 +5,7 @@ import {
   claimIdParamsSchema,
   listClaimsQuerySchema,
   listWinnersQuerySchema,
+  rejectClaimBodySchema,
   submitClaimBodySchema,
 } from './claim.schemas.ts';
 import { claimService } from './claim.service.ts';
@@ -79,6 +80,8 @@ export function createClaimRoutes(winnerService: WinnerService): FastifyPluginAs
 
   fastify.post('/admin/claims/:id/reject', { preHandler: [requireAdmin] }, async (request) => {
     const { id } = claimIdParamsSchema.parse(request.params);
+    const bodyResult = rejectClaimBodySchema.safeParse(request.body);
+    const reason = bodyResult.success && bodyResult.data?.reason ? bodyResult.data.reason : 'ADMIN_REJECTED';
     const idempotencyKey = request.headers['idempotency-key'];
     if (typeof idempotencyKey !== 'string') {
       throw new ValidationError('Idempotency-Key header is required', 'IDEMPOTENCY_KEY_REQUIRED');
@@ -92,6 +95,7 @@ export function createClaimRoutes(winnerService: WinnerService): FastifyPluginAs
       actorId: request.user!.id,
       actorType: role,
       idempotencyKey,
+      reason,
     });
   });
 

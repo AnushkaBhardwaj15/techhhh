@@ -24,32 +24,39 @@ const CLAIM_CARDS: {
     points: '+10 pts',
   },
   {
+    pattern: 'FOUR_CORNERS',
+    title: 'Four Corners',
+    subtitle: 'Outer 4 corners',
+    description: 'The four corner cells of your ticket marked',
+    points: '+10 pts',
+  },
+  {
     pattern: 'TOP_LINE',
     title: 'Top Line',
     subtitle: 'Row 1 complete',
     description: 'All 5 cells in the top row marked',
-    points: '+30 pts',
+    points: '+15 pts',
   },
   {
     pattern: 'MIDDLE_LINE',
     title: 'Middle Line',
     subtitle: 'Row 2 complete',
     description: 'All 5 cells in the middle row marked',
-    points: '+30 pts',
+    points: '+15 pts',
   },
   {
     pattern: 'BOTTOM_LINE',
     title: 'Bottom Line',
     subtitle: 'Row 3 complete',
     description: 'All 5 cells in the bottom row marked',
-    points: '+30 pts',
+    points: '+15 pts',
   },
   {
     pattern: 'FULL_HOUSE',
     title: 'Full House',
     subtitle: 'All 15 numbers',
     description: 'All 15 cells across your ticket marked',
-    points: '+50 pts',
+    points: '+30 pts',
   },
 ];
 
@@ -131,6 +138,23 @@ function checkPatternBoxes(pattern: ClaimPattern, ticket?: Ticket | null): Patte
         warning: valid
           ? undefined
           : `⚠️ Cannot Send Claim for Bottom Line: You have marked only ${markedCount}/${requiredCount} boxes in Row 3. All ${requiredCount} boxes in the bottom line must be checked before submitting!`,
+      };
+    }
+    case 'FOUR_CORNERS': {
+      const corners = cells.filter(
+        (c) => (c.rowIndex === 0 || c.rowIndex === 2) && (c.colIndex === 0 || c.colIndex === 8)
+      );
+      const markedCount = corners.filter((c) => c.marked).length;
+      const requiredCount = corners.length || 4;
+      const valid = corners.length > 0 && markedCount === requiredCount;
+      return {
+        valid,
+        markedCount,
+        requiredCount,
+        label: `${markedCount}/${requiredCount} checked`,
+        warning: valid
+          ? undefined
+          : `⚠️ Cannot Send Claim for Four Corners: You have marked only ${markedCount}/${requiredCount} corner boxes. All ${requiredCount} corner boxes must be checked before submitting!`,
       };
     }
     case 'FULL_HOUSE': {
@@ -244,7 +268,7 @@ export function ClaimPanel({
       ) : null}
 
       <div className={styles.cardGrid}>
-        {CLAIM_CARDS.map((card) => {
+        {CLAIM_CARDS.filter((card) => !round.patterns?.length || roundPatternsMap.has(card.pattern)).map((card) => {
           const config = roundPatternsMap.get(card.pattern);
           const isEnabled = config ? config.enabled : false;
           const isConfigOpen = config ? config.status === 'OPEN' : false;
