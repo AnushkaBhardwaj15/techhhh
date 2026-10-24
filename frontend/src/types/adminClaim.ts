@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const adminClaimStatusSchema = z.enum(['PENDING_VERIFICATION', 'VERIFIED', 'REJECTED', 'REJECTED_PATTERN_ALREADY_CLOSED']);
-export const adminClaimPatternSchema = z.enum(['EARLY_5', 'TOP_LINE', 'MIDDLE_LINE', 'BOTTOM_LINE', 'FULL_HOUSE']);
+export const adminClaimPatternSchema = z.enum(['EARLY_5', 'FOUR_CORNERS', 'TOP_LINE', 'MIDDLE_LINE', 'BOTTOM_LINE', 'FULL_HOUSE', 'SECOND_FULL_HOUSE']);
 
 export const adminClaimSchema = z.object({
   id: z.string().uuid(),

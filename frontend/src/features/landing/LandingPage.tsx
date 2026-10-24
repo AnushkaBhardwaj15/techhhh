@@ -136,7 +136,7 @@ export function LandingPage() {
                       NO PASSWORD NEEDED
                     </span>
                   </div>
-                  <p style={{ margin: '0 0 14px', fontSize: '13px', color: '#444', lineHeight: 1.4 }}>
+                  <p style={{ margin: '0 0 14px', fontSize: '13px', color: 'var(--muted)', lineHeight: 1.4 }}>
                     Join the live room immediately with an automatically allocated 15-cell ticket:
                   </p>
                   <form onSubmit={handleQuickJoin} style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>

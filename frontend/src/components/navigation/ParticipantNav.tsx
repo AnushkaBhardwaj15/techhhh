@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
+import { ActionButton } from '../ActionButton';
 import type { AuthenticatedUser } from '../../types/auth';
-import styles from './ParticipantNav.module.css';
+import styles from './Navigation.module.css';
 
 interface ParticipantNavProps {
   user: AuthenticatedUser;
@@ -32,15 +33,14 @@ export function ParticipantNav({ user, onLogout, isLoggingOut = false }: Partici
             <span aria-hidden="true">👤</span>
             <span>Profile</span>
           </Link>
-          <button
+          <ActionButton
             type="button"
             className={styles.logoutButton}
             onClick={onLogout}
-            disabled={isLoggingOut}
-            aria-busy={isLoggingOut}
+            busy={isLoggingOut}
           >
             {isLoggingOut ? 'Signing out…' : 'Sign out'}
-          </button>
+          </ActionButton>
         </div>
       </div>
     </header>

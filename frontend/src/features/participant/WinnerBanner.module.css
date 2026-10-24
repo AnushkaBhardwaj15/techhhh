@@ -1,10 +1,10 @@
 .banner {
   margin: 22px 0 0;
   padding: 16px 18px;
-  border: 2px solid var(--ink);
-  background: #e7f0e8;
+  border: 1px solid var(--border);
+  background: var(--lime-soft);
   color: var(--ink);
-  box-shadow: 4px 4px 0 var(--ink);
+  box-shadow: none;
 }
 
 .banner h2 {
@@ -18,13 +18,13 @@
 }
 
 .banner strong {
-  color: #315c53;
+  color: var(--accent-ink);
 }
 
 .others {
   margin-top: 12px;
   padding-top: 10px;
-  border-top: 1px solid #b8c8b8;
+  border-top: 1px solid var(--border);
 }
 
 .others ul {
@@ -43,13 +43,18 @@
 .banner a {
   display: inline-block;
   margin-top: 10px;
-  color: #315c53;
+  color: var(--accent-ink);
   font: 700 10px var(--mono);
 }
 
-@media(prefers-reduced-motion:reduce) {
+@media (prefers-reduced-motion: reduce) {
   .banner {
     animation: none !important;
     transition: none !important;
   }
+}
+
+.banner {
+  border-radius: 12px;
+  border-left: 3px solid var(--lime);
 }

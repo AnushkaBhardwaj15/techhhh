@@ -10,7 +10,7 @@ import { AdminRoundOperations } from './AdminRoundOperations';
 import styles from './AdminRounds.module.css';
 
 const PAGE_SIZE = 20;
-const patternTypes: PatternType[] = ['EARLY_5', 'TOP_LINE', 'MIDDLE_LINE', 'BOTTOM_LINE', 'FULL_HOUSE'];
+const patternTypes: PatternType[] = ['EARLY_5', 'FOUR_CORNERS', 'TOP_LINE', 'MIDDLE_LINE', 'BOTTOM_LINE', 'FULL_HOUSE', 'SECOND_FULL_HOUSE'];
 const defaultPatterns = (): PatternConfig[] => patternTypes.map((patternType) => ({ patternType, enabled: true, maxWinners: 1 }));
 const listKey = (userId: string, eventId: string, page: number) => ['admin-rounds', userId, eventId, 'list', page] as const;
 const detailKey = (userId: string, eventId: string, roundId: string) => ['admin-rounds', userId, eventId, 'detail', roundId] as const;

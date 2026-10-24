@@ -7,6 +7,7 @@ import { login } from '../../lib/api/auth';
 import { useAuthUiStore } from './authStore';
 import { roleHomePath, safeReturnPath } from './routing';
 import styles from './LoginPage.module.css';
+import { ActionButton } from '../../components/ActionButton';
 
 const credentialsSchema = z.object({
   email: z.string().email('Enter a valid email address.'),
@@ -61,31 +62,33 @@ export function LoginPage() {
     signinMutation.error instanceof ApiError
       ? signinMutation.error.status === 401
         ? 'Email or password is incorrect.'
-        : signinMutation.error.message
+        : signinMutation.error.status === 429
+          ? 'Too many attempts. Please wait before signing in again.'
+          : signinMutation.error.message
       : signinMutation.error
       ? 'Sign-in failed. Check server connection.'
       : '';
 
   return (
     <main className={styles.page}>
-      <div className={styles.brandGroup}>
+      <header className={styles.brandGroup} aria-label="Tech Tambola">
         <span className={styles.brandBadge}>TECH</span>
         <strong className={styles.brandName}>
           TAMBOLA<span className={styles.brandDot}>.</span>
         </strong>
-      </div>
-
-      {/* Box design matching Image 1: SIGN TO TECH-TAMBOLA with original red/orange accents */}
+        <p className={styles.tagline}>PLAY · LEARN · WIN</p>
+      </header>
       <div className={styles.card}>
-        <p className={styles.eyebrow}>AUTHENTICATION PORTAL</p>
+        <p className={styles.eyebrow}>YOUR NEXT ROUND STARTS HERE</p>
         <h1 className={styles.title}>
-          SIGN TO <span className={styles.coralText}>TECH-TAMBOLA</span>
+          <span className={styles.signInLabel}>Sign in to</span>
+          <span className={styles.titleAccent}>Tech Tambola</span>
         </h1>
 
-        {/* 1-Click Demo Accounts */}
+        <p className={styles.presetHint}>Choose a demo account to fill your details.</p>
         <div className={styles.presetSection}>
           <div className={styles.presetGroup}>
-            <span className={styles.presetHeading}>PARTICIPANTS (CLICK TO FILL)</span>
+            <span className={styles.presetHeading}>PARTICIPANTS</span>
             <div className={styles.presetRow}>
               <button
                 type="button"
@@ -112,7 +115,7 @@ export function LoginPage() {
           </div>
 
           <div className={styles.presetGroup}>
-            <span className={styles.presetHeading}>ADMINS (CLICK TO FILL)</span>
+            <span className={styles.presetHeading}>ADMINS</span>
             <div className={styles.presetRow}>
               <button
                 type="button"
@@ -148,7 +151,7 @@ export function LoginPage() {
         <form onSubmit={submit} noValidate>
           <div className={styles.field}>
             <label htmlFor="email" className={styles.label}>
-              email-id <span className={styles.requiredStar}>*</span>
+              Email address <span className={styles.requiredStar} aria-hidden="true">*</span>
             </label>
             <input
               id="email"
@@ -156,7 +159,8 @@ export function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className={styles.input}
-              placeholder="e.g. player1@techtombola.internal"
+              placeholder="you@example.com"
+              inputMode="email"
               autoComplete="email"
               autoCapitalize="none"
               required
@@ -166,11 +170,14 @@ export function LoginPage() {
           <div className={styles.field}>
             <div className={styles.labelRow}>
               <label htmlFor="password" className={styles.label}>
-                password <span className={styles.requiredStar}>*</span>
+                Password <span className={styles.requiredStar} aria-hidden="true">*</span>
               </label>
               <button
                 type="button"
                 className={styles.toggleVisibilityBtn}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                aria-pressed={showPassword}
+                aria-controls="password"
                 onClick={() => setShowPassword((prev) => !prev)}
               >
                 {showPassword ? 'HIDE' : 'SHOW'}
@@ -178,6 +185,7 @@ export function LoginPage() {
             </div>
             <input
               id="password"
+              aria-label="Password"
               type={showPassword ? 'text' : 'password'}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -189,16 +197,18 @@ export function LoginPage() {
           </div>
 
           <div className={styles.buttonContainer}>
-            <button
+            <ActionButton
               type="submit"
-              disabled={signinMutation.isPending}
+              busy={signinMutation.isPending}
               className={styles.submitBtn}
             >
-              {signinMutation.isPending ? 'SIGNING-IN…' : 'SIGN-IN'}
-            </button>
+              {signinMutation.isPending ? 'Signing in…' : 'Sign in'}
+              <span aria-hidden="true">→</span>
+            </ActionButton>
           </div>
         </form>
       </div>
+      <p className={styles.footer}>A little tech. A little luck. Your next win.</p>
     </main>
   );
 }

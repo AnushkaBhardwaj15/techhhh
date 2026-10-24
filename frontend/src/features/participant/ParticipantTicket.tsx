@@ -37,6 +37,8 @@ export function TicketGrid({
   winningCellIds?: ReadonlySet<string>;
   onToggleCell?: (cell: Ticket['cells'][number]) => void;
 }) {
+  void _drawnKeys;
+  void _winningCellIds;
   const matchRef = useRef<HTMLTableCellElement>(null);
   const scrollHintId = useId();
   const cells = new Map(ticket.cells.map((cell) => [`${cell.rowIndex}:${cell.colIndex}`, cell]));
@@ -66,6 +68,7 @@ export function TicketGrid({
                   const uncertain = !!cell && uncertainCellIds.has(cell.id);
                   return (
                     <td
+                      ref={cell?.keyValue.toUpperCase()===revealedKey?.toUpperCase()?matchRef:undefined}
                       key={column}
                       aria-label={
                         cell
@@ -188,7 +191,9 @@ export function ParticipantTicket({
     if (saved) {
       try {
         return JSON.parse(saved);
-      } catch {}
+      } catch {
+        /* ignore corrupted storage */
+      }
     }
     return propTicket || fallbackRef.current;
   });

@@ -1,9 +1,14 @@
 .page {
-  padding: 32px 24px 80px;
-  background-color: var(--cream);
-  min-height: calc(100vh - 65px);
   display: flex;
   justify-content: center;
+  width: calc(100% - 32px);
+  max-width: 1200px;
+  margin: 24px auto;
+  min-height: 0;
+  padding: clamp(20px, 3vw, 36px);
+  background: var(--ice);
+  color: var(--ink);
+  border-radius: 16px;
 }
 
 .container {
@@ -24,17 +29,17 @@
   font-weight: 800;
   color: var(--ink);
   text-decoration: none;
-  background: #fff;
+  background: var(--surface);
   border: 1.5px solid var(--ink);
-  box-shadow: 2px 2px 0 var(--ink);
+  box-shadow: none;
   padding: 6px 14px;
   border-radius: 2px;
   transition: transform 0.1s ease;
 }
 
 .backButton:hover {
-  transform: translate(-1px, -1px);
-  box-shadow: 3px 3px 0 var(--ink);
+  transform: none;
+  box-shadow: none;
 }
 
 .roleBadge {
@@ -45,7 +50,7 @@
   padding: 4px 8px;
   border: 1px solid var(--forest);
   color: var(--forest);
-  background: rgba(49, 92, 83, 0.08);
+  background: rgba(8, 123, 139, 0.08);
 }
 
 .header {
@@ -57,7 +62,7 @@
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.12em;
-  color: var(--coral);
+  color: var(--accent-ink);
   margin-bottom: 8px;
   text-transform: uppercase;
 }
@@ -74,15 +79,15 @@
 .subhead {
   font-size: 15px;
   line-height: 1.5;
-  color: #555;
+  color: var(--muted);
   margin: 0;
   max-width: 680px;
 }
 
 .card {
-  background: #fff;
-  border: 2px solid var(--ink);
-  box-shadow: 4px 4px 0 var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: none;
   padding: 28px;
   margin-bottom: 28px;
 }
@@ -91,7 +96,7 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  border-bottom: 1.5px solid #eee;
+  border-bottom: 1.5px solid var(--border);
   padding-bottom: 16px;
   margin-bottom: 20px;
   gap: 16px;
@@ -108,7 +113,7 @@
 
 .cardSubtitle {
   font-size: 13px;
-  color: #666;
+  color: var(--muted);
   margin: 4px 0 0;
 }
 
@@ -118,9 +123,9 @@
   font-weight: 800;
   letter-spacing: 0.05em;
   padding: 3px 8px;
-  border: 1px solid #2d6a4f;
-  background: #d8f3dc;
-  color: #1b4332;
+  border: 1px solid var(--success-ink);
+  background: var(--lime-soft);
+  color: var(--success-ink);
   border-radius: 2px;
 }
 
@@ -136,7 +141,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 8px 0;
-  border-bottom: 1px dashed #eee;
+  border-bottom: 1px dashed var(--border);
   gap: 16px;
   flex-wrap: wrap;
 }
@@ -145,7 +150,7 @@
   font-family: var(--mono);
   font-size: 12px;
   font-weight: 800;
-  color: #666;
+  color: var(--muted);
   text-transform: uppercase;
 }
 
@@ -160,7 +165,7 @@
   font-size: 14px;
   background: var(--cream);
   padding: 4px 8px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border);
   border-radius: 3px;
   color: var(--ink);
   font-weight: 700;
@@ -177,7 +182,7 @@
   font-size: 14px;
   background: #f8f9fa;
   padding: 4px 10px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border);
   border-radius: 3px;
   min-width: 140px;
   font-weight: 700;
@@ -211,7 +216,7 @@
 .monoId {
   font-family: var(--mono);
   font-size: 12px;
-  color: #666;
+  color: var(--muted);
 }
 
 .statsGrid {
@@ -222,9 +227,9 @@
 }
 
 .statBox {
-  background: #fff;
-  border: 2px solid var(--ink);
-  box-shadow: 3px 3px 0 var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: none;
   padding: 20px;
   display: flex;
   flex-direction: column;
@@ -243,22 +248,22 @@
   font-family: var(--mono);
   font-size: 11px;
   font-weight: 800;
-  color: #666;
+  color: var(--muted);
   text-transform: uppercase;
 }
 
 .statAccepted {
-  border-color: #2d6a4f;
-  background: #f0fdf4;
+  border-color: var(--success-ink);
+  background: var(--lime-soft);
 }
 
 .statAccepted .statNumber {
-  color: #1b4332;
+  color: var(--success-ink);
 }
 
 .statRejected {
-  border-color: #e07a5f;
-  background: #fff5f5;
+  border-color: var(--accent-ink);
+  background: var(--danger-soft);
 }
 
 .statRejected .statNumber {
@@ -312,12 +317,12 @@
 }
 
 .cardAccepted {
-  border-left: 6px solid #2d6a4f;
+  border-left: 6px solid var(--success-ink);
   background: #f7fdf9;
 }
 
 .cardRejected {
-  border-left: 6px solid #e07a5f;
+  border-left: 6px solid var(--accent-ink);
   background: #fff9f8;
 }
 
@@ -353,8 +358,8 @@
 }
 
 .claimBadge[data-status="VERIFIED"] {
-  background: #d8f3dc;
-  color: #1b4332;
+  background: var(--lime-soft);
+  color: var(--success-ink);
   border: 1px solid #74c69d;
 }
 
@@ -374,7 +379,7 @@
   display: flex;
   gap: 16px;
   font-size: 12px;
-  color: #555;
+  color: var(--muted);
   flex-wrap: wrap;
   margin-bottom: 8px;
 }
@@ -410,7 +415,7 @@
 .emptyClaims {
   text-align: center;
   padding: 40px 20px;
-  color: #666;
+  color: var(--muted);
 }
 
 .emptyClaims p {
@@ -422,7 +427,7 @@
 
 .emptyHint {
   font-size: 13px;
-  color: #888;
+  color: var(--muted);
 }
 
 .loadingText,
@@ -435,4 +440,19 @@
 
 .errorText {
   color: #c53030;
+}
+.card {
+  border-radius: 12px;
+}
+.header h1 {
+  font-size: clamp(28px, 5vw, 42px);
+}
+@media (max-width: 600px) {
+  .card {
+    padding: 18px 14px;
+  }
+  .topNav {
+    gap: 10px;
+    flex-wrap: wrap;
+  }
 }

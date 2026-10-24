@@ -55,7 +55,7 @@ describe('LoginPage', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Unable to reach Tech Tombola');
   });
   it.each([
-    ['PARTICIPANT', '/participant', 'Participant surface'],
+    ['PARTICIPANT', '/lobby', 'Participant surface'],
     ['ADMIN', '/admin', 'Admin surface'],
     ['SUPER_ADMIN', '/admin', 'Super Admin surface'],
   ] as const)('routes a %s account to its role surface', async (role, path, label) => {
@@ -71,6 +71,27 @@ describe('LoginPage', () => {
     await user.click(screen.getByRole('button', { name: /sign in/i }));
     expect(await screen.findByText(label)).toBeInTheDocument();
     expect(authApi.login).toHaveBeenCalledWith('attendee@example.test', 'password');
+  });
+  it('renders the new title and fills participant and admin presets', async () => {
+    const user = setup();
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Tech Tambola');
+    await user.click(screen.getByRole('button', { name: 'Player 2' }));
+    expect(screen.getByRole('textbox', { name: /Email address/ })).toHaveValue('player2@techtombola.internal');
+    expect(screen.getByLabelText('Password')).toHaveValue('PlayerPass123!');
+    await user.click(screen.getByRole('button', { name: 'Admin 3' }));
+    expect(screen.getByRole('textbox', { name: /Email address/ })).toHaveValue('admin3@techtombola.internal');
+    expect(authApi.login).not.toHaveBeenCalled();
+  });
+  it('toggles password visibility without submitting', async () => {
+    const user = setup();
+    const password = screen.getByLabelText('Password');
+    expect(password).toHaveAttribute('type', 'password');
+    await user.click(screen.getByRole('button', { name: 'Show password' }));
+    expect(password).toHaveAttribute('type', 'text');
+    expect(screen.getByRole('button', { name: 'Hide password' })).toHaveAttribute('aria-pressed', 'true');
+    await user.click(screen.getByRole('button', { name: 'Hide password' }));
+    expect(password).toHaveAttribute('type', 'password');
+    expect(authApi.login).not.toHaveBeenCalled();
   });
   it('accepts only same-origin return paths', () => {
     expect(safeReturnPath('/admin/rounds?active=1')).toBe('/admin/rounds?active=1');

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const roundStatusSchema = z.enum(['DRAFT', 'READY', 'ACTIVE', 'PAUSED', 'RECOVERY_REQUIRED', 'COMPLETED', 'CANCELLED']);
-export const patternTypeSchema = z.enum(['EARLY_5', 'TOP_LINE', 'MIDDLE_LINE', 'BOTTOM_LINE', 'FULL_HOUSE']);
+export const patternTypeSchema = z.enum(['EARLY_5', 'FOUR_CORNERS', 'TOP_LINE', 'MIDDLE_LINE', 'BOTTOM_LINE', 'FULL_HOUSE', 'SECOND_FULL_HOUSE']);
 export const patternStatusSchema = z.enum(['OPEN', 'CLOSED']);
 
 export const patternConfigSchema = z.object({

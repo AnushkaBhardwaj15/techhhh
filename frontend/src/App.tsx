@@ -26,7 +26,6 @@ const AdminAudit = lazy(() => import('./features/admin/AdminAudit').then((module
 const AdminSystem = lazy(() => import('./features/admin/AdminSystem').then((module) => ({ default: module.AdminSystem })));
 const ParticipantLobby = lazy(() => import('./features/participant/ParticipantLobby').then((module) => ({ default: module.ParticipantLobby })));
 const ParticipantTicketEntry = lazy(() => import('./features/participant/ParticipantTicketEntry').then((module) => ({ default: module.ParticipantTicketEntry })));
-const ParticipantTicket = lazy(() => import('./features/participant/ParticipantTicket').then((module) => ({ default: module.ParticipantTicket })));
 const ParticipantGame = lazy(() => import('./features/participant/ParticipantGame').then((module) => ({ default: module.ParticipantGame })));
 const ParticipantClaims = lazy(() => import('./features/participant/ParticipantClaims').then((module) => ({ default: module.ParticipantClaims })));
 const ParticipantResults = lazy(() => import('./features/participant/ParticipantResults').then((module) => ({ default: module.ParticipantResults })));
@@ -77,7 +76,7 @@ function ProtectedLayout({ allowed }: { allowed: AuthenticatedUser['role'][] }) 
         <AdminTopBar user={user} onLogout={handleLogout} isLoggingOut={loggingOut} />
       )}
       {logoutError && (
-        <div role="alert" style={{ padding: '8px 24px', background: '#f9e5df', color: '#842e28', fontFamily: 'var(--mono)', fontSize: '11px', fontWeight: 700 }}>
+        <div role="alert" className="session-error">
           {logoutError}
         </div>
       )}
@@ -120,15 +119,15 @@ function AppRoutes() {
         <Route path="/sign-in" element={<LoginPage />} />
         <Route path="/signin" element={<LoginPage />} />
         <Route path="/play" element={<Navigate to="/participant/game" replace />} />
-        <Route path="/lobby" element={<Navigate to="/participant/lobby" replace />} />
         <Route path="/host" element={<Navigate to="/admin" replace />} />
         <Route path="/admin/dashboard" element={<Navigate to="/admin" replace />} />
         <Route element={<ProtectedLayout allowed={['PARTICIPANT']} />}>
           <Route path="/participant" element={<Navigate to="/lobby" replace />} />
           <Route path="/participant/lobby" element={<ParticipantLobby />} />
+          <Route path="/participant/waiting" element={<ParticipantLobby waiting />} />
           <Route path="/lobby" element={<ParticipantLobby />} />
           <Route path="/participant/ticket-entry" element={<ParticipantTicketEntry />} />
-          <Route path="/participant/ticket" element={<ParticipantTicket />} />
+          <Route path="/participant/ticket" element={<ParticipantGame />} />
           <Route path="/participant/game" element={<ParticipantGame />} />
           <Route path="/play" element={<ParticipantGame />} />
           <Route path="/participant/claims" element={<ParticipantClaims />} />

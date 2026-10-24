@@ -1,39 +1,83 @@
 :root {
-  font-family: system-ui, sans-serif;
+  font-family: "Segoe UI", system-ui, sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
-  --forest: #315c53;
-  --cream: #f4ecd6;
-  --coral: #ef8076;
-  --ink: #1d2421;
-  --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  --navy: #081220;
+  --navy-raised: #122438;
+  --cyan: #00e5ff;
+  --cyan-hover: #73efff;
+  --cyan-soft: #d5f5f7;
+  --lime: #a3ff4b;
+  --lime-soft: #e5f6d6;
+  --ice: #e6f3f3;
+  --surface: #f8fcfb;
+  --surface-muted: #dce9ec;
+  --ink: #081220;
+  --muted: #48616d;
+  --muted-dark: #a6bfcc;
+  --border: #b5ccd2;
+  --border-dark: #35536a;
+  --accent-ink: #076f7d;
+  --success-ink: #315e18;
+  --danger-soft: #fce7e8;
+  --warning-soft: #fff2cb;
+  --mono: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
+  --display: "Segoe UI", system-ui, sans-serif;
+  /* Compatibility aliases keep existing components on the shared palette. */
+  --forest: var(--navy);
+  --cream: var(--ice);
+  --coral: var(--cyan);
+  --serif: var(--display);
   color: var(--ink);
-  background: var(--forest);
+  background: var(--navy);
+  font-variant-numeric: tabular-nums;
 }
 
 * {
   box-sizing: border-box;
 }
-
 html {
   scroll-behavior: smooth;
 }
-
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
-}
-
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100dvh;
 }
-
 button,
-input {
+input,
+select,
+textarea {
   font: inherit;
+}
+button,
+a,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+button {
+  touch-action: manipulation;
+}
+button:disabled {
+  cursor: not-allowed;
+}
+:focus-visible {
+  outline: 3px solid var(--accent-ink);
+  outline-offset: 3px;
+}
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+p {
+  text-wrap: pretty;
+}
+img,
+svg {
+  max-width: 100%;
 }
 
 .feedback {
@@ -41,58 +85,101 @@ input {
   padding: 32px;
   display: grid;
   place-content: center;
-  color: var(--cream);
-  background: var(--forest);
+  color: var(--ice);
+  background: var(--navy);
   text-align: center;
 }
-
 .feedback h1 {
   font-size: clamp(28px, 6vw, 46px);
 }
-
+.feedback[role="status"] {
+  min-height: 120px;
+}
 .role-page {
   min-height: 100dvh;
-  background: var(--cream);
+  background: var(--navy);
+}
+.role-page > header {
+  display: block;
+  padding: 0;
+  border: 0;
+}
+.role-page main {
+  min-width: 0;
+}
+.role-page
+  :where(button, input:not([type="checkbox"]):not([type="radio"]), select) {
+  min-height: 44px;
+}
+.role-page
+  :where(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
+  max-width: 100%;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  color: var(--ink);
+  background: var(--surface);
+  font-size: 16px;
+}
+.role-page :where(button) {
+  border-radius: 7px;
+}
+.role-page :where(h1) {
+  font-family: var(--display);
+  font-size: clamp(28px, 5vw, 46px);
+  line-height: 1.1;
+  letter-spacing: -0.04em;
+}
+.role-page :where(h2, h3) {
+  font-family: var(--display);
+  letter-spacing: -0.025em;
+}
+.role-page :where(table) {
+  font-variant-numeric: tabular-nums;
+}
+.role-page :where(fieldset) {
+  min-width: 0;
+  border-color: var(--border);
+}
+.role-page :where(dialog) {
+  max-width: calc(100% - 32px);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--ice);
+  color: var(--ink);
+}
+.role-page :where(dialog)::backdrop {
+  background: rgb(8 18 32 / 70%);
+}
+.session-error {
+  padding: 12px 20px;
+  background: var(--danger-soft);
+  color: #842e28;
+  font: 700 12px/1.5 var(--mono);
 }
 
-.role-page>header {
-  display: flex;
-  gap: 20px;
-  align-items: center;
-  padding: 18px 24px;
-  border-bottom: 2px solid var(--ink);
-}
-
-.role-page>header span {
-  margin-left: auto;
-}
-
-.role-page>header button {
-  border: 1px solid var(--ink);
-  background: transparent;
-  padding: 8px 12px;
-  cursor: pointer;
-}
-
-.role-page>main {
-  padding: 32px;
-}
-
-@media(max-width:430px) {
-  .role-page>header {
-    gap: 8px;
-    padding: 12px;
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
   }
-
-  .role-page>header strong {
-    font-size: 13px;
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
+}
 
-  .role-page>header span {
-    font-size: 12px;
+@media (max-width: 600px) {
+  :root
+    .role-page
+    :is(button, select, input:not([type="checkbox"]):not([type="radio"])) {
+    min-height: 44px;
   }
-
-  .role-page>header button {
-    padding: 7px 8px;
+  :root
+    .role-page
+    :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
+    font-size: 16px;
   }
 }

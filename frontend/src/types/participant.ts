@@ -6,7 +6,7 @@ export const participantEventSchema = z.object({
   scheduledAt: timestamp.nullable(), startedAt: timestamp.nullable(), completedAt: timestamp.nullable(), createdAt: timestamp, updatedAt: timestamp,
 });
 const patternSchema = z.object({
-  id: z.string(), roundId: z.string(), patternType: z.enum(['EARLY_5', 'TOP_LINE', 'MIDDLE_LINE', 'BOTTOM_LINE', 'FULL_HOUSE']),
+  id: z.string(), roundId: z.string(), patternType: z.enum(['EARLY_5', 'FOUR_CORNERS', 'TOP_LINE', 'MIDDLE_LINE', 'BOTTOM_LINE', 'FULL_HOUSE', 'SECOND_FULL_HOUSE']),
   enabled: z.boolean(), maxWinners: z.number(), status: z.enum(['OPEN', 'CLOSED']), createdAt: timestamp, updatedAt: timestamp,
 });
 export const participantRoundSchema = z.object({
