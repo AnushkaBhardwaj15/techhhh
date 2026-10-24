@@ -1,10 +1,20 @@
 .page {
-  min-height: calc(100vh - 65px);
-  padding: 32px 24px 64px;
-  background-color: var(--cream);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  color: var(--ink);
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
   box-sizing: border-box;
+  width: calc(100% - 32px);
+  max-width: 1200px;
+  margin: 24px auto;
+  min-height: 0;
+  padding: clamp(20px, 3vw, 36px);
+  background: var(--ice);
+  color: var(--ink);
+  border-radius: 16px;
 }
 
 .gameContainer {
@@ -22,22 +32,22 @@
 .dashboardBackBtn {
   background: var(--cream);
   color: var(--ink);
-  border: 2.5px solid var(--ink);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 9px 20px;
   font-size: 15px;
   font-weight: 950;
   font-family: var(--mono);
   cursor: pointer;
-  box-shadow: 3px 3px 0 var(--ink);
+  box-shadow: none;
   transition: all 0.12s ease;
 }
 
 .dashboardBackBtn:hover {
   background: var(--ink);
   color: var(--cream);
-  transform: translate(-1px, -1px);
-  box-shadow: 4px 4px 0 var(--ink);
+  transform: none;
+  box-shadow: none;
 }
 
 .gameTitleHeading {
@@ -49,12 +59,12 @@
 }
 
 .mainCard {
-  background-color: #ffffff;
-  border: 2.5px solid var(--ink);
-  border-top: 6px solid var(--coral);
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--cyan);
   border-radius: 16px;
   padding: clamp(24px, 4vw, 42px);
-  box-shadow: 6px 6px 0 var(--ink);
+  box-shadow: none;
   box-sizing: border-box;
 }
 
@@ -64,18 +74,18 @@
   align-items: center;
   margin-bottom: 36px;
   padding-bottom: 32px;
-  border-bottom: 2px solid var(--ink);
+  border-bottom: 1px solid var(--border);
 }
 
 .gameCodePill {
   display: inline-flex;
   align-items: center;
   gap: 12px;
-  background-color: #ffffff;
-  border: 2.5px solid var(--ink);
+  background-color: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 8px 24px;
-  box-shadow: 3px 3px 0 var(--ink);
+  box-shadow: none;
   margin-bottom: 22px;
 }
 
@@ -83,14 +93,14 @@
   font-family: var(--mono);
   font-size: 13px;
   font-weight: 800;
-  color: #4b5563;
+  color: var(--muted);
 }
 
 .gameCodeValue {
   font-family: var(--mono);
   font-size: 28px;
   font-weight: 950;
-  color: #d9483b;
+  color: var(--accent-ink);
   letter-spacing: 0.12em;
 }
 
@@ -112,11 +122,11 @@
 }
 
 .qrFrame {
-  background: #ffffff;
-  border: 3px solid var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 16px;
   padding: 16px;
-  box-shadow: 6px 6px 0 var(--ink);
+  box-shadow: none;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -126,7 +136,7 @@
 .qrInstruction {
   font-size: 14.5px;
   font-weight: 600;
-  color: #374151;
+  color: var(--muted);
   text-align: center;
   max-width: 520px;
   margin: 0 0 22px;
@@ -134,8 +144,8 @@
 }
 
 .lobbyTag {
-  background: #feebe8;
-  color: #c93b2d;
+  background: var(--cyan-soft);
+  color: var(--accent-ink);
   font-family: var(--mono);
   font-weight: 800;
   padding: 2px 7px;
@@ -148,11 +158,11 @@
   justify-content: center;
   flex-wrap: wrap;
   gap: 20px;
-  background: #fffdf8;
-  border: 2px solid var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 12px 26px;
-  box-shadow: 3px 3px 0 var(--ink);
+  box-shadow: none;
 }
 
 .statusGroup {
@@ -165,7 +175,7 @@
   font-family: var(--mono);
   font-size: 12px;
   font-weight: 800;
-  color: #4b5563;
+  color: var(--muted);
 }
 
 .statusBadge {
@@ -178,9 +188,9 @@
 }
 
 .status_ACTIVE {
-  background: #dcfce7;
-  color: #166534;
-  border-color: #166534;
+  background: var(--lime-soft);
+  color: var(--success-ink);
+  border-color: var(--success-ink);
 }
 
 .status_READY {
@@ -197,8 +207,8 @@
 
 .status_COMPLETED {
   background: #e2e8f0;
-  color: #475569;
-  border-color: #475569;
+  color: var(--muted);
+  border-color: var(--muted);
 }
 
 .actionsGroup {
@@ -210,48 +220,48 @@
 .startBtn {
   background-color: #22c55e;
   color: #052e16;
-  border: 2px solid var(--ink);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 9px 22px;
   font-size: 14px;
   font-weight: 950;
   font-family: var(--mono);
   cursor: pointer;
-  box-shadow: 2px 2px 0 var(--ink);
+  box-shadow: none;
   transition: all 0.12s ease;
 }
 
 .startBtn:hover {
   background-color: #16a34a;
-  color: #ffffff;
-  transform: translate(-1px, -1px);
-  box-shadow: 3px 3px 0 var(--ink);
+  color: var(--surface);
+  transform: none;
+  box-shadow: none;
 }
 
 .pauseBtn {
   background-color: #f59e0b;
   color: #451a03;
-  border: 2px solid var(--ink);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 9px 20px;
   font-size: 14px;
   font-weight: 950;
   font-family: var(--mono);
   cursor: pointer;
-  box-shadow: 2px 2px 0 var(--ink);
+  box-shadow: none;
 }
 
 .finishBtn {
-  background-color: #64748b;
-  color: #ffffff;
-  border: 2px solid var(--ink);
+  background-color: var(--muted);
+  color: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 9px 20px;
   font-size: 14px;
   font-weight: 950;
   font-family: var(--mono);
   cursor: pointer;
-  box-shadow: 2px 2px 0 var(--ink);
+  box-shadow: none;
 }
 
 /* ============================================================
@@ -291,7 +301,7 @@
   padding: 4px 10px;
   border: 1.5px solid var(--ink);
   border-radius: 4px;
-  box-shadow: 2px 2px 0 var(--ink);
+  box-shadow: none;
   letter-spacing: 0.05em;
 }
 
@@ -325,20 +335,22 @@
 
 .domainPill:hover {
   background: var(--forest);
-  color: #ffffff;
+  color: var(--surface);
 }
 
 .domainPillActive {
   background: var(--ink);
   color: var(--cream);
-  box-shadow: 2px 2px 0 var(--coral);
+  box-shadow: none;
 }
 
 .searchInput {
-  height: 38px;
-  min-width: 250px;
-  background-color: #ffffff;
-  border: 2px solid var(--ink);
+  height: 44px;
+  min-width: 0;
+  width: 100%;
+  margin-block: 12px;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 0 12px;
   font-size: 13.5px;
@@ -348,7 +360,7 @@
 
 .searchInput:focus {
   border-color: var(--coral);
-  box-shadow: 0 0 0 3px rgba(239, 128, 118, 0.35);
+  box-shadow: none;
 }
 
 .questionsList {
@@ -362,21 +374,22 @@
 
 /* EXACT FORMAT FROM IMAGE 3 */
 .questionItem {
-  background-color: #fffdf8;
-  border: 2px solid var(--ink);
+  background-color: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 10px;
   padding: 16px 20px;
-  box-shadow: 3px 3px 0 var(--ink);
+  box-shadow: none;
   transition: all 0.12s ease;
 }
 
 .questionItemDrawn {
-  background-color: #f0fdf4;
-  border-color: #166534;
+  background-color: var(--lime-soft);
+  border-color: var(--success-ink);
 }
 
 .itemHeader {
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-start;
   justify-content: space-between;
   gap: 14px;
@@ -394,7 +407,7 @@
   font-size: 11px;
   font-weight: 900;
   color: var(--forest);
-  background: rgba(49, 92, 83, 0.1);
+  background: rgba(8, 123, 139, 0.1);
   padding: 2px 6px;
   border-radius: 4px;
 }
@@ -410,16 +423,16 @@
 
 /* DOMAIN BADGE FROM IMAGE 3 */
 .domainBadge {
-  background: #ffffff;
+  background: var(--surface);
   color: var(--ink);
   font-family: var(--mono);
   font-size: 10.5px;
   font-weight: 900;
   letter-spacing: 0.08em;
   padding: 3px 10px;
-  border: 2px solid var(--ink);
+  border: 1px solid var(--border);
   border-radius: 999px;
-  box-shadow: 1.5px 1.5px 0 var(--ink);
+  box-shadow: none;
   flex-shrink: 0;
   text-transform: uppercase;
 }
@@ -439,7 +452,7 @@
   margin: 0;
   font-size: 14px;
   font-weight: 600;
-  color: #374151;
+  color: var(--muted);
   line-height: 1.4;
 }
 
@@ -469,20 +482,20 @@
   font-size: 11px;
   font-weight: 900;
   cursor: pointer;
-  box-shadow: 2px 2px 0 var(--ink);
+  box-shadow: none;
   transition: all 0.12s ease;
 }
 
 .callBtn:hover:not(:disabled) {
-  background: #ff9d92;
-  transform: translate(-1px, -1px);
-  box-shadow: 3px 3px 0 var(--ink);
+  background: var(--cyan-hover);
+  transform: none;
+  box-shadow: none;
 }
 
 .callBtnDrawn {
-  background: #dcfce7;
-  color: #166534;
-  border-color: #166534;
+  background: var(--lime-soft);
+  color: var(--success-ink);
+  border-color: var(--success-ink);
   cursor: default;
   box-shadow: none;
 }
@@ -496,5 +509,57 @@
   .filterBar {
     flex-direction: column;
     align-items: stretch;
+  }
+}
+
+.mainCard {
+  padding: clamp(16px, 3vw, 28px);
+  background: var(--surface);
+  border-radius: 12px;
+}
+.gameTitleHeading {
+  color: var(--accent-ink);
+}
+.navRow {
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.gameCodePill {
+  background: var(--navy);
+  border-color: var(--border-dark);
+  max-width: 100%;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.gameCodeLabel {
+  color: var(--muted-dark);
+}
+.gameCodeValue {
+  color: var(--cyan);
+}
+.copyBtn {
+  background: var(--navy-raised);
+  color: var(--ice);
+  border-color: var(--border-dark);
+}
+.qrFrame {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: white;
+}
+@media (max-width: 600px) {
+  .qrSection {
+    margin-bottom: 24px;
+    padding-bottom: 24px;
+  }
+  .gameCodePill {
+    padding: 12px;
+    gap: 8px;
+  }
+  .controlsBar {
+    gap: 10px;
+  }
+  .controlsBar > button {
+    flex: 1 1 100%;
   }
 }
