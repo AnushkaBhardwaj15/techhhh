@@ -37,7 +37,8 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   // Participant: get own ticket for current round
-  fastify.get('/participant/ticket', { preHandler: [requireParticipantToken] }, async (request) => {
+  fastify.get('/participant/ticket', { preHandler: [requireParticipantToken] }, async (request, reply) => {
+    reply.header('Cache-Control', 'private, max-age=30, must-revalidate');
     const query = getParticipantTicketQuerySchema.parse(request.query);
     try {
       const ticket = await ticketService.getParticipantTicket(

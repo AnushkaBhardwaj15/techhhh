@@ -14,7 +14,18 @@ import { roundRepository } from '../rounds/round.repository.ts';
 export function createClaimRoutes(winnerService: WinnerService): FastifyPluginAsync {
   return async (fastify) => {
   // Participant: Submit win claim
-  fastify.post('/participant/claims', { preHandler: [requireParticipantToken] }, async (request, reply) => {
+  fastify.post(
+    '/participant/claims',
+    {
+      preHandler: [requireParticipantToken],
+      config: {
+        rateLimit: {
+          max: process.env.NODE_ENV === 'test' ? 100_000 : 30,
+          timeWindow: 60_000,
+        },
+      },
+    },
+    async (request, reply) => {
     const body = submitClaimBodySchema.parse(request.body);
     const round = await roundRepository.findById(body.roundId);
     const eventId = round?.eventId || request.user!.eventId || 'e7bf4217-f212-4970-b3f1-e924e1782f25';

@@ -36,6 +36,8 @@ const ParticipantClaims = lazy(() => import('./features/participant/ParticipantC
 const ParticipantResults = lazy(() => import('./features/participant/ParticipantResults').then((module) => ({ default: module.ParticipantResults })));
 const ParticipantProfile = lazy(() => import('./features/participant/ParticipantProfile').then((module) => ({ default: module.ParticipantProfile })));
 const LiveDisplay = lazy(() => import('./features/live/LiveDisplay').then((module) => ({ default: module.LiveDisplay })));
+const NotFoundPage = lazy(() => import('./features/error/NotFoundPage').then((module) => ({ default: module.NotFoundPage })));
+const ForbiddenPage = lazy(() => import('./features/error/ForbiddenPage').then((module) => ({ default: module.ForbiddenPage })));
 
 function ProtectedLayout({ allowed }: { allowed: AuthenticatedUser['role'][] }) {
   const location = useLocation();
@@ -157,7 +159,9 @@ function AppRoutes() {
             <Route path="system" element={<SuperAdminSystemRoute />} />
           </Route>
         </Route>
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="/404" element={<NotFoundPage />} />
+        <Route path="/403" element={<ForbiddenPage />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </Suspense>
   );

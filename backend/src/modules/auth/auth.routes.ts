@@ -46,18 +46,29 @@ export function createAuthRoutes({ onSessionRevoked }: AuthRouteDependencies = {
       return { user: result.user, roundId: result.roundId, ticketId: result.ticketId };
     });
 
-    fastify.post('/auth/login', async (request, reply) => {
-      const body = loginSchema.parse(request.body);
-      const result = await authService.login({
-        email: body.email,
-        password: body.password,
-        ip: request.ip,
-        userAgent: request.headers['user-agent'],
-        requestId: request.id,
-      });
-      reply.setCookie(SESSION_COOKIE_NAME, result.token, getSessionCookieOptions());
-      return { user: result.user };
-    });
+    fastify.post(
+      '/auth/login',
+      {
+        config: {
+          rateLimit: {
+            max: process.env.NODE_ENV === 'test' ? 100_000 : 10,
+            timeWindow: 60_000,
+          },
+        },
+      },
+      async (request, reply) => {
+        const body = loginSchema.parse(request.body);
+        const result = await authService.login({
+          email: body.email,
+          password: body.password,
+          ip: request.ip,
+          userAgent: request.headers['user-agent'],
+          requestId: request.id,
+        });
+        reply.setCookie(SESSION_COOKIE_NAME, result.token, getSessionCookieOptions());
+        return { user: result.user };
+      }
+    );
 
     fastify.post('/auth/logout', async (request, reply) => {
       const token = request.cookies[SESSION_COOKIE_NAME];
