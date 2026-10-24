@@ -133,6 +133,31 @@ function ReferenceParticipantGame({ id, user: _user }: { id: string; user: Authe
               <strong>{game.score}</strong>
             </div>
           </header>
+          {game.status === 'PAUSED' && (
+            <div
+              role="status"
+              style={{
+                background: 'rgba(255, 183, 77, 0.15)',
+                border: '1px solid #ffb74d',
+                borderRadius: '12px',
+                padding: '16px 20px',
+                marginBottom: '20px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '14px',
+              }}
+            >
+              <span style={{ fontSize: '28px' }} aria-hidden="true">⏸️</span>
+              <div>
+                <strong style={{ color: '#ffb74d', fontSize: '16px', display: 'block' }}>
+                  Event Paused by Host
+                </strong>
+                <p style={{ margin: '4px 0 0 0', color: '#e2e8f0', fontSize: '14px', lineHeight: 1.4 }}>
+                  The host has temporarily paused the event. Calls and prize claims are on hold. Your ticket and marks are safely saved — live play will resume automatically as soon as the host resumes!
+                </p>
+              </div>
+            </div>
+          )}
           {latest && (
             <ReferenceQuestionCard
               draw={{

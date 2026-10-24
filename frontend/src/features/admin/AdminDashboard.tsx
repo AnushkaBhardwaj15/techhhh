@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
-import { createPlayRound, validatePlayBank } from '../../lib/api/play';
+import { createPlayRound, validatePlayBank, commandPlayRound } from '../../lib/api/play';
 import type { AuthenticatedUser } from '../../types/auth';
 import { useAdminDashboard } from './useAdminDashboard';
 import {
@@ -39,6 +39,22 @@ export function AdminDashboard() {
   const [error, setError] = useState('');
   const [creationKey] = useState(() => crypto.randomUUID());
   const [games, setGames] = useState<SyncGameRecord[]>([]);
+  const [commandingId, setCommandingId] = useState<string | null>(null);
+
+  async function handleGameCommand(gameId: string, action: 'start' | 'pause' | 'resume') {
+    if (commandingId) return;
+    setCommandingId(gameId);
+    setError('');
+    try {
+      await commandPlayRound(gameId, { action }, crypto.randomUUID());
+      const { games: all } = await fetchActiveGame();
+      setGames(all);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not update event state.');
+    } finally {
+      setCommandingId(null);
+    }
+  }
 
   // Excel Question Import state
   const [showImport, setShowImport] = useState(false);
@@ -147,6 +163,80 @@ export function AdminDashboard() {
           </dl>
         </section>
       )}
+
+      {/* Live Event Quick Controls Banner */}
+      {(() => {
+        const liveGame = games.find((g) => g.status === 'ACTIVE' || g.status === 'PAUSED');
+        if (!liveGame) return null;
+        const isPaused = liveGame.status === 'PAUSED';
+        return (
+          <div
+            style={{
+              background: isPaused ? 'rgba(255, 183, 77, 0.12)' : 'rgba(0, 229, 255, 0.12)',
+              border: `1px solid ${isPaused ? '#ffb74d' : 'var(--cyan, #00e5ff)'}`,
+              borderRadius: '12px',
+              padding: '16px 20px',
+              marginBottom: '20px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '12px',
+            }}
+          >
+            <div>
+              <span
+                style={{
+                  display: 'inline-block',
+                  padding: '3px 8px',
+                  borderRadius: '4px',
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  letterSpacing: '0.08em',
+                  background: isPaused ? '#ffb74d' : 'var(--lime, #a3ff4b)',
+                  color: '#0b1523',
+                  marginBottom: '4px',
+                }}
+              >
+                {isPaused ? '⏸ EVENT PAUSED' : '● LIVE EVENT IN PROGRESS'}
+              </span>
+              <h2 style={{ margin: '2px 0 0 0', fontSize: '18px', color: '#fff' }}>
+                {liveGame.name} (Code: {liveGame.code})
+              </h2>
+            </div>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              {isPaused ? (
+                <button
+                  type="button"
+                  className={styles.createGameBtn}
+                  style={{ background: 'var(--cyan, #00e5ff)', color: '#0b1523', fontWeight: 700 }}
+                  onClick={() => void handleGameCommand(liveGame.id, 'resume')}
+                  disabled={commandingId === liveGame.id}
+                >
+                  ▶ Resume Event
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className={styles.createGameBtn}
+                  style={{ background: '#ffb74d', color: '#0b1523', fontWeight: 700 }}
+                  onClick={() => void handleGameCommand(liveGame.id, 'pause')}
+                  disabled={commandingId === liveGame.id}
+                >
+                  ⏸ Pause Event
+                </button>
+              )}
+              <button
+                type="button"
+                className={styles.createGameBtn}
+                onClick={() => handleOpenGame(liveGame)}
+              >
+                Open Game Control →
+              </button>
+            </div>
+          </div>
+        );
+      })()}
 
       <div className={styles.dashboardCard}>
         {/* Top Header Row matching Image 1: Left: Games played till now-, Right: +Create Game & Import */}
@@ -320,6 +410,39 @@ export function AdminDashboard() {
                 </div>
 
                 <div className={styles.gameActionCol}>
+                  {game.status === 'READY' && (
+                    <button
+                      type="button"
+                      className={styles.manageGameBtn}
+                      style={{ background: 'var(--lime, #a3ff4b)', color: '#0b1523', fontWeight: 700 }}
+                      onClick={() => void handleGameCommand(game.id, 'start')}
+                      disabled={commandingId === game.id}
+                    >
+                      {commandingId === game.id ? 'Starting…' : '▶ Start Event'}
+                    </button>
+                  )}
+                  {game.status === 'ACTIVE' && (
+                    <button
+                      type="button"
+                      className={styles.manageGameBtn}
+                      style={{ background: '#ffb74d', color: '#0b1523', fontWeight: 700 }}
+                      onClick={() => void handleGameCommand(game.id, 'pause')}
+                      disabled={commandingId === game.id}
+                    >
+                      {commandingId === game.id ? 'Pausing…' : '⏸ Pause Event'}
+                    </button>
+                  )}
+                  {game.status === 'PAUSED' && (
+                    <button
+                      type="button"
+                      className={styles.manageGameBtn}
+                      style={{ background: 'var(--cyan, #00e5ff)', color: '#0b1523', fontWeight: 700 }}
+                      onClick={() => void handleGameCommand(game.id, 'resume')}
+                      disabled={commandingId === game.id}
+                    >
+                      {commandingId === game.id ? 'Resuming…' : '▶ Resume Event'}
+                    </button>
+                  )}
                   <button
                     type="button"
                     className={styles.manageGameBtn}

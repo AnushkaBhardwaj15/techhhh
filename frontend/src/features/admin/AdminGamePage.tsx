@@ -358,13 +358,47 @@ export function AdminGamePage() {
               })}
             </section>
             <section className={playStyles.panel}>
-              <h2>Winners and points</h2>
+              <h2>Prize Tiers & Winners</h2>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px', marginBottom: '16px' }}>
+                {game.patterns.map((p) => {
+                  const patternLabels: Record<string, string> = {
+                    EARLY_5: 'Early 5 (Any 5)',
+                    FOUR_CORNERS: 'Four Corners',
+                    TOP_LINE: 'Top Line (Row 1)',
+                    MIDDLE_LINE: 'Middle Line (Row 2)',
+                    BOTTOM_LINE: 'Bottom Line (Row 3)',
+                    FULL_HOUSE: 'First Full House',
+                    SECOND_HOUSE: 'Second Full House',
+                  };
+                  return (
+                    <div
+                      key={p.pattern}
+                      style={{
+                        padding: '10px 14px',
+                        borderRadius: '8px',
+                        background: p.closed ? 'rgba(163, 255, 75, 0.12)' : 'rgba(255, 255, 255, 0.04)',
+                        border: `1px solid ${p.closed ? '#a3ff4b' : 'rgba(255, 255, 255, 0.1)'}`,
+                      }}
+                    >
+                      <strong style={{ display: 'block', fontSize: '13px', color: p.closed ? '#a3ff4b' : '#fff' }}>
+                        {patternLabels[p.pattern] ?? p.pattern}
+                      </strong>
+                      <span style={{ fontSize: '11px', color: p.closed ? '#a3ff4b' : '#94a3b8' }}>
+                        {p.closed ? '✓ Awarded' : '○ Still available'}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
               {game.standings.length ? (
-                game.standings.map((row, index) => (
-                  <p key={index}>
-                    {row.name} — {row.points} points
-                  </p>
-                ))
+                <div>
+                  <h3 style={{ fontSize: '14px', color: '#00e5ff', margin: '0 0 8px 0' }}>Verified Winners:</h3>
+                  {game.standings.map((row, index) => (
+                    <p key={index} style={{ margin: '4px 0', fontSize: '13px' }}>
+                      🏆 <strong>{row.name}</strong>
+                    </p>
+                  ))}
+                </div>
               ) : (
                 <p>No prizes awarded yet.</p>
               )}

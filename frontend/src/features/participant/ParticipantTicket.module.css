@@ -476,3 +476,146 @@
     display: block;
   }
 }
+
+.viewModeBar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+
+.viewModeToggle {
+  display: inline-flex;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 3px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.viewModeBtn {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font: 700 11px/1.2 var(--mono);
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.viewModeBtn:hover {
+  color: var(--cream, #fff);
+}
+
+.viewModeBtnActive {
+  background: var(--cyan);
+  color: #0b1523;
+  font-weight: 750;
+}
+
+/* Vertical Mode Styles */
+.verticalGrid {
+  min-width: 0 !important;
+  width: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 16px !important;
+  border-spacing: 0 !important;
+}
+
+.verticalGrid tbody {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 16px !important;
+  width: 100% !important;
+}
+
+.verticalGrid tr {
+  display: flex !important;
+  flex-direction: column !important;
+  background: rgba(15, 23, 42, 0.6) !important;
+  border: 1px solid rgba(0, 229, 255, 0.2) !important;
+  border-radius: 12px !important;
+  padding: 12px 14px !important;
+  gap: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+}
+
+.verticalGrid tr::before {
+  content: attr(data-row-title);
+  display: block;
+  font: 700 12px/1.2 var(--mono);
+  color: var(--cyan);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 4px;
+}
+
+.verticalGrid td.empty {
+  display: none !important;
+}
+
+.verticalGrid td.playable,
+.verticalGrid td.marked,
+.verticalGrid td.winning {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  height: auto !important;
+  padding: 10px 14px !important;
+  border-radius: 8px !important;
+  box-sizing: border-box !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  transition: transform 0.1s ease, border-color 0.15s ease;
+}
+
+.verticalGrid td.marked,
+.verticalGrid td.winning {
+  background: var(--lime) !important;
+  color: var(--navy) !important;
+  border-color: var(--lime) !important;
+}
+
+.verticalGrid .cellContent {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  text-align: left !important;
+  width: 100% !important;
+}
+
+.verticalGrid .cellContent .position {
+  font-size: 10px !important;
+  margin-bottom: 0 !important;
+  min-width: 50px !important;
+  color: var(--muted) !important;
+}
+
+.verticalGrid td.marked .cellContent .position,
+.verticalGrid td.winning .cellContent .position {
+  color: #1e3a1e !important;
+}
+
+.verticalGrid .cellContent .cellText {
+  flex: 1 !important;
+  font-size: 15px !important;
+  font-weight: 750 !important;
+  text-align: left !important;
+  letter-spacing: -0.01em !important;
+}
+
+.verticalGrid .cellContent .markButton {
+  width: auto !important;
+  min-width: 90px !important;
+  min-height: 42px !important;
+  margin-top: 0 !important;
+  padding: 8px 16px !important;
+  border-radius: 6px !important;
+  font-size: 12px !important;
+  font-weight: 750 !important;
+  letter-spacing: 0.04em !important;
+}
+
