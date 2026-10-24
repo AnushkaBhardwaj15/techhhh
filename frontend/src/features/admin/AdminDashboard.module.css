@@ -12,9 +12,9 @@
   margin: 24px auto;
   min-height: 0;
   padding: clamp(20px, 3vw, 36px);
-  background: var(--ice);
-  color: var(--ink);
-  border-radius: 16px;
+  background: var(--color-parchment, #F0E8D9);
+  color: var(--color-espresso, #302820);
+  border-radius: var(--radius-sm, 4px);
 }
 
 /* ============================================================
@@ -23,12 +23,14 @@
 .dashboardCard {
   max-width: 960px;
   margin: 0 auto;
-  background-color: var(--surface);
-  border: 1px solid var(--border);
-  border-top: 3px solid var(--cyan);
-  border-radius: 16px;
+  background-color: var(--color-paper, #FAF7F0);
+  border: 2px solid #302820;
+  border-color: var(--color-espresso, #302820);
+  border-top: 4px solid #8C4545;
+  border-top-color: var(--color-oxblood, #8C4545);
+  border-radius: var(--radius-sm, 4px);
   padding: clamp(24px, 4vw, 38px);
-  box-shadow: none;
+  box-shadow: 4px 4px 0 var(--color-espresso, #302820);
   box-sizing: border-box;
 }
 
@@ -39,43 +41,46 @@
   flex-wrap: wrap;
   gap: 16px;
   margin-bottom: 28px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid #BFB29F;
+  border-bottom-color: var(--color-border-muted, #BFB29F);
   padding-bottom: 20px;
 }
 
 .titleGamesPlayed {
   font-size: 22px;
-  font-weight: 950;
-  color: var(--ink);
+  font-weight: 850;
+  color: var(--color-espresso, #302820);
   margin: 0;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  font-family: var(--display);
 }
 
 .createGameBtn {
-  background-color: var(--coral);
-  color: var(--ink);
-  border: 1px solid var(--border);
-  border-radius: 10px;
+  background-color: var(--color-oxblood, #8C4545);
+  color: var(--color-paper, #FAF7F0);
+  border: 2px solid #302820;
+  border-color: var(--color-espresso, #302820);
+  border-radius: var(--radius-xs, 2px);
   padding: 10px 24px;
-  font-size: 16px;
-  font-weight: 950;
+  font-size: 13px;
+  font-weight: 850;
+  font-family: var(--mono);
   letter-spacing: 0.05em;
   cursor: pointer;
-  box-shadow: none;
+  box-shadow: 2px 2px 0 var(--color-espresso, #302820);
   transition: all 0.12s ease;
   text-transform: uppercase;
 }
 
 .createGameBtn:hover {
-  background-color: var(--cyan-hover);
-  transform: none;
-  box-shadow: none;
+  background-color: #733737;
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 var(--color-espresso, #302820);
 }
 
 .createGameBtn:active {
-  transform: none;
-  box-shadow: none;
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 var(--color-espresso, #302820);
 }
 
 .gamesList {
@@ -91,9 +96,10 @@
   flex-wrap: wrap;
   gap: 16px;
   padding: 18px 22px;
-  background-color: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
+  background-color: var(--color-parchment, #F0E8D9);
+  border: 1.5px solid #302820;
+  border-color: var(--color-espresso, #302820);
+  border-radius: var(--radius-xs, 2px);
   box-shadow: none;
   transition:
     transform 0.12s ease,
@@ -119,20 +125,23 @@
 }
 
 .gameSeqBadge {
-  background: var(--forest);
-  color: var(--cream);
+  background: var(--color-espresso, #302820);
+  color: var(--color-paper, #FAF7F0);
   font-family: var(--mono);
   font-size: 10px;
   font-weight: 900;
   padding: 3px 7px;
-  border: 1.5px solid var(--ink);
+  border: 1px solid #302820;
+  border-color: var(--color-espresso, #302820);
+  border-radius: var(--radius-xs, 2px);
   letter-spacing: 0.05em;
 }
 
 .gameName {
   font-size: 18px;
-  font-weight: 900;
-  color: var(--ink);
+  font-weight: 850;
+  color: var(--color-espresso, #302820);
+  letter-spacing: -0.01em;
 }
 
 .gameMetaRow {
@@ -146,11 +155,12 @@
   font-family: var(--mono);
   font-size: 12px;
   font-weight: 900;
-  background: var(--cyan-soft);
-  color: var(--accent-ink);
+  background: var(--color-sandstone, #DCD0BD);
+  color: var(--color-espresso, #302820);
   padding: 3px 8px;
-  border-radius: 4px;
-  border: 1px solid var(--coral);
+  border-radius: var(--radius-xs, 2px);
+  border: 1px solid #302820;
+  border-color: var(--color-espresso, #302820);
 }
 
 .statusPill {
@@ -158,8 +168,9 @@
   font-size: 11px;
   font-weight: 800;
   padding: 3px 8px;
-  border-radius: 4px;
-  border: 1px solid var(--ink);
+  border-radius: var(--radius-xs, 2px);
+  border: 1px solid #302820;
+  border-color: var(--color-espresso, #302820);
   text-transform: uppercase;
 }
 
@@ -200,10 +211,11 @@
 }
 
 .manageGameBtn {
-  background: var(--ink);
-  color: var(--cream);
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  background: var(--color-espresso, #302820);
+  color: var(--color-paper, #FAF7F0);
+  border: 1.5px solid #302820;
+  border-color: var(--color-espresso, #302820);
+  border-radius: var(--radius-xs, 2px);
   padding: 8px 18px;
   font-family: var(--mono);
   font-size: 12px;
@@ -214,8 +226,8 @@
 }
 
 .manageGameBtn:hover {
-  background: var(--forest);
-  color: var(--surface);
+  background: #42382E;
+  border-color: var(--color-oxblood, #8C4545);
   transform: none;
   box-shadow: none;
 }
@@ -232,29 +244,31 @@
 .emptyText {
   font-size: 18px;
   font-weight: 800;
-  color: var(--muted);
+  color: var(--color-espresso, #302820);
   margin: 0 0 20px;
 }
 
 .createGameBtnCenter {
-  background-color: var(--coral);
-  color: var(--ink);
-  border: 1px solid var(--border);
-  border-radius: 12px;
+  background-color: var(--color-oxblood, #8C4545);
+  color: var(--color-paper, #FAF7F0);
+  border: 2px solid #302820;
+  border-color: var(--color-espresso, #302820);
+  border-radius: var(--radius-xs, 2px);
   padding: 14px 36px;
-  font-size: 18px;
-  font-weight: 950;
-  letter-spacing: 0.06em;
+  font-size: 15px;
+  font-weight: 850;
+  font-family: var(--mono);
+  letter-spacing: 0.05em;
   cursor: pointer;
-  box-shadow: none;
+  box-shadow: 2px 2px 0 var(--color-espresso, #302820);
   transition: all 0.12s ease;
   text-transform: uppercase;
 }
 
 .createGameBtnCenter:hover {
-  background-color: var(--cyan-hover);
-  transform: none;
-  box-shadow: none;
+  background-color: #733737;
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 var(--color-espresso, #302820);
 }
 
 /* ============================================================

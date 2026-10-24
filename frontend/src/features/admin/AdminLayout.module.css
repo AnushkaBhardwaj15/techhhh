@@ -2,18 +2,20 @@
   display: grid;
   grid-template-columns: 208px minmax(0, 1fr);
   min-height: calc(100dvh - 74px);
+  background: var(--color-parchment, #F0E8D9);
 }
 .nav {
-  background: var(--navy);
-  color: var(--ice);
+  background: var(--color-espresso, #302820);
+  color: var(--color-sandstone, #DCD0BD);
   padding: 28px 16px;
-  border-right: 1px solid var(--border-dark);
+  border-right: 2px solid #241F1A;
+  border-right-color: var(--color-espresso-deep, #241F1A);
 }
 .brand {
   margin: 0 0 22px;
-  font: 700 10px/1.4 var(--mono);
+  font: 750 10px/1.4 var(--mono);
   letter-spacing: 0.12em;
-  color: var(--muted-dark);
+  color: var(--color-sandstone, #DCD0BD);
 }
 .navList {
   display: grid;
@@ -28,30 +30,33 @@
   min-height: 44px;
   padding: 11px 12px;
   border: 1px solid transparent;
-  border-radius: 7px;
-  color: var(--muted-dark);
-  font-size: 14px;
-  font-weight: 600;
+  border-radius: var(--radius-xs, 2px);
+  color: var(--color-sandstone, #DCD0BD);
+  font-size: 13.5px;
+  font-weight: 650;
   text-decoration: none;
+  transition: all 0.1s ease;
 }
 .navLink:hover {
-  background: var(--navy-raised);
-  color: var(--ice);
+  background: var(--color-espresso-deep, #241F1A);
+  color: var(--color-paper, #FAF7F0);
 }
 .navLink:focus-visible {
-  outline: 2px solid var(--cyan);
+  outline: 2px solid var(--color-oxblood, #8C4545);
   outline-offset: 2px;
 }
 .active {
-  background: var(--navy-raised);
-  border-color: var(--border-dark);
-  color: var(--cyan);
-  box-shadow: inset 3px 0 var(--cyan);
+  background: var(--color-espresso-deep, #241F1A);
+  border: 1px solid #BFB29F;
+  border-color: var(--color-border-muted, #BFB29F);
+  color: var(--color-paper, #FAF7F0);
+  font-weight: 800;
+  box-shadow: inset 4px 0 var(--color-oxblood, #8C4545);
 }
 .content {
   min-width: 0;
-  padding: 24px;
-  background: var(--navy);
+  padding: clamp(16px, 2.5vw, 32px);
+  background: var(--color-parchment, #F0E8D9);
 }
 @media (max-width: 900px) {
   .layout {

@@ -12,9 +12,9 @@
   margin: 24px auto;
   min-height: 0;
   padding: clamp(20px, 3vw, 36px);
-  background: var(--ice);
-  color: var(--ink);
-  border-radius: 16px;
+  background: var(--color-parchment, #F0E8D9);
+  color: var(--color-espresso, #302820);
+  border-radius: var(--radius-sm, 4px);
 }
 
 .gameContainer {
@@ -30,13 +30,14 @@
 }
 
 .dashboardBackBtn {
-  background: var(--cream);
-  color: var(--ink);
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  background: var(--color-paper, #FAF7F0);
+  color: var(--color-espresso, #302820);
+  border: 1.5px solid #302820;
+  border-color: var(--color-espresso, #302820);
+  border-radius: var(--radius-xs, 2px);
   padding: 9px 20px;
-  font-size: 15px;
-  font-weight: 950;
+  font-size: 13px;
+  font-weight: 850;
   font-family: var(--mono);
   cursor: pointer;
   box-shadow: none;
@@ -44,27 +45,29 @@
 }
 
 .dashboardBackBtn:hover {
-  background: var(--ink);
-  color: var(--cream);
+  background: var(--color-espresso, #302820);
+  color: var(--color-paper, #FAF7F0);
   transform: none;
   box-shadow: none;
 }
 
 .gameTitleHeading {
-  font-size: 17px;
-  font-weight: 950;
-  font-family: var(--mono);
-  color: var(--forest);
-  letter-spacing: 0.04em;
+  font-size: 18px;
+  font-weight: 850;
+  font-family: var(--display);
+  color: var(--color-espresso, #302820);
+  letter-spacing: -0.01em;
 }
 
 .mainCard {
-  background-color: var(--surface);
-  border: 1px solid var(--border);
-  border-top: 3px solid var(--cyan);
-  border-radius: 16px;
+  background-color: var(--color-paper, #FAF7F0);
+  border: 2px solid #302820;
+  border-color: var(--color-espresso, #302820);
+  border-top: 4px solid #8C4545;
+  border-top-color: var(--color-oxblood, #8C4545);
+  border-radius: var(--radius-sm, 4px);
   padding: clamp(24px, 4vw, 42px);
-  box-shadow: none;
+  box-shadow: 4px 4px 0 var(--color-espresso, #302820);
   box-sizing: border-box;
 }
 
@@ -81,9 +84,10 @@
   display: inline-flex;
   align-items: center;
   gap: 12px;
-  background-color: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
+  background-color: var(--color-sandstone, #DCD0BD);
+  border: 1.5px solid #302820;
+  border-color: var(--color-espresso, #302820);
+  border-radius: var(--radius-xs, 2px);
   padding: 8px 24px;
   box-shadow: none;
   margin-bottom: 22px;
@@ -93,22 +97,23 @@
   font-family: var(--mono);
   font-size: 13px;
   font-weight: 800;
-  color: var(--muted);
+  color: var(--color-espresso, #302820);
 }
 
 .gameCodeValue {
   font-family: var(--mono);
   font-size: 28px;
   font-weight: 950;
-  color: var(--accent-ink);
+  color: var(--color-oxblood, #8C4545);
   letter-spacing: 0.12em;
 }
 
 .copyBtn {
-  background: var(--cream);
-  color: var(--ink);
-  border: 1.5px solid var(--ink);
-  border-radius: 6px;
+  background: var(--color-paper, #FAF7F0);
+  color: var(--color-espresso, #302820);
+  border: 1px solid #302820;
+  border-color: var(--color-espresso, #302820);
+  border-radius: var(--radius-xs, 2px);
   padding: 4px 10px;
   font-family: var(--mono);
   font-size: 11px;
@@ -117,8 +122,8 @@
 }
 
 .copyBtn:hover {
-  background: var(--ink);
-  color: var(--cream);
+  background: var(--color-espresso, #302820);
+  color: var(--color-paper, #FAF7F0);
 }
 
 .qrFrame {
