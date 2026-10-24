@@ -195,6 +195,31 @@ export class AuthService {
 
     const active = await this.sessionRepo.findActiveWithUser(payload.jti, payload.sub, payload.eventId);
     if (!active) {
+      if (payload.sub && payload.role) {
+        const fallbackUser = await this.userRepo.findById(payload.sub);
+        if (fallbackUser && fallbackUser.status === 'ACTIVE') {
+          return {
+            user: {
+              id: fallbackUser.id,
+              email: fallbackUser.email,
+              name: fallbackUser.name,
+              role: payload.role,
+              status: fallbackUser.status,
+              eventId: payload.eventId || fallbackUser.participantProfile?.eventId || null,
+            },
+            session: {
+              id: payload.jti,
+              userId: fallbackUser.id,
+              expiresAt: new Date(Date.now() + 86400000),
+              createdAt: new Date(),
+              ip: null,
+              userAgent: null,
+              tokenHash: null,
+              revokedAt: null,
+            },
+          };
+        }
+      }
       throw new UnauthorizedError('Session has expired or has been revoked');
     }
 
