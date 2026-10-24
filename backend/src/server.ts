@@ -32,10 +32,11 @@ async function main() {
   process.on('SIGINT', () => shutdown('SIGINT'));
 
   try {
-    await app.listen({ port: env.PORT, host: env.HOST });
+    const listenHost = process.env.NODE_ENV === 'production' || process.env.RENDER ? '0.0.0.0' : (env.HOST || '0.0.0.0');
+    await app.listen({ port: env.PORT, host: listenHost });
     app.log.info(
       { config: getSafeEnv(env) },
-      `Tech Tombola backend listening on http://${env.HOST}:${env.PORT}`
+      `Tech Tombola backend listening on http://${listenHost}:${env.PORT}`
     );
   } catch (err) {
     app.log.error({ err }, 'Failed to start server');

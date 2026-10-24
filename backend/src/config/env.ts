@@ -5,7 +5,15 @@ const envSchema = z
   .object({
     NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
     PORT: z.coerce.number().int().min(1, 'Port must be between 1 and 65535').max(65535, 'Port must be between 1 and 65535').default(3000),
-    HOST: z.string().default('0.0.0.0'),
+    HOST: z
+      .string()
+      .default('0.0.0.0')
+      .transform((val) => {
+        if (process.env.NODE_ENV === 'production' || process.env.RENDER) {
+          return '0.0.0.0';
+        }
+        return val || '0.0.0.0';
+      }),
     DATABASE_URL: z
       .string()
       .min(1, 'DATABASE_URL is required')
