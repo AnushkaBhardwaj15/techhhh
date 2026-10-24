@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export const submitClaimBodySchema = z.object({
   roundId: z.string().uuid(),
-  pattern: z.enum(['EARLY_5', 'TOP_LINE', 'MIDDLE_LINE', 'BOTTOM_LINE', 'FULL_HOUSE']),
+  pattern: z.enum(['EARLY_5', 'FOUR_CORNERS', 'TOP_LINE', 'MIDDLE_LINE', 'BOTTOM_LINE', 'FULL_HOUSE', 'SECOND_FULL_HOUSE']),
 });
 
 export const listClaimsQuerySchema = z.object({

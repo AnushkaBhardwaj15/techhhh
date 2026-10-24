@@ -110,7 +110,7 @@ export class LiveReadRepository implements ILiveReadRepository {
   async listDraws(eventId: string, roundId: string): Promise<LiveDrawRecord[]> {
     try {
       const rows = await getDb()
-        .select({ id: draws.id, roundId: draws.roundId, sequenceNumber: draws.sequenceNumber, drawMode: draws.drawMode, questionText: draws.questionText, keyValue: draws.keyValue, drawnAt: draws.drawnAt })
+        .select({ id: draws.id, roundId: draws.roundId, sequenceNumber: draws.sequenceNumber, drawMode: draws.drawMode, questionText: draws.questionText, keyValue: sql<string>`CASE WHEN draws.answer_revealed THEN ${draws.keyValue} ELSE '' END`, drawnAt: draws.drawnAt })
         .from(draws)
         .innerJoin(rounds, eq(draws.roundId, rounds.id))
         .where(and(eq(draws.roundId, roundId), eq(rounds.eventId, eventId)))

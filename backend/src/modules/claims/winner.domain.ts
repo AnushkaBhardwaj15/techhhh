@@ -2,10 +2,12 @@ import { ConflictError, UnprocessableEntityError } from '../../shared/errors/ind
 
 export type WinningPatternType =
   | 'EARLY_5'
+  | 'FOUR_CORNERS'
   | 'TOP_LINE'
   | 'MIDDLE_LINE'
   | 'BOTTOM_LINE'
-  | 'FULL_HOUSE';
+  | 'FULL_HOUSE'
+  | 'SECOND_FULL_HOUSE';
 
 export interface TicketCellEvaluationInput {
   rowIndex: number;
@@ -153,6 +155,9 @@ export function evaluatePattern(
       return isLineCompleted(cells, 1, drawnKeyIds);
     case 'BOTTOM_LINE':
       return isLineCompleted(cells, 2, drawnKeyIds);
+    case 'FOUR_CORNERS':
+      return [ [0,0], [0,8], [2,0], [2,8] ].every(([r,c]) => cells.some(cell => cell.rowIndex === r && cell.colIndex === c && drawnKeyIds.has(cell.keyId)));
+    case 'SECOND_FULL_HOUSE':
     case 'FULL_HOUSE':
       return isFullHouse(cells, drawnKeyIds);
     default:
@@ -196,6 +201,7 @@ export function selectWinningCellIds(
     MIDDLE_LINE: 1,
     BOTTOM_LINE: 2,
   };
+  if (patternType === 'FOUR_CORNERS') return cells.filter(cell => (cell.rowIndex === 0 || cell.rowIndex === 2) && (cell.colIndex === 0 || cell.colIndex === 8)).map(cell => cell.cellId);
   const rowIndex = rowIndexByPattern[patternType];
   return cells
     .filter((cell) => rowIndex === undefined || cell.rowIndex === rowIndex)

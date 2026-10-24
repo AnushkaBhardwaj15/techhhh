@@ -178,7 +178,7 @@ export async function seed() {
   }
 
   // 6. Ensure Patterns for Round
-  const patternTypes = ['EARLY_5', 'TOP_LINE', 'MIDDLE_LINE', 'BOTTOM_LINE', 'FULL_HOUSE'];
+  const patternTypes = ['EARLY_5', 'FOUR_CORNERS', 'TOP_LINE', 'MIDDLE_LINE', 'BOTTOM_LINE', 'FULL_HOUSE', 'SECOND_FULL_HOUSE'];
   for (const pt of patternTypes) {
     const existing = await db.select().from(roundPatterns).where(eq(roundPatterns.roundId, roundId));
     if (!existing.some((p) => p.patternType === pt)) {

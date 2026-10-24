@@ -19,6 +19,7 @@ import type {
 import { getSharedActiveGame } from './activeGameStore.ts';
 
 export interface IRoundRepository {
+  isReferenceRound?(id: string): Promise<boolean>;
   create(roundData: InsertRound, patterns: PatternConfig[], tx?: any): Promise<RoundSummary>;
   findById(id: string, tx?: any): Promise<RoundSummary | null>;
   findByEventAndSequence(eventId: string, sequenceNumber: number, tx?: any): Promise<RoundSummary | null>;
@@ -38,6 +39,10 @@ export interface IRoundRepository {
 }
 
 export class RoundRepository implements IRoundRepository {
+  async isReferenceRound(id: string): Promise<boolean> {
+    const result = await getDb().execute(sql`SELECT id FROM rounds WHERE id=${id} AND game_code IS NOT NULL`);
+    return result.length > 0;
+  }
   private getClient(tx?: any) {
     return tx || getDb();
   }
@@ -120,7 +125,7 @@ export class RoundRepository implements IRoundRepository {
 
     const active = getSharedActiveGame();
     if (id === active.id || !id) {
-      const patternTypes = ['EARLY_5', 'TOP_LINE', 'MIDDLE_LINE', 'BOTTOM_LINE', 'FULL_HOUSE'] as const;
+      const patternTypes = ['EARLY_5', 'FOUR_CORNERS', 'TOP_LINE', 'MIDDLE_LINE', 'BOTTOM_LINE', 'FULL_HOUSE', 'SECOND_FULL_HOUSE'] as const;
       return {
         id: active.id,
         eventId: 'e7bf4217-f212-4970-b3f1-e924e1782f25',

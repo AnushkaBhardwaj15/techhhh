@@ -42,6 +42,7 @@ export class DrawService {
     rng?: (count: number) => number;
   }): Promise<{ draw: DrawDto }> {
     const { actorId, roundId, idempotencyKey, rng } = params;
+    if(await this.roundRepo.isReferenceRound?.(roundId))throw new ConflictError('Use the live reference round controls for calls and reveals.');
 
     if (!idempotencyKey || typeof idempotencyKey !== 'string' || idempotencyKey.trim().length === 0) {
       throw new ValidationError('Idempotency-Key header is required for draw operations');
@@ -166,6 +167,7 @@ export class DrawService {
     idempotencyKey: string;
   }): Promise<{ draw: DrawDto }> {
     const { actorId, roundId, questionId, idempotencyKey } = params;
+    if(await this.roundRepo.isReferenceRound?.(roundId))throw new ConflictError('Use the live reference round controls for calls and reveals.');
 
     if (!idempotencyKey || typeof idempotencyKey !== 'string' || idempotencyKey.trim().length === 0) {
       throw new ValidationError('Idempotency-Key header is required for draw operations');

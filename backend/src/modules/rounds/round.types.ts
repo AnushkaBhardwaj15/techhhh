@@ -12,10 +12,12 @@ export type RoundStatus = (typeof ROUND_STATUSES)[number];
 
 export const PATTERN_TYPES = [
   'EARLY_5',
+  'FOUR_CORNERS',
   'TOP_LINE',
   'MIDDLE_LINE',
   'BOTTOM_LINE',
   'FULL_HOUSE',
+  'SECOND_FULL_HOUSE',
 ] as const;
 
 export type PatternType = (typeof PATTERN_TYPES)[number];
