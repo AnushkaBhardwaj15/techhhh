@@ -65,7 +65,13 @@ const activeGameRecord: gameSync.SyncGameRecord = {
   roundSequence: 1,
 };
 
-function renderLobby({ waiting = false, initialEntries = ['/participant/lobby'] } = {}) {
+function renderLobby({
+  waiting = false,
+  initialEntries = [waiting ? '/participant/waiting' : '/participant/lobby'],
+}: {
+  waiting?: boolean;
+  initialEntries?: string[];
+} = {}) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={client}>

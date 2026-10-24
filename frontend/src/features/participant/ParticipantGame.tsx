@@ -8,6 +8,7 @@ import { getParticipantDraws } from '../../lib/api/draws';
 import { getCurrentRound, getParticipantEvent } from '../../lib/api/participant';
 import { claimPlayPrize, markPlayCell } from '../../lib/api/play';
 import { mergeParticipantDraws, useParticipantRealtime, type ConnectionStatus, type DisplayDraw } from '../../lib/realtime';
+import { playNewClueSound } from '../../lib/audio';
 import type { AuthenticatedUser } from '../../types/auth';
 import type { PlayState } from '../../types/play';
 import { ActionButton } from '../../components/ActionButton';
@@ -326,8 +327,24 @@ function AuthoritativeParticipantGame({
   const drawnKeys = new Set(history.map((draw) => draw.keyValue));
   const retryDraws = () => void draws.refetch();
 
+  useEffect(() => {
+    if (latest?.sequenceNumber) {
+      playNewClueSound();
+    }
+  }, [latest?.sequenceNumber]);
+
   return (
     <div className={styles.game}>
+      {realtime.announcement && (
+        <aside className={styles.announcement} aria-live="polite">
+          <p>
+            <strong>📢 ANNOUNCEMENT:</strong> {realtime.announcement}
+          </p>
+          <button type="button" onClick={realtime.dismissAnnouncement} aria-label="Dismiss announcement">
+            Dismiss
+          </button>
+        </aside>
+      )}
       <section className={styles.live} aria-label="Live round updates">
         <div className={styles.liveHeader}>
           <div>

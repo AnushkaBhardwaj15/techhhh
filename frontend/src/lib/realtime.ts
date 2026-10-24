@@ -29,6 +29,7 @@ export function useParticipantRealtime(enabled: boolean, userId: string, eventId
   const [retryVersion, setRetryVersion] = useState(0);
   const [connection, setConnection] = useState<{ scope: string; status: ConnectionStatus; warning: string }>({ scope, status: 'CONNECTING', warning: '' });
   const [live, setLive] = useState<{ scope: string; draws: LiveDraw[] }>({ scope, draws: [] });
+  const [announcement, setAnnouncement] = useState('');
 
   useEffect(() => {
     let stopped = false;
@@ -135,6 +136,8 @@ export function useParticipantRealtime(enabled: boolean, userId: string, eventId
           synchronize(reconcileDraws());
         } else if (event.type === 'WINNER_VERIFIED') {
           synchronize(reconcileWinners());
+        } else if (event.type === 'ANNOUNCEMENT') {
+          setAnnouncement(event.payload.message);
         } else if (event.type.startsWith('ROUND_')) {
           synchronize(reconcileRound());
         } else {
@@ -215,6 +218,8 @@ export function useParticipantRealtime(enabled: boolean, userId: string, eventId
     status: connection.scope === scope ? connection.status : 'CONNECTING' as const,
     warning: connection.scope === scope ? connection.warning : '',
     liveDraws: live.scope === scope ? live.draws : [],
+    announcement,
+    dismissAnnouncement: () => setAnnouncement(''),
     retry,
   };
 }

@@ -7,6 +7,7 @@ import { getCurrentRound, getParticipantEvent } from '../../lib/api/participant'
 import { getParticipantTicket } from '../../lib/api/ticket';
 import { markTicketCell, unmarkTicketCell } from '../../lib/api/marks';
 import { cancelOnReducedMotion } from '../../lib/reducedMotion';
+import { playMarkSound, playUnmarkSound } from '../../lib/audio';
 import { useAuthUiStore } from '../auth/authStore';
 import { useParticipantWins } from './useParticipantWins';
 import type { AuthenticatedUser } from '../../types/auth';
@@ -97,13 +98,18 @@ export function TicketGrid({
                               className={styles.markButton}
                               type="button"
                               aria-label={
-                                onToggleCell
+                                onToggleCell && cell.keyValue.startsWith('TERM ')
                                   ? `Row ${row + 1}, column ${column + 1}: ${cell.keyValue}, ${cell.marked ? 'marked' : 'not marked'}`
                                   : `Mark ${cell.keyValue}, row ${row + 1}, column ${column + 1}`
                               }
                               aria-busy={pending || undefined}
                               disabled={!canMark || pending || uncertain}
                               onClick={() => {
+                                if (cell.marked) {
+                                  playUnmarkSound();
+                                } else {
+                                  playMarkSound();
+                                }
                                 onMark?.(cell.id);
                                 onToggleCell?.(cell);
                               }}

@@ -13,6 +13,7 @@ import { AdminTopBar } from './components/navigation/AdminTopBar';
 import type { AuthenticatedUser } from './types/auth';
 import './styles/global.css';
 
+const LandingPage = lazy(() => import('./features/landing/LandingPage').then((module) => ({ default: module.LandingPage })));
 const LoginPage = lazy(() => import('./features/auth/LoginPage').then((module) => ({ default: module.LoginPage })));
 const AdminDashboard = lazy(() => import('./features/admin/AdminDashboard').then((module) => ({ default: module.AdminDashboard })));
 const AdminGamePage = lazy(() => import('./features/admin/AdminGamePage').then((module) => ({ default: module.AdminGamePage })));
@@ -114,7 +115,7 @@ function AppRoutes() {
   return (
     <Suspense fallback={<LoadingMessage>Loading page…</LoadingMessage>}>
       <Routes>
-        <Route path="/" element={<LoginRoute />} />
+        <Route path="/" element={<LandingPage />} />
         <Route path="/live" element={<LiveDisplay />} />
         <Route path="/display" element={<LiveDisplay />} />
         <Route path="/display/round" element={<LiveDisplay />} />

@@ -4,6 +4,12 @@
 .brand span { color:var(--coral); }
 .eventName { margin:8px 0 0; color:rgb(244 236 214 / 76%); font-size:clamp(12px,1vw,16px); letter-spacing:.04em; }
 .liveStatus { display:flex; align-items:center; gap:10px; flex-shrink:0; font:700 11px/1 var(--mono); letter-spacing:.07em; }
+.joinCard { display:flex; align-items:center; gap:10px; background:rgb(255 255 255 / 8%); border:1px solid rgb(244 236 214 / 30%); border-radius:8px; padding:6px 12px; }
+.joinCardQr { background:#fff; padding:3px; border-radius:4px; display:inline-flex; }
+.joinCardText { display:flex; flex-direction:column; gap:2px; }
+.joinKicker { font:700 9px/1 var(--mono); color:var(--coral); letter-spacing:.1em; }
+.joinCardText strong { font-size:12px; font-weight:800; color:var(--cream); }
+.joinCardText p { margin:0; font-size:10px; color:rgb(244 236 214 / 70%); }
 .statusDot { width:11px; height:11px; border-radius:50%; background:#d3ad5f; border:2px solid var(--cream); }
 .statusDot[data-state="connected"] { background:#a9cf73; }
 .statusDot[data-state="unavailable"] { background:var(--coral); }

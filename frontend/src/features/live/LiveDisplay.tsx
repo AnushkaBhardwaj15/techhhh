@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { ErrorMessage, LoadingMessage } from '../../components/Feedback';
 import { getLiveDraws, getLiveEvent, getLiveRound } from '../../lib/api/liveDisplay';
 import { getLiveWinners } from '../../lib/api/winners';
+import { QRCodeSvg } from '../../components/QRCodeSvg';
 import { readPublicPlay } from '../../lib/api/play';
 import { cancelOnReducedMotion } from '../../lib/reducedMotion';
 import { useLiveDisplayRealtime } from '../../lib/websocket/useLiveDisplayRealtime';
@@ -237,17 +238,29 @@ function AuthoritativeLiveDisplay() {
           <p className={styles.brand}>TECH <span>TOMBOLA</span></p>
           <p className={styles.eventName}>{event.data?.title ?? 'Public live display'}</p>
         </div>
-        <div className={styles.liveStatus} aria-label={`Live feed ${realtime.connection}`}>
-          <span className={styles.statusDot} data-state={realtime.connection} />
-          {realtime.connection === 'connected'
-            ? 'LIVE FEED CONNECTED'
-            : realtime.connection === 'connecting'
-            ? 'CONNECTING TO LIVE FEED'
-            : realtime.connection === 'reconnecting'
-            ? 'RECONNECTING TO LIVE FEED'
-            : realtime.connection === 'unavailable'
-            ? 'LIVE FEED UNAVAILABLE'
-            : 'LIVE FEED WAITING'}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+          <div className={styles.joinCard} aria-label="Scan QR code to join event on your phone">
+            <div className={styles.joinCardQr}>
+              <QRCodeSvg value={typeof window !== 'undefined' ? `${window.location.origin}/login` : '/login'} size={44} title="Scan QR to join" />
+            </div>
+            <div className={styles.joinCardText}>
+              <span className={styles.joinKicker}>SCAN TO PLAY</span>
+              <strong>Join on Phone</strong>
+              <p>{typeof window !== 'undefined' ? window.location.host : 'localhost'}</p>
+            </div>
+          </div>
+          <div className={styles.liveStatus} aria-label={`Live feed ${realtime.connection}`}>
+            <span className={styles.statusDot} data-state={realtime.connection} />
+            {realtime.connection === 'connected'
+              ? 'LIVE FEED CONNECTED'
+              : realtime.connection === 'connecting'
+              ? 'CONNECTING TO LIVE FEED'
+              : realtime.connection === 'reconnecting'
+              ? 'RECONNECTING TO LIVE FEED'
+              : realtime.connection === 'unavailable'
+              ? 'LIVE FEED UNAVAILABLE'
+              : 'LIVE FEED WAITING'}
+          </div>
         </div>
       </header>
       {realtime.announcement && (

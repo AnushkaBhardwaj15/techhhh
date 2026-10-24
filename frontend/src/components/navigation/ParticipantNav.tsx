@@ -1,5 +1,8 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ActionButton } from '../ActionButton';
+import { GameRulesModal } from '../GameRulesModal';
+import { isAudioEnabled, setAudioEnabled } from '../../lib/audio';
 import type { AuthenticatedUser } from '../../types/auth';
 import styles from './Navigation.module.css';
 
@@ -10,40 +13,74 @@ interface ParticipantNavProps {
 }
 
 export function ParticipantNav({ user, onLogout, isLoggingOut = false }: ParticipantNavProps) {
-  return (
-    <header className={styles.header} role="banner">
-      <div className={styles.topRow}>
-        <div className={styles.brandGroup}>
-          <Link to="/lobby" className={styles.wordmark} aria-label="Tech Tombola home page" tabIndex={-1}>
-            <span className={styles.badge}>TECH</span>
-            <strong>TAMBOLA</strong>
-          </Link>
-          <span className={styles.roleBanner} aria-label="Role: Participant">
-            PARTICIPANT
-          </span>
-        </div>
+  const [showRules, setShowRules] = useState(false);
+  const [soundOn, setSoundOn] = useState(() => isAudioEnabled());
 
-        {/* User Actions: Profile & Sign out only */}
-        <div className={styles.userActions}>
-          <Link
-            to="/participant/profile"
-            className={styles.profileButton}
-            title={`View profile for ${user.email}`}
-            tabIndex={-1}
-          >
-            <span aria-hidden="true">👤</span>
-            <span>Profile</span>
-          </Link>
-          <ActionButton
-            type="button"
-            className={styles.logoutButton}
-            onClick={onLogout}
-            busy={isLoggingOut}
-          >
-            {isLoggingOut ? 'Signing out…' : 'Sign out'}
-          </ActionButton>
+  function toggleSound() {
+    const next = !soundOn;
+    setSoundOn(next);
+    setAudioEnabled(next);
+  }
+
+  return (
+    <>
+      <header className={styles.header} role="banner">
+        <div className={styles.topRow}>
+          <div className={styles.brandGroup}>
+            <Link to="/lobby" className={styles.wordmark} aria-label="Tech Tombola home page" tabIndex={-1}>
+              <span className={styles.badge}>TECH</span>
+              <strong>TAMBOLA</strong>
+            </Link>
+            <span className={styles.roleBanner} aria-label="Role: Participant">
+              PARTICIPANT
+            </span>
+          </div>
+
+          {/* User Actions: Rules, Sound, Profile & Sign out */}
+          <div className={styles.userActions}>
+            <button
+              type="button"
+              className={styles.profileButton}
+              onClick={() => setShowRules(true)}
+              aria-label="View game rules and winning patterns"
+              title="How to Play Tech Tombola"
+              tabIndex={-1}
+            >
+              <span aria-hidden="true">📖</span>
+              <span>Rules</span>
+            </button>
+            <button
+              type="button"
+              className={styles.profileButton}
+              onClick={toggleSound}
+              aria-label={soundOn ? 'Mute sound effects' : 'Enable sound effects'}
+              title={soundOn ? 'Sound is ON (click to mute)' : 'Sound is MUTED (click to unmute)'}
+              tabIndex={-1}
+            >
+              <span aria-hidden="true">{soundOn ? '🔊' : '🔇'}</span>
+              <span>{soundOn ? 'Sound' : 'Muted'}</span>
+            </button>
+            <Link
+              to="/participant/profile"
+              className={styles.profileButton}
+              title={`View profile for ${user.email}`}
+              tabIndex={-1}
+            >
+              <span aria-hidden="true">👤</span>
+              <span>Profile</span>
+            </Link>
+            <ActionButton
+              type="button"
+              className={styles.logoutButton}
+              onClick={onLogout}
+              busy={isLoggingOut}
+            >
+              {isLoggingOut ? 'Signing out…' : 'Sign out'}
+            </ActionButton>
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
+      <GameRulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
+    </>
   );
 }
