@@ -121,28 +121,33 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 16px;
-  background: var(--ink);
-  color: var(--cream);
+  padding: 8px 18px;
+  background: var(--retro-orange, #EE640F);
+  color: #FFFFFF;
   text-decoration: none;
   font-family: var(--mono);
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 850;
   letter-spacing: 0.08em;
-  border: 1.5px solid var(--ink);
-  box-shadow: none;
+  border: 2px solid var(--color-espresso, #18130F);
+  border-radius: var(--radius-sm, 6px);
+  box-shadow: 2px 2px 0 var(--color-espresso, #18130F);
   transition:
     transform 100ms ease,
-    box-shadow 100ms ease;
+    box-shadow 100ms ease,
+    background 100ms ease;
 }
 
 .navCta:hover {
-  background: #2b3531;
+  background: var(--retro-orange-hover, #D75508);
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 var(--color-espresso, #18130F);
 }
 
 .navCta:active {
-  transform: translate(2px, 2px);
-  box-shadow: none;
+  background: var(--retro-orange-active, #BF4803);
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 var(--color-espresso, #18130F);
 }
 
 .navItem:focus-visible,
@@ -245,17 +250,16 @@
   gap: 12px;
   min-height: 52px;
   padding: 0 24px;
-  background: var(--color-oxblood, #8C4545);
-  color: var(--color-paper, #FAF7F0);
+  background: var(--retro-orange, #EE640F);
+  color: #FFFFFF;
   text-decoration: none;
   font-family: var(--mono);
   font-size: 13px;
   font-weight: 900;
   letter-spacing: 0.08em;
-  border: 2px solid #302820;
-  border-color: var(--color-espresso, #302820);
-  border-radius: var(--radius-xs, 2px);
-  box-shadow: 2px 2px 0 var(--color-espresso, #302820);
+  border: 2.5px solid var(--color-espresso, #18130F);
+  border-radius: var(--radius-sm, 6px);
+  box-shadow: 4px 4px 0 var(--color-espresso, #18130F);
   cursor: pointer;
   transition:
     transform 100ms ease,
@@ -264,14 +268,15 @@
 }
 
 .primaryButton:hover {
-  background: #733737;
-  transform: translate(-1px, -1px);
-  box-shadow: 3px 3px 0 var(--color-espresso, #302820);
+  background: var(--retro-orange-hover, #D75508);
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 var(--color-espresso, #18130F);
 }
 
 .primaryButton:active {
-  transform: translate(1px, 1px);
-  box-shadow: 1px 1px 0 var(--color-espresso, #302820);
+  background: var(--retro-orange-active, #BF4803);
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--color-espresso, #18130F);
 }
 
 .buttonArrow {

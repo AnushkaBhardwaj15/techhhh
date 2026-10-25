@@ -4,17 +4,17 @@
   margin: 24px auto;
   min-height: 0;
   padding: clamp(20px, 3vw, 36px);
-  background: var(--color-parchment, #F0E8D9);
-  color: var(--ink);
-  border-radius: 16px;
+  background: var(--retro-cream, #FAF4E8);
+  color: var(--retro-ink, #18130F);
+  border-radius: var(--radius-sm, 4px);
 }
 .eyebrow {
   margin: 0 0 10px;
-  color: var(--accent-ink);
+  color: var(--retro-orange, #EE640F);
   font:
-    700 11px/1.4 ui-monospace,
-    monospace;
+    800 11px/1.4 var(--mono);
   letter-spacing: 0.16em;
+  text-transform: uppercase;
 }
 .heading {
   display: flex;
@@ -28,6 +28,8 @@
   font-size: clamp(36px, 5vw, 62px);
   line-height: 0.98;
   letter-spacing: -0.045em;
+  font-weight: 900;
+  color: var(--retro-ink, #18130F);
 }
 .heading p:last-child {
   max-width: 620px;
@@ -38,19 +40,25 @@
 .queue button,
 .actions button,
 .pagination button {
-  min-height: 44px;
-  border: 1.5px solid #302820;
-  border-color: var(--color-espresso, #302820);
+  min-height: 42px;
+  border: 2px solid var(--retro-ink, #18130F);
   border-radius: var(--radius-xs, 2px);
-  background: var(--color-oxblood, #8C4545);
-  color: var(--color-paper, #FAF7F0);
-  box-shadow: 2px 2px 0 var(--color-espresso, #302820);
+  background: var(--retro-orange, #EE640F);
+  color: #FFFFFF;
+  box-shadow: 2.5px 2.5px 0 var(--retro-ink, #18130F);
   font:
-    700 14px/1.2 system-ui,
-    sans-serif;
+    850 13px/1.2 var(--mono);
   text-decoration: none;
   cursor: pointer;
-  box-shadow: none;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+.heading a:hover,
+.queue button:hover,
+.actions button:hover,
+.pagination button:hover {
+  background: var(--retro-orange-hover, #D75508);
+  transform: translate(-1px, -1px);
+  box-shadow: 3.5px 3.5px 0 var(--retro-ink, #18130F);
 }
 .heading a {
   display: inline-flex;
@@ -67,8 +75,10 @@
 .queue,
 .detail {
   min-width: 0;
-  border: 1px solid var(--border);
-  background: var(--color-paper, #FAF7F0);
+  border: 2.5px solid var(--retro-ink, #18130F);
+  border-top: 5px solid var(--retro-orange, #EE640F);
+  background: #FFFFFF;
+  box-shadow: 5px 5px 0 var(--retro-ink, #18130F);
 }
 .queueHeader,
 .detailHeader {

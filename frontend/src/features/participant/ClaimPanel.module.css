@@ -1,10 +1,12 @@
 .panel {
-  margin: 24px 0 0;
-  padding: clamp(16px, 2.5vw, 24px);
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--ink);
-  box-shadow: none;
+  margin: 28px 0 0;
+  padding: clamp(18px, 3vw, 28px);
+  border: 2.5px solid var(--retro-ink, #18130F);
+  border-top: 5px solid var(--retro-orange, #EE640F);
+  background: #FFFFFF;
+  color: var(--retro-ink, #18130F);
+  box-shadow: 6px 6px 0 var(--retro-ink, #18130F);
+  border-radius: var(--radius-sm, 4px);
 }
 
 .header {
@@ -16,62 +18,69 @@
 
 .header h2 {
   margin: 4px 0 0;
-  font-size: clamp(20px, 3vw, 26px);
-  font-weight: 800;
+  font-size: clamp(22px, 3.2vw, 28px);
+  font-weight: 900;
   line-height: 1.1;
+  color: var(--retro-ink, #18130F);
 }
 
 .kicker {
   margin: 0;
-  color: var(--accent-ink);
-  font: 700 10px/1.2 var(--mono);
+  color: var(--retro-orange, #EE640F);
+  font: 800 11px/1.2 var(--mono);
   letter-spacing: 0.12em;
-}
-
-.autoCheckBadge {
-  padding: 4px 8px;
-  background: var(--lime-soft);
-  border: 1px solid var(--accent-ink);
-  color: var(--accent-ink);
-  font: 700 10px var(--mono);
   text-transform: uppercase;
 }
 
+.autoCheckBadge {
+  padding: 5px 10px;
+  background: var(--retro-orange-soft, #FDE8DA);
+  border: 1.5px solid var(--retro-ink, #18130F);
+  color: var(--retro-ink, #18130F);
+  font: 800 10px var(--mono);
+  text-transform: uppercase;
+  box-shadow: 1.5px 1.5px 0 var(--retro-ink, #18130F);
+}
+
 .guidance {
-  margin: 8px 0 16px;
-  color: var(--muted);
-  font-size: 13px;
+  margin: 8px 0 20px;
+  color: var(--color-text-secondary, #62584C);
+  font-size: 13.5px;
   line-height: 1.5;
 }
 
 .cardGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 12px;
-  margin-bottom: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
 }
 
 .claimCard {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 14px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  box-shadow: none;
-  transition:
-    transform 0.1s ease,
-    box-shadow 0.1s ease;
+  padding: 18px;
+  background: #FFFFFF;
+  border: 2px solid var(--retro-ink, #18130F);
+  box-shadow: 3.5px 3.5px 0 var(--retro-ink, #18130F);
+  border-radius: var(--radius-xs, 2px);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.claimCard:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 5.5px 5.5px 0 var(--retro-ink, #18130F);
 }
 
 .cardWinner {
-  background: #fff8e6;
-  border-color: #b58105;
+  background: var(--retro-orange-soft, #FDE8DA);
+  border-color: var(--retro-ink, #18130F);
 }
 
 .cardPending {
-  background: #fdfbee;
-  border-color: #92400e;
+  background: #FEF3C7;
+  border-color: var(--retro-ink, #18130F);
 }
 
 .cardTop {
@@ -79,36 +88,37 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 8px;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
 .cardTitle {
   margin: 0;
-  font-size: 16px;
-  font-weight: 800;
-  color: var(--ink);
+  font-size: 17px;
+  font-weight: 900;
+  color: var(--retro-ink, #18130F);
 }
 
 .cardSubtitle {
   margin: 2px 0 0;
-  font: 700 10px var(--mono);
-  color: var(--accent-ink);
+  font: 800 10px var(--mono);
+  color: var(--retro-orange, #EE640F);
   text-transform: uppercase;
 }
 
 .cardPoints {
-  font: 800 11px var(--mono);
-  padding: 2px 6px;
-  background: var(--color-sandstone, #DCD0BD);
-  border: 1px solid var(--border);
-  color: var(--accent-ink);
+  font: 900 11px var(--mono);
+  padding: 3px 8px;
+  background: var(--retro-orange-tint, #FFF4ED);
+  border: 1.5px solid var(--retro-ink, #18130F);
+  color: var(--retro-orange, #EE640F);
+  box-shadow: 1.5px 1.5px 0 var(--retro-ink, #18130F);
 }
 
 .cardDesc {
-  margin: 0 0 14px;
-  font-size: 12px;
-  line-height: 1.4;
-  color: var(--muted);
+  margin: 0 0 16px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--color-text-secondary, #62584C);
   flex-grow: 1;
 }
 
@@ -120,132 +130,160 @@
   width: 100%;
   min-height: 44px;
   flex-shrink: 0;
-  padding: 10px 8px;
-  background: var(--accent-ink);
-  color: var(--surface);
-  border: 1px solid var(--border);
-  font: 700 11px var(--mono);
+  padding: 10px 12px;
+  background: var(--retro-orange, #EE640F);
+  color: #FFFFFF;
+  border: 2px solid var(--retro-ink, #18130F);
+  font: 850 12px var(--mono);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   cursor: pointer;
-  transition: background-color 0.12s ease;
+  box-shadow: 3px 3px 0 var(--retro-ink, #18130F);
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background-color 0.1s ease;
 }
 
 .claimBtn:hover:not(:disabled) {
-  background: #733737;
+  background: var(--retro-orange-hover, #D75508);
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 var(--retro-ink, #18130F);
+}
+
+.claimBtn:active:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--retro-ink, #18130F);
 }
 
 .claimBtn:disabled {
-  opacity: 0.5;
+  opacity: 0.55;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
 .statusVerified {
   display: block;
   text-align: center;
-  padding: 8px 6px;
-  background: var(--lime-soft);
-  border: 1px solid var(--accent-ink);
-  color: var(--accent-ink);
-  font: 800 11px var(--mono);
+  padding: 8px 8px;
+  background: #D1FAE5;
+  border: 2px solid var(--retro-ink, #18130F);
+  color: #065F46;
+  font: 900 11px var(--mono);
+  box-shadow: 2px 2px 0 var(--retro-ink, #18130F);
 }
 
 .statusPending {
   display: block;
   text-align: center;
-  padding: 8px 6px;
-  background: #fef3c7;
-  border: 1px solid #d97706;
-  color: #92400e;
-  font: 800 11px var(--mono);
+  padding: 8px 8px;
+  background: #FEF3C7;
+  border: 2px solid var(--retro-ink, #18130F);
+  color: #92400E;
+  font: 900 11px var(--mono);
+  box-shadow: 2px 2px 0 var(--retro-ink, #18130F);
 }
 
 .statusClosed {
   display: block;
   text-align: center;
-  padding: 8px 6px;
-  background: #f3f4f6;
-  border: 1px solid #d1d5db;
-  color: #6b7280;
-  font: 700 11px var(--mono);
+  padding: 8px 8px;
+  background: #E5E7EB;
+  border: 2px solid var(--retro-ink, #18130F);
+  color: #4B5563;
+  font: 800 11px var(--mono);
+  box-shadow: 2px 2px 0 var(--retro-ink, #18130F);
 }
 
 .rejectedBox {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .statusRejected {
   display: block;
   text-align: center;
-  padding: 4px;
-  background: var(--danger-soft);
-  border: 1px solid #ef4444;
-  color: #b91c1c;
-  font: 800 10px var(--mono);
+  padding: 6px;
+  background: #FEE2E2;
+  border: 2px solid var(--retro-ink, #18130F);
+  color: #991B1B;
+  font: 900 10.5px var(--mono);
+  box-shadow: 2px 2px 0 var(--retro-ink, #18130F);
 }
 
 .retryBtn {
   width: 100%;
-  padding: 6px;
-  background: transparent;
-  border: 1px solid var(--ink);
-  font: 700 10px var(--mono);
+  padding: 8px;
+  background: #FFFFFF;
+  border: 2px solid var(--retro-ink, #18130F);
+  font: 800 11px var(--mono);
   cursor: pointer;
+  box-shadow: 2px 2px 0 var(--retro-ink, #18130F);
+}
+
+.retryBtn:hover {
+  background: var(--retro-orange-soft, #FDE8DA);
 }
 
 .checkButton {
-  display: block;
-  margin: 10px 0;
-  padding: 8px 14px;
-  border: 1px solid var(--ink);
-  background: var(--surface);
-  font: 700 11px var(--mono);
+  display: inline-block;
+  margin: 12px 0;
+  padding: 9px 16px;
+  border: 2px solid var(--retro-ink, #18130F);
+  background: #FFFFFF;
+  color: var(--retro-ink, #18130F);
+  font: 800 11px var(--mono);
   cursor: pointer;
+  box-shadow: 2.5px 2.5px 0 var(--retro-ink, #18130F);
+  transition: transform 0.1s ease;
+}
+
+.checkButton:hover {
+  background: var(--retro-orange-tint, #FFF4ED);
+  transform: translate(-1px, -1px);
+  box-shadow: 3.5px 3.5px 0 var(--retro-ink, #18130F);
 }
 
 .success,
 .uncertain,
 .errorText {
   margin: 12px 0 6px;
-  padding: 10px 12px;
-  font: 700 11px/1.4 var(--mono);
-  border: 1px solid currentColor;
+  padding: 10px 14px;
+  font: 800 11px/1.4 var(--mono);
+  border: 2px solid var(--retro-ink, #18130F);
+  box-shadow: 3px 3px 0 var(--retro-ink, #18130F);
 }
 
 .success {
-  background: var(--lime-soft);
-  color: var(--accent-ink);
+  background: #D1FAE5;
+  color: #065F46;
 }
 
 .uncertain {
-  background: #fef3c7;
-  color: #92400e;
+  background: #FEF3C7;
+  color: #92400E;
 }
 
 .errorText {
-  background: var(--danger-soft);
-  color: #b91c1c;
+  background: #FEE2E2;
+  color: #991B1B;
 }
 
 .recentClaims {
-  margin-top: 18px;
-  padding-top: 14px;
-  border-top: 1px dashed var(--border);
+  margin-top: 22px;
+  padding-top: 16px;
+  border-top: 2px dashed var(--retro-ink, #18130F);
 }
 
 .recentClaims h4 {
-  margin: 0 0 8px;
-  font: 700 11px var(--mono);
+  margin: 0 0 10px;
+  font: 800 11px var(--mono);
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--color-text-secondary, #62584C);
 }
 
 .recentClaims ul {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 10px;
   list-style: none;
   padding: 0;
   margin: 0;
@@ -255,41 +293,44 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 10px;
-  background: var(--surface);
-  border: 1px solid var(--ink);
-  font-size: 11px;
+  padding: 6px 12px;
+  background: #FFFFFF;
+  border: 1.5px solid var(--retro-ink, #18130F);
+  box-shadow: 2px 2px 0 var(--retro-ink, #18130F);
+  font-size: 11.5px;
 }
 
 .recentClaims li [data-status="VERIFIED"] {
-  color: var(--accent-ink);
-  font-weight: 700;
+  color: #065F46;
+  font-weight: 850;
 }
 
 .recentClaims li [data-status="PENDING_VERIFICATION"] {
-  color: #92400e;
-  font-weight: 700;
+  color: #92400E;
+  font-weight: 850;
 }
 
 .recentClaims li [data-status="REJECTED"] {
-  color: #b91c1c;
+  color: #991B1B;
 }
 
 .error {
-  padding: 8px 12px;
-  background: var(--danger-soft);
-  color: #b91c1c;
+  padding: 10px 14px;
+  background: #FEE2E2;
+  color: #991B1B;
+  border: 2px solid var(--retro-ink, #18130F);
+  box-shadow: 3px 3px 0 var(--retro-ink, #18130F);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .error button {
-  padding: 4px 8px;
-  border: 1px solid currentColor;
+  padding: 5px 10px;
+  border: 1.5px solid currentColor;
   background: transparent;
   cursor: pointer;
-  font: 700 10px var(--mono);
+  font: 800 10.5px var(--mono);
 }
 
 .validationWarning {
@@ -297,19 +338,18 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin: 12px 0 16px;
-  padding: 14px 16px;
-  background: #fff3cd;
-  border: 2px solid #856404;
-  box-shadow: none;
-  color: #856404;
-  animation: fadeIn 0.2s ease-in-out;
+  margin: 14px 0 18px;
+  padding: 14px 18px;
+  background: #FEF3C7;
+  border: 2.5px solid var(--retro-ink, #18130F);
+  box-shadow: 4px 4px 0 var(--retro-ink, #18130F);
+  color: #92400E;
 }
 
 .validationWarningContent {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 .warningIcon {
@@ -319,17 +359,17 @@
 
 .warningMessage {
   margin: 0;
-  font-weight: 700;
-  font-size: 13px;
+  font-weight: 800;
+  font-size: 13.5px;
   line-height: 1.4;
 }
 
 .closeWarningBtn {
   background: transparent;
   border: none;
-  font-size: 16px;
-  font-weight: 800;
-  color: #856404;
+  font-size: 18px;
+  font-weight: 900;
+  color: #92400E;
   cursor: pointer;
   padding: 4px;
   line-height: 1;
@@ -341,57 +381,36 @@
 
 .requirementBadge {
   display: inline-block;
-  padding: 3px 6px;
-  font: 700 10px var(--mono);
-  border: 1px solid currentColor;
+  padding: 3px 7px;
+  font: 800 10px var(--mono);
+  border: 1.5px solid currentColor;
 }
 
 .reqValid {
-  background: #d4edda;
-  color: #155724;
-  border-color: #c3e6cb;
+  background: #D1FAE5;
+  color: #065F46;
+  border-color: #065F46;
 }
 
 .reqPending {
-  background: #f8f9fa;
-  color: #6c757d;
-  border-color: #d6d8db;
-}
-.panel {
-  border-radius: 12px;
-}
-.cardGrid {
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
-}
-.claimCard {
-  border-radius: 8px;
-}
-.cardWinner {
-  background: var(--lime-soft);
-  border-color: #94b46d;
-}
-.cardPoints {
-  background: var(--surface-muted);
-}
-@media (max-width: 600px) {
-  .header {
-    align-items: flex-start;
-    flex-wrap: wrap;
-  }
+  background: #F3F4F6;
+  color: #4B5563;
+  border-color: #4B5563;
 }
 
 .viewClaimsLink {
-  color: var(--accent-ink);
-  font: 700 11px var(--mono);
+  color: var(--retro-orange, #EE640F);
+  font: 800 11px var(--mono);
   text-decoration: none;
 }
+
 .viewClaimsLink:hover {
   text-decoration: underline;
 }
 
 .claimActionsGroup {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   flex-direction: column;
 }
 
@@ -399,68 +418,99 @@
   width: 100%;
   min-height: 44px;
   flex-shrink: 0;
-  padding: 8px 6px;
-  background: var(--surface);
-  color: var(--ink);
-  border: 1px solid var(--border);
-  font: 700 10px var(--mono);
+  padding: 8px 10px;
+  background: #FFFFFF;
+  color: var(--retro-ink, #18130F);
+  border: 2px solid var(--retro-ink, #18130F);
+  font: 800 11px var(--mono);
   text-transform: uppercase;
   cursor: pointer;
-  transition: background-color 0.12s ease;
+  box-shadow: 2.5px 2.5px 0 var(--retro-ink, #18130F);
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background-color 0.1s ease;
 }
+
 .chooseBtn:hover:not(:disabled) {
-  background: var(--surface-muted);
+  background: var(--retro-orange-tint, #FFF4ED);
+  transform: translate(-1px, -1px);
+  box-shadow: 3.5px 3.5px 0 var(--retro-ink, #18130F);
 }
+
 .chooseBtn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
 .confirmation {
-  margin-top: 16px;
-  padding: 16px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--surface-muted, #f4ecd6);
+  margin-top: 18px;
+  padding: 18px;
+  border: 2px solid var(--retro-ink, #18130F);
+  background: var(--retro-orange-soft, #FDE8DA);
+  box-shadow: 4px 4px 0 var(--retro-ink, #18130F);
+  border-radius: var(--radius-xs, 2px);
 }
 
 .confirmation h3 {
   margin: 0 0 8px;
-  font-size: 16px;
-  font-weight: 800;
+  font-size: 17px;
+  font-weight: 900;
+  color: var(--retro-ink, #18130F);
 }
 
 .confirmation p {
-  margin: 0 0 12px;
+  margin: 0 0 14px;
   font-size: 14px;
   line-height: 1.4;
+  color: var(--retro-ink, #18130F);
 }
 
 .confirmButtons {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
 .confirmBtn {
-  padding: 8px 16px;
-  background: var(--accent, #315c53);
-  color: #fffaf0;
-  border: 1px solid var(--ink);
-  font: 700 11px var(--mono);
+  padding: 9px 18px;
+  background: var(--retro-orange, #EE640F);
+  color: #FFFFFF;
+  border: 2px solid var(--retro-ink, #18130F);
+  font: 850 11px var(--mono);
   text-transform: uppercase;
   cursor: pointer;
+  box-shadow: 3px 3px 0 var(--retro-ink, #18130F);
+  transition: transform 0.1s ease;
 }
+
+.confirmBtn:hover:not(:disabled) {
+  background: var(--retro-orange-hover, #D75508);
+  transform: translate(-1px, -1px);
+}
+
 .confirmBtn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
 .cancelBtn {
-  padding: 8px 16px;
-  background: transparent;
-  color: var(--ink);
-  border: 1px solid var(--ink);
-  font: 700 11px var(--mono);
+  padding: 9px 18px;
+  background: #FFFFFF;
+  color: var(--retro-ink, #18130F);
+  border: 2px solid var(--retro-ink, #18130F);
+  font: 850 11px var(--mono);
   cursor: pointer;
+  box-shadow: 2.5px 2.5px 0 var(--retro-ink, #18130F);
+  transition: transform 0.1s ease;
+}
+
+.cancelBtn:hover {
+  background: var(--retro-cream, #FAF4E8);
+  transform: translate(-1px, -1px);
+}
+
+@media (max-width: 600px) {
+  .header {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
 }

@@ -16,13 +16,15 @@
   margin-bottom: 26px;
 }
 .brandBadge {
-  background: var(--color-oxblood, #8C4545);
-  color: var(--color-paper, #FAF7F0);
-  padding: 4px 10px;
+  background: var(--retro-orange, #EE640F);
+  color: #FFFFFF;
+  padding: 4px 12px;
   font-size: 14px;
   font-weight: 900;
   letter-spacing: 0.16em;
-  border-radius: var(--radius-xs, 2px);
+  border: 2px solid var(--color-espresso, #18130F);
+  border-radius: var(--radius-sm, 6px);
+  box-shadow: 2px 2px 0 var(--color-espresso, #18130F);
 }
 .brandName {
   font-size: clamp(32px, 8vw, 42px);
@@ -30,29 +32,27 @@
   letter-spacing: 0.08em;
   margin-top: 5px;
   font-weight: 900;
-  color: var(--color-espresso, #302820);
+  color: var(--color-espresso, #18130F);
 }
 .brandDot {
-  color: var(--color-oxblood, #8C4545);
+  color: var(--retro-orange, #EE640F);
 }
 .tagline {
   margin: 9px 0 0;
   font-size: 10px;
   letter-spacing: 0.24em;
-  color: var(--color-text-secondary, #62584C);
+  color: var(--color-text-secondary, #584A3F);
 }
 .card {
   width: 100%;
   max-width: 440px;
-  padding: 25px 22px;
-  border: 2px solid #302820;
-  border-color: var(--color-espresso, #302820);
-  border-top: 4px solid #8C4545;
-  border-top-color: var(--color-oxblood, #8C4545);
-  border-radius: var(--radius-sm, 4px);
-  background: var(--color-paper, #FAF7F0);
-  color: var(--color-espresso, #302820);
-  box-shadow: 4px 4px 0 var(--color-espresso, #302820);
+  padding: 28px 24px;
+  border: 2.5px solid var(--color-espresso, #18130F);
+  border-top: 6px solid var(--retro-orange, #EE640F);
+  border-radius: var(--radius-sm, 6px);
+  background: var(--color-paper, #FFFFFF);
+  color: var(--color-espresso, #18130F);
+  box-shadow: 6px 6px 0 var(--color-espresso, #18130F);
 }
 .eyebrow {
   margin: 0 0 16px;
@@ -196,36 +196,43 @@
   width: 100%;
   min-height: 52px;
   padding: 12px;
-  border: 2px solid #302820;
-  border-color: var(--color-espresso, #302820);
-  border-radius: var(--radius-xs, 2px);
-  background: var(--color-oxblood, #8C4545);
-  color: var(--color-paper, #FAF7F0);
+  border: 2.5px solid var(--color-espresso, #18130F);
+  border-radius: var(--radius-sm, 6px);
+  background: var(--retro-orange, #EE640F);
+  color: #FFFFFF;
   font-size: 15px;
-  font-weight: 850;
+  font-weight: 900;
   font-family: var(--mono);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   cursor: pointer;
-  box-shadow: 2px 2px 0 var(--color-espresso, #302820);
-  transition: all 0.12s ease;
+  box-shadow: 4px 4px 0 var(--color-espresso, #18130F);
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background-color 0.12s ease;
 }
 .submitBtn span {
   font-size: 24px;
   line-height: 1;
 }
 .submitBtn:hover:not(:disabled) {
-  background: #733737;
-  transform: translate(-1px, -1px);
-  box-shadow: 3px 3px 0 var(--color-espresso, #302820);
+  background: var(--retro-orange-hover, #D75508);
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 var(--color-espresso, #18130F);
+}
+.submitBtn:active:not(:disabled) {
+  background: var(--retro-orange-active, #BF4803);
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--color-espresso, #18130F);
 }
 .submitBtn:disabled {
-  opacity: 0.65;
+  opacity: 0.55;
+  background: var(--color-disabled, #ECE4D6);
+  color: var(--color-text-secondary, #584A3F);
+  box-shadow: none;
   cursor: wait;
 }
 .page button:focus-visible,
 .input:focus-visible {
-  outline: 3px solid var(--color-oxblood, #8C4545);
+  outline: 3px solid var(--retro-orange, #EE640F);
   outline-offset: 3px;
 }
 .errorBox {

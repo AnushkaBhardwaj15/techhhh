@@ -84,7 +84,7 @@ export function AdminAudit() {
             <tr key={record.id}>
               <td><time dateTime={record.createdAt}>{new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(record.createdAt))}</time></td>
               <td>
-                <span style={{ fontWeight: 600, color: 'var(--color-primary-cyan, #00e5ff)', display: 'block' }}>{actorInfo.primary}</span>
+                <span style={{ fontWeight: 600, color: 'var(--retro-orange, #EE640F)', display: 'block' }}>{actorInfo.primary}</span>
                 <span style={{ fontSize: '12px', color: '#94a3b8' }}>{actorInfo.secondary}</span>
               </td>
               <td>

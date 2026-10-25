@@ -537,7 +537,7 @@ export function AdminDashboard() {
 
                 <div className={styles.auditSectionTitle}>
                   <span>Audits for this Round</span>
-                  {roundAuditQuery.isFetching && <span style={{ fontSize: '12px', color: '#00e5ff' }}>Refreshing…</span>}
+                  {roundAuditQuery.isFetching && <span style={{ fontSize: '12px', color: 'var(--retro-orange, #EE640F)' }}>Refreshing…</span>}
                 </div>
 
                 {roundAuditQuery.isLoading ? (
@@ -594,7 +594,7 @@ export function AdminDashboard() {
                                   '—'
                                 ) : (
                                   <details>
-                                    <summary style={{ cursor: 'pointer', color: '#00e5ff' }}>
+                                    <summary style={{ cursor: 'pointer', color: 'var(--retro-orange, #EE640F)' }}>
                                       View metadata
                                     </summary>
                                     <pre style={{ margin: '8px 0 0 0', fontSize: '11px', maxHeight: '120px', overflowY: 'auto' }}>
