@@ -1,30 +1,38 @@
 .banner {
-  margin: 22px 0 0;
-  padding: 16px 18px;
-  border: 1px solid var(--border);
-  background: var(--lime-soft);
-  color: var(--ink);
-  box-shadow: none;
+  margin: 24px 0 0;
+  padding: 18px 22px;
+  border: 3px solid var(--neo-ink, #121212);
+  border-radius: var(--neo-radius, 2px);
+  background: var(--neo-mint, #00D084);
+  color: var(--neo-ink, #121212);
+  box-shadow: var(--neo-shadow, 4px 4px 0px #121212);
 }
 
 .banner h2 {
   margin: 0;
-  font-size: clamp(18px, 3vw, 24px);
+  font-size: clamp(20px, 3.2vw, 26px);
+  font-weight: 900;
+  letter-spacing: -0.02em;
 }
 
 .banner p {
-  margin: 7px 0 0;
+  margin: 8px 0 0;
   line-height: 1.45;
+  font-size: 14px;
+  font-weight: 700;
 }
 
 .banner strong {
-  color: var(--accent-ink);
+  background: var(--neo-ink, #121212);
+  color: #FFFFFF;
+  padding: 2px 6px;
+  border-radius: var(--neo-radius, 2px);
 }
 
 .others {
-  margin-top: 12px;
-  padding-top: 10px;
-  border-top: 1px solid var(--border);
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 2px dashed var(--neo-ink, #121212);
 }
 
 .others ul {
@@ -37,24 +45,16 @@
 }
 
 .others li {
-  font-size: 12px;
+  font-size: 13px;
+  font-weight: 800;
+  font-family: var(--font-mono, monospace);
 }
 
 .banner a {
   display: inline-block;
-  margin-top: 10px;
-  color: var(--accent-ink);
-  font: 700 10px var(--mono);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .banner {
-    animation: none !important;
-    transition: none !important;
-  }
-}
-
-.banner {
-  border-radius: 12px;
-  border-left: 3px solid var(--lime);
+  margin-top: 12px;
+  color: var(--neo-ink, #121212);
+  font: 900 11px var(--font-mono, monospace);
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }

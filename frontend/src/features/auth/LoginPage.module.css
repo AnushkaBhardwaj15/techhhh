@@ -1,282 +1,360 @@
 .page {
   min-height: 100dvh;
-  background: var(--color-parchment, #F0E8D9);
-  color: var(--color-espresso, #302820);
+  background: var(--neo-bg, #F7F5EE);
+  color: var(--neo-ink, #121212);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 28px 16px;
-  font-family: var(--mono);
+  padding: 32px 16px;
+  font-family: var(--font-mono, monospace);
 }
+
 .brandGroup {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 26px;
+  margin-bottom: 24px;
 }
+
 .brandBadge {
-  background: var(--retro-orange, #EE640F);
-  color: #FFFFFF;
+  background: var(--neo-ink, #121212);
+  color: var(--neo-yellow, #FFE600);
+  border: 2px solid var(--neo-ink, #121212);
   padding: 4px 12px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 900;
-  letter-spacing: 0.16em;
-  border: 2px solid var(--color-espresso, #18130F);
-  border-radius: var(--radius-sm, 6px);
-  box-shadow: 2px 2px 0 var(--color-espresso, #18130F);
+  letter-spacing: 0.18em;
+  border-radius: var(--neo-radius, 2px);
+  box-shadow: 2px 2px 0px var(--neo-ink, #121212);
 }
+
 .brandName {
-  font-size: clamp(32px, 8vw, 42px);
-  line-height: 1.2;
-  letter-spacing: 0.08em;
-  margin-top: 5px;
+  font-size: clamp(34px, 8vw, 44px);
+  line-height: 1.1;
+  letter-spacing: 0.04em;
+  margin-top: 8px;
   font-weight: 900;
-  color: var(--color-espresso, #18130F);
+  color: var(--neo-ink, #121212);
+  font-family: var(--font-body, system-ui, sans-serif);
 }
+
 .brandDot {
-  color: var(--retro-orange, #EE640F);
+  color: var(--neo-orange, #FF4800);
 }
+
 .tagline {
-  margin: 9px 0 0;
-  font-size: 10px;
-  letter-spacing: 0.24em;
-  color: var(--color-text-secondary, #584A3F);
+  margin: 8px 0 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  color: var(--neo-ink, #121212);
+  opacity: 0.8;
 }
+
 .card {
   width: 100%;
-  max-width: 440px;
+  max-width: 460px;
   padding: 28px 24px;
-  border: 2.5px solid var(--color-espresso, #18130F);
-  border-top: 6px solid var(--retro-orange, #EE640F);
-  border-radius: var(--radius-sm, 6px);
-  background: var(--color-paper, #FFFFFF);
-  color: var(--color-espresso, #18130F);
-  box-shadow: 6px 6px 0 var(--color-espresso, #18130F);
+  border: 3px solid var(--neo-ink, #121212);
+  border-radius: var(--neo-radius, 2px);
+  background: var(--neo-surface, #FFFFFF);
+  color: var(--neo-ink, #121212);
+  box-shadow: var(--neo-shadow-lg, 8px 8px 0px #121212);
 }
+
 .eyebrow {
-  margin: 0 0 16px;
-  color: #48616a;
-  font-size: 9px;
-  line-height: 1.5;
-  letter-spacing: 0.12em;
-  font-weight: 700;
+  display: inline-block;
+  margin: 0 0 14px;
+  padding: 3px 8px;
+  background: var(--neo-yellow, #FFE600);
+  color: var(--neo-ink, #121212);
+  border: 2px solid var(--neo-ink, #121212);
+  box-shadow: 2px 2px 0px var(--neo-ink, #121212);
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  line-height: 1.2;
 }
+
 .title {
-  margin: 0 0 22px;
-  font-size: 28px;
-  line-height: 1.15;
-  letter-spacing: -0.04em;
+  margin: 0 0 20px;
+  font-size: 26px;
+  line-height: 1.2;
+  font-weight: 900;
+  letter-spacing: -0.02em;
 }
+
 .signInLabel {
   display: block;
   font-size: 15px;
+  font-weight: 600;
   letter-spacing: 0;
-  margin-bottom: 5px;
+  margin-bottom: 4px;
+  color: var(--neo-ink, #121212);
 }
+
+.signInLabel em {
+  font-style: normal;
+  background: var(--neo-yellow, #FFE600);
+  padding: 0 4px;
+  border: 1px solid var(--neo-ink, #121212);
+}
+
 .titleAccent {
   display: block;
-  color: var(--color-oxblood, #8C4545);
+  color: var(--neo-orange, #FF4800);
+  text-decoration: underline;
+  text-decoration-color: var(--neo-ink, #121212);
+  text-underline-offset: 4px;
 }
+
 .presetHint {
-  margin: 0 0 14px;
-  font-family: system-ui, sans-serif;
-  font-size: 13px;
-  line-height: 1.5;
-  color: var(--color-text-secondary, #62584C);
+  margin: 0 0 12px;
+  font-family: var(--font-body, system-ui, sans-serif);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--neo-ink, #121212);
+  opacity: 0.85;
 }
+
 .presetSection {
   display: grid;
-  gap: 14px;
-  padding-bottom: 22px;
-  margin-bottom: 22px;
-  border-bottom: 1px solid #c4d4d3;
+  gap: 12px;
+  padding-bottom: 20px;
+  margin-bottom: 20px;
+  border-bottom: 2px dashed var(--neo-ink, #121212);
 }
+
 .presetGroup {
   display: grid;
-  gap: 7px;
+  gap: 6px;
 }
+
 .presetHeading {
+  font-family: var(--font-mono, monospace);
   font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.09em;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  color: var(--neo-ink, #121212);
 }
+
 .presetRow {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
 }
+
 .presetBtn {
-  min-height: 44px;
-  padding: 8px 3px;
-  border: 1.5px solid #302820;
-  border-color: var(--color-espresso, #302820);
-  border-radius: var(--radius-xs, 2px);
-  color: var(--color-espresso, #302820);
-  background: var(--color-sandstone, #DCD0BD);
+  min-height: 42px;
+  padding: 6px 4px;
+  border: 2px solid var(--neo-ink, #121212);
+  border-radius: var(--neo-radius, 2px);
+  color: var(--neo-ink, #121212);
+  background: #FFFFFF;
+  font-family: var(--font-mono, monospace);
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 900;
   cursor: pointer;
+  box-shadow: 2px 2px 0px var(--neo-ink, #121212);
+  transition: transform 0.08s ease, box-shadow 0.08s ease, background-color 0.08s ease;
 }
+
 .presetAdmin {
-  background: var(--color-sandstone, #DCD0BD);
-  border-color: var(--color-espresso, #302820);
+  background: #F4F0EA;
 }
+
 .presetBtn:hover {
-  background: #CFC1AC;
+  background: var(--neo-yellow, #FFE600);
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px var(--neo-ink, #121212);
 }
+
 .presetAdmin:hover {
-  background: #CFC1AC;
+  background: var(--neo-mint, #00D084);
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px var(--neo-ink, #121212);
 }
+
 .presetActive {
-  outline: 2px solid var(--color-oxblood, #8C4545);
-  outline-offset: 2px;
+  background: var(--neo-yellow, #FFE600) !important;
+  transform: translate(2px, 2px);
+  box-shadow: 0px 0px 0px var(--neo-ink, #121212) !important;
+  border-color: var(--neo-ink, #121212);
 }
+
 .field {
-  margin-bottom: 18px;
+  margin-bottom: 16px;
 }
+
 .label {
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   font-size: 12px;
-  font-weight: 800;
-  color: var(--color-espresso, #302820);
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  color: var(--neo-ink, #121212);
+  font-family: var(--font-mono, monospace);
 }
+
 .requiredStar {
-  color: #8C4545;
+  color: var(--neo-orange, #FF4800);
 }
+
 .input {
   display: block;
   width: 100%;
   min-width: 0;
-  height: 50px;
+  height: 48px;
   padding: 0 12px;
-  border: 1.5px solid #302820;
-  border-color: var(--color-espresso, #302820);
-  border-radius: var(--radius-xs, 2px);
-  background: var(--color-paper, #FAF7F0);
-  color: var(--color-espresso, #302820);
-  font-family: system-ui, sans-serif;
-  font-size: 16px;
+  border: 2px solid var(--neo-ink, #121212);
+  border-radius: var(--neo-radius, 2px);
+  background: #FFFFFF;
+  color: var(--neo-ink, #121212);
+  font-family: var(--font-body, system-ui, sans-serif);
+  font-size: 15px;
+  font-weight: 600;
+  box-shadow: 3px 3px 0px var(--neo-ink, #121212);
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
 }
+
 .input::placeholder {
-  color: #687d85;
+  color: #7A7A7A;
+  font-weight: 500;
 }
+
+.input:focus {
+  outline: none;
+  background: #FFFFFA;
+  box-shadow: 4px 4px 0px var(--neo-ink, #121212);
+  transform: translate(-1px, -1px);
+}
+
 .labelRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 4px;
 }
+
 .labelRow .label {
   margin-bottom: 0;
 }
+
 .toggleVisibilityBtn {
   min-width: 44px;
-  min-height: 44px;
-  margin: -8px 0 -4px;
-  padding: 8px 0 8px 8px;
+  min-height: 36px;
+  margin: -6px 0 -4px;
+  padding: 4px 6px;
   background: transparent;
   border: 0;
-  color: var(--color-oxblood, #8C4545);
+  color: var(--neo-ink, #121212);
+  font-family: var(--font-mono, monospace);
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 900;
   text-decoration: underline;
   text-underline-offset: 3px;
   cursor: pointer;
 }
+
 .buttonContainer {
   margin-top: 24px;
 }
+
 .submitBtn {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 14px;
+  gap: 12px;
   width: 100%;
   min-height: 52px;
   padding: 12px;
-  border: 2.5px solid var(--color-espresso, #18130F);
-  border-radius: var(--radius-sm, 6px);
-  background: var(--retro-orange, #EE640F);
+  border: 3px solid var(--neo-ink, #121212);
+  border-radius: var(--neo-radius, 2px);
+  background: var(--neo-orange, #FF4800);
   color: #FFFFFF;
   font-size: 15px;
   font-weight: 900;
-  font-family: var(--mono);
+  font-family: var(--font-mono, monospace);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   cursor: pointer;
-  box-shadow: 4px 4px 0 var(--color-espresso, #18130F);
-  transition: transform 0.1s ease, box-shadow 0.1s ease, background-color 0.12s ease;
+  box-shadow: var(--neo-shadow, 4px 4px 0px #121212);
+  transition: transform 0.08s ease, box-shadow 0.08s ease, background-color 0.08s ease;
 }
+
 .submitBtn span {
-  font-size: 24px;
+  font-size: 22px;
   line-height: 1;
 }
+
 .submitBtn:hover:not(:disabled) {
-  background: var(--retro-orange-hover, #D75508);
+  background: #E03E00;
   transform: translate(-2px, -2px);
-  box-shadow: 6px 6px 0 var(--color-espresso, #18130F);
+  box-shadow: 6px 6px 0px var(--neo-ink, #121212);
 }
+
 .submitBtn:active:not(:disabled) {
-  background: var(--retro-orange-active, #BF4803);
-  transform: translate(2px, 2px);
-  box-shadow: 1px 1px 0 var(--color-espresso, #18130F);
+  transform: translate(3px, 3px);
+  box-shadow: 1px 1px 0px var(--neo-ink, #121212);
 }
+
 .submitBtn:disabled {
-  opacity: 0.55;
-  background: var(--color-disabled, #ECE4D6);
-  color: var(--color-text-secondary, #584A3F);
-  box-shadow: none;
+  opacity: 0.6;
   cursor: wait;
 }
+
 .page button:focus-visible,
 .input:focus-visible {
-  outline: 3px solid var(--retro-orange, #EE640F);
-  outline-offset: 3px;
+  outline: 3px solid var(--neo-ink, #121212);
+  outline-offset: 2px;
 }
+
 .errorBox {
   margin-bottom: 18px;
-  padding: 12px;
-  border-left: 3px solid #a73039;
-  background: #fbe8e8;
-  color: #862630;
-  font-family: system-ui, sans-serif;
-  font-size: 14px;
-  line-height: 1.5;
+  padding: 12px 14px;
+  border: 2px solid var(--neo-ink, #121212);
+  background: #FFD4D4;
+  color: #8C0000;
+  box-shadow: 3px 3px 0px var(--neo-ink, #121212);
+  font-family: var(--font-mono, monospace);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.4;
 }
+
 .footer {
-  margin: 22px 0 0;
+  margin: 24px 0 0;
   max-width: 100%;
-  color: #a5bfc9;
+  color: var(--neo-ink, #121212);
+  opacity: 0.75;
   text-align: center;
-  font-size: 10px;
+  font-size: 11px;
+  font-weight: 700;
   line-height: 1.6;
+  font-family: var(--font-mono, monospace);
 }
+
 @media (min-width: 600px) {
   .page {
-    padding: 40px 24px;
+    padding: 44px 24px;
   }
   .card {
-    padding: 30px 32px;
+    padding: 32px 36px;
   }
   .title {
-    font-size: 32px;
+    font-size: 30px;
   }
 }
+
 @media (max-height: 740px) {
   .page {
     justify-content: flex-start;
     padding-top: 20px;
   }
   .brandGroup {
-    margin-bottom: 20px;
-  }
-}
-@media (prefers-reduced-motion: no-preference) {
-  .presetBtn,
-  .submitBtn {
-    transition: background-color 0.15s ease;
+    margin-bottom: 16px;
   }
 }
 

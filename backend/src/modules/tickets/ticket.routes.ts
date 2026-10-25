@@ -49,19 +49,20 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
     },
     async (request) => {
       const query = getParticipantTicketQuerySchema.parse(request.query);
-    const ticket = await ticketService.getParticipantTicket(
-      request.user!.id,
-      query.roundId,
-      undefined,
-      request.user!.sessionId,
-      request.user!.eventId ?? undefined
-    );
-    if (!ticket) {
-      throw new NotFoundError('Ticket not found');
+      const ticket = await ticketService.getParticipantTicket(
+        request.user!.id,
+        query.roundId,
+        undefined,
+        request.user!.sessionId,
+        request.user!.eventId ?? undefined
+      );
+      if (!ticket) {
+        throw new NotFoundError('Ticket not found');
+      }
+      return {
+        ticket,
+        ...ticket,
+      };
     }
-    return {
-      ticket,
-      ...ticket,
-    };
-  });
+  );
 };
