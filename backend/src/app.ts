@@ -116,7 +116,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   // Enable Rate Limiting
   await app.register(rateLimit, {
     global: true,
-    max: env.NODE_ENV === 'test' ? 100_000 : 120,
+    max: env.NODE_ENV === 'test' || env.NODE_ENV === 'development' ? 100_000 : 120,
     timeWindow: 60_000,
     keyGenerator: (req) => {
       const user = (req as unknown as { user?: { id?: string } }).user;
@@ -143,6 +143,19 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
     limits: {
       fileSize: 10 * 1024 * 1024,
     },
+  });
+
+  // Allow empty or whitespace-only JSON bodies without Fastify throwing FST_ERR_CTP_EMPTY_JSON_BODY
+  app.addContentTypeParser('application/json', { parseAs: 'string' }, (_req, body, done) => {
+    if (!body || (typeof body === 'string' && body.trim() === '')) {
+      done(null, undefined);
+      return;
+    }
+    try {
+      done(null, JSON.parse(body as string));
+    } catch (err) {
+      done(err as Error, undefined);
+    }
   });
 
   // Set Request-ID header on all responses
@@ -199,6 +212,17 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
       return;
     }
 
+    if (error instanceof SyntaxError) {
+      reply.status(400).send({
+        error: {
+          code: ERROR_CODES.BAD_REQUEST,
+          message: 'Malformed JSON payload',
+        },
+        requestId,
+      });
+      return;
+    }
+
     if (typeof error === 'object' && error !== null && 'statusCode' in error && error.statusCode === 413) {
       reply.status(413).send({
         error: {
@@ -225,6 +249,30 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
         requestId,
       });
       return;
+    }
+
+    // 4. Fastify 4xx client errors (e.g. malformed JSON, content-type parsing, etc.)
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'statusCode' in error &&
+      typeof (error as { statusCode: unknown }).statusCode === 'number'
+    ) {
+      const statusCode = (error as { statusCode: number }).statusCode;
+      if (statusCode >= 400 && statusCode < 500) {
+        const message =
+          'message' in error && typeof (error as { message: unknown }).message === 'string'
+            ? (error as { message: string }).message
+            : 'Bad request';
+        reply.status(statusCode).send({
+          error: {
+            code: statusCode === 400 ? ERROR_CODES.BAD_REQUEST : statusCode === 404 ? ERROR_CODES.NOT_FOUND : statusCode === 403 ? ERROR_CODES.FORBIDDEN : statusCode === 401 ? ERROR_CODES.UNAUTHORIZED : statusCode === 409 ? ERROR_CODES.CONFLICT : statusCode === 429 ? ERROR_CODES.RATE_LIMIT_EXCEEDED : ERROR_CODES.BAD_REQUEST,
+            message,
+          },
+          requestId,
+        });
+        return;
+      }
     }
 
     // 4. Unexpected / database / 500 errors - strictly hide stack traces and DB details

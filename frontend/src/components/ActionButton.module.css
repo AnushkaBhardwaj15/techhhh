@@ -5,48 +5,51 @@
   gap: 8px;
   min-height: 44px;
   padding: 10px 20px;
-  border: 2.5px solid var(--color-espresso, #18130F);
-  border-radius: var(--radius-sm, 6px);
-  background: var(--retro-orange, #EE640F);
-  color: #FFFFFF;
+  border: var(--neo-border);
+  border-radius: var(--radius-sm, 4px);
+  background: var(--neo-yellow);
+  color: var(--neo-ink);
   font-family: var(--mono);
   font-size: 13px;
-  font-weight: 850;
+  font-weight: 900;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   cursor: pointer;
-  box-shadow: 3px 3px 0 var(--color-espresso, #18130F);
-  transition: transform 0.1s ease, box-shadow 0.1s ease, background-color 0.12s ease;
+  box-shadow: var(--neo-shadow-md);
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background-color 0.1s ease;
+  user-select: none;
 }
 
 .button:hover:not(:disabled) {
-  background: var(--retro-orange-hover, #D75508);
-  transform: translate(-2px, -2px);
-  box-shadow: 5px 5px 0 var(--color-espresso, #18130F);
+  background: #FFF04D;
+  transform: translate(-1px, -1px);
+  box-shadow: var(--neo-shadow-lg);
 }
 
 .button:active:not(:disabled) {
-  background: var(--retro-orange-active, #BF4803);
-  transform: translate(2px, 2px);
-  box-shadow: 1px 1px 0 var(--color-espresso, #18130F);
+  transform: translate(3px, 3px);
+  box-shadow: 1px 1px 0px var(--neo-ink);
 }
 
 .button:disabled {
   cursor: not-allowed;
   opacity: 0.55;
-  background: var(--color-disabled, #ECE4D6);
-  color: var(--color-text-secondary, #584A3F);
+  background: var(--neo-sand);
   box-shadow: none;
+  transform: none;
 }
+
 .loader {
   flex: none;
   animation: spin 0.8s linear infinite;
 }
+
 @keyframes spin {
   to {
     transform: rotate(360deg);
   }
 }
+
 @media (prefers-reduced-motion: reduce) {
   .loader {
     animation: none;

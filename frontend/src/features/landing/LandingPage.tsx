@@ -120,40 +120,26 @@ export function LandingPage() {
               </div>
 
               {!user && (
-                <div style={{
-                  margin: '28px 0 0',
-                  padding: '20px 24px',
-                  background: 'var(--cream)',
-                  border: '2px solid var(--ink)',
-                  boxShadow: '6px 6px 0 var(--ink)',
-                  maxWidth: '560px',
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                    <span style={{ background: 'var(--coral)', color: 'var(--ink)', padding: '3px 8px', fontFamily: 'var(--mono)', fontSize: '11px', fontWeight: 900 }}>
-                      ⚡ INSTANT GAME JOIN
+                <div className={styles.quickJoinBox}>
+                  <div className={styles.quickJoinHeader}>
+                    <span className={styles.quickJoinBadge}>
+                      INSTANT GAME ENTRY
                     </span>
-                    <span style={{ fontFamily: 'var(--mono)', fontSize: '11px', color: 'var(--forest)', fontWeight: 800 }}>
+                    <span className={styles.quickJoinMeta}>
                       NO PASSWORD NEEDED
                     </span>
                   </div>
-                  <p style={{ margin: '0 0 14px', fontSize: '13px', color: 'var(--muted)', lineHeight: 1.4 }}>
-                    Join the live room immediately with an automatically allocated 15-cell ticket:
+                  <p className={styles.quickJoinText}>
+                    Join the tournament room immediately with an automatically allocated 15-cell ticket:
                   </p>
-                  <form onSubmit={handleQuickJoin} style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  <form onSubmit={handleQuickJoin} className={styles.quickJoinForm}>
                     <input
                       type="text"
                       placeholder="Your Full Name"
                       value={joinName}
                       onChange={(e) => setJoinName(e.target.value)}
                       required
-                      style={{
-                        flex: '1 1 160px',
-                        minHeight: '44px',
-                        padding: '10px 12px',
-                        border: '1.5px solid var(--ink)',
-                        fontFamily: 'inherit',
-                        fontSize: '13px',
-                      }}
+                      className={styles.quickJoinInput}
                     />
                     <input
                       type="email"
@@ -161,37 +147,18 @@ export function LandingPage() {
                       value={joinEmail}
                       onChange={(e) => setJoinEmail(e.target.value)}
                       required
-                      style={{
-                        flex: '1 1 180px',
-                        minHeight: '44px',
-                        padding: '10px 12px',
-                        border: '1.5px solid var(--ink)',
-                        fontFamily: 'inherit',
-                        fontSize: '13px',
-                      }}
+                      className={styles.quickJoinInput}
                     />
                     <button
                       type="submit"
                       disabled={joining}
-                      style={{
-                        minHeight: '44px',
-                        padding: '0 18px',
-                        background: 'var(--coral)',
-                        color: 'var(--ink)',
-                        border: '1.5px solid var(--ink)',
-                        fontFamily: 'var(--mono)',
-                        fontSize: '12px',
-                        fontWeight: 900,
-                        cursor: 'pointer',
-                        boxShadow: '3px 3px 0 var(--ink)',
-                        whiteSpace: 'nowrap',
-                      }}
+                      className={styles.quickJoinBtn}
                     >
                       {joining ? 'JOINING…' : 'GET TICKET & PLAY ↗'}
                     </button>
                   </form>
                   {joinError && (
-                    <p style={{ margin: '8px 0 0', color: '#8d271f', fontSize: '12px', fontWeight: 600 }}>
+                    <p className={styles.quickJoinError}>
                       {joinError}
                     </p>
                   )}
