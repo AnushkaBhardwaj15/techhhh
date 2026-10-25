@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useOutletContext } from 'react-router-dom';
-import { createPlayRound, validatePlayBank, commandPlayRound } from '../../lib/api/play';
-import type { AuthenticatedUser } from '../../types/auth';
-import { useAdminDashboard } from './useAdminDashboard';
+import { useQuery } from '@tanstack/react-query';
+import { createPlayRound, validatePlayBank } from '../../lib/api/play';
+import { listAdminAudit } from '../../lib/api/adminOperations';
+import { useNavigate } from 'react-router-dom';
 import {
   fetchActiveGame,
   subscribeToGameSync,
   type SyncGameRecord,
 } from '../../lib/gameSync';
+import { formatAuditAction, formatAuditActor, formatAuditResource } from './auditFormatters';
 import styles from './AdminDashboard.module.css';
 
 interface ImportedQuestion {
@@ -39,22 +40,14 @@ export function AdminDashboard() {
   const [error, setError] = useState('');
   const [creationKey] = useState(() => crypto.randomUUID());
   const [games, setGames] = useState<SyncGameRecord[]>([]);
-  const [commandingId, setCommandingId] = useState<string | null>(null);
+  const [selectedRoundForAudit, setSelectedRoundForAudit] = useState<SyncGameRecord | null>(null);
 
-  async function handleGameCommand(gameId: string, action: 'start' | 'pause' | 'resume') {
-    if (commandingId) return;
-    setCommandingId(gameId);
-    setError('');
-    try {
-      await commandPlayRound(gameId, { action }, crypto.randomUUID());
-      const { games: all } = await fetchActiveGame();
-      setGames(all);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not update event state.');
-    } finally {
-      setCommandingId(null);
-    }
-  }
+  const roundAuditQuery = useQuery({
+    queryKey: ['admin-round-audit', selectedRoundForAudit?.id],
+    queryFn: ({ signal }) =>
+      listAdminAudit({ roundId: selectedRoundForAudit!.id, limit: 100 }, signal),
+    enabled: !!selectedRoundForAudit,
+  });
 
   // Excel Question Import state
   const [showImport, setShowImport] = useState(false);
@@ -449,6 +442,13 @@ export function AdminDashboard() {
                   )}
                   <button
                     type="button"
+                    className={styles.settingsBtn}
+                    onClick={() => setSelectedRoundForAudit(game)}
+                  >
+                    ⚙ Settings
+                  </button>
+                  <button
+                    type="button"
                     className={styles.manageGameBtn}
                     onClick={() => handleOpenGame(game)}
                   >
@@ -470,6 +470,130 @@ export function AdminDashboard() {
             >
               {creating ? 'Creating…' : '+ Create Game'}
             </button>
+          </div>
+        )}
+
+        {/* Round Settings & Audits Modal */}
+        {selectedRoundForAudit && (
+          <div
+            className={styles.modalOverlay}
+            onClick={() => setSelectedRoundForAudit(null)}
+          >
+            <div
+              className={styles.modalContent}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className={styles.modalHeader}>
+                <div>
+                  <h2 className={styles.modalTitle}>
+                    Settings & Audits — {selectedRoundForAudit.name}
+                  </h2>
+                  <p className={styles.modalSubtitle}>
+                    Game #{selectedRoundForAudit.roundSequence} · Code: #{selectedRoundForAudit.code} · Created: {new Date(selectedRoundForAudit.createdAt).toLocaleString()}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className={styles.modalCloseBtn}
+                  onClick={() => setSelectedRoundForAudit(null)}
+                >
+                  ✕ Close
+                </button>
+              </div>
+
+              <div className={styles.modalBody}>
+                <div className={styles.roundInfoBar}>
+                  <div className={styles.roundInfoItem}>
+                    <span className={styles.roundInfoLabel}>Round Status</span>
+                    <span className={styles.roundInfoValue}>{selectedRoundForAudit.status}</span>
+                  </div>
+                  <div className={styles.roundInfoItem}>
+                    <span className={styles.roundInfoLabel}>Game Code</span>
+                    <span className={styles.roundInfoValue}>#{selectedRoundForAudit.code}</span>
+                  </div>
+                  <div className={styles.roundInfoItem}>
+                    <span className={styles.roundInfoLabel}>Sequence</span>
+                    <span className={styles.roundInfoValue}>Game #{selectedRoundForAudit.roundSequence}</span>
+                  </div>
+                </div>
+
+                <div className={styles.auditSectionTitle}>
+                  <span>Audits for this Round</span>
+                  {roundAuditQuery.isFetching && <span style={{ fontSize: '12px', color: '#00e5ff' }}>Refreshing…</span>}
+                </div>
+
+                {roundAuditQuery.isLoading ? (
+                  <p className={styles.emptyAuditMsg}>Loading round audits…</p>
+                ) : roundAuditQuery.error ? (
+                  <p className={styles.emptyAuditMsg}>Could not load audits for this round.</p>
+                ) : roundAuditQuery.data?.items.length === 0 ? (
+                  <p className={styles.emptyAuditMsg}>No audit records logged for this round yet.</p>
+                ) : (
+                  <div className={styles.auditTableWrap}>
+                    <table className={styles.auditTable}>
+                      <thead>
+                        <tr>
+                          <th>Time</th>
+                          <th>Actor</th>
+                          <th>Action</th>
+                          <th>Resource</th>
+                          <th>Details</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {roundAuditQuery.data?.items.map((record) => {
+                          const actorInfo = formatAuditActor(record);
+                          const resourceInfo = formatAuditResource(record);
+                          return (
+                            <tr key={record.id}>
+                              <td>
+                                <time dateTime={record.createdAt}>
+                                  {new Intl.DateTimeFormat(undefined, {
+                                    dateStyle: 'medium',
+                                    timeStyle: 'short',
+                                  }).format(new Date(record.createdAt))}
+                                </time>
+                              </td>
+                              <td>
+                                <span className={styles.auditActorEmail}>{actorInfo.primary}</span>
+                                <span className={styles.auditActorRole}>{actorInfo.secondary}</span>
+                              </td>
+                              <td>
+                                <span className={styles.auditActionText}>
+                                  {formatAuditAction(record.action, record.metadata)}
+                                </span>
+                              </td>
+                              <td>
+                                <span className={styles.auditResourcePrimary}>
+                                  {resourceInfo.primary}
+                                </span>
+                                <span className={styles.auditResourceSecondary}>
+                                  {resourceInfo.secondary}
+                                </span>
+                              </td>
+                              <td>
+                                {record.metadata === null ? (
+                                  '—'
+                                ) : (
+                                  <details>
+                                    <summary style={{ cursor: 'pointer', color: '#00e5ff' }}>
+                                      View metadata
+                                    </summary>
+                                    <pre style={{ margin: '8px 0 0 0', fontSize: '11px', maxHeight: '120px', overflowY: 'auto' }}>
+                                      {JSON.stringify(record.metadata, null, 2)}
+                                    </pre>
+                                  </details>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         )}
       </div>

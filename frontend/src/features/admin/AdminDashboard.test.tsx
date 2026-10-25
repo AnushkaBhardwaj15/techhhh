@@ -19,6 +19,10 @@ vi.mock('../../lib/api/play', () => ({
   commandPlayRound: vi.fn(),
 }));
 
+vi.mock('../../lib/api/adminOperations', () => ({
+  listAdminAudit: vi.fn().mockResolvedValue({ items: [], limit: 100, hasMore: false, nextCursor: null }),
+}));
+
 const admin: AuthenticatedUser = {
   id: 'admin-1',
   email: 'admin@example.test',
@@ -92,6 +96,7 @@ describe('admin dashboard', () => {
     expect(await screen.findByText('Tech Tambola — Game 1')).toBeVisible();
     expect(screen.getByText('GAME #1')).toBeVisible();
     expect(screen.getByText('CODE: #8679DE')).toBeVisible();
+    expect(screen.getByRole('button', { name: '⚙ Settings' })).toBeVisible();
     expect(screen.getByRole('button', { name: 'Open Game Control →' })).toBeVisible();
   });
 

@@ -110,6 +110,7 @@ describe('Operations read models', () => {
       id: auditRow.id,
       actorId: auditRow.actorId,
       actorEmail: null,
+      actorName: null,
       actorType: 'ADMIN',
       action: 'ROUND_STARTED',
       resourceType: 'round',

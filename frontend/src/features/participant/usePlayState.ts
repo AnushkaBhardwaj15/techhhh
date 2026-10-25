@@ -12,7 +12,10 @@ export function usePlayState(roundId: string, publicView = false) {
         ? readPublicPlay(signal).then((result) => result.game)
         : readPlayRound(roundId, signal),
     enabled: publicView || !!roundId,
-    refetchInterval: wsConnected ? 5000 : 1500,
+    refetchInterval: (q) => {
+      if (q.state.data?.status === 'COMPLETED') return false;
+      return wsConnected ? 5000 : 1500;
+    },
     refetchOnWindowFocus: "always",
   });
   const id = query.data?.id;

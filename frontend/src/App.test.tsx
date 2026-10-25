@@ -47,7 +47,7 @@ describe('application role routes', () => {
     vi.mocked(authApi.getMe).mockResolvedValue({ id: 'u1', email: 'a@example.test', name: 'Ari Patel', role: 'ADMIN', status: 'ACTIVE' });
     window.history.replaceState({}, '', '/admin');
     render(<App />);
-    expect(await screen.findByRole('heading', { name: 'Your games' }, { timeout: 5000 })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Your games' })).toBeInTheDocument();
     expect(authApi.getMe).toHaveBeenCalledOnce();
   });
 
@@ -64,7 +64,7 @@ describe('application role routes', () => {
     vi.mocked(authApi.getMe).mockResolvedValue({ id: 'u1', email: 'a@example.test', name: 'Ari Patel', role: 'ADMIN', status: 'ACTIVE' });
     window.history.replaceState({}, '', '/admin/system');
     render(<App />);
-    expect(await screen.findByRole('heading', { name: 'Your games' }, { timeout: 5000 })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Your games' })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'System health' })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'System' })).not.toBeInTheDocument();
     expect(getSuperAdminSystem).not.toHaveBeenCalled();

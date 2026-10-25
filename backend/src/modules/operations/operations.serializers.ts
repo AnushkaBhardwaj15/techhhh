@@ -1,16 +1,14 @@
 import type { AuditLogRecord } from '../../db/schema/audit.ts';
 import { redactSensitiveData } from '../../shared/utils/redaction.ts';
 
-export function serializeAuditRecord(record: AuditLogRecord & { actorEmail?: string | null; eventName?: string | null; resourceName?: string | null }) {
-  const meta = record.metadata as Record<string, unknown> | null;
-  const actorEmail = record.actorEmail ?? (meta?.actorEmail as string | undefined) ?? (meta?.email as string | undefined) ?? null;
-  const eventName = record.eventName ?? (meta?.eventName as string | undefined) ?? (meta?.eventTitle as string | undefined) ?? null;
-  const resourceName = record.resourceName ?? (meta?.resourceName as string | undefined) ?? (meta?.patternType as string | undefined) ?? (meta?.title as string | undefined) ?? null;
-
+export function serializeAuditRecord(
+  record: AuditLogRecord & { actorEmail?: string | null; actorName?: string | null }
+) {
   return {
     id: record.id,
     actorId: record.actorId,
-    actorEmail,
+    actorEmail: record.actorEmail ?? (record.metadata as Record<string, unknown> | null)?.email ?? null,
+    actorName: record.actorName ?? (record.metadata as Record<string, unknown> | null)?.name ?? null,
     actorType: record.actorType,
     action: record.action,
     resourceType: record.resourceType,
