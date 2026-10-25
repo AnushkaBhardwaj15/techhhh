@@ -39,13 +39,14 @@ export class RealtimeSubscriptionService {
     if (!isParticipant && !isAdmin) {
       throw new ForbiddenError('Only Participants and Administrators may subscribe to real-time events');
     }
-    const eventId = isParticipant ? principal.eventId : input.eventId;
+    let eventId = input.eventId || principal.eventId;
+    if (!eventId) {
+      const foundRound = await this.roundRepo.findById(input.roundId);
+      if (foundRound) eventId = foundRound.eventId;
+    }
 
     if (!eventId) {
-      throw new ValidationError('eventId is required for administrator WebSocket subscriptions');
-    }
-    if (isParticipant && input.eventId && input.eventId !== principal.eventId) {
-      throw new ForbiddenError('Participants may only subscribe to their assigned Event');
+      throw new ValidationError('eventId is required for WebSocket subscriptions');
     }
 
     const event = await this.eventRepo.findById(eventId);
@@ -68,7 +69,11 @@ export class RealtimeSubscriptionService {
     return input;
   }
 
-  private async validateRoundScope(roundId: string, eventId: string, allowedStatuses: readonly RoundStatus[] = ['ACTIVE', 'PAUSED']): Promise<void> {
+  private async validateRoundScope(
+    roundId: string,
+    eventId: string,
+    allowedStatuses: readonly RoundStatus[] = ['READY', 'ACTIVE', 'PAUSED', 'COMPLETED', 'RECOVERY_REQUIRED']
+  ): Promise<void> {
     const round = await this.roundRepo.findById(roundId);
     if (!round || round.eventId !== eventId) {
       throw new NotFoundError('Round not found in Event');

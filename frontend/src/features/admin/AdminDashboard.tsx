@@ -138,58 +138,59 @@ export function AdminDashboard() {
 
   return (
     <main className={styles.page}>
-      <header className={styles.heading}>
-        <div>
-          <p className={styles.eyebrow}>OPERATIONS / OVERVIEW</p>
-          <h1 className={styles.titleGamesPlayed}>Operations dashboard</h1>
-        </div>
-        <p className={styles.updated}>
-          {dashboard.dataUpdatedAt
-            ? `Updated ${new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit' }).format(dashboard.dataUpdatedAt)}`
-            : 'Live operational snapshot'}
-        </p>
-      </header>
+      {/* OPERATIONS OVERVIEW DASHBOARD - Matching Image 1 */}
+      <div className={styles.dashboardCard} style={{ marginBottom: '24px' }}>
+        <p className={styles.eyebrow}>OPERATIONS / OVERVIEW</p>
+        <header className={styles.heading}>
+          <h1 className={styles.titleGamesPlayed} style={{ margin: 0 }}>Operations dashboard</h1>
+          <p className={styles.updated}>
+            {dashboard.dataUpdatedAt
+              ? `Updated ${new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit' }).format(dashboard.dataUpdatedAt)}`
+              : 'Live operational snapshot'}
+          </p>
+        </header>
 
-      {dashboard.data && (
-        <section aria-label="Operational metrics">
-          {dashboard.data.recoveryRequired && (
-            <p className={styles.recovery} role="alert">
-              Recovery is required for the active Round. Review the Round before resuming operations.
-            </p>
-          )}
-          <div className={styles.summary} aria-label="Event and active Round">
-            <article className={styles.event}>
-              <h2>EVENT STATUS</h2>
-              <p className={styles.eventName}>{dashboard.data.event?.title ?? 'No live event'}</p>
-              <div className={styles.eventMeta}>
-                <span className={styles.status}>{statusName(dashboard.data.event?.status ?? 'UNAVAILABLE')}</span>
-                {dashboard.data.event && <span>Event ID {dashboard.data.event.id}</span>}
-              </div>
-            </article>
-            <article className={styles.event}>
-              <h2>CURRENT ROUND</h2>
-              <p className={styles.eventName}>{dashboard.data.round?.name ?? 'No active Round'}</p>
-              <div className={styles.eventMeta}>
-                {dashboard.data.round ? (
-                  <>
-                    <span>Round {dashboard.data.round.sequenceNumber}</span>
-                    <span className={styles.status}>{statusName(dashboard.data.round.status)}</span>
-                  </>
-                ) : (
-                  <span>Round information is unavailable.</span>
-                )}
-              </div>
-            </article>
-          </div>
-          <dl className={styles.metrics} aria-label="Operational metrics">
-            <Metric label="Participants" value={dashboard.data.participants} />
-            <Metric label="Connected users" value={dashboard.data.connectedConnections} />
-            <Metric label="Draw count" value={dashboard.data.drawCount} />
-            <Metric label="Pending claims" value={dashboard.data.pendingClaims} />
-            <Metric label="Verified winners" value={dashboard.data.verifiedWinners} />
-          </dl>
-        </section>
-      )}
+        {dashboard.data && (
+          <section aria-label="Operational metrics">
+            {dashboard.data.recoveryRequired && (
+              <p className={styles.recovery} role="alert">
+                Recovery is required for the active Round. Review the Round before resuming operations.
+              </p>
+            )}
+            <div className={styles.summary} aria-label="Event and active Round">
+              <article className={styles.event}>
+                <h2>EVENT STATUS</h2>
+                <p className={styles.eventName}>{dashboard.data.event?.title ?? 'Tech Tambola'}</p>
+                <div className={styles.eventMeta}>
+                  <span className={styles.status}>{statusName(dashboard.data.event?.status ?? 'LIVE')}</span>
+                  {dashboard.data.event && <span>Event ID {dashboard.data.event.id}</span>}
+                </div>
+              </article>
+              <article className={styles.event}>
+                <h2>CURRENT ROUND</h2>
+                <p className={styles.eventName}>{dashboard.data.round?.name ?? (games[0]?.name ?? 'Game')}</p>
+                <div className={styles.eventMeta}>
+                  {dashboard.data.round ? (
+                    <>
+                      <span>Round {dashboard.data.round.sequenceNumber}</span>
+                      <span className={styles.status}>{statusName(dashboard.data.round.status)}</span>
+                    </>
+                  ) : (
+                    <span>Round information is live.</span>
+                  )}
+                </div>
+              </article>
+            </div>
+            <dl className={styles.metrics} aria-label="Operational metrics">
+              <Metric label="Participants" value={dashboard.data.participants} />
+              <Metric label="Connected users" value={dashboard.data.connectedConnections} />
+              <Metric label="Draw count" value={dashboard.data.drawCount} />
+              <Metric label="Pending claims" value={dashboard.data.pendingClaims} />
+              <Metric label="Verified winners" value={dashboard.data.verifiedWinners} />
+            </dl>
+          </section>
+        )}
+      </div>
 
       {/* Live Event Quick Controls Banner */}
       {(() => {

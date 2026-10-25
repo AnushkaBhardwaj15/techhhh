@@ -137,7 +137,11 @@ export function useParticipantRealtime(enabled: boolean, userId: string, eventId
         } else if (event.type === 'WINNER_VERIFIED') {
           synchronize(reconcileWinners());
         } else if (event.type === 'ANNOUNCEMENT') {
-          setAnnouncement(event.payload.message);
+          if (!event.payload.message.startsWith('ROUND_UPDATE_')) {
+            setAnnouncement(event.payload.message);
+          }
+          synchronize(reconcileDraws());
+          synchronize(reconcileRound());
         } else if (event.type.startsWith('ROUND_')) {
           synchronize(reconcileRound());
         } else {

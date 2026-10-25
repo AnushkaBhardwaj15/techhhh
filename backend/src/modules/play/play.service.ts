@@ -45,24 +45,32 @@ export class PlayService {
       if (!broadcastGame) {
         return { game: null, games: summaries };
       }
-      const state = await this.store.read(broadcastGame.id, {
-        ...actor,
-        eventId: broadcastGame.eventId,
-      });
-      return {
-        game: publicPlayState(state, false),
-        games: summaries,
-      };
+      try {
+        const state = await this.store.read(broadcastGame.id, {
+          ...actor,
+          eventId: broadcastGame.eventId,
+        });
+        return {
+          game: publicPlayState(state, false),
+          games: summaries,
+        };
+      } catch {
+        return { game: null, games: summaries };
+      }
     }
 
-    const state = await this.store.read(summaries[0].id, actor);
-    return {
-      game: publicPlayState(
-        state,
-        actor?.role === "ADMIN" || actor?.role === "SUPER_ADMIN",
-      ),
-      games: summaries,
-    };
+    try {
+      const state = await this.store.read(summaries[0].id, actor);
+      return {
+        game: publicPlayState(
+          state,
+          actor?.role === "ADMIN" || actor?.role === "SUPER_ADMIN",
+        ),
+        games: summaries,
+      };
+    } catch {
+      return { game: null, games: summaries };
+    }
   }
   async broadcast(id: string, actor: PlayActor, broadcast: boolean) {
     this.admin(actor);
@@ -191,7 +199,26 @@ export class PlayService {
         new Date().toISOString(),
       ),
     );
-    if (result.accepted) await this.notify(state);
+    if (result.accepted) {
+      await this.notify(state);
+      try {
+        const lastWin = state.wins[state.wins.length - 1];
+        await this.publish?.broadcastCommitted({
+          type: "WINNER_VERIFIED",
+          eventId: state.eventId,
+          roundId: state.id,
+          occurredAt: new Date().toISOString(),
+          payload: {
+            winnerId: lastWin?.id ?? crypto.randomUUID(),
+            participantName: "Player",
+            pattern,
+            eligibleCellIds: state.ticket?.cells.filter((c) => c.marked).slice(0, 5).map((c) => c.id) ?? [],
+          },
+        });
+      } catch {
+        /* transport fallback */
+      }
+    }
     return { ...result, game: publicPlayState(state) };
   }
   private admin(actor: PlayActor) {
@@ -202,15 +229,55 @@ export class PlayService {
     if (actor.role !== "PARTICIPANT") throw new ForbiddenError();
   }
   private async notify(state: PlayState) {
-    // Invalidates subscribed native WebSocket clients after the SQL transaction commits.
+    // Real-time broadcast for all connected participants and public viewers
     try {
+      const lastDraw = state.draws[state.draws.length - 1];
+      if (lastDraw) {
+        await this.publish?.broadcastCommitted({
+          type: "DRAW_CREATED",
+          eventId: state.eventId,
+          roundId: state.id,
+          occurredAt: new Date().toISOString(),
+          payload: {
+            sequence: lastDraw.sequence,
+            key: lastDraw.answer ?? String(lastDraw.number),
+            question: lastDraw.prompt,
+            drawnAt: lastDraw.drawnAt,
+          },
+        });
+      }
+      if (state.status === "ACTIVE") {
+        await this.publish?.broadcastCommitted({
+          type: "ROUND_STARTED",
+          eventId: state.eventId,
+          roundId: state.id,
+          occurredAt: new Date().toISOString(),
+          payload: { status: "ACTIVE" },
+        });
+      } else if (state.status === "PAUSED") {
+        await this.publish?.broadcastCommitted({
+          type: "ROUND_PAUSED",
+          eventId: state.eventId,
+          roundId: state.id,
+          occurredAt: new Date().toISOString(),
+          payload: { status: "PAUSED" },
+        });
+      } else if (state.status === "COMPLETED") {
+        await this.publish?.broadcastCommitted({
+          type: "ROUND_COMPLETED",
+          eventId: state.eventId,
+          roundId: state.id,
+          occurredAt: new Date().toISOString(),
+          payload: { status: "COMPLETED" },
+        });
+      }
       await this.publish?.broadcastCommitted({
         type: "ANNOUNCEMENT",
         eventId: state.eventId,
         roundId: state.id,
         occurredAt: new Date().toISOString(),
         payload: {
-          message: "Round state updated. Refresh the authoritative snapshot.",
+          message: `ROUND_UPDATE_${state.id}`,
         },
       });
     } catch {

@@ -655,27 +655,27 @@
   box-shadow: 5.5px 5.5px 0 var(--retro-ink, #18130F);
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   .page {
-    padding: 16px 12px 36px;
+    padding: 16px 10px 36px;
   }
   .outerCard {
-    padding: 20px 14px;
+    padding: 20px 12px;
   }
   .codeSlot {
-    width: 38px;
-    height: 48px;
-    font-size: 20px;
+    width: clamp(34px, 11vw, 44px);
+    height: clamp(44px, 13vw, 52px);
+    font-size: clamp(18px, 5vw, 24px);
   }
   .codeSlotsContainer {
-    gap: 6px;
+    gap: clamp(4px, 1.5vw, 8px);
   }
   .activeGameHeader {
     flex-wrap: wrap;
     gap: 8px;
   }
   .activeGameContent {
-    gap: 18px;
+    gap: 16px;
   }
   .customCodeRow {
     flex-wrap: wrap;
@@ -689,5 +689,9 @@
   }
   .sectionHeader {
     flex-wrap: wrap;
+  }
+  .joinBtn {
+    width: 100%;
+    padding: 12px 24px;
   }
 }

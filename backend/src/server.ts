@@ -30,6 +30,12 @@ async function main() {
 
   process.on('SIGTERM', () => shutdown('SIGTERM'));
   process.on('SIGINT', () => shutdown('SIGINT'));
+  process.on('unhandledRejection', (reason) => {
+    app.log.error({ err: reason }, 'Unhandled Rejection caught');
+  });
+  process.on('uncaughtException', (err) => {
+    app.log.error({ err }, 'Uncaught Exception caught');
+  });
 
   try {
     const listenHost = process.env.NODE_ENV === 'production' || process.env.RENDER ? '0.0.0.0' : (env.HOST || '0.0.0.0');

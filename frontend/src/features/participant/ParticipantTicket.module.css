@@ -173,7 +173,8 @@
   transition: transform 0.1s ease, box-shadow 0.1s ease;
 }
 
-.grid td.empty {
+.grid td.empty,
+.mobileGrid td.empty {
   background: #EFE8DA;
   border: 1.5px dashed #A99F91;
   box-shadow: none;
@@ -518,5 +519,127 @@
     scroll-behavior: auto !important;
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
+  }
+}
+.mobileGridViewport {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  margin: 8px 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+.mobileGrid {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 5px;
+}
+
+.mobileColHeader {
+  padding: 8px 4px;
+  font: 900 12px/1.2 var(--mono);
+  color: var(--retro-ink, #18130F);
+  letter-spacing: 0.08em;
+  text-align: center;
+  background: var(--retro-orange-soft, #FDE8DA);
+  border: 2px solid var(--retro-ink, #18130F);
+  box-shadow: 2px 2px 0 var(--retro-ink, #18130F);
+  border-radius: var(--radius-xs, 2px);
+  text-transform: uppercase;
+}
+
+.mobileGrid td {
+  width: 33.333%;
+  min-height: 68px;
+  height: clamp(68px, 16vw, 92px);
+  padding: 6px 3px;
+  border: 2px solid var(--retro-ink, #18130F);
+  box-shadow: 2px 2px 0 var(--retro-ink, #18130F);
+  border-radius: var(--radius-xs, 2px);
+  text-align: center;
+  vertical-align: middle;
+  overflow-wrap: anywhere;
+  background: #FFFFFF;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobileGrid td.playable {
+  background: #FFFFFF;
+  cursor: pointer;
+}
+
+.mobileGrid td.playable:active {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 var(--retro-ink, #18130F);
+}
+
+.mobileGrid td.marked {
+  color: #FFFFFF !important;
+  background: var(--retro-orange, #EE640F) !important;
+  border-color: var(--retro-ink, #18130F) !important;
+  box-shadow: inset 2px 2px 0 rgba(0, 0, 0, 0.25), 2px 2px 0 var(--retro-ink, #18130F) !important;
+}
+
+.mobileGrid td.winning {
+  color: #FFFFFF !important;
+  background: #10B981 !important;
+  border-color: var(--retro-ink, #18130F) !important;
+  box-shadow: inset 2px 2px 0 rgba(0, 0, 0, 0.25), 3px 3px 0 var(--retro-ink, #18130F) !important;
+}
+
+.mobileGrid td strong {
+  display: block;
+  font-size: clamp(10px, 2.8vw, 13px);
+  line-height: 1.15;
+  font-weight: 850;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 768px) {
+  .page {
+    padding: 16px 10px 48px;
+  }
+  .intro {
+    padding-bottom: 16px;
+  }
+  .intro h1 {
+    font-size: clamp(26px, 6.5vw, 36px);
+    margin: 8px 0;
+  }
+  .ticket {
+    padding: 14px 8px;
+    box-shadow: 3.5px 3.5px 0 var(--retro-ink, #18130F);
+  }
+  .serverMark {
+    text-align: left;
+    font-size: 9px;
+  }
+  .ticketHead {
+    gap: 8px;
+  }
+  .ticketHead h3 {
+    font-size: 13px;
+    word-break: break-all;
+  }
+  .gridScrollHint {
+    display: none !important;
+  }
+  .legend {
+    gap: 10px;
+    padding: 8px 10px;
+    font-size: 10px;
+  }
+  .legendItem {
+    font-size: 10px;
+  }
+  .roundHeading {
+    gap: 6px 12px;
+    margin: 4px 0 12px;
+  }
+  .roundHeading h2 {
+    font-size: clamp(20px, 5vw, 28px);
   }
 }

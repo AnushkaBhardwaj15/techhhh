@@ -211,12 +211,16 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
     }
 
     // 3. Known domain / application errors
-    if (error instanceof AppError) {
-      if (isLoggingEnabled) request.log.warn({ event: 'request_rejected', errorCode: error.code }, 'Request rejected');
-      reply.status(error.statusCode).send({
+    const errStatus = (error as any)?.statusCode ?? (error as any)?.status;
+    const errCode = (error as any)?.code ?? (error as any)?.errorCode;
+    if (error instanceof AppError || (typeof errStatus === 'number' && errStatus >= 400 && errStatus < 500)) {
+      const statusCode = typeof errStatus === 'number' ? errStatus : 400;
+      const errorCode = typeof errCode === 'string' ? errCode : 'REQUEST_FAILED';
+      if (isLoggingEnabled) request.log.warn({ event: 'request_rejected', errorCode }, 'Request rejected');
+      reply.status(statusCode).send({
         error: {
-          code: error.code,
-          message: error.message,
+          code: errorCode,
+          message: error.message || 'Request failed',
         },
         requestId,
       });
@@ -224,6 +228,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
     }
 
     // 4. Unexpected / database / 500 errors - strictly hide stack traces and DB details
+    console.error(`[Server Error] ${request.method} ${request.url}:`, error);
     if (isLoggingEnabled) {
       request.log.error({ err: error }, 'Request or database operation failed');
     }

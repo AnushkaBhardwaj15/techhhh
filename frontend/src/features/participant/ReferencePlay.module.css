@@ -249,9 +249,91 @@
   font-size: 14px;
 }
 
-@media (max-width: 600px) {
+.claimList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.claimItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+  border: 2px solid var(--retro-ink, #18130F);
+  background: #FFFFFF;
+  box-shadow: 3px 3px 0 var(--retro-ink, #18130F);
+  border-radius: var(--radius-xs, 2px);
+}
+
+.claimName {
+  display: block;
+  font-size: 15px;
+  font-weight: 850;
+  color: var(--retro-ink, #18130F);
+}
+
+.points {
+  display: block;
+  font: 800 11px var(--mono);
+  color: var(--retro-orange, #EE640F);
+  margin-top: 2px;
+}
+
+@media (max-width: 768px) {
   .page {
-    padding-inline: 12px;
+    padding: 14px 10px 48px;
+  }
+  .heading h1 {
+    font-size: clamp(22px, 5.5vw, 32px);
+  }
+  .score {
+    padding: 8px 14px;
+    font-size: 22px;
+    box-shadow: 2.5px 2.5px 0 var(--retro-ink, #18130F);
+  }
+  .score span {
+    font-size: 9px;
+  }
+  .clue {
+    padding: 14px 10px;
+    box-shadow: 4px 4px 0 var(--retro-ink, #18130F);
+  }
+  .clue h2 {
+    font-size: clamp(17px, 4.5vw, 24px);
+    margin: 8px 0 12px;
+  }
+  .code {
+    font-size: 12px;
+    padding: 10px;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .answer strong {
+    font-size: clamp(22px, 5.5vw, 32px);
+  }
+  .panel {
+    padding: 14px 10px;
+    margin: 18px 0;
+    box-shadow: 4px 4px 0 var(--retro-ink, #18130F);
+  }
+  .claimItem {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 12px;
+  }
+  .claimItem > div {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .claimItem button {
+    width: 100%;
+    min-height: 42px;
   }
   .actions > button {
     width: 100%;

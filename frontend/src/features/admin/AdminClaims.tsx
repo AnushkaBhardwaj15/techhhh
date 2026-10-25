@@ -39,8 +39,8 @@ export function AdminClaims() {
   const claims = useQuery({
     queryKey: claimsKey(user.id, page),
     queryFn: ({ signal }) => listAdminClaims({ page, limit: PAGE_SIZE, signal }),
-    refetchInterval: 15_000,
-    refetchIntervalInBackground: false,
+    refetchInterval: 1000,
+    refetchIntervalInBackground: true,
     refetchOnReconnect: 'always',
   });
   const selected = claims.data?.data.find((claim) => claim.id === selectedId);

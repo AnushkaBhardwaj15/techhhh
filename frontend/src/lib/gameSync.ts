@@ -80,7 +80,7 @@ export function subscribeToGameSync(
       .catch(() => {
         /* The current UI keeps its last snapshot and reports query errors. */
       });
-  }, 3500);
+  }, 500);
   return () => {
     stopped = true;
     clearInterval(timer);

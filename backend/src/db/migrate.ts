@@ -7,7 +7,7 @@ export async function runMigrations(overrideUrl?: string): Promise<{ applied: st
   const env = getEnv();
   const url = overrideUrl || process.env.DATABASE_URL_UNPOOLED || env.DATABASE_URL;
   const isLocal = url.includes('localhost') || url.includes('127.0.0.1');
-  const ssl = isLocal ? false : (env.NODE_ENV === 'production' ? 'require' : false);
+  const ssl = isLocal ? false : 'require';
   const sql = postgres(url, { max: 1, connect_timeout: 10, ssl });
 
   try {

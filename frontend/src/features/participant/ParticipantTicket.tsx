@@ -17,6 +17,29 @@ import styles from './ParticipantTicket.module.css';
 
 const refreshableRound = new Set(['DRAFT', 'READY', 'RECOVERY_REQUIRED']);
 
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth <= 768 || (window.matchMedia ? window.matchMedia('(max-width: 768px)').matches : false);
+  });
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const update = () => {
+      setIsMobile(window.innerWidth <= 768 || (window.matchMedia?.('(max-width: 768px)').matches ?? false));
+    };
+    window.addEventListener('resize', update);
+    const media = window.matchMedia?.('(max-width: 768px)');
+    media?.addEventListener?.('change', update);
+    return () => {
+      window.removeEventListener('resize', update);
+      media?.removeEventListener?.('change', update);
+    };
+  }, []);
+
+  return isMobile;
+}
+
 export function TicketGrid({
   ticket,
   revealedKey,
@@ -42,6 +65,7 @@ export function TicketGrid({
 }) {
   const matchRef = useRef<HTMLTableCellElement>(null);
   const scrollHintId = useId();
+  const isMobile = useIsMobile();
   const cells = new Map(ticket.cells.map((cell) => [`${cell.rowIndex}:${cell.colIndex}`, cell]));
 
   useEffect(() => {
@@ -55,86 +79,181 @@ export function TicketGrid({
 
   return (
     <>
-      <p className={styles.gridScrollHint} id={scrollHintId}>
-        If needed, scroll horizontally to see all nine columns.
-      </p>
-      <div className={styles.gridViewport} role="region" aria-label="Ticket grid" aria-describedby={scrollHintId} tabIndex={0}>
-        <table className={styles.grid} aria-label="Your Tombola ticket">
-          <tbody>
-            {Array.from({ length: 3 }, (_, row) => (
-              <tr
-                key={row}
-                data-row-num={row + 1}
-                data-row-title={row === 0 ? 'Row 1 · Top Line (5 keys)' : row === 1 ? 'Row 2 · Middle Line (5 keys)' : 'Row 3 · Bottom Line (5 keys)'}
-              >
-                {Array.from({ length: 9 }, (_, column) => {
-                  const cell = cells.get(`${row}:${column}`);
-                  const matched = !!cell && cell.keyValue.toUpperCase() === revealedKey?.toUpperCase();
-                  const pending = !!cell && pendingCellIds.has(cell.id);
-                  const uncertain = !!cell && uncertainCellIds.has(cell.id);
-                  const winning = !!cell && winningCellIds.has(cell.id);
-                  const showButton = onMark
-                    ? (!cell?.marked && drawnKeys.has(cell?.keyValue ?? ''))
-                    : (Boolean(canMark) && Boolean(cell));
-                  return (
-                    <td
-                      ref={matched ? matchRef : undefined}
-                      key={column}
-                      aria-label={
-                        cell
-                          ? `Row ${row + 1}, column ${column + 1}: ${cell.keyValue}, ${cell.marked ? 'marked' : 'not marked'}${matched ? ', matches latest revealed key' : ''}${winning ? ', verified winning cell' : ''}`
-                          : `Row ${row + 1}, column ${column + 1}: empty`
-                      }
-                      className={`${cell ? (cell.marked ? styles.marked : styles.playable) : styles.empty}${matched ? ` ${styles.matched}` : ''}${pending ? ` ${styles.pending}` : ''}${winning ? ` ${styles.winning}` : ''}`}
-                      data-cell-id={cell?.id}
-                      data-marked={cell?.marked ?? undefined}
-                      data-winning={winning || undefined}
-                    >
-                      {cell ? (
-                        <div className={styles.cellContent}>
-                          <span className={styles.position}>
-                            R{row + 1} · C{column + 1}
-                          </span>
-                          <strong className={styles.cellText}>{cell.keyValue}</strong>
-                          {winning && <span className={styles.winningState}>Verified win cell</span>}
-                          {showButton ? (
-                            <button
-                              className={styles.markButton}
-                              type="button"
-                              aria-label={
-                                onToggleCell && cell.keyValue.startsWith('TERM ')
-                                  ? `Row ${row + 1}, column ${column + 1}: ${cell.keyValue}, ${cell.marked ? 'marked' : 'not marked'}`
-                                  : `Mark ${cell.keyValue}, row ${row + 1}, column ${column + 1}`
-                              }
-                              aria-busy={pending || undefined}
-                              disabled={!canMark || pending || uncertain}
-                              onClick={() => {
-                                if (cell.marked) {
-                                  playUnmarkSound();
-                                } else {
-                                  playMarkSound();
-                                }
-                                onMark?.(cell.id);
-                                onToggleCell?.(cell);
-                              }}
-                            >
-                              {pending ? 'Saving…' : uncertain ? 'Status unknown' : cell.marked ? 'Marked' : 'Mark'}
-                            </button>
-                          ) : (
-                            <span className={styles.cellState}>{cell.marked ? 'Marked' : 'Not marked'}</span>
-                          )}
-                          <span className={styles.statusIcon} aria-hidden="true">{cell.marked ? '✓' : '○'}</span>
-                        </div>
-                      ) : (
-                        <span className={styles.emptyLabel}>Empty</span>
-                      )}
-                    </td>
-                  );
-                })}
+      {!isMobile && (
+        <p className={styles.gridScrollHint} id={scrollHintId}>
+          If needed, scroll horizontally to see all nine columns.
+        </p>
+      )}
+      <div
+        className={isMobile ? styles.mobileGridViewport : styles.gridViewport}
+        role="region"
+        aria-label={isMobile ? 'Mobile ticket grid' : 'Ticket grid'}
+        aria-describedby={!isMobile ? scrollHintId : undefined}
+        tabIndex={0}
+      >
+        {isMobile ? (
+          /* Mobile view: 9 rows x 3 columns (Rows 1-3) to avoid horizontal scrolling */
+          <table className={styles.mobileGrid} aria-label="Your mobile Tombola ticket">
+            <thead>
+              <tr>
+                <th className={styles.mobileColHeader}>ROW 1</th>
+                <th className={styles.mobileColHeader}>ROW 2</th>
+                <th className={styles.mobileColHeader}>ROW 3</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {Array.from({ length: 9 }, (_, colIdx) => (
+                <tr key={colIdx}>
+                  {Array.from({ length: 3 }, (_, rowIdx) => {
+                    const cell = cells.get(`${rowIdx}:${colIdx}`);
+                    const matched = !!cell && cell.keyValue.toUpperCase() === revealedKey?.toUpperCase();
+                    const pending = !!cell && pendingCellIds.has(cell.id);
+                    const uncertain = !!cell && uncertainCellIds.has(cell.id);
+                    const winning = !!cell && winningCellIds.has(cell.id);
+                    const showButton = onMark
+                      ? (!cell?.marked && drawnKeys.has(cell?.keyValue ?? ''))
+                      : (Boolean(canMark) && Boolean(cell));
+                    const handleCellClick = () => {
+                      if (!cell || !showButton || !canMark || pending || uncertain) return;
+                      if (cell.marked) {
+                        playUnmarkSound();
+                      } else {
+                        playMarkSound();
+                      }
+                      onMark?.(cell.id);
+                      onToggleCell?.(cell);
+                    };
+                    return (
+                      <td
+                        ref={matched ? matchRef : undefined}
+                        key={rowIdx}
+                        aria-label={
+                          cell
+                            ? `Row ${rowIdx + 1}, column ${colIdx + 1}: ${cell.keyValue}, ${cell.marked ? 'marked' : 'not marked'}${matched ? ', matches latest revealed key' : ''}${winning ? ', verified winning cell' : ''}`
+                            : `Row ${rowIdx + 1}, column ${colIdx + 1}: empty`
+                        }
+                        className={`${cell ? (cell.marked ? styles.marked : styles.playable) : styles.empty}${matched ? ` ${styles.matched}` : ''}${pending ? ` ${styles.pending}` : ''}${winning ? ` ${styles.winning}` : ''}`}
+                        data-cell-id={cell?.id}
+                        data-marked={cell?.marked ?? undefined}
+                        data-winning={winning || undefined}
+                        onClick={handleCellClick}
+                        style={{ cursor: cell && showButton && canMark && !pending && !uncertain ? 'pointer' : undefined }}
+                      >
+                        {cell ? (
+                          <div className={styles.cellContent}>
+                            <span className={styles.position}>
+                              Col {colIdx + 1}
+                            </span>
+                            <strong className={styles.cellText}>{cell.keyValue}</strong>
+                            {winning && <span className={styles.winningState}>Verified win</span>}
+                            {showButton ? (
+                              <button
+                                className={styles.markButton}
+                                type="button"
+                                aria-label={`Mark ${cell.keyValue}, row ${rowIdx + 1}, column ${colIdx + 1}`}
+                                aria-busy={pending || undefined}
+                                disabled={!canMark || pending || uncertain}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleCellClick();
+                                }}
+                              >
+                                {pending ? 'Saving…' : uncertain ? 'Status unknown' : cell.marked ? 'Marked' : 'Mark'}
+                              </button>
+                            ) : (
+                              <span className={styles.cellState}>{cell.marked ? 'Marked' : 'Not marked'}</span>
+                            )}
+                            <span className={styles.statusIcon} aria-hidden="true">{cell.marked ? '✓' : '○'}</span>
+                          </div>
+                        ) : (
+                          <span className={styles.emptyLabel}>·</span>
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          /* Laptop / Desktop view: classic 3 rows x 9 columns */
+          <table className={styles.grid} aria-label="Your Tombola ticket">
+            <tbody>
+              {Array.from({ length: 3 }, (_, row) => (
+                <tr
+                  key={row}
+                  data-row-num={row + 1}
+                  data-row-title={row === 0 ? 'Row 1 · Top Line (5 keys)' : row === 1 ? 'Row 2 · Middle Line (5 keys)' : 'Row 3 · Bottom Line (5 keys)'}
+                >
+                  {Array.from({ length: 9 }, (_, column) => {
+                    const cell = cells.get(`${row}:${column}`);
+                    const matched = !!cell && cell.keyValue.toUpperCase() === revealedKey?.toUpperCase();
+                    const pending = !!cell && pendingCellIds.has(cell.id);
+                    const uncertain = !!cell && uncertainCellIds.has(cell.id);
+                    const winning = !!cell && winningCellIds.has(cell.id);
+                    const showButton = onMark
+                      ? (!cell?.marked && drawnKeys.has(cell?.keyValue ?? ''))
+                      : (Boolean(canMark) && Boolean(cell));
+                    return (
+                      <td
+                        ref={matched ? matchRef : undefined}
+                        key={column}
+                        aria-label={
+                          cell
+                            ? `Row ${row + 1}, column ${column + 1}: ${cell.keyValue}, ${cell.marked ? 'marked' : 'not marked'}${matched ? ', matches latest revealed key' : ''}${winning ? ', verified winning cell' : ''}`
+                            : `Row ${row + 1}, column ${column + 1}: empty`
+                        }
+                        className={`${cell ? (cell.marked ? styles.marked : styles.playable) : styles.empty}${matched ? ` ${styles.matched}` : ''}${pending ? ` ${styles.pending}` : ''}${winning ? ` ${styles.winning}` : ''}`}
+                        data-cell-id={cell?.id}
+                        data-marked={cell?.marked ?? undefined}
+                        data-winning={winning || undefined}
+                      >
+                        {cell ? (
+                          <div className={styles.cellContent}>
+                            <span className={styles.position}>
+                              R{row + 1} · C{column + 1}
+                            </span>
+                            <strong className={styles.cellText}>{cell.keyValue}</strong>
+                            {winning && <span className={styles.winningState}>Verified win cell</span>}
+                            {showButton ? (
+                              <button
+                                className={styles.markButton}
+                                type="button"
+                                aria-label={
+                                  onToggleCell && cell.keyValue.startsWith('TERM ')
+                                    ? `Row ${row + 1}, column ${column + 1}: ${cell.keyValue}, ${cell.marked ? 'marked' : 'not marked'}`
+                                    : `Mark ${cell.keyValue}, row ${row + 1}, column ${column + 1}`
+                                }
+                                aria-busy={pending || undefined}
+                                disabled={!canMark || pending || uncertain}
+                                onClick={() => {
+                                  if (cell.marked) {
+                                    playUnmarkSound();
+                                  } else {
+                                    playMarkSound();
+                                  }
+                                  onMark?.(cell.id);
+                                  onToggleCell?.(cell);
+                                }}
+                              >
+                                {pending ? 'Saving…' : uncertain ? 'Status unknown' : cell.marked ? 'Marked' : 'Mark'}
+                              </button>
+                            ) : (
+                              <span className={styles.cellState}>{cell.marked ? 'Marked' : 'Not marked'}</span>
+                            )}
+                            <span className={styles.statusIcon} aria-hidden="true">{cell.marked ? '✓' : '○'}</span>
+                          </div>
+                        ) : (
+                          <span className={styles.emptyLabel}>Empty</span>
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
       <div className={styles.legend}>
         <div className={styles.legendItem}>
@@ -193,8 +312,8 @@ export function ParticipantTicket({
     refetchOnReconnect: 'always',
     refetchOnWindowFocus: 'always',
     refetchInterval: (query) => {
-      if (query.state.error) return query.state.error instanceof ApiError && query.state.error.status === 404 ? 5000 : false;
-      return query.state.data && refreshableRound.has(query.state.data.status) ? 5000 : false;
+      if (query.state.error) return query.state.error instanceof ApiError && query.state.error.status === 404 ? 800 : false;
+      return query.state.data && refreshableRound.has(query.state.data.status) ? 800 : false;
     },
   });
 
@@ -204,7 +323,7 @@ export function ParticipantTicket({
     enabled: !!event.data && !!round.data,
     refetchOnReconnect: 'always',
     refetchOnWindowFocus: 'always',
-    refetchInterval: (query) => (query.state.error instanceof ApiError && query.state.error.status === 404 ? 5000 : false),
+    refetchInterval: (query) => (query.state.error instanceof ApiError && query.state.error.status === 404 ? 800 : false),
   });
 
   const fallbackRef = useRef<Ticket>(createDefaultTicket(round.data?.id || 'round-1', user.id));
@@ -467,7 +586,7 @@ export function ParticipantTicket({
                   <div className={styles.ticketHead}>
                     <div>
                       <span className={styles.label}>TICKET</span>
-                      <h3 style={{ letterSpacing: '0.12em' }}>{ticket.data.id}</h3>
+                      <h3 style={{ letterSpacing: '0.04em', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>{ticket.data.id}</h3>
                     </div>
                     <span className={styles.serverMark}>#{formatTicketCode(ticket.data.id)} · SAVED BY SERVER</span>
                   </div>

@@ -516,6 +516,30 @@ export class PlayRepository implements PlayStore {
           });
         }
       }
+      if (
+        result &&
+        typeof result === "object" &&
+        "claimId" in result &&
+        "pattern" in result &&
+        (result as any).accepted &&
+        state.ticket
+      ) {
+        const claimObj = result as { claimId: string; pattern: string };
+        await tx.unsafe(
+          `INSERT INTO claims(id,round_id,participant_id,ticket_id,pattern_type,status,created_at,updated_at)
+           VALUES($1,$2,$3,$4,$5,'PENDING_VERIFICATION',now(),now())
+           ON CONFLICT (round_id,participant_id,pattern_type)
+           DO UPDATE SET status = CASE WHEN claims.status = 'VERIFIED' THEN claims.status ELSE 'PENDING_VERIFICATION' END, updated_at = now()`,
+          [
+            claimObj.claimId,
+            id,
+            state.ticket.participantId,
+            state.ticket.id,
+            claimObj.pattern,
+          ],
+        );
+      }
+      await this.audit(tx, actor, id, "REFERENCE_ROUND_ACTION");
       if (replay)
         await tx.unsafe(
           `INSERT INTO idempotency_keys(key,resource_type,response_payload) VALUES($1,'reference_command',$2::text::jsonb)`,
@@ -563,14 +587,16 @@ export class PlayRepository implements PlayStore {
       );
       this.bankCache.set(id, bank);
     }
-    const draws = await sql.unsafe<PlayDraw[]>(
-      `SELECT d.id,d.sequence_number AS sequence,d.question_id AS "questionId",d.key_id AS "keyId",k.item_number AS number,d.question_text AS prompt,d.key_value AS answer,COALESCE(d.category,'General') AS category,d.code_snippet AS "codeSnippet",d.answer_revealed AS revealed,d.drawn_at AS "drawnAt" FROM draws d JOIN event_keys k ON k.id=d.key_id WHERE d.round_id=$1 ORDER BY d.sequence_number`,
-      [id],
-    );
-    const wins = await sql.unsafe<PlayWin[]>(
-      `SELECT w.id,w.claim_id AS "claimId",w.participant_id AS "participantId",p.user_id AS "userId",u.name,w.pattern_type AS pattern,w.verified_at AS "createdAt" FROM winners w JOIN participant_profiles p ON p.id=w.participant_id JOIN users u ON u.id=p.user_id WHERE w.round_id=$1 ORDER BY w.verified_at,w.id`,
-      [id],
-    );
+    const [draws, wins] = await Promise.all([
+      sql.unsafe<PlayDraw[]>(
+        `SELECT d.id,d.sequence_number AS sequence,d.question_id AS "questionId",d.key_id AS "keyId",k.item_number AS number,d.question_text AS prompt,d.key_value AS answer,COALESCE(d.category,'General') AS category,d.code_snippet AS "codeSnippet",d.answer_revealed AS revealed,d.drawn_at AS "drawnAt" FROM draws d JOIN event_keys k ON k.id=d.key_id WHERE d.round_id=$1 ORDER BY d.sequence_number`,
+        [id],
+      ),
+      sql.unsafe<PlayWin[]>(
+        `SELECT w.id,w.claim_id AS "claimId",w.participant_id AS "participantId",COALESCE(p.user_id,w.participant_id) AS "userId",COALESCE(u.name,'Player') AS name,w.pattern_type AS pattern,w.verified_at AS "createdAt" FROM winners w LEFT JOIN participant_profiles p ON p.id=w.participant_id LEFT JOIN users u ON u.id=p.user_id WHERE w.round_id=$1 ORDER BY w.verified_at,w.id`,
+        [id],
+      ),
+    ]);
     let ticket: PlayState["ticket"] = null;
     if (actor?.role === "PARTICIPANT") {
       let [profile] = await sql.unsafe<{ id: string }[]>(

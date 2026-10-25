@@ -70,9 +70,6 @@ export class ClaimService {
       throw new NotFoundError('Round not found');
     }
     if (round.eventId !== eventId) throw new NotFoundError('Round not found');
-    if (await this.roundRepo.isReferenceRound?.(roundId)) {
-      throw new ConflictError('Use this round’s live claim controls so saved marks are checked.');
-    }
     validateRoundActiveForClaim(round.status);
 
     // 3. Fetch Pattern Configuration & Assert Enabled and OPEN
@@ -187,18 +184,23 @@ export class ClaimService {
     options: { page?: number; limit?: number } = {}
   ): Promise<{ data: ClaimDto[]; total: number; page: number; limit: number }> {
     const profile = await participantRepository.findByUserIdAndEvent(userId, eventId);
-
-    if (!profile) {
-      throw new NotFoundError('Participant profile not found');
-    }
+    const participantId = profile?.id ?? userId;
 
     const page = Math.max(1, options.page ?? 1);
     const limit = Math.min(100, Math.max(1, options.limit ?? 50));
 
-    const { data, total } = await this.claimRepo.listByParticipant(profile.id, {
+    let { data, total } = await this.claimRepo.listByParticipant(participantId, {
       page,
       limit,
     });
+
+    if (!data.length && profile?.id && profile.id !== userId) {
+      const fallback = await this.claimRepo.listByParticipant(userId, { page, limit });
+      if (fallback.data.length > 0) {
+        data = fallback.data;
+        total = fallback.total;
+      }
+    }
 
     return {
       data: data.map((c) => ({

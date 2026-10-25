@@ -162,7 +162,7 @@ export function ParticipantLobby({ waiting = false }: { waiting?: boolean }) {
         );
         setVerifiedCode(clean);
         setJoinedGameId(result.activeGame.id);
-        navigate("/participant/waiting", { replace: true });
+        navigate("/participant/game", { replace: true });
       } catch {
         setErrorMsg(
           "We could not join the game. Check your connection and try again.",

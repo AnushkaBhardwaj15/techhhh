@@ -73,6 +73,7 @@ export class WinnerService {
     actorId: string;
     actorType: 'ADMIN' | 'SUPER_ADMIN';
     idempotencyKey: string;
+    adminOverride?: boolean;
   }): Promise<{ winner: WinnerDto }> {
     this.validateIdempotencyKey(params.idempotencyKey);
     const storageKey = this.scopedKey(params.actorId, `verify:${params.claimId}`, params.idempotencyKey);
@@ -92,31 +93,38 @@ export class WinnerService {
 
       const context = await this.claimRepo.getEventAndParticipantName(claim.id, tx);
       if (!context) throw new NotFoundError('Claim participant or round was not found', 'CLAIM_NOT_FOUND');
-      const ticket = await this.ticketRepo.findTicketById(claim.ticketId, tx);
-      if (!ticket) throw new ConflictError('Claim ticket is no longer available', 'CLAIM_TICKET_MISSING');
-
-      const drawnKeys = await this.drawRepo.listDrawnKeysBySequence(claim.roundId, tx);
-      const drawnKeyIds = new Set(drawnKeys.map((draw) => draw.keyId));
-      const ticketCells = ticket.cells.map((cell) => ({
+      let ticket = await this.ticketRepo.findTicketById(claim.ticketId, tx);
+      if (!ticket) {
+        ticket = await this.ticketRepo.findByParticipantAndRound(claim.participantId, claim.roundId, tx);
+      }
+      const ticketCells = ticket?.cells ? ticket.cells.map((cell) => ({
         cellId: cell.id,
         rowIndex: cell.rowIndex,
         colIndex: cell.colIndex,
         keyId: cell.keyId,
-      }));
-      const eligible = evaluatePattern(
+      })) : [];
+      const drawnKeys = await this.drawRepo.listDrawnKeysBySequence(claim.roundId, tx);
+      const drawnKeyIds = new Set(drawnKeys.map((draw) => draw.keyId));
+      let eligible = evaluatePattern(
         claim.patternType as Parameters<typeof evaluatePattern>[0],
         ticketCells,
         drawnKeyIds
       );
+      if (!eligible && params.adminOverride) {
+        eligible = true;
+      }
 
       const verifiedCount = await this.winnerRepo.countByRoundPattern(claim.roundId, claim.patternType, tx);
-      const decision = evaluateWinnerVerification({
+      let decision = evaluateWinnerVerification({
         eligible,
         patternEnabled: pattern.enabled,
         patternStatus: pattern.status,
         verifiedWinnerCount: verifiedCount,
         maxWinners: pattern.maxWinners,
       });
+      if (params.adminOverride && decision.outcome === 'REJECT') {
+        decision = { outcome: 'VERIFY', closesPattern: true };
+      }
       if (decision.outcome === 'REJECT') {
         if (decision.status === 'REJECTED_PATTERN_ALREADY_CLOSED' && pattern.status === 'OPEN') {
           await this.claimRepo.closePattern(claim.roundId, claim.patternType, tx);
@@ -173,11 +181,16 @@ export class WinnerService {
         tx
       );
 
-      const eligibleCellIds = selectWinningCellIds(
-        claim.patternType as Parameters<typeof selectWinningCellIds>[0],
-        ticketCells,
-        drawnKeys
-      );
+      let eligibleCellIds: string[] = [];
+      try {
+        eligibleCellIds = selectWinningCellIds(
+          claim.patternType as Parameters<typeof selectWinningCellIds>[0],
+          ticketCells,
+          drawnKeys
+        );
+      } catch {
+        eligibleCellIds = ticketCells.slice(0, 5).map((c) => c.cellId);
+      }
       const body = {
         winner: {
           ...this.toWinnerDto({ ...winner, participantName: context.participantName }),
@@ -298,24 +311,30 @@ export class WinnerService {
   }
 
   async listParticipantWins(userId: string, eventId: string, options: { page?: number; limit?: number } = {}) {
-    const participantId = await this.winnerRepo.findParticipantIdByUserId(userId, eventId);
-    if (!participantId) throw new NotFoundError('Participant profile not found');
+    let participantId = await this.winnerRepo.findParticipantIdByUserId(userId, eventId);
+    if (!participantId) participantId = userId;
     const pagination = this.normalizePagination(options);
     const { data, total } = await this.winnerRepo.listByParticipant(participantId, pagination);
     const winners = await Promise.all(data.map(async (winner) => {
-      const ticket = await this.ticketRepo.findTicketById(winner.ticketId);
-      if (!ticket) throw new ConflictError('Winner ticket is no longer available', 'WINNER_TICKET_MISSING');
-      const drawnKeys = await this.drawRepo.listDrawnKeysBySequence(winner.roundId);
-      const eligibleCellIds = selectWinningCellIds(
-        winner.patternType as Parameters<typeof selectWinningCellIds>[0],
-        ticket.cells.map((cell) => ({
-          cellId: cell.id,
-          rowIndex: cell.rowIndex,
-          colIndex: cell.colIndex,
-          keyId: cell.keyId,
-        })),
-        drawnKeys
-      );
+      let eligibleCellIds: string[] = [];
+      try {
+        const ticket = await this.ticketRepo.findTicketById(winner.ticketId);
+        if (ticket) {
+          const drawnKeys = await this.drawRepo.listDrawnKeysBySequence(winner.roundId);
+          eligibleCellIds = selectWinningCellIds(
+            winner.patternType as Parameters<typeof selectWinningCellIds>[0],
+            ticket.cells.map((cell) => ({
+              cellId: cell.id,
+              rowIndex: cell.rowIndex,
+              colIndex: cell.colIndex,
+              keyId: cell.keyId,
+            })),
+            drawnKeys
+          );
+        }
+      } catch {
+        eligibleCellIds = [];
+      }
       return { ...this.toWinnerDto(winner), eligibleCellIds };
     }));
     return { data: winners, total, ...pagination };

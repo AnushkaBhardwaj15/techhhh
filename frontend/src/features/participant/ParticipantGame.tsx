@@ -115,7 +115,7 @@ function ReferenceParticipantGame({ id, user: _user }: { id: string; user: Authe
       setAccepted(result.accepted);
       setFeedback(
         result.accepted
-          ? `${labels[pattern]} accepted. You earned ${result.points} points.`
+          ? `${labels[pattern]} submitted! Awaiting host verification.`
           : (result.warning ?? 'This claim is not ready yet. No penalty was applied.')
       );
       await client.invalidateQueries({ queryKey: ['reference-play'] });
@@ -128,9 +128,7 @@ function ReferenceParticipantGame({ id, user: _user }: { id: string; user: Authe
     }
   }
 
-  if (game?.status === 'READY') {
-    return <Navigate to="/participant/waiting" replace />;
-  }
+
 
   const latest = game?.draws.at(-1);
 
@@ -372,6 +370,7 @@ function AuthoritativeParticipantGame({
     enabled: canRead,
     refetchOnReconnect: 'always',
     refetchOnWindowFocus: 'always',
+    refetchInterval: round.data?.status === 'ACTIVE' ? 1000 : false,
   });
   const history = mergeParticipantDraws(draws.data?.data ?? [], realtime.liveDraws);
   const latest = history.at(-1);

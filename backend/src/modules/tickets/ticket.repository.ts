@@ -230,10 +230,10 @@ export class TicketRepository implements ITicketRepository {
         rowIndex: ticketCells.rowIndex,
         colIndex: ticketCells.colIndex,
         createdAt: ticketCells.createdAt,
-        keyValue: eventKeys.value,
+        keyValue: sql<string>`COALESCE(${eventKeys.value}, '')`,
       })
       .from(ticketCells)
-      .innerJoin(eventKeys, eq(ticketCells.keyId, eventKeys.id))
+      .leftJoin(eventKeys, eq(ticketCells.keyId, eventKeys.id))
       .where(eq(ticketCells.ticketId, ticket.id));
 
     cells.sort((a: { rowIndex: number; colIndex: number }, b: { rowIndex: number; colIndex: number }) => {

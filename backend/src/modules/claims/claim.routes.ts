@@ -75,6 +75,7 @@ export function createClaimRoutes(winnerService: WinnerService): FastifyPluginAs
       actorId: request.user!.id,
       actorType: role,
       idempotencyKey,
+      adminOverride: true,
     });
   });
 

@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ApiError } from "../../lib/api/client";
 import { listPlayRounds, commandPlayRound, broadcastPlayRound } from "../../lib/api/play";
+import { listAdminClaims, verifyAdminClaim, rejectAdminClaim } from "../../lib/api/adminClaims";
 import { usePlayState } from "../participant/usePlayState";
 import { QRCodeSvg } from "../../components/QRCodeSvg";
 import { ActionButton } from "../../components/ActionButton";
@@ -24,7 +25,60 @@ export function AdminGamePage() {
   const [broadcasting, setBroadcasting] = useState(false);
   const [error, setError] = useState("");
   const [viewingIndex, setViewingIndex] = useState<number | null>(null);
+  const [claimActionId, setClaimActionId] = useState<string | null>(null);
+  const [claimFeedback, setClaimFeedback] = useState<string>("");
   const busy = useRef(false);
+
+  const claimsQuery = useQuery({
+    queryKey: ["admin-claims-game", id],
+    queryFn: () => listAdminClaims({ limit: 50 }),
+    refetchInterval: 1000,
+  });
+  const pendingClaims = (claimsQuery.data?.data ?? []).filter(
+    (c) => (c.roundId === id || !id) && c.status === "PENDING_VERIFICATION"
+  );
+
+  async function handleApproveClaim(claimId: string) {
+    setClaimActionId(claimId);
+    setClaimFeedback("");
+    try {
+      await verifyAdminClaim(claimId, crypto.randomUUID());
+      setClaimFeedback("Claim successfully approved and winner recorded!");
+      await Promise.all([
+        claimsQuery.refetch(),
+        client.invalidateQueries({ queryKey: ["reference-play"] }),
+        client.invalidateQueries({ queryKey: ["admin-claims"] }),
+        client.invalidateQueries({ queryKey: ["admin-claims-game"] }),
+        client.invalidateQueries({ queryKey: ["participant"] }),
+        client.invalidateQueries({ queryKey: ["live"] }),
+      ]);
+    } catch (err) {
+      setClaimFeedback(err instanceof Error ? err.message : "Failed to approve claim.");
+    } finally {
+      setClaimActionId(null);
+    }
+  }
+
+  async function handleRejectClaim(claimId: string) {
+    setClaimActionId(claimId);
+    setClaimFeedback("");
+    try {
+      await rejectAdminClaim(claimId, crypto.randomUUID());
+      setClaimFeedback("Claim was rejected.");
+      await Promise.all([
+        claimsQuery.refetch(),
+        client.invalidateQueries({ queryKey: ["reference-play"] }),
+        client.invalidateQueries({ queryKey: ["admin-claims"] }),
+        client.invalidateQueries({ queryKey: ["admin-claims-game"] }),
+        client.invalidateQueries({ queryKey: ["participant"] }),
+      ]);
+    } catch (err) {
+      setClaimFeedback(err instanceof Error ? err.message : "Failed to reject claim.");
+    } finally {
+      setClaimActionId(null);
+    }
+  }
+
   const retry = useRef<{
     command: Parameters<typeof commandPlayRound>[1];
     key: string;
@@ -375,6 +429,57 @@ export function AdminGamePage() {
                 )}
               </div>
             </section>
+
+            {/* Pending Claims Section for Admin Approval */}
+            <section className={styles.claimsAlertSection} aria-label="Participant claims review">
+              <div className={styles.claimsAlertHeader}>
+                <h3 className={styles.claimsAlertTitle}>
+                  🔔 Participant Claims {pendingClaims.length > 0 ? `(${pendingClaims.length} pending)` : "(0 pending)"}
+                </h3>
+                <Link to="/admin/claims" style={{ color: "var(--color-primary-cyan, #00e5ff)", fontSize: "0.85rem", textDecoration: "underline" }}>
+                  View All Claims →
+                </Link>
+              </div>
+              {claimFeedback && <p style={{ color: "var(--color-primary-cyan, #00e5ff)", marginBottom: "0.5rem", fontSize: "0.9rem" }}>{claimFeedback}</p>}
+              {pendingClaims.length === 0 ? (
+                <p style={{ color: "var(--muted, #888)", margin: 0, fontSize: "0.9rem" }}>
+                  No pending claims right now. When participants press Claim, it will appear here for your approval.
+                </p>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                  {pendingClaims.map((claim) => (
+                    <div key={claim.id} className={styles.claimCard}>
+                      <div>
+                        <strong>{claim.participantName}</strong> claimed{" "}
+                        <span style={{ color: "#ffab00", fontWeight: 700 }}>{claim.patternType.replaceAll("_", " ")}</span>
+                        <div style={{ fontSize: "0.75rem", color: "#aaa" }}>
+                          Submitted {new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit" }).format(new Date(claim.createdAt))}
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", gap: "0.5rem" }}>
+                        <button
+                          type="button"
+                          className={styles.claimBtnVerify}
+                          disabled={claimActionId === claim.id}
+                          onClick={() => handleApproveClaim(claim.id)}
+                        >
+                          {claimActionId === claim.id ? "Processing…" : "✓ Approve"}
+                        </button>
+                        <button
+                          type="button"
+                          className={styles.claimBtnReject}
+                          disabled={claimActionId === claim.id}
+                          onClick={() => handleRejectClaim(claim.id)}
+                        >
+                          ✕ Reject
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+
             <section className={playStyles.panel}>
               <h2>Called questions ({totalCalls})</h2>
               {!totalCalls && <p>No questions called yet.</p>}

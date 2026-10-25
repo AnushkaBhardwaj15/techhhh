@@ -525,3 +525,69 @@
     flex: 1 1 100%;
   }
 }
+
+.claimsAlertSection {
+  margin: 1.5rem 0;
+  padding: 1.25rem;
+  background: rgba(255, 171, 0, 0.08);
+  border: 2px solid #ffab00;
+  border-radius: 12px;
+}
+
+.claimsAlertHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.claimsAlertTitle {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #ffab00;
+  margin: 0;
+}
+
+.claimCard {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: var(--surface, #1e1e24);
+  border: 1px solid var(--border, #333);
+  border-radius: 8px;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.claimBtnVerify {
+  background: #00e676;
+  color: #000;
+  border: none;
+  font-weight: 700;
+  padding: 0.45rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.claimBtnVerify:hover {
+  opacity: 0.9;
+}
+
+.claimBtnReject {
+  background: #ff5252;
+  color: #fff;
+  border: none;
+  font-weight: 700;
+  padding: 0.45rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.claimBtnReject:hover {
+  opacity: 0.9;
+}

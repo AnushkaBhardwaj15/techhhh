@@ -48,8 +48,8 @@ function Reveal({ draw }: { draw: LiveDraw | undefined }) {
       </p>
       <h1>{draw?.question ?? 'The first question is coming up.'}</h1>
       <div className={styles.answer}>
-        <p className={styles.kicker}>KEY</p>
-        <p className={styles.key}>{draw?.key ?? '—'}</p>
+        <p className={styles.kicker}>AUDIENCE VIEW</p>
+        <p className={styles.key}>{draw ? 'LIVE QUESTION' : 'WAITING'}</p>
       </div>
     </section>
   );
@@ -132,14 +132,6 @@ function ReferenceLiveDisplay() {
             {latest?.codeSnippet && (
               <pre className={styles.codeSnippet}>{latest.codeSnippet}</pre>
             )}
-
-            {/* Answer is ONLY revealed if admin has explicitly projected/revealed it */}
-            {latest?.revealed && (
-              <div className={styles.revealedAnswerBox}>
-                <span className={styles.revealedLabel}>OFFICIAL ANSWER</span>
-                <strong className={styles.revealedKey}>{latest.answer}</strong>
-              </div>
-            )}
           </section>
 
           {/* Lower Section: Recent Calls and Standings */}
@@ -163,11 +155,6 @@ function ReferenceLiveDisplay() {
                         <span className={styles.recentSeq}>#{draw.sequence}</span>
                         <div className={styles.recentBody}>
                           <p className={styles.recentPrompt}>{draw.prompt}</p>
-                          {draw.revealed && (
-                            <span className={styles.recentAnswerPill}>
-                              {draw.answer}
-                            </span>
-                          )}
                         </div>
                       </div>
                     ))
@@ -302,7 +289,7 @@ function AuthoritativeLiveDisplay() {
                 <li key={draw.id}>
                   <span>{String(draw.sequenceNumber).padStart(2, '0')}</span>
                   <div>
-                    <strong>{draw.key}</strong>
+                    <strong>Clue #{draw.sequenceNumber}</strong>
                     <p>{draw.question}</p>
                   </div>
                 </li>
