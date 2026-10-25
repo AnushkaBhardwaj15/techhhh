@@ -51,7 +51,7 @@ export function createAuthRoutes({ onSessionRevoked }: AuthRouteDependencies = {
       {
         config: {
           rateLimit: {
-            max: process.env.NODE_ENV === 'test' ? 100_000 : 10,
+            max: process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'development' ? 100_000 : 600,
             timeWindow: 60_000,
           },
         },

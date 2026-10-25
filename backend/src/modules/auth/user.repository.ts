@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { eq, desc } from 'drizzle-orm';
 import { getDb } from '../../db/client.ts';
 import {
   users,
@@ -198,6 +198,7 @@ export class UserRepository implements IUserRepository {
         .leftJoin(adminProfiles, eq(adminProfiles.userId, users.id))
         .leftJoin(participantProfiles, eq(participantProfiles.userId, users.id))
         .where(eq(users.email, clean))
+        .orderBy(desc(participantProfiles.createdAt))
         .limit(1);
 
       if (rows.length > 0) {

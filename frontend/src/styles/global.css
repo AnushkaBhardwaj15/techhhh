@@ -3,100 +3,109 @@
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 
-  /* Retro Orange Neubrutalism Core Palette */
-  --retro-orange: #EE640F;
-  --retro-orange-hover: #D75508;
-  --retro-orange-active: #BF4803;
-  --retro-orange-soft: #FDE8DA;
-  --retro-orange-tint: #FFF4ED;
-  --retro-cream: #FAF4E8;
-  --retro-ink: #18130F;
+  /* ============================================================
+     NEOBRUTALISM AUTHORITATIVE DESIGN SYSTEM TOKENS
+     ============================================================ */
+  --neo-bg: #F7F5EE;                /* Architectural matte paper canvas */
+  --neo-surface: #FFFFFF;           /* Stark white card surface */
+  --neo-ink: #121212;               /* Carbon black for text, lines, borders */
+  --neo-ink-secondary: #4B4B52;     /* High-legibility secondary text */
+  --neo-sand: #ECE7DA;              /* Elevated neutral track / empty slots */
 
-  /* Theme Core Mapping */
-  --color-parchment: #FAF4E8;
-  --color-espresso: #18130F;
-  --color-oxblood: #EE640F;
-  --color-sandstone: #F2E7D5;
-  --color-stone-olive: #68725E;
-  --color-paper: #FFFFFF;
+  /* High-Voltage Neobrutalist Accents */
+  --neo-yellow: #FFE600;            /* Canary Yellow (Primary Tournament Punch) */
+  --neo-orange: #FF4800;            /* Hazard / International Orange (Claims & Urgency) */
+  --neo-mint: #00D084;              /* Verified Win Emerald */
+  --neo-blue: #2563EB;              /* Telemetry Electric Blue */
+  --neo-danger: #D92D20;            /* Error / Rejection Red */
 
-  /* Supporting Tokens */
-  --color-espresso-deep: #0F0C09;
-  --color-text-secondary: #584A3F;
-  --color-border-muted: #18130F;
-  --color-border-subtle: #D8CCA8;
-  --color-disabled: #ECE4D6;
+  /* Structural Borders */
+  --neo-border-thin: 1.5px solid #121212;
+  --neo-border: 2px solid #121212;
+  --neo-border-thick: 3px solid #121212;
+
+  /* Geometric Radii - Sharp & Deliberate */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+
+  /* Hard Tactile Shadows - Zero Gaussian Blur */
+  --neo-shadow-xs: 2px 2px 0px #121212;
+  --neo-shadow-sm: 3px 3px 0px #121212;
+  --neo-shadow-md: 4px 4px 0px #121212;
+  --neo-shadow-lg: 6px 6px 0px #121212;
+  --neo-shadow-xl: 8px 8px 0px #121212;
+
+  /* Backward Compatible Token Aliases */
+  --color-parchment: var(--neo-bg);
+  --color-espresso: var(--neo-ink);
+  --color-paper: var(--neo-surface);
+  --color-sandstone: var(--neo-sand);
+  --color-oxblood: var(--neo-orange);
+  --color-stone-olive: #4B4B52;
+  --color-espresso-deep: #16181D;
+  --color-text-secondary: var(--neo-ink-secondary);
+  --color-border-muted: #121212;
+  --color-border-subtle: #27272A;
+  --color-disabled: #E4DED3;
   --color-white: #FFFFFF;
+  --color-success: var(--neo-mint);
+  --color-warning: var(--neo-yellow);
+  --color-danger: var(--neo-danger);
+  --color-info: var(--neo-blue);
 
-  /* Semantic State Tokens */
-  --color-success: #356644;
-  --color-warning: #EE640F;
-  --color-danger: #D64228;
-  --color-info: #2B5E6B;
+  --shadow-brutal-sm: var(--neo-shadow-xs);
+  --shadow-brutal-md: var(--neo-shadow-md);
 
-  /* Tactile Neubrutalist Borders, Radii & Hard Offset Shadows */
-  --radius-xs: 3px;
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --border-brutal: 2.5px solid var(--color-espresso, #18130F);
-  --shadow-brutal-xs: 2px 2px 0px var(--color-espresso, #18130F);
-  --shadow-brutal-sm: 3px 3px 0px var(--color-espresso, #18130F);
-  --shadow-brutal-md: 5px 5px 0px var(--color-espresso, #18130F);
-  --shadow-brutal-lg: 8px 8px 0px var(--color-espresso, #18130F);
-  --shadow-brutal-orange: 4px 4px 0px #EE640F;
-  --shadow-brutal-orange-lg: 6px 6px 0px #EE640F;
-
-  --navy: #18130F;
-  --navy-raised: #251E18;
-  --cyan: #EE640F;
-  --cyan-hover: #D75508;
-  --cyan-soft: #FDE8DA;
-  --lime: #356644;
-  --lime-soft: #E2F1E4;
-  --ice: #FDE8DA;
-  --surface: var(--color-paper, #FFFFFF);
-  --surface-muted: var(--color-sandstone, #F2E7D5);
-  --ink: var(--color-espresso, #18130F);
-  --muted: var(--color-text-secondary, #584A3F);
-  --muted-dark: #68725E;
-  --border: var(--color-espresso, #18130F);
-  --border-dark: var(--color-espresso-deep, #0F0C09);
-  --accent-ink: #EE640F;
-  --success-ink: #264B32;
-  --danger-soft: #FDE8E6;
-  --warning-soft: #FFF2DA;
-  --mono: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
-  --display: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --forest: var(--color-espresso, #18130F);
-  --cream: var(--color-parchment, #FAF4E8);
-  --coral: #EE640F;
+  --navy: #121316;
+  --navy-raised: #1A1C23;
+  --cyan: var(--neo-blue);
+  --lime: var(--neo-yellow);
+  --surface: var(--neo-surface);
+  --surface-muted: var(--neo-sand);
+  --ink: var(--neo-ink);
+  --muted: var(--neo-ink-secondary);
+  --muted-dark: #3F3F46;
+  --border: var(--neo-ink);
+  --border-dark: #000000;
+  --accent-ink: var(--neo-orange);
+  --cream: var(--neo-bg);
+  --forest: var(--neo-ink);
+  --coral: var(--neo-yellow);
+  --mono: "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  --display: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
   --serif: var(--display);
 
-  color: var(--color-espresso, #18130F);
-  background: var(--color-parchment, #FAF4E8);
+  color: var(--neo-ink);
+  background: var(--neo-bg);
   font-variant-numeric: tabular-nums;
 }
 
 * {
   box-sizing: border-box;
 }
+
 html {
   scroll-behavior: smooth;
+  background: var(--neo-bg);
 }
+
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100dvh;
-  background: var(--retro-cream, #FAF4E8);
-  color: var(--retro-ink, #18130F);
+  background: var(--neo-bg);
+  color: var(--neo-ink);
+  font-family: var(--display);
 }
+
 button,
 input,
 select,
 textarea {
   font: inherit;
 }
+
 button,
 a,
 input,
@@ -104,110 +113,127 @@ select,
 textarea {
   -webkit-tap-highlight-color: transparent;
 }
+
 button {
   touch-action: manipulation;
 }
+
 button:disabled {
   cursor: not-allowed;
 }
+
 :focus-visible {
-  outline: 3px solid var(--retro-orange, #EE640F);
+  outline: 3px solid var(--neo-ink);
   outline-offset: 2px;
 }
+
 h1,
 h2,
-h3 {
+h3,
+h4 {
   text-wrap: balance;
-  color: var(--color-espresso);
+  color: var(--neo-ink);
+  letter-spacing: -0.035em;
+  font-weight: 900;
 }
+
 p {
   text-wrap: pretty;
 }
+
 img,
 svg {
   max-width: 100%;
 }
 
+/* Common Neobrutalist Feedback and Page Wrappers */
 .feedback {
   min-height: 100dvh;
   padding: 32px;
   display: grid;
   place-content: center;
-  color: var(--retro-ink, #18130F);
-  background: var(--retro-cream, #FAF4E8);
+  color: var(--neo-ink);
+  background: var(--neo-bg);
   text-align: center;
 }
+
 .feedback h1 {
   font-size: clamp(28px, 6vw, 46px);
+  margin-bottom: 12px;
 }
+
 .feedback[role="status"] {
   min-height: 120px;
 }
+
 .role-page {
   min-height: 100dvh;
-  background: var(--retro-cream, #FAF4E8);
-  color: var(--retro-ink, #18130F);
+  background: var(--neo-bg);
+  color: var(--neo-ink);
 }
+
 .role-page > header {
   display: block;
   padding: 0;
   border: 0;
 }
+
 .role-page main {
   min-width: 0;
 }
-.role-page
-  :where(button, input:not([type="checkbox"]):not([type="radio"]), select) {
+
+.role-page :where(button, input:not([type="checkbox"]):not([type="radio"]), select) {
   min-height: 44px;
 }
-.role-page
-  :where(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
+
+.role-page :where(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
   max-width: 100%;
-  border-radius: var(--radius-xs, 2px);
-  border: 2px solid var(--color-espresso, #18130F);
-  box-shadow: 2px 2px 0 var(--color-espresso, #18130F);
-  color: var(--color-espresso, #18130F);
-  background: var(--color-paper, #FFFFFF);
+  border-radius: var(--radius-sm, 4px);
+  border: var(--neo-border);
+  color: var(--neo-ink);
+  background: var(--neo-surface);
   font-size: 15px;
+  padding: 10px 14px;
+  box-shadow: var(--neo-shadow-xs);
+  transition: box-shadow 0.12s ease, border-color 0.12s ease;
 }
+
+.role-page :where(input:not([type="checkbox"]):not([type="radio"]):focus, select:focus, textarea:focus) {
+  outline: none;
+  box-shadow: var(--neo-shadow-sm);
+  border-color: var(--neo-ink);
+}
+
 .role-page :where(button) {
-  border-radius: var(--radius-xs, 2px);
+  border-radius: var(--radius-sm, 4px);
 }
-.role-page :where(h1) {
-  font-family: var(--display);
-  font-size: clamp(28px, 5vw, 46px);
-  line-height: 1.1;
-  letter-spacing: -0.04em;
-}
-.role-page :where(h2, h3) {
-  font-family: var(--display);
-  letter-spacing: -0.025em;
-}
+
 .role-page :where(table) {
   font-variant-numeric: tabular-nums;
+  border-collapse: collapse;
 }
-.role-page :where(fieldset) {
-  min-width: 0;
-  border: 2px solid var(--border);
-}
+
 .role-page :where(dialog) {
   max-width: calc(100% - 32px);
-  border: 2.5px solid var(--border);
-  border-top: 5px solid var(--retro-orange, #EE640F);
+  border: var(--neo-border-thick);
   border-radius: var(--radius-sm, 4px);
-  box-shadow: 6px 6px 0 var(--color-espresso, #18130F);
-  background: var(--color-paper, #FFFFFF);
-  color: var(--ink);
+  background: var(--neo-surface);
+  color: var(--neo-ink);
+  box-shadow: var(--neo-shadow-xl);
+  padding: 24px;
 }
+
 .role-page :where(dialog)::backdrop {
-  background: rgba(24, 19, 15, 0.7);
+  background: rgba(18, 18, 18, 0.65);
+  backdrop-filter: none;
 }
+
 .session-error {
   padding: 12px 20px;
-  background: var(--danger-soft);
-  color: #842e28;
-  border: 2px solid #842e28;
-  box-shadow: 3px 3px 0 #842e28;
+  background: #FFF1F0;
+  color: var(--neo-danger);
+  border: var(--neo-border);
+  box-shadow: var(--neo-shadow-xs);
   font: 700 12px/1.5 var(--mono);
 }
 
@@ -222,18 +248,5 @@ svg {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
-  }
-}
-
-@media (max-width: 600px) {
-  :root
-    .role-page
-    :is(button, select, input:not([type="checkbox"]):not([type="radio"])) {
-    min-height: 44px;
-  }
-  :root
-    .role-page
-    :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
-    font-size: 16px;
   }
 }

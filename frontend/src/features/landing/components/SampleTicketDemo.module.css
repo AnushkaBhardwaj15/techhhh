@@ -1,111 +1,133 @@
 .wrapper {
-  background: var(--cream);
-  border: 1px solid var(--border);
-  box-shadow: none;
-  padding: clamp(16px, 3vw, 28px);
+  background: var(--neo-surface);
+  border: var(--neo-border-thick);
+  border-radius: var(--radius-sm, 4px);
+  box-shadow: var(--neo-shadow-lg);
+  padding: clamp(18px, 3.5vw, 32px);
   width: 100%;
 }
 
+/* ============================================================
+   CONTROLS BAR
+   ============================================================ */
 .controlsBar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 12px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid rgba(29, 36, 33, 0.18);
-  margin-bottom: 16px;
+  gap: 16px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid var(--neo-ink);
+  margin-bottom: 20px;
 }
 
 .controlsInfo {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
 .label {
   font-family: var(--mono);
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  color: var(--forest);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  color: var(--neo-ink);
+  background: var(--neo-yellow);
+  padding: 2px 8px;
+  border: 1.5px solid var(--neo-ink);
+  width: fit-content;
+  box-shadow: 1.5px 1.5px 0px var(--neo-ink);
 }
 
 .instruction {
   margin: 0;
-  font-size: 13px;
-  color: var(--ink);
-  font-weight: 500;
+  font-size: 14px;
+  color: var(--neo-ink);
+  font-weight: 700;
 }
 
 .actionButtons {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .simButton {
-  background: var(--coral);
-  color: var(--ink);
-  border: 1.5px solid var(--ink);
-  padding: 8px 14px;
+  background: var(--neo-yellow);
+  color: var(--neo-ink);
+  border: var(--neo-border);
+  border-radius: var(--radius-xs, 2px);
+  padding: 10px 18px;
   font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 800;
+  font-size: 12px;
+  font-weight: 900;
   letter-spacing: 0.05em;
   cursor: pointer;
-  box-shadow: none;
-  transition:
-    transform 100ms ease,
-    box-shadow 100ms ease,
-    background 100ms ease;
+  box-shadow: var(--neo-shadow-sm);
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease;
 }
 
 .simButton:hover {
-  background: #733737;
-  color: var(--color-paper, #FAF7F0);
+  background: #FFF152;
+  transform: translate(-1px, -1px);
+  box-shadow: var(--neo-shadow-md);
 }
 
 .simButton:active {
   transform: translate(2px, 2px);
-  box-shadow: none;
+  box-shadow: 1px 1px 0px var(--neo-ink);
 }
 
 .resetButton {
-  background: transparent;
-  color: var(--ink);
-  border: 1.5px solid var(--ink);
-  padding: 8px 12px;
+  background: var(--neo-bg);
+  color: var(--neo-ink);
+  border: var(--neo-border);
+  border-radius: var(--radius-xs, 2px);
+  padding: 10px 16px;
   font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 700;
+  font-size: 12px;
+  font-weight: 800;
   cursor: pointer;
+  box-shadow: var(--neo-shadow-xs);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
 }
 
 .resetButton:hover {
-  background: rgba(29, 36, 33, 0.08);
+  background: #ECE7DA;
+  transform: translate(-1px, -1px);
+  box-shadow: var(--neo-shadow-sm);
+}
+
+.resetButton:active {
+  transform: translate(2px, 2px);
+  box-shadow: none;
 }
 
 .simButton:focus-visible,
 .resetButton:focus-visible,
 .playableCell:focus-visible {
-  outline: 3px solid var(--coral);
+  outline: 3px solid var(--neo-ink);
   outline-offset: 2px;
 }
 
-/* Simulated Clue Banner */
+/* ============================================================
+   SIMULATED CLUE CARD
+   ============================================================ */
 .clueCard {
-  background: var(--surface);
-  border: 1.5px solid var(--ink);
-  padding: 12px 16px;
-  margin-bottom: 16px;
-  animation: fadeIn 200ms ease-out;
+  background: #FFFDE6;
+  border: var(--neo-border);
+  border-radius: var(--radius-xs, 2px);
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  box-shadow: var(--neo-shadow-sm);
+  animation: slideDown 0.15s ease-out;
 }
 
-@keyframes fadeIn {
+@keyframes slideDown {
   from {
     opacity: 0;
-    transform: translateY(-4px);
+    transform: translateY(-6px);
   }
   to {
     opacity: 1;
@@ -117,39 +139,42 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 .clueBadge {
   font-family: var(--mono);
-  font-size: 9px;
-  font-weight: 800;
+  font-size: 10px;
+  font-weight: 900;
   letter-spacing: 0.1em;
-  color: var(--accent-ink);
-  background: var(--color-sandstone, #DCD0BD);
-  padding: 2px 6px;
-  border: 1px solid var(--color-border-muted, #BFB29F);
+  color: var(--neo-ink);
+  background: var(--neo-yellow);
+  padding: 3px 8px;
+  border: 1.5px solid var(--neo-ink);
+  box-shadow: 1.5px 1.5px 0px var(--neo-ink);
 }
 
 .revealedKeyBadge {
   font-family: var(--mono);
   font-size: 12px;
+  font-weight: 900;
   letter-spacing: 0.08em;
-  color: var(--forest);
+  color: var(--neo-ink);
 }
 
 .revealedKeyBadge strong {
-  background: var(--forest);
-  color: var(--cream);
-  padding: 2px 6px;
-  margin-left: 4px;
+  background: var(--neo-ink);
+  color: #FFFFFF;
+  padding: 3px 8px;
+  margin-left: 6px;
+  border-radius: var(--radius-xs, 2px);
 }
 
 .cluePrompt {
-  margin: 4px 0 6px;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--ink);
+  margin: 6px 0 8px;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--neo-ink);
   line-height: 1.4;
 }
 
@@ -157,255 +182,216 @@
   margin: 0;
   font-family: var(--mono);
   font-size: 11px;
-  color: #55625c;
+  font-weight: 700;
+  color: var(--neo-ink-secondary);
 }
 
-/* Ticket Card */
+/* ============================================================
+   TICKET CARD - 3x9 GRID
+   ============================================================ */
 .ticketCard {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  padding: 16px;
-  margin-bottom: 16px;
+  background: var(--neo-bg);
+  border: var(--neo-border-thick);
+  border-radius: var(--radius-sm, 4px);
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: var(--neo-shadow-md);
 }
 
 .ticketCardHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
 .cardKicker {
   font-family: var(--mono);
-  font-size: 9px;
-  font-weight: 800;
+  font-size: 10px;
+  font-weight: 900;
   letter-spacing: 0.12em;
-  color: var(--accent-ink);
+  color: var(--neo-orange);
 }
 
 .cardId {
   margin: 2px 0 0;
   font-family: var(--mono);
-  font-size: 13px;
-  font-weight: 800;
-  color: var(--ink);
+  font-size: 14px;
+  font-weight: 900;
+  color: var(--neo-ink);
 }
 
 .ticketScore {
   font-family: var(--mono);
-  font-size: 11px;
-  color: var(--forest);
-  background: var(--color-sandstone, #DCD0BD);
-  padding: 4px 8px;
-  border: 1px solid var(--color-border-muted, #BFB29F);
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--neo-ink);
+  background: var(--neo-yellow);
+  padding: 4px 10px;
+  border: 1.5px solid var(--neo-ink);
+  box-shadow: 1.5px 1.5px 0px var(--neo-ink);
 }
 
 .ticketScore strong {
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .gridContainer {
   width: 100%;
   overflow-x: auto;
   scrollbar-width: thin;
+  padding-bottom: 4px;
 }
 
 .grid {
   width: 100%;
-  min-width: 580px;
+  min-width: 620px;
   border-collapse: separate;
-  border-spacing: 4px;
+  border-spacing: 6px;
 }
 
 .emptyCell {
-  background: var(--surface-muted);
-  border: 1px dashed rgba(29, 36, 33, 0.3);
+  background: var(--neo-sand);
+  border: 1.5px dashed rgba(18, 18, 18, 0.35);
   text-align: center;
   vertical-align: middle;
-  height: 58px;
+  height: 62px;
+  border-radius: var(--radius-xs, 2px);
 }
 
 .emptyDot {
-  color: #8c938b;
+  color: rgba(18, 18, 18, 0.3);
   font-size: 16px;
+  font-weight: 900;
 }
 
 .playableCell {
-  background: var(--surface);
-  border: 1.5px solid var(--ink);
+  background: #FFFFFF;
+  border: 2px solid var(--neo-ink);
+  border-radius: var(--radius-xs, 2px);
   text-align: center;
   vertical-align: middle;
-  height: 58px;
-  padding: 4px 2px;
+  height: 62px;
+  padding: 6px 4px;
   cursor: pointer;
   user-select: none;
-  transition:
-    transform 80ms ease,
-    background 120ms ease;
+  box-shadow: 2.5px 2.5px 0px var(--neo-ink);
+  transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.1s ease;
   position: relative;
 }
 
 .playableCell:hover {
-  background: var(--color-sandstone, #DCD0BD);
+  background: #FFF9D2;
+  transform: translate(-1px, -1px);
+  box-shadow: 3.5px 3.5px 0px var(--neo-ink);
 }
 
 .playableCell:active {
-  transform: scale(0.96);
+  transform: translate(2px, 2px);
+  box-shadow: 0.5px 0.5px 0px var(--neo-ink);
 }
 
-.cellMarked {
-  background: var(--lime) !important;
-  color: var(--cream);
-  border-color: var(--ink);
-}
-
-.cellHighlighted {
-  outline: 3px solid var(--coral);
-  outline-offset: 2px;
-  z-index: 2;
-  animation: pulse 1s infinite alternate;
-}
-
-@keyframes pulse {
-  from {
-    box-shadow: none;
-  }
-  to {
-    box-shadow: none;
-  }
-}
-
-.coord {
+.cellKey {
   display: block;
   font-family: var(--mono);
-  font-size: 8px;
-  font-weight: 700;
-  color: #647069;
-  margin-bottom: 2px;
-}
-
-.cellMarked .coord {
-  color: var(--success-ink);
-}
-
-.keyText {
-  display: block;
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 900;
   letter-spacing: 0.04em;
-  line-height: 1.1;
+  color: var(--neo-ink);
 }
 
-.checkIcon {
+.cellCoord {
   display: block;
-  font-size: 10px;
-  font-weight: 800;
-  margin-top: 2px;
-}
-
-.cellMarked .checkIcon {
-  color: var(--color-espresso, #302820);
-}
-
-/* Pattern Eligibility Status */
-.patternsBar {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.patternsLabel {
-  font-family: var(--mono);
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  color: var(--forest);
-}
-
-.patternChips {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-  gap: 8px;
-}
-
-.patternChip {
-  display: flex;
-  flex-direction: column;
-  padding: 8px 10px;
-  border: 1px solid rgba(29, 36, 33, 0.2);
-  background: var(--surface-muted);
-  font-size: 11px;
-}
-
-.patternIcon {
-  font-size: 12px;
-  color: #8c938b;
-  margin-bottom: 2px;
-}
-
-.patternChip strong {
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--ink);
-}
-
-.patternDesc {
   font-family: var(--mono);
   font-size: 9px;
-  color: #636d67;
-  margin-top: 2px;
+  font-weight: 700;
+  color: var(--neo-ink-secondary);
+  margin-top: 3px;
+}
+
+/* Cell States */
+.cellMarked {
+  background: var(--neo-ink) !important;
+  color: #FFFFFF !important;
+  box-shadow: 1px 1px 0px #000000 !important;
+}
+
+.cellMarked .cellKey {
+  color: #FFFFFF !important;
+}
+
+.cellMarked .cellCoord {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.cellMatched {
+  background: var(--neo-yellow) !important;
+  border-color: #000000 !important;
+  box-shadow: 4px 4px 0px #000000 !important;
+  animation: pulseClue 1.2s infinite alternate ease-in-out;
+}
+
+@keyframes pulseClue {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.02);
+  }
+}
+
+.markStamp {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  font-family: var(--mono);
+  font-size: 8px;
+  font-weight: 900;
+  background: var(--neo-yellow);
+  color: var(--neo-ink);
+  padding: 1px 3px;
+  border: 1px solid var(--neo-ink);
+  line-height: 1;
+}
+
+/* ============================================================
+   PATTERNS EVALUATION STRIP
+   ============================================================ */
+.patternsStrip {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.patternBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: #FFFFFF;
+  border: 1.5px solid var(--neo-ink);
+  border-radius: var(--radius-xs, 2px);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--neo-ink);
+  box-shadow: 2px 2px 0px var(--neo-ink);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
 }
 
 .patternAchieved {
-  background: var(--lime-soft);
-  border-color: var(--forest);
-  box-shadow: none;
+  background: var(--neo-mint) !important;
+  color: #FFFFFF !important;
+  border-color: #000000 !important;
+  box-shadow: 3px 3px 0px #000000 !important;
 }
 
-.patternAchieved .patternIcon {
-  color: var(--forest);
+.patternLabel {
+  letter-spacing: 0.05em;
 }
 
-.patternAchieved strong {
-  color: var(--forest);
-}
-
-@media (max-width: 600px) {
-  .controlsBar {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  .actionButtons {
-    width: 100%;
-    justify-content: space-between;
-  }
-  .patternChips {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .playableCell,
-  .simButton,
-  .cellHighlighted {
-    animation: none !important;
-    transition: none !important;
-  }
-}
-
-.wrapper {
-  border-radius: 10px;
-  background: var(--surface);
-}
-.cellMarked {
-  background: #C4D6B0;
-  color: var(--color-espresso, #302820);
-}
-@media (max-width: 600px) {
-  .controlsBar {
-    gap: 14px;
-  }
-  .actionButtons {
-    flex-wrap: wrap;
-  }
+.patternStatus {
+  font-size: 10px;
+  font-weight: 900;
 }
