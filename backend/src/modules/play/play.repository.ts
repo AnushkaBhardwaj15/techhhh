@@ -5,6 +5,7 @@ import {
   ConflictError,
   ForbiddenError,
   NotFoundError,
+  ValidationError,
 } from "../../shared/errors/index.ts";
 import { DEFAULT_TECHNICAL_BANK } from "./technical-bank.ts";
 import { generateReferenceCells, PLAY_POINTS } from "./play.domain.ts";
@@ -251,6 +252,50 @@ export class PlayRepository implements PlayStore {
         broadcast ? "ROUND_BROADCAST_ENABLED" : "ROUND_BROADCAST_DISABLED",
         { roundId: id, broadcast },
       );
+      return this.load(tx, id, actor);
+    });
+  }
+  async markCell(
+    id: string,
+    actor: PlayActor,
+    cellId: string,
+    marked: boolean,
+  ): Promise<PlayState> {
+    return this.connection().begin(async (tx) => {
+      const [round] = await tx.unsafe<{ status: string; event_id: string }[]>(
+        "SELECT status, event_id FROM rounds WHERE id=$1",
+        [id],
+      );
+      if (!round || !["ACTIVE", "PAUSED"].includes(round.status)) {
+        throw new ConflictError("Action unavailable in current game state.");
+      }
+
+      // Verify cell belongs to the participant's ticket in this round
+      const [ticketCell] = await tx.unsafe<{ ticket_id: string }[]>(
+        `SELECT tc.ticket_id 
+         FROM ticket_cells tc
+         JOIN tickets t ON t.id = tc.ticket_id
+         JOIN participant_profiles p ON p.id = t.participant_id
+         WHERE tc.id = $1 AND t.round_id = $2 AND p.user_id = $3`,
+        [cellId, id, actor.userId],
+      );
+
+      if (!ticketCell) {
+        throw new ValidationError("This cell does not belong to your assigned ticket.");
+      }
+
+      if (marked) {
+        await tx.unsafe(
+          `INSERT INTO ticket_marks(ticket_id, cell_id) VALUES($1, $2) ON CONFLICT(ticket_id, cell_id) DO NOTHING`,
+          [ticketCell.ticket_id, cellId],
+        );
+      } else {
+        await tx.unsafe(
+          `DELETE FROM ticket_marks WHERE ticket_id=$1 AND cell_id=$2`,
+          [ticketCell.ticket_id, cellId],
+        );
+      }
+
       return this.load(tx, id, actor);
     });
   }

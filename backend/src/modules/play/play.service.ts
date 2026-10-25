@@ -177,9 +177,7 @@ export class PlayService {
   }
   async mark(id: string, actor: PlayActor, cellId: string, marked: boolean) {
     this.participant(actor);
-    const { state } = await this.store.change(id, actor, (s) =>
-      togglePlayMark(s, cellId, marked),
-    );
+    const state = await this.store.markCell(id, actor, cellId, marked);
     return publicPlayState(state);
   }
   async claim(id: string, actor: PlayActor, pattern: PlayPattern) {

@@ -114,4 +114,10 @@ export interface PlayStore {
     command: (state: PlayState) => T,
     replay?: { key: string; fingerprint: string },
   ): Promise<{ state: PlayState; result: T }>;
+  markCell(
+    id: string,
+    actor: PlayActor,
+    cellId: string,
+    marked: boolean,
+  ): Promise<PlayState>;
 }
