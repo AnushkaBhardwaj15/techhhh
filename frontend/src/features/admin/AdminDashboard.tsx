@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { createPlayRound, validatePlayBank } from '../../lib/api/play';
+import { useNavigate, useOutletContext } from 'react-router-dom';
+import { createPlayRound, validatePlayBank, commandPlayRound } from '../../lib/api/play';
 import { listAdminAudit } from '../../lib/api/adminOperations';
-import { useNavigate } from 'react-router-dom';
+import type { AuthenticatedUser } from '../../types/auth';
+import { useAdminDashboard } from './useAdminDashboard';
 import {
   fetchActiveGame,
   subscribeToGameSync,
@@ -40,6 +42,7 @@ export function AdminDashboard() {
   const [error, setError] = useState('');
   const [creationKey] = useState(() => crypto.randomUUID());
   const [games, setGames] = useState<SyncGameRecord[]>([]);
+  const [commandingId, setCommandingId] = useState<string | null>(null);
   const [selectedRoundForAudit, setSelectedRoundForAudit] = useState<SyncGameRecord | null>(null);
 
   const roundAuditQuery = useQuery({
@@ -48,6 +51,21 @@ export function AdminDashboard() {
       listAdminAudit({ roundId: selectedRoundForAudit!.id, limit: 100 }, signal),
     enabled: !!selectedRoundForAudit,
   });
+
+  async function handleGameCommand(gameId: string, action: 'start' | 'pause' | 'resume') {
+    if (commandingId) return;
+    setCommandingId(gameId);
+    setError('');
+    try {
+      await commandPlayRound(gameId, { action }, crypto.randomUUID());
+      const { games: all } = await fetchActiveGame();
+      setGames(all);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not update event state.');
+    } finally {
+      setCommandingId(null);
+    }
+  }
 
   // Excel Question Import state
   const [showImport, setShowImport] = useState(false);

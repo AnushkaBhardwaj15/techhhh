@@ -411,21 +411,24 @@ export function AdminGamePage() {
                     BOTTOM_LINE: 'Bottom Line (Row 3)',
                     FULL_HOUSE: 'First Full House',
                     SECOND_HOUSE: 'Second Full House',
+                    SECOND_FULL_HOUSE: 'Second Full House',
                   };
+                  const label = patternLabels[p.pattern] ?? p.pattern.replace(/_/g, ' ');
                   return (
                     <div
                       key={p.pattern}
                       style={{
                         padding: '10px 14px',
-                        borderRadius: '8px',
-                        background: p.closed ? 'rgba(163, 255, 75, 0.12)' : 'rgba(255, 255, 255, 0.04)',
-                        border: `1px solid ${p.closed ? '#a3ff4b' : 'rgba(255, 255, 255, 0.1)'}`,
+                        borderRadius: '6px',
+                        background: p.closed ? 'var(--lime-soft, #e5f6d6)' : 'var(--color-paper, #FAF7F0)',
+                        border: `1.5px solid ${p.closed ? 'var(--color-success, #3D6B4F)' : 'var(--color-border-muted, #BFB29F)'}`,
+                        boxShadow: 'var(--shadow-brutal-sm, 2px 2px 0px var(--color-espresso))',
                       }}
                     >
-                      <strong style={{ display: 'block', fontSize: '13px', color: p.closed ? '#a3ff4b' : '#fff' }}>
-                        {patternLabels[p.pattern] ?? p.pattern}
+                      <strong style={{ display: 'block', fontSize: '13px', color: p.closed ? 'var(--color-success, #3D6B4F)' : 'var(--color-espresso, #302820)', fontWeight: 700 }}>
+                        {label}
                       </strong>
-                      <span style={{ fontSize: '11px', color: p.closed ? '#a3ff4b' : 'var(--color-sandstone, #DCD0BD)' }}>
+                      <span style={{ fontSize: '11px', color: p.closed ? 'var(--color-success, #3D6B4F)' : 'var(--color-text-secondary, #62584C)', fontWeight: 600, marginTop: '2px', display: 'inline-block' }}>
                         {p.closed ? '✓ Awarded' : '○ Still available'}
                       </span>
                     </div>

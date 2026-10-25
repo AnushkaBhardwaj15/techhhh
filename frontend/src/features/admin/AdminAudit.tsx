@@ -58,27 +58,6 @@ export function AdminAudit() {
     ? 'Your account cannot view the audit log.'
     : audit.error instanceof ApiError ? audit.error.message : 'We could not read the audit response.';
 
-  function getActionBadge(action: string) {
-    const actionLabels: Record<string, string> = {
-      WIN_CLAIM_CREATED: 'Claim Submitted',
-      WIN_VERIFIED: 'Winner Verified',
-      WIN_CLAIM_REJECTED: 'Claim Rejected',
-      MARK_CREATED: 'Cell Marked',
-      MARK_REMOVED: 'Cell Unmarked',
-      ROUND_STARTED: 'Round Started',
-      ROUND_PAUSED: 'Round Paused',
-      ROUND_RESUMED: 'Round Resumed',
-      ROUND_COMPLETED: 'Round Completed',
-      DRAW_CREATED: 'Clue Drawn',
-      MANUAL_DRAW_CREATED: 'Manual Draw',
-      LOGIN_SUCCESS: 'Login Success',
-      LOGIN_FAILED: 'Login Failed',
-      PARTICIPANT_CREATED: 'Participant Created',
-      PARTICIPANT_IMPORTED: 'Participants Imported',
-    };
-    return actionLabels[action] ?? action;
-  }
-
   return <main className={styles.page}>
     <p className={styles.eyebrow}>OPERATIONS / RECORDS</p>
     <header className={styles.heading}><div><h1>Audit log</h1><p>Human-readable operational records. Tracks participant interactions, host commands, claims, and game lifecycle.</p></div></header>
@@ -108,10 +87,13 @@ export function AdminAudit() {
                 <span style={{ fontWeight: 600, color: 'var(--color-primary-cyan, #00e5ff)', display: 'block' }}>{actorInfo.primary}</span>
                 <span style={{ fontSize: '12px', color: '#94a3b8' }}>{actorInfo.secondary}</span>
               </td>
-              <td><strong>{formatAuditAction(record.action, record.metadata)}</strong></td>
+              <td>
+                <strong>{record.action}</strong>
+                <span style={{ fontSize: '12px', color: '#94a3b8', display: 'block' }}>{formatAuditAction(record.action, record.metadata)}</span>
+              </td>
               <td>
                 <span style={{ fontWeight: 500, display: 'block' }}>{resourceInfo.primary}</span>
-                <span style={{ fontSize: '12px', color: '#94a3b8' }}>{resourceInfo.secondary}</span>
+                <span style={{ fontSize: '12px', color: '#94a3b8' }}>{record.resourceId ?? resourceInfo.secondary}</span>
               </td>
               <td>{record.metadata === null ? '—' : <details><summary>View metadata</summary><pre>{JSON.stringify(record.metadata, null, 2)}</pre></details>}</td>
             </tr>
