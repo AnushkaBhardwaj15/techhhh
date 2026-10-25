@@ -19,9 +19,9 @@ projects:
               - key: HOST
                 value: 0.0.0.0
               - key: DATABASE_URL
-                value: postgresql://neondb_owner:npg_BWyHZM8eKQL0@ep-sweet-dawn-az7vrdy9-pooler.c-3.ap-southeast-1.aws.neon.tech/neondb?sslmode=require
+                sync: false
               - key: DATABASE_URL_UNPOOLED
-                value: postgresql://neondb_owner:npg_BWyHZM8eKQL0@ep-sweet-dawn-az7vrdy9.c-3.ap-southeast-1.aws.neon.tech/neondb?sslmode=require
+                sync: false
               - key: JWT_SECRET
                 generateValue: true
               - key: SESSION_SECRET

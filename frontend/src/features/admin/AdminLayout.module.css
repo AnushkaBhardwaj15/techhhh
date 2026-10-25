@@ -1,69 +1,83 @@
 .layout {
   display: grid;
-  grid-template-columns: 208px minmax(0, 1fr);
+  grid-template-columns: 218px minmax(0, 1fr);
   min-height: calc(100dvh - 74px);
+  background: var(--retro-cream, #FAF4E8);
 }
+
 .nav {
-  background: var(--navy);
-  color: var(--ice);
+  background: var(--retro-ink, #18130F);
+  color: var(--retro-cream, #FAF4E8);
   padding: 28px 16px;
-  border-right: 1px solid var(--border-dark);
+  border-right: 2.5px solid var(--retro-ink, #18130F);
 }
+
 .brand {
   margin: 0 0 22px;
-  font: 700 10px/1.4 var(--mono);
+  font: 850 11px/1.4 var(--mono);
   letter-spacing: 0.12em;
-  color: var(--muted-dark);
+  color: var(--retro-orange, #EE640F);
+  text-transform: uppercase;
 }
+
 .navList {
   display: grid;
-  gap: 6px;
+  gap: 8px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
+
 .navLink {
   display: flex;
   align-items: center;
-  min-height: 44px;
-  padding: 11px 12px;
-  border: 1px solid transparent;
-  border-radius: 7px;
-  color: var(--muted-dark);
-  font-size: 14px;
-  font-weight: 600;
+  min-height: 42px;
+  padding: 10px 14px;
+  border: 1.5px solid transparent;
+  border-radius: var(--radius-xs, 2px);
+  color: #D1C7B8;
+  font-size: 13.5px;
+  font-weight: 700;
   text-decoration: none;
+  transition: all 0.12s ease;
 }
+
 .navLink:hover {
-  background: var(--navy-raised);
-  color: var(--ice);
+  background: #241D17;
+  color: #FFFFFF;
+  border-color: rgba(238, 100, 15, 0.4);
 }
+
 .navLink:focus-visible {
-  outline: 2px solid var(--cyan);
+  outline: 2px solid var(--retro-orange, #EE640F);
   outline-offset: 2px;
 }
+
 .active {
-  background: var(--navy-raised);
-  border-color: var(--border-dark);
-  color: var(--cyan);
-  box-shadow: inset 3px 0 var(--cyan);
+  background: var(--retro-orange, #EE640F) !important;
+  border: 2px solid var(--retro-ink, #18130F) !important;
+  color: #FFFFFF !important;
+  font-weight: 850 !important;
+  box-shadow: 2px 2px 0 var(--retro-ink, #18130F) !important;
 }
+
 .content {
   min-width: 0;
-  padding: 24px;
-  background: var(--navy);
+  padding: clamp(16px, 2.5vw, 32px);
+  background: var(--retro-cream, #FAF4E8);
 }
+
 @media (max-width: 900px) {
   .layout {
     display: block;
   }
   .nav {
-    padding: 12px 16px 4px;
+    padding: 14px 16px 6px;
     border-right: 0;
-    border-bottom: 1px solid var(--border-dark);
+    border-bottom: 2.5px solid var(--retro-ink, #18130F);
   }
   .brand {
-    margin-bottom: 8px;
+    margin-bottom: 10px;
   }
   .navList {
     display: flex;

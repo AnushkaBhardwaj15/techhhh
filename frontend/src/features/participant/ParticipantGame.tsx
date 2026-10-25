@@ -1,73 +1,254 @@
-import { useEffect, useRef, useState } from "react";
-import { gsap } from "gsap";
-import { cancelOnReducedMotion } from "../../lib/reducedMotion";
-import type { DisplayDraw } from "../../lib/realtime";
-import { Link, Navigate, useOutletContext } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
-import type { AuthenticatedUser } from "../../types/auth";
-import type { PlayState } from "../../types/play";
-import { claimPlayPrize, markPlayCell } from "../../lib/api/play";
-import { usePlayState } from "./usePlayState";
-import { TicketGrid } from "./ParticipantTicket";
-import { ActionButton } from "../../components/ActionButton";
-import styles from "./ReferencePlay.module.css";
+import { useEffect, useRef, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { gsap } from 'gsap';
+import { Link, Navigate, useOutletContext } from 'react-router-dom';
+import { ApiError } from '../../lib/api/client';
+import { cancelOnReducedMotion } from '../../lib/reducedMotion';
+import { getParticipantDraws } from '../../lib/api/draws';
+import { getCurrentRound, getParticipantEvent } from '../../lib/api/participant';
+import { claimPlayPrize, markPlayCell } from '../../lib/api/play';
+import { mergeParticipantDraws, useParticipantRealtime, type ConnectionStatus, type DisplayDraw } from '../../lib/realtime';
+import { playNewClueSound } from '../../lib/audio';
+import type { AuthenticatedUser } from '../../types/auth';
+import type { PlayState } from '../../types/play';
+import { ActionButton } from '../../components/ActionButton';
+import { ParticipantTicket, TicketGrid } from './ParticipantTicket';
+import { ClaimPanel } from './ClaimPanel';
+import { WinnerBanner } from './WinnerBanner';
+import { usePlayState } from './usePlayState';
+import styles from './ParticipantGame.module.css';
+import refStyles from './ReferencePlay.module.css';
+
 const labels = {
-  EARLY_5: "Early Five",
-  FOUR_CORNERS: "Four Corners",
-  TOP_LINE: "Top Line",
-  MIDDLE_LINE: "Middle Line",
-  BOTTOM_LINE: "Bottom Line",
-  FULL_HOUSE: "Full House",
-  SECOND_FULL_HOUSE: "Second Full House",
+  EARLY_5: 'Early Five',
+  FOUR_CORNERS: 'Four Corners',
+  TOP_LINE: 'Top Line',
+  MIDDLE_LINE: 'Middle Line',
+  BOTTOM_LINE: 'Bottom Line',
+  FULL_HOUSE: 'Full House',
+  SECOND_FULL_HOUSE: 'Second Full House',
 };
-export function QuestionCard({
+
+export function ParticipantGame() {
+  const user = useOutletContext<AuthenticatedUser>();
+  const joinedGameId = sessionStorage.getItem(`tt_joined_game_${user.id}`);
+
+  const event = useQuery({
+    queryKey: ['participant', user.id, 'event'],
+    queryFn: ({ signal }) => getParticipantEvent(signal),
+    enabled: !joinedGameId,
+    retry: false,
+    refetchOnReconnect: 'always',
+    refetchOnWindowFocus: 'always',
+  });
+
+  // If there is an active reference game session, render Reference Play
+  if (joinedGameId) {
+    return <ReferenceParticipantGame id={joinedGameId} user={user} />;
+  }
+
+  // If there's neither a joined reference game nor an event, redirect to lobby
+  if (!joinedGameId && !event.isLoading && !event.data) {
+    return <Navigate to="/participant/lobby" replace />;
+  }
+
+  return <AuthoritativeParticipantGame user={user} event={event} />;
+}
+
+function ReferenceParticipantGame({ id, user: _user }: { id: string; user: AuthenticatedUser }) {
+  const query = usePlayState(id);
+  const game = query.data;
+  const client = useQueryClient();
+  const [pending, setPending] = useState(false);
+  const busy = useRef(false);
+  const [feedback, setFeedback] = useState('');
+  const [accepted, setAccepted] = useState(false);
+
+  async function mark(cellId: string, marked: boolean) {
+    if (busy.current) return;
+    busy.current = true;
+    setPending(true);
+    setFeedback('');
+    try {
+      const updated = await markPlayCell(id, cellId, marked);
+      client.setQueryData(['reference-play', 'private', id], updated);
+    } catch {
+      setAccepted(false);
+      setFeedback('We could not confirm that mark. Check the saved ticket before trying again.');
+      void query.refetch();
+    } finally {
+      busy.current = false;
+      setPending(false);
+    }
+  }
+
+  async function claim(pattern: PlayState['patterns'][number]['pattern']) {
+    if (busy.current) return;
+    busy.current = true;
+    setPending(true);
+    setFeedback('');
+    try {
+      const result = await claimPlayPrize(id, pattern);
+      client.setQueryData(['reference-play', 'private', id], result.game);
+      setAccepted(result.accepted);
+      setFeedback(
+        result.accepted
+          ? `${labels[pattern]} accepted. You earned ${result.points} points.`
+          : (result.warning ?? 'This claim is not ready yet. No penalty was applied.')
+      );
+      await client.invalidateQueries({ queryKey: ['reference-play'] });
+    } catch {
+      setAccepted(false);
+      setFeedback('Could not confirm the claim. Check the latest winners before retrying. No penalty was applied.');
+    } finally {
+      busy.current = false;
+      setPending(false);
+    }
+  }
+
+  if (game?.status === 'READY') {
+    return <Navigate to="/participant/waiting" replace />;
+  }
+
+  const latest = game?.draws.at(-1);
+
+  return (
+    <main className={refStyles.page}>
+      <Link className={refStyles.back} to="/participant/lobby">← Participation</Link>
+      {query.isPending && <p role="status">Loading your saved ticket and calls…</p>}
+      {query.isError && (
+        <p role="alert" className={refStyles.warning}>
+          Could not load the game. <button onClick={() => void query.refetch()}>Try again</button>
+        </p>
+      )}
+      {game && (
+        <>
+          <header className={refStyles.heading}>
+            <div>
+              <p className={refStyles.kicker}>GAME #{game.sequenceNumber} · CODE {game.code}</p>
+              <h1>{game.name}</h1>
+            </div>
+            <div className={refStyles.score}>
+              <span>YOUR POINTS</span>
+              <strong>{game.score}</strong>
+            </div>
+          </header>
+          {game.status === 'PAUSED' && (
+            <div
+              role="status"
+              style={{
+                background: 'rgba(255, 183, 77, 0.15)',
+                border: '1px solid #ffb74d',
+                borderRadius: '12px',
+                padding: '16px 20px',
+                marginBottom: '20px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '14px',
+              }}
+            >
+              <span style={{ fontSize: '28px' }} aria-hidden="true">⏸️</span>
+              <div>
+                <strong style={{ color: '#ffb74d', fontSize: '16px', display: 'block' }}>
+                  Event Paused by Host
+                </strong>
+                <p style={{ margin: '4px 0 0 0', color: '#e2e8f0', fontSize: '14px', lineHeight: 1.4 }}>
+                  The host has temporarily paused the event. Calls and prize claims are on hold. Your ticket and marks are safely saved — live play will resume automatically as soon as the host resumes!
+                </p>
+              </div>
+            </div>
+          )}
+          {latest && (
+            <ReferenceQuestionCard
+              draw={{
+                id: latest.id,
+                roundId: game.id,
+                sequenceNumber: latest.sequence,
+                questionText: latest.prompt,
+                keyValue: latest.answer ?? '',
+                drawnAt: latest.drawnAt,
+              }}
+              category={latest.category}
+              codeSnippet={latest.codeSnippet}
+              revealed={latest.revealed}
+            />
+          )}
+          <ReferenceTicket game={game} pending={pending} onMark={mark} />
+          <section className={refStyles.panel} aria-label="Available prizes">
+            <h2>Available prizes</h2>
+            <div className={refStyles.claimList}>
+              {game.patterns.map((p) => (
+                <div key={p.pattern} className={refStyles.claimItem}>
+                  <div>
+                    <span className={refStyles.claimName}>{labels[p.pattern]}</span>
+                    <span className={refStyles.points}>{p.points} PTS</span>
+                  </div>
+                  <ActionButton
+                    busy={pending}
+                    disabled={game.status !== 'ACTIVE' || p.closed || pending}
+                    onClick={() => void claim(p.pattern)}
+                  >
+                    {p.closed ? 'Already won' : `Claim ${labels[p.pattern]}`}
+                  </ActionButton>
+                </div>
+              ))}
+            </div>
+            {feedback && (
+              <p role={accepted ? 'status' : 'alert'} className={accepted ? refStyles.success : refStyles.warning}>
+                {feedback}
+              </p>
+            )}
+          </section>
+        </>
+      )}
+    </main>
+  );
+}
+
+function ReferenceQuestionCard({
   draw,
-  animate,
+  category,
   codeSnippet,
+  revealed,
 }: {
   draw: DisplayDraw;
-  animate: boolean;
+  category?: string | null;
   codeSnippet?: string | null;
-  totalQuestions?: number;
+  revealed: boolean;
 }) {
   const card = useRef<HTMLElement>(null);
   const text = useRef<HTMLHeadingElement>(null);
+
   useEffect(() => {
-    const preference = window.matchMedia?.("(prefers-reduced-motion: reduce)");
-    if (!animate || !card.current || preference?.matches) return;
+    const preference = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+    if (!card.current || preference?.matches) return;
     const context = gsap.context(() => {
       gsap
         .timeline()
         .fromTo(card.current, { opacity: 0.8 }, { opacity: 1, duration: 0.15 })
-        .fromTo(
-          text.current,
-          { y: 6, opacity: 0 },
-          { y: 0, opacity: 1, duration: 0.25 },
-        );
+        .fromTo(text.current, { y: 6, opacity: 0 }, { y: 0, opacity: 1, duration: 0.25 });
     }, card);
     return cancelOnReducedMotion(preference, () => context.revert());
-  }, [animate, draw.sequenceNumber]);
+  }, [draw.sequenceNumber]);
+
   return (
-    <section ref={card} className={styles.clue} aria-label="Current clue">
-      <p className={styles.kicker}>CALL #{draw.sequenceNumber}</p>
-      <h2 ref={text} aria-live="polite">
-        {draw.questionText}
-      </h2>
+    <section ref={card} className={refStyles.clue} aria-label="Current clue">
+      <p className={refStyles.kicker}>CALL #{draw.sequenceNumber}{category ? ` · ${category}` : ''}</p>
+      <h2 ref={text} aria-live="polite">{draw.questionText}</h2>
       {codeSnippet && <pre>{codeSnippet}</pre>}
-      {draw.keyValue ? (
-        <div className={styles.answer}>
+      {revealed && draw.keyValue ? (
+        <div className={refStyles.answer}>
           <span>OFFICIAL ANSWER</span>
           <strong>{draw.keyValue}</strong>
         </div>
       ) : (
-        <p className={styles.unrevealed}>
-          Answer not revealed yet. Mark a matching term if you know it.
-        </p>
+        <p className={refStyles.unrevealed}>Answer not revealed yet. Mark a matching term if you know it.</p>
       )}
     </section>
   );
 }
-export function ReferenceTicket({
+
+function ReferenceTicket({
   game,
   pending,
   onMark,
@@ -77,10 +258,7 @@ export function ReferenceTicket({
   onMark: (id: string, marked: boolean) => void;
 }) {
   const [numbers, setNumbers] = useState(false);
-  if (!game.ticket)
-    return (
-      <p role="alert">Your ticket has not been assigned. Contact the admin.</p>
-    );
+  if (!game.ticket) return <p role="alert">Your ticket has not been assigned. Contact the admin.</p>;
   const ticket = {
     ...game.ticket,
     roundId: game.id,
@@ -94,221 +272,244 @@ export function ReferenceTicket({
     })),
   };
   return (
-    <section className={styles.panel} aria-label="Assigned ticket">
-      <div className={styles.sectionHead}>
+    <section className={refStyles.panel} aria-label="Assigned ticket">
+      <div className={refStyles.sectionHead}>
         <div>
-          <p className={styles.kicker}>YOUR SAVED TICKET</p>
+          <p className={refStyles.kicker}>YOUR SAVED TICKET</p>
           <h2>#{game.ticket.id.slice(0, 6).toUpperCase()}</h2>
         </div>
         <ActionButton onClick={() => setNumbers((value) => !value)}>
-          {numbers ? "Show answer terms" : "Show numbers"}
+          {numbers ? 'Show answer terms' : 'Show numbers'}
         </ActionButton>
       </div>
-      <p className={styles.hint}>
-        Tap cells to mark or unmark them yourself. Only saved marks matching
-        official calls count for prizes.
+      <p className={refStyles.hint}>
+        Tap cells to mark or unmark them yourself. Only saved marks matching official calls count for prizes.
       </p>
       <TicketGrid
         ticket={ticket}
-        canMark={game.status === "ACTIVE" && !pending}
+        canMark={game.status === 'ACTIVE' && !pending}
         onToggleCell={(cell) => onMark(cell.id, !cell.marked)}
       />
-      <p className={styles.hint}>
-        {pending
-          ? "Saving your action…"
-          : "Your marks are saved by the server."}
+      <p className={refStyles.hint}>
+        {pending ? 'Saving your action…' : 'Your marks are saved by the server.'}
       </p>
     </section>
   );
 }
-export function ParticipantGame() {
-  const user = useOutletContext<AuthenticatedUser>();
-  const id = sessionStorage.getItem(`tt_joined_game_${user.id}`) ?? "";
-  const query = usePlayState(id);
-  const game = query.data;
-  const client = useQueryClient();
-  const [pending, setPending] = useState(false);
-  const busy = useRef(false);
-  const [feedback, setFeedback] = useState("");
-  const [accepted, setAccepted] = useState(false);
-  async function mark(cellId: string, marked: boolean) {
-    if (busy.current) return;
-    busy.current = true;
-    setPending(true);
-    setFeedback("");
-    try {
-      const updated = await markPlayCell(id, cellId, marked);
-      client.setQueryData(["reference-play", "private", id], updated);
-    } catch {
-      setAccepted(false);
-      setFeedback(
-        "We could not confirm that mark. Check the saved ticket before trying again.",
-      );
-      void query.refetch();
-    } finally {
-      busy.current = false;
-      setPending(false);
+
+function AuthoritativeParticipantGame({
+  user,
+  event,
+}: {
+  user: AuthenticatedUser;
+  event: ReturnType<typeof useQuery<any, any>>;
+}) {
+  const queryClient = useQueryClient();
+  const round = useQuery({
+    queryKey: ['participant', user.id, 'round', event.data?.id],
+    queryFn: ({ signal }) => getCurrentRound(signal),
+    enabled: !!event.data,
+    refetchOnReconnect: 'always',
+    refetchOnWindowFocus: 'always',
+  });
+  const noRound = round.error instanceof ApiError && round.error.status === 404;
+  const noEvent = event.error instanceof ApiError && event.error.status === 404;
+  const canRead = !!event.data && !!round.data && !noRound && !noEvent;
+  const staleGameState = (!!event.data && !!event.error) || (!!round.data && !!round.error);
+  const roundStatus = round.data?.status;
+  const canConnect = canRead && (round.data?.status === 'ACTIVE' || round.data?.status === 'PAUSED');
+  const refetchEvent = event.refetch;
+  const refetchRound = round.refetch;
+  const realtime = useParticipantRealtime(canConnect, user.id, event.data?.id ?? '', round.data?.id ?? '', queryClient);
+
+  useEffect(() => {
+    const policyRejected = realtime.warning.startsWith('Live updates are unavailable for this round state.');
+    const observation = noEvent ? 'event' : noRound ? 'round' : roundStatus && !['ACTIVE', 'PAUSED'].includes(roundStatus) ? roundStatus : policyRejected ? 'policy-rejected' : null;
+    if (!observation) return;
+    let stopped = false;
+    let remaining = 5;
+    let timer: number | undefined;
+    const delay = observation === 'READY' ? 3_000 : observation === 'event' || observation === 'round' || observation === 'policy-rejected' ? 5_000 : 10_000;
+    const observe = async () => {
+      remaining -= 1;
+      await (observation === 'event' ? refetchEvent() : refetchRound());
+      if (!stopped && remaining > 0) timer = window.setTimeout(observe, delay);
+    };
+    timer = window.setTimeout(observe, delay);
+    return () => { stopped = true; if (timer !== undefined) window.clearTimeout(timer); };
+  }, [noEvent, noRound, refetchEvent, refetchRound, realtime.warning, roundStatus]);
+
+  const draws = useQuery({
+    queryKey: ['participant', user.id, 'draws', event.data?.id, round.data?.id],
+    queryFn: ({ signal }) => getParticipantDraws(round.data!.id, signal),
+    enabled: canRead,
+    refetchOnReconnect: 'always',
+    refetchOnWindowFocus: 'always',
+  });
+  const history = mergeParticipantDraws(draws.data?.data ?? [], realtime.liveDraws);
+  const latest = history.at(-1);
+  const animateSequence = realtime.liveDraws.at(-1)?.sequenceNumber;
+  const drawnKeys = new Set(history.map((draw) => draw.keyValue));
+  const retryDraws = () => void draws.refetch();
+
+  useEffect(() => {
+    if (latest?.sequenceNumber) {
+      playNewClueSound();
     }
-  }
-  async function claim(pattern: PlayState["patterns"][number]["pattern"]) {
-    if (busy.current) return;
-    busy.current = true;
-    setPending(true);
-    setFeedback("");
-    try {
-      const result = await claimPlayPrize(id, pattern);
-      client.setQueryData(["reference-play", "private", id], result.game);
-      setAccepted(result.accepted);
-      setFeedback(
-        result.accepted
-          ? `${labels[pattern]} accepted. You earned ${result.points} points.`
-          : (result.warning ??
-              "This claim is not ready yet. No penalty was applied."),
-      );
-      await client.invalidateQueries({ queryKey: ["reference-play"] });
-    } catch {
-      setAccepted(false);
-      setFeedback(
-        "Could not confirm the claim. Check the latest winners before retrying. No penalty was applied.",
-      );
-    } finally {
-      busy.current = false;
-      setPending(false);
-    }
-  }
-  if (!id) return <Navigate to="/participant/lobby" replace />;
-  if (game?.status === "READY")
-    return <Navigate to="/participant/waiting" replace />;
-  const latest = game?.draws.at(-1);
+  }, [latest?.sequenceNumber]);
+
   return (
-    <main className={styles.page}>
-      <Link className={styles.back} to="/participant/lobby">
-        ← Participation
-      </Link>
-      {query.isPending && (
-        <p role="status">Loading your saved ticket and calls…</p>
+    <div className={styles.game}>
+      {realtime.announcement && (
+        <aside className={styles.announcement} aria-live="polite">
+          <p>
+            <strong>📢 ANNOUNCEMENT:</strong> {realtime.announcement}
+          </p>
+          <button type="button" onClick={realtime.dismissAnnouncement} aria-label="Dismiss announcement">
+            Dismiss
+          </button>
+        </aside>
       )}
-      {query.isError && (
-        <p role="alert" className={styles.warning}>
-          Could not load the game.{" "}
-          <button onClick={() => void query.refetch()}>Try again</button>
-        </p>
+      <section className={styles.live} aria-label="Live round updates">
+        <div className={styles.liveHeader}>
+          <div>
+            <p className={styles.kicker}>LIVE ROUND</p>
+            <h1>{round.data?.name ?? 'Round updates'}</h1>
+          </div>
+          {round.data && <RoundStatus status={round.data.status} />}
+        </div>
+        {event.isLoading || (event.data && round.isLoading) ? (
+          <p role="status">Checking your current round…</p>
+        ) : noEvent || noRound ? (
+          <div>
+            <p role="status">Your host has not made a round available yet.</p>
+            <button onClick={() => void (noEvent ? event.refetch() : round.refetch())}>Check again</button>
+          </div>
+        ) : event.error && !event.data ? (
+          <div className={styles.error}>
+            <p role="alert">{event.error instanceof ApiError && event.error.status === 403 ? 'You do not have permission to view this event.' : 'We could not load your event.'}</p>
+            <button onClick={() => void event.refetch()}>Retry</button>
+          </div>
+        ) : round.error && !round.data ? (
+          <div className={styles.error}>
+            <p role="alert">{round.error instanceof ApiError && round.error.status === 403 ? 'You do not have permission to view the current round.' : 'We could not load the current round.'}</p>
+            <button onClick={() => void round.refetch()}>Retry</button>
+          </div>
+        ) : null}
+
+        {canConnect ? (
+          <ConnectionIndicator status={realtime.status} warning={realtime.warning} retry={realtime.retry} />
+        ) : canRead && (
+          <p className={styles.connectionNote} role="status">{roundStatusNote(round.data.status)}</p>
+        )}
+
+        {staleGameState && (
+          <p className={styles.stale} role="status">Game details could not be refreshed. Showing the last details received from the server.</p>
+        )}
+
+        {canRead && draws.isPending ? <p role="status">Loading revealed questions and keys…</p> : null}
+        {canRead && draws.error && !draws.data ? (
+          <div className={styles.error}>
+            <p role="alert">We could not load the draw history.</p>
+            <button onClick={retryDraws}>Retry</button>
+          </div>
+        ) : null}
+
+        {draws.data && draws.error && <p className={styles.stale} role="status">Showing the last draw history received from the server.</p>}
+
+        {latest ? (
+          <QuestionCard draw={latest} animate={animateSequence === latest.sequenceNumber} />
+        ) : draws.data ? (
+          <p className={styles.empty}>No questions have been drawn in this round yet.</p>
+        ) : null}
+
+        {history.length > 0 && <DrawHistory draws={history} />}
+      </section>
+
+      {canRead && <WinnerBanner userId={user.id} roundId={round.data.id} roundStatus={round.data.status} />}
+      <ParticipantTicket
+        revealedKey={latest?.keyValue}
+        animateReveal={animateSequence === latest?.sequenceNumber}
+        drawnKeys={drawnKeys}
+        canMark={round.data?.status === 'ACTIVE' && !round.error && !event.error && realtime.status === 'CONNECTED' && !draws.isFetching && !draws.error}
+      />
+      {event.data && round.data && (
+        <ClaimPanel round={round.data} canSubmit={realtime.status === 'CONNECTED' && !event.error && !round.error} />
       )}
-      {game && (
-        <>
-          <header className={styles.heading}>
-            <div>
-              <p className={styles.kicker}>
-                TECH TAMBOLA · {game.status}
-                {game.closingSequence !== null ? " · CLOSING" : ""}
-              </p>
-              <h1>{game.name}</h1>
-            </div>
-            <strong className={styles.score}>
-              {game.score ?? 0}
-              <span>YOUR POINTS</span>
-            </strong>
-          </header>
-          {latest ? (
-            <QuestionCard
-              draw={{
-                roundId: game.id,
-                sequenceNumber: latest.sequence,
-                questionText: latest.prompt,
-                keyValue: latest.revealed ? (latest.answer ?? "") : "",
-                drawnAt: latest.drawnAt,
-              }}
-              animate
-              codeSnippet={latest.codeSnippet}
-            />
-          ) : (
-            <section className={styles.clue}>
-              <h2>Waiting for the admin to call the first question.</h2>
-            </section>
-          )}
-          {game.status === "PAUSED" && (
-            <p className={styles.warning} role="status">
-              The admin has paused the game. Your ticket and marks are saved.
-            </p>
-          )}
-          {game.status === "RECOVERY_REQUIRED" && (
-            <p className={styles.warning} role="status">
-              The admin must recover this game before play resumes. Your ticket
-              is preserved.
-            </p>
-          )}
-          {game.status === "COMPLETED" && (
-            <p className={styles.notice} role="status">
-              Game completed. Your ticket, winners, and points remain saved.
-            </p>
-          )}
-          <ReferenceTicket
-            game={game}
-            pending={pending}
-            onMark={(cellId, marked) => void mark(cellId, marked)}
-          />
-          <section className={styles.panel}>
-            <h2>Claim a prize</h2>
-            <p className={styles.hint}>
-              The server checks your saved marks against official calls. Wrong
-              claims only show a warning.
-            </p>
-            {feedback && (
-              <p
-                className={accepted ? styles.notice : styles.warning}
-                role={accepted ? "status" : "alert"}
-              >
-                {feedback}
-              </p>
-            )}
-            <div className={styles.patterns}>
-              {game.patterns.map((prize) => (
-                <article className={styles.pattern} key={prize.pattern}>
-                  <h3>{labels[prize.pattern]}</h3>
-                  <span>{prize.points} points</span>
-                  <ActionButton
-                    busy={pending}
-                    disabled={game.status !== "ACTIVE" || prize.closed}
-                    onClick={() => void claim(prize.pattern)}
-                  >
-                    {prize.closed
-                      ? "Already won"
-                      : `Claim ${labels[prize.pattern]}`}
-                  </ActionButton>
-                </article>
-              ))}
-            </div>
-          </section>
-          <section className={styles.panel}>
-            <h2>Called clues and revealed answers</h2>
-            {!game.draws.length && <p>No calls yet.</p>}
-            {[...game.draws].reverse().map((draw) => (
-              <div className={styles.historyRow} key={draw.id}>
-                <div>
-                  <strong>
-                    #{draw.sequence} {draw.prompt}
-                  </strong>
-                  <p>
-                    {draw.revealed ? draw.answer : "Waiting for answer reveal"}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </section>
-          <section className={styles.panel}>
-            <h2>Standings</h2>
-            {game.standings.length ? (
-              game.standings.map((person, index) => (
-                <p key={index}>
-                  {person.name} — {person.points} points
-                </p>
-              ))
-            ) : (
-              <p>No prizes awarded yet.</p>
-            )}
-          </section>
-        </>
-      )}
-    </main>
+    </div>
+  );
+}
+
+function RoundStatus({ status }: { status: string }) {
+  return <span className={styles.roundStatus}>{status.replaceAll('_', ' ')}</span>;
+}
+
+function roundStatusNote(status: string) {
+  return status === 'READY' ? 'Live updates begin when the round starts.' : 'The round is not live. Showing saved draw history.';
+}
+
+function ConnectionIndicator({ status, warning, retry }: { status: ConnectionStatus; warning: string; retry: () => void }) {
+  const labels: Record<ConnectionStatus, string> = {
+    CONNECTING: 'Connecting to live updates',
+    SYNCING: 'Syncing game details',
+    CONNECTED: 'Live updates connected',
+    RECONNECTING: 'Reconnecting to live updates',
+    DISCONNECTED: 'Live updates disconnected',
+  };
+  return (
+    <div className={styles.connection}>
+      <p role="status" data-connection={status}>{labels[status]}</p>
+      {status === 'DISCONNECTED' && <button onClick={retry}>Reconnect</button>}
+      {warning && <p role="alert">{warning}</p>}
+    </div>
+  );
+}
+
+export function QuestionCard({ draw, animate }: { draw: DisplayDraw; animate: boolean }) {
+  const cardRef = useRef<HTMLElement>(null);
+  const questionRef = useRef<HTMLParagraphElement>(null);
+  const keyRef = useRef<HTMLParagraphElement>(null);
+
+  useEffect(() => {
+    const preference = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+    if (!animate || !cardRef.current || preference?.matches) return;
+    const context = gsap.context(() => {
+      gsap
+        .timeline()
+        .fromTo(questionRef.current, { y: 6 }, { y: 0, duration: 0.18, ease: 'power2.out', clearProps: 'transform' })
+        .fromTo(keyRef.current, { scale: 0.97 }, { scale: 1, duration: 0.2, ease: 'back.out(1.6)', clearProps: 'transform' }, '-=0.04');
+    }, cardRef);
+    return cancelOnReducedMotion(preference, () => context.revert());
+  }, [animate, draw.sequenceNumber]);
+
+  return (
+    <article ref={cardRef} className={styles.questionCard} aria-label={`Question ${draw.sequenceNumber}`}>
+      <div>
+        <p className={styles.label}>QUESTION {draw.sequenceNumber}</p>
+        <p ref={questionRef} className={styles.question} aria-live="polite">{draw.questionText}</p>
+      </div>
+      <div className={styles.keyReveal}>
+        <p className={styles.label}>ANSWER / KEY</p>
+        <p ref={keyRef} className={styles.key} aria-live="polite">{draw.keyValue}</p>
+      </div>
+    </article>
+  );
+}
+
+function DrawHistory({ draws }: { draws: DisplayDraw[] }) {
+  return (
+    <section className={styles.history} aria-label="Draw history">
+      <h2>Draw history</h2>
+      <ol>
+        {draws.map((draw) => (
+          <li key={draw.id ?? draw.sequenceNumber}>
+            <span>#{draw.sequenceNumber}</span>
+            <span>{draw.questionText}</span>
+            <strong>{draw.keyValue}</strong>
+            <time dateTime={draw.drawnAt}>{new Date(draw.drawnAt).toLocaleTimeString()}</time>
+          </li>
+        ))}
+      </ol>
+    </section>
   );
 }

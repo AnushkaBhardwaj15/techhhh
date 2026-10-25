@@ -115,6 +115,8 @@ describe('Operations read models', () => {
       action: 'ROUND_STARTED',
       resourceType: 'round',
       resourceId: 'round-1',
+      eventName: null,
+      resourceName: null,
       metadata: { reason: 'operator', password: '***', nested: { apiKey: '***' } },
       createdAt: timestamp.toISOString(),
     });

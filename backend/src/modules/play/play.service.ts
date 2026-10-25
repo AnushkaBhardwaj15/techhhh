@@ -36,6 +36,22 @@ export class PlayService {
   async current(actor?: PlayActor) {
     const summaries = await this.store.list(actor);
     if (!summaries[0]) return { game: null, games: [] };
+
+    if (actor?.role === "PARTICIPANT") {
+      const broadcastGame = summaries.find(
+        (s) =>
+          s.isBroadcast && ["READY", "ACTIVE", "PAUSED"].includes(s.status),
+      );
+      if (!broadcastGame) {
+        return { game: null, games: summaries };
+      }
+      const state = await this.store.read(broadcastGame.id, actor);
+      return {
+        game: publicPlayState(state, false),
+        games: summaries,
+      };
+    }
+
     const state = await this.store.read(summaries[0].id, actor);
     return {
       game: publicPlayState(
@@ -44,6 +60,11 @@ export class PlayService {
       ),
       games: summaries,
     };
+  }
+  async broadcast(id: string, actor: PlayActor, broadcast: boolean) {
+    this.admin(actor);
+    const state = await this.store.broadcast(id, actor, broadcast);
+    return publicPlayState(state, true);
   }
   async read(id: string, actor?: PlayActor) {
     return publicPlayState(
@@ -78,8 +99,10 @@ export class PlayService {
   }
   async join(code: string, actor: PlayActor) {
     if (actor.role !== "PARTICIPANT") throw new ForbiddenError();
-    const id = await this.store.findCode(code, actor);
-    const state = await this.store.read(id, actor);
+    const found = await this.store.findCode(code, actor);
+    const roundId = typeof found === "string" ? found : found.id;
+    const eventId = typeof found === "string" ? actor.eventId : found.eventId;
+    const state = await this.store.read(roundId, { ...actor, eventId });
     if (!["READY", "ACTIVE", "PAUSED"].includes(state.status))
       throw new ConflictError(
         "This game is no longer accepting participants.",

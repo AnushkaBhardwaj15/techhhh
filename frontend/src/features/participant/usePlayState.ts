@@ -50,6 +50,9 @@ export function usePlayState(roundId: string, publicView = false) {
         setWsConnected(false);
         if (!stopped && event.code !== 1008) timer = setTimeout(connect, 2000);
       };
+      socket.onerror = () => {
+        setWsConnected(false);
+      };
     }
     connect();
     return () => {
@@ -58,6 +61,7 @@ export function usePlayState(roundId: string, publicView = false) {
       clearTimeout(timer);
       if (socket) {
         socket.onclose = null;
+        socket.onerror = null;
         socket.close();
       }
     };

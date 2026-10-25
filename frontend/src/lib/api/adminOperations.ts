@@ -4,6 +4,8 @@ import { auditPageSchema, systemStatusSchema } from '../../types/adminOperations
 export interface AuditFilters {
   roundId?: string;
   actorId?: string;
+  actorEmail?: string;
+  search?: string;
   action?: string;
   from?: string;
   to?: string;

@@ -32,6 +32,7 @@ const envSchema = z
       .transform((val) => (!val || val === '' || val === '*' ? 'http://localhost:5173' : val)),
     CORS_ORIGIN: z.string().default('*'),
     LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
+    TRUST_PROXY: z.string().optional().default('false').transform((val) => val === 'true' || val === '1'),
   })
   .superRefine((data, ctx) => {
     if (data.NODE_ENV === 'production') {

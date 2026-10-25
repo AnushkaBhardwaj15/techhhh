@@ -44,7 +44,7 @@ export function LandingPage() {
   }
 
   const user = session.data;
-  const destination = user ? roleHomePath(user.role) : '/login';
+  const destination = user ? (user.role === 'PARTICIPANT' ? '/lobby' : roleHomePath(user.role)) : '/login';
   const ctaText = user ? `ENTER ${user.role === 'PARTICIPANT' ? 'LOBBY' : 'DASHBOARD'}` : 'SIGN IN TO PLAY';
 
   return (

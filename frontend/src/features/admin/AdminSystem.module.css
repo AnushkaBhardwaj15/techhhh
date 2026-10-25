@@ -4,7 +4,7 @@
   margin: 24px auto;
   min-height: 0;
   padding: clamp(20px, 3vw, 36px);
-  background: var(--ice);
+  background: var(--color-parchment, #F0E8D9);
   color: var(--ink);
   border-radius: 16px;
 }
@@ -39,10 +39,12 @@
 .state button {
   min-height: 44px;
   padding: 0 14px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--cyan);
-  color: var(--ink);
+  border: 1.5px solid #302820;
+  border-color: var(--color-espresso, #302820);
+  border-radius: var(--radius-xs, 2px);
+  background: var(--color-oxblood, #8C4545);
+  color: var(--color-paper, #FAF7F0);
+  box-shadow: 2px 2px 0 var(--color-espresso, #302820);
   font:
     700 13px system-ui,
     sans-serif;
@@ -51,8 +53,8 @@
 }
 .heading button:focus-visible,
 .state button:focus-visible {
-  outline: 3px solid var(--cyan);
-  outline-offset: 3px;
+  outline: 2px solid var(--color-oxblood, #8C4545);
+  outline-offset: 2px;
 }
 .heading button:disabled {
   opacity: 0.6;
@@ -66,7 +68,7 @@
   gap: 20px;
   padding: 24px;
   border: 1px solid var(--border);
-  background: var(--ice);
+  background: var(--color-paper, #FAF7F0);
   box-shadow: none;
 }
 .readiness h2 {
@@ -98,7 +100,8 @@
 }
 [data-state="not_ready"],
 [data-state="unavailable"] {
-  background: var(--cyan);
+  background: var(--color-sandstone, #DCD0BD);
+  color: var(--color-espresso, #302820);
 }
 .section {
   margin-top: 28px;
@@ -150,8 +153,8 @@
   text-underline-offset: 3px;
 }
 .roundsLink:focus-visible {
-  outline: 3px solid var(--cyan);
-  outline-offset: 3px;
+  outline: 2px solid var(--color-oxblood, #8C4545);
+  outline-offset: 2px;
 }
 .section time {
   display: inline-block;
@@ -163,8 +166,8 @@
 }
 .stale {
   padding: 12px 16px;
-  border-left: 4px solid var(--cyan);
-  background: var(--ice);
+  border-left: 4px solid var(--color-oxblood, #8C4545);
+  background: var(--color-paper, #FAF7F0);
   line-height: 1.5;
 }
 .state button {

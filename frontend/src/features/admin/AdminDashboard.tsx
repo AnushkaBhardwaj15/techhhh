@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { createPlayRound, validatePlayBank } from '../../lib/api/play';
+import { useNavigate, useOutletContext } from 'react-router-dom';
+import { createPlayRound, validatePlayBank, commandPlayRound, broadcastPlayRound } from '../../lib/api/play';
 import { listAdminAudit } from '../../lib/api/adminOperations';
-import { useNavigate } from 'react-router-dom';
+import type { AuthenticatedUser } from '../../types/auth';
+import { useAdminDashboard } from './useAdminDashboard';
 import {
   fetchActiveGame,
   subscribeToGameSync,
@@ -19,12 +21,29 @@ interface ImportedQuestion {
   codeSnippet?: string | null;
 }
 
+function statusName(value: string) {
+  return value.toLowerCase().replaceAll('_', ' ');
+}
+
+function Metric({ label, value }: { label: string; value: number }) {
+  return (
+    <div className={styles.metric}>
+      <dt>{label}</dt>
+      <dd>{value.toLocaleString()}</dd>
+    </div>
+  );
+}
+
 export function AdminDashboard() {
   const navigate = useNavigate();
+  const user = useOutletContext<AuthenticatedUser | undefined>();
+  const dashboard = useAdminDashboard(user?.id ?? 'admin');
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState('');
   const [creationKey] = useState(() => crypto.randomUUID());
   const [games, setGames] = useState<SyncGameRecord[]>([]);
+  const [commandingId, setCommandingId] = useState<string | null>(null);
+  const [broadcastingId, setBroadcastingId] = useState<string | null>(null);
   const [selectedRoundForAudit, setSelectedRoundForAudit] = useState<SyncGameRecord | null>(null);
 
   const roundAuditQuery = useQuery({
@@ -33,6 +52,36 @@ export function AdminDashboard() {
       listAdminAudit({ roundId: selectedRoundForAudit!.id, limit: 100 }, signal),
     enabled: !!selectedRoundForAudit,
   });
+
+  async function handleToggleBroadcast(gameId: string, currentStatus: boolean) {
+    if (broadcastingId) return;
+    setBroadcastingId(gameId);
+    setError('');
+    try {
+      await broadcastPlayRound(gameId, !currentStatus);
+      const { games: all } = await fetchActiveGame();
+      setGames(all);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not update lobby broadcast status.');
+    } finally {
+      setBroadcastingId(null);
+    }
+  }
+
+  async function handleGameCommand(gameId: string, action: 'start' | 'pause' | 'resume') {
+    if (commandingId) return;
+    setCommandingId(gameId);
+    setError('');
+    try {
+      await commandPlayRound(gameId, { action }, crypto.randomUUID());
+      const { games: all } = await fetchActiveGame();
+      setGames(all);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not update event state.');
+    } finally {
+      setCommandingId(null);
+    }
+  }
 
   // Excel Question Import state
   const [showImport, setShowImport] = useState(false);
@@ -89,18 +138,148 @@ export function AdminDashboard() {
 
   return (
     <main className={styles.page}>
+      <header className={styles.heading}>
+        <div>
+          <p className={styles.eyebrow}>OPERATIONS / OVERVIEW</p>
+          <h1 className={styles.titleGamesPlayed}>Operations dashboard</h1>
+        </div>
+        <p className={styles.updated}>
+          {dashboard.dataUpdatedAt
+            ? `Updated ${new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit' }).format(dashboard.dataUpdatedAt)}`
+            : 'Live operational snapshot'}
+        </p>
+      </header>
+
+      {dashboard.data && (
+        <section aria-label="Operational metrics">
+          {dashboard.data.recoveryRequired && (
+            <p className={styles.recovery} role="alert">
+              Recovery is required for the active Round. Review the Round before resuming operations.
+            </p>
+          )}
+          <div className={styles.summary} aria-label="Event and active Round">
+            <article className={styles.event}>
+              <h2>EVENT STATUS</h2>
+              <p className={styles.eventName}>{dashboard.data.event?.title ?? 'No live event'}</p>
+              <div className={styles.eventMeta}>
+                <span className={styles.status}>{statusName(dashboard.data.event?.status ?? 'UNAVAILABLE')}</span>
+                {dashboard.data.event && <span>Event ID {dashboard.data.event.id}</span>}
+              </div>
+            </article>
+            <article className={styles.event}>
+              <h2>CURRENT ROUND</h2>
+              <p className={styles.eventName}>{dashboard.data.round?.name ?? 'No active Round'}</p>
+              <div className={styles.eventMeta}>
+                {dashboard.data.round ? (
+                  <>
+                    <span>Round {dashboard.data.round.sequenceNumber}</span>
+                    <span className={styles.status}>{statusName(dashboard.data.round.status)}</span>
+                  </>
+                ) : (
+                  <span>Round information is unavailable.</span>
+                )}
+              </div>
+            </article>
+          </div>
+          <dl className={styles.metrics} aria-label="Operational metrics">
+            <Metric label="Participants" value={dashboard.data.participants} />
+            <Metric label="Connected users" value={dashboard.data.connectedConnections} />
+            <Metric label="Draw count" value={dashboard.data.drawCount} />
+            <Metric label="Pending claims" value={dashboard.data.pendingClaims} />
+            <Metric label="Verified winners" value={dashboard.data.verifiedWinners} />
+          </dl>
+        </section>
+      )}
+
+      {/* Live Event Quick Controls Banner */}
+      {(() => {
+        const liveGame = games.find((g) => g.status === 'ACTIVE' || g.status === 'PAUSED');
+        if (!liveGame) return null;
+        const isPaused = liveGame.status === 'PAUSED';
+        return (
+          <div
+            style={{
+              background: 'var(--color-sandstone, #DCD0BD)',
+              border: '2px solid #302820',
+              borderColor: 'var(--color-espresso, #302820)',
+              borderRadius: 'var(--radius-sm, 4px)',
+              boxShadow: '3px 3px 0 var(--color-espresso, #302820)',
+              padding: '16px 20px',
+              marginBottom: '20px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '12px',
+            }}
+          >
+            <div>
+              <span
+                style={{
+                  display: 'inline-block',
+                  padding: '3px 8px',
+                  borderRadius: 'var(--radius-xs, 2px)',
+                  fontSize: '11px',
+                  fontWeight: 800,
+                  letterSpacing: '0.08em',
+                  background: isPaused ? '#946824' : 'var(--color-oxblood, #8C4545)',
+                  color: '#FAF7F0',
+                  marginBottom: '4px',
+                }}
+              >
+                {isPaused ? '⏸ EVENT PAUSED' : '● LIVE EVENT IN PROGRESS'}
+              </span>
+              <h2 style={{ margin: '2px 0 0 0', fontSize: '18px', color: 'var(--color-espresso, #302820)' }}>
+                {liveGame.name} (Code: {liveGame.code})
+              </h2>
+            </div>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              {isPaused ? (
+                <button
+                  type="button"
+                  className={styles.createGameBtn}
+                  style={{ background: 'var(--color-oxblood, #8C4545)', color: '#FAF7F0', fontWeight: 700 }}
+                  onClick={() => void handleGameCommand(liveGame.id, 'resume')}
+                  disabled={commandingId === liveGame.id}
+                >
+                  ▶ Resume Event
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className={styles.createGameBtn}
+                  style={{ background: '#946824', color: '#FAF7F0', fontWeight: 700 }}
+                  onClick={() => void handleGameCommand(liveGame.id, 'pause')}
+                  disabled={commandingId === liveGame.id}
+                >
+                  ⏸ Pause Event
+                </button>
+              )}
+              <button
+                type="button"
+                className={styles.createGameBtn}
+                onClick={() => handleOpenGame(liveGame)}
+              >
+                Open Game Control →
+              </button>
+            </div>
+          </div>
+        );
+      })()}
+
       <div className={styles.dashboardCard}>
         {/* Top Header Row matching Image 1: Left: Games played till now-, Right: +Create Game & Import */}
         <div className={styles.headerRow}>
-          <h1 className={styles.titleGamesPlayed}>Your games</h1>
+          <h1 className={styles.titleGamesPlayed} style={{ margin: 0, fontSize: '22px' }}>Your games</h1>
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
             <button
               type="button"
               className={styles.createGameBtn}
               style={{
-                background: 'rgba(0, 229, 255, 0.1)',
-                border: '1px solid var(--color-primary-cyan, #00e5ff)',
-                color: 'var(--color-primary-cyan, #00e5ff)',
+                background: 'var(--color-paper, #FAF7F0)',
+                border: '1.5px solid #302820',
+                borderColor: 'var(--color-espresso, #302820)',
+                color: 'var(--color-espresso, #302820)',
               }}
               onClick={() => {
                 setShowImport(!showImport);
@@ -133,10 +312,10 @@ export function AdminDashboard() {
             }}
             aria-label="Import Question Bank from Excel"
           >
-            <h2 style={{ fontSize: '18px', margin: '0 0 10px 0', color: 'var(--color-primary-cyan, #00e5ff)' }}>
+            <h2 style={{ fontSize: '18px', margin: '0 0 10px 0', color: 'var(--color-espresso, #302820)' }}>
               Import Questions from Excel / Spreadsheet
             </h2>
-            <p style={{ margin: '0 0 16px 0', fontSize: '14px', color: 'var(--color-text-muted, #94a3b8)' }}>
+            <p style={{ margin: '0 0 16px 0', fontSize: '14px', color: 'var(--color-text-secondary, #62584C)' }}>
               Select an Excel file (.xlsx, .xls) or CSV with question clues and answer terms. Tech Tambola will validate answer uniqueness, row formatting, and bank size.
             </p>
 
@@ -147,19 +326,19 @@ export function AdminDashboard() {
               disabled={validating || creating}
               style={{
                 padding: '10px',
-                background: 'rgba(255, 255, 255, 0.05)',
-                border: '1px dashed rgba(0, 229, 255, 0.5)',
-                borderRadius: '8px',
-                color: '#fff',
+                background: 'var(--color-paper, #FAF7F0)',
+                border: '1.5px dashed var(--color-espresso, #302820)',
+                borderRadius: 'var(--radius-xs, 2px)',
+                color: 'var(--color-espresso, #302820)',
                 width: '100%',
                 boxSizing: 'border-box',
                 cursor: 'pointer',
               }}
             />
 
-            {validating && <p style={{ color: '#00e5ff', marginTop: '12px' }}>Analyzing spreadsheet columns and rows…</p>}
+            {validating && <p style={{ color: 'var(--color-oxblood, #8C4545)', marginTop: '12px' }}>Analyzing spreadsheet columns and rows…</p>}
             {importError && (
-              <p style={{ color: '#ff5252', marginTop: '12px' }} role="alert">
+              <p style={{ color: '#8C4545', marginTop: '12px' }} role="alert">
                 {importError}
               </p>
             )}
@@ -169,25 +348,25 @@ export function AdminDashboard() {
                 <div
                   style={{
                     padding: '12px',
-                    borderRadius: '8px',
-                    background: validationResult.valid ? 'rgba(163, 255, 75, 0.1)' : 'rgba(255, 82, 82, 0.1)',
-                    border: `1px solid ${validationResult.valid ? '#a3ff4b' : '#ff5252'}`,
+                    borderRadius: 'var(--radius-xs, 2px)',
+                    background: validationResult.valid ? '#E2ECD6' : '#F7E6E6',
+                    border: `1.5px solid ${validationResult.valid ? '#3D6B4F' : '#8C4545'}`,
                   }}
                 >
-                  <strong style={{ color: validationResult.valid ? '#a3ff4b' : '#ff5252' }}>
+                  <strong style={{ color: validationResult.valid ? '#3D6B4F' : '#8C4545' }}>
                     {validationResult.valid
                       ? `✓ Spreadsheet Validated (${validationResult.validRows} questions ready)`
                       : `✗ Validation Failed (${validationResult.errors.length} issue(s) detected)`}
                   </strong>
                   {validationResult.errors.length > 0 && (
-                    <ul style={{ margin: '8px 0 0 0', paddingLeft: '20px', color: '#ffb4b4', fontSize: '13px' }}>
+                    <ul style={{ margin: '8px 0 0 0', paddingLeft: '20px', color: '#8C4545', fontSize: '13px' }}>
                       {validationResult.errors.map((err, i) => (
                         <li key={i}>{err}</li>
                       ))}
                     </ul>
                   )}
                   {validationResult.warnings.length > 0 && (
-                    <ul style={{ margin: '8px 0 0 0', paddingLeft: '20px', color: '#ffeb3b', fontSize: '13px' }}>
+                    <ul style={{ margin: '8px 0 0 0', paddingLeft: '20px', color: '#946824', fontSize: '13px' }}>
                       {validationResult.warnings.map((warn, i) => (
                         <li key={i}>{warn}</li>
                       ))}
@@ -198,20 +377,21 @@ export function AdminDashboard() {
                 {/* Preview first 5 rows */}
                 {validationResult.questions.length > 0 && (
                   <div style={{ marginTop: '16px' }}>
-                    <h3 style={{ fontSize: '14px', margin: '0 0 8px 0', color: '#cbd5e1' }}>
+                    <h3 style={{ fontSize: '14px', margin: '0 0 8px 0', color: 'var(--color-espresso, #302820)' }}>
                       Preview (First 5 of {validationResult.questions.length} questions):
                     </h3>
-                    <div style={{ maxHeight: '180px', overflowY: 'auto', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}>
+                    <div style={{ maxHeight: '180px', overflowY: 'auto', border: '1px solid var(--color-border-muted, #BFB29F)', borderRadius: 'var(--radius-xs, 2px)', background: 'var(--color-paper, #FAF7F0)' }}>
                       {validationResult.questions.slice(0, 5).map((q) => (
                         <div
                           key={q.number}
                           style={{
                             padding: '8px 12px',
-                            borderBottom: '1px solid rgba(255,255,255,0.06)',
+                            borderBottom: '1px solid var(--color-border-subtle, #D2C6B5)',
                             fontSize: '13px',
+                            color: 'var(--color-espresso, #302820)',
                           }}
                         >
-                          <strong style={{ color: '#00e5ff' }}>#{q.number} {q.term}</strong> ({q.category}): {q.clue}
+                          <strong style={{ color: 'var(--color-oxblood, #8C4545)' }}>#{q.number} {q.term}</strong> ({q.category}): {q.clue}
                         </div>
                       ))}
                     </div>
@@ -234,7 +414,7 @@ export function AdminDashboard() {
           </section>
         )}
 
-        {error && <p role="alert">{error}</p>}
+        {!dashboard.data && error && <p role="alert">{error}</p>}
         {/* Saved rounds */}
         {games.length > 0 ? (
           <div className={styles.gamesList}>
@@ -254,6 +434,23 @@ export function AdminDashboard() {
                     >
                       {game.status}
                     </span>
+                    {game.isBroadcast && (
+                      <span
+                        style={{
+                          background: 'var(--retro-orange, #EE640F)',
+                          color: '#FFFFFF',
+                          fontFamily: 'var(--mono)',
+                          fontSize: '11px',
+                          fontWeight: 900,
+                          padding: '3px 8px',
+                          border: '1.5px solid var(--retro-ink, #18130F)',
+                          boxShadow: '1.5px 1.5px 0 var(--retro-ink, #18130F)',
+                          borderRadius: '2px',
+                        }}
+                      >
+                        📢 SHOWN IN LOBBY
+                      </span>
+                    )}
                     <span className={styles.dateText}>
                       {new Date(game.createdAt).toLocaleDateString()}
                     </span>
@@ -261,6 +458,53 @@ export function AdminDashboard() {
                 </div>
 
                 <div className={styles.gameActionCol}>
+                  <button
+                    type="button"
+                    className={styles.settingsBtn}
+                    style={{
+                      background: game.isBroadcast ? 'var(--retro-orange, #EE640F)' : '#FFFFFF',
+                      color: game.isBroadcast ? '#FFFFFF' : 'var(--retro-ink, #18130F)',
+                      fontWeight: 800,
+                    }}
+                    onClick={() => void handleToggleBroadcast(game.id, !!game.isBroadcast)}
+                    disabled={broadcastingId === game.id}
+                    title="Toggle whether participants see this game and quick-join directly in the lobby"
+                  >
+                    {broadcastingId === game.id ? 'Updating…' : game.isBroadcast ? '📢 Broadcast: ON' : '🔒 Broadcast: OFF'}
+                  </button>
+                  {game.status === 'READY' && (
+                    <button
+                      type="button"
+                      className={styles.manageGameBtn}
+                      style={{ background: 'var(--lime, #a3ff4b)', color: 'var(--color-espresso, #302820)', fontWeight: 700 }}
+                      onClick={() => void handleGameCommand(game.id, 'start')}
+                      disabled={commandingId === game.id}
+                    >
+                      {commandingId === game.id ? 'Starting…' : '▶ Start Event'}
+                    </button>
+                  )}
+                  {game.status === 'ACTIVE' && (
+                    <button
+                      type="button"
+                      className={styles.manageGameBtn}
+                      style={{ background: '#ffb74d', color: 'var(--color-espresso, #302820)', fontWeight: 700 }}
+                      onClick={() => void handleGameCommand(game.id, 'pause')}
+                      disabled={commandingId === game.id}
+                    >
+                      {commandingId === game.id ? 'Pausing…' : '⏸ Pause Event'}
+                    </button>
+                  )}
+                  {game.status === 'PAUSED' && (
+                    <button
+                      type="button"
+                      className={styles.manageGameBtn}
+                      style={{ background: 'var(--color-oxblood, #8C4545)', color: '#FAF7F0', fontWeight: 700 }}
+                      onClick={() => void handleGameCommand(game.id, 'resume')}
+                      disabled={commandingId === game.id}
+                    >
+                      {commandingId === game.id ? 'Resuming…' : '▶ Resume Event'}
+                    </button>
+                  )}
                   <button
                     type="button"
                     className={styles.settingsBtn}
@@ -340,7 +584,7 @@ export function AdminDashboard() {
 
                 <div className={styles.auditSectionTitle}>
                   <span>Audits for this Round</span>
-                  {roundAuditQuery.isFetching && <span style={{ fontSize: '12px', color: '#00e5ff' }}>Refreshing…</span>}
+                  {roundAuditQuery.isFetching && <span style={{ fontSize: '12px', color: 'var(--retro-orange, #EE640F)' }}>Refreshing…</span>}
                 </div>
 
                 {roundAuditQuery.isLoading ? (
@@ -397,7 +641,7 @@ export function AdminDashboard() {
                                   '—'
                                 ) : (
                                   <details>
-                                    <summary style={{ cursor: 'pointer', color: '#00e5ff' }}>
+                                    <summary style={{ cursor: 'pointer', color: 'var(--retro-orange, #EE640F)' }}>
                                       View metadata
                                     </summary>
                                     <pre style={{ margin: '8px 0 0 0', fontSize: '11px', maxHeight: '120px', overflowY: 'auto' }}>

@@ -3,6 +3,9 @@ import cors from '@fastify/cors';
 import cookie from '@fastify/cookie';
 import websocket from '@fastify/websocket';
 import multipart from '@fastify/multipart';
+import helmet from '@fastify/helmet';
+import rateLimit from '@fastify/rate-limit';
+import compress from '@fastify/compress';
 import { ZodError } from 'zod';
 import { getEnv } from './config/env.ts';
 import { REQUEST_ID_HEADER, ERROR_CODES, WEBSOCKET_MAX_PAYLOAD_BYTES } from './config/constants.ts';
@@ -53,6 +56,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
     genReqId: (req) => normalizeRequestId(req.headers[REQUEST_ID_HEADER]),
     requestIdHeader: false,
     logController: new LogController({ disableRequestLogging: true }),
+    trustProxy: env.TRUST_PROXY || env.NODE_ENV === 'production',
   });
 
   if (process.env.LOAD_DIAGNOSTICS === '1') {
@@ -85,6 +89,46 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
     methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Idempotency-Key', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
     exposedHeaders: ['Set-Cookie'],
+  });
+
+  // Enable Security Headers
+  await app.register(helmet, {
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        connectSrc: ["'self'", 'ws:', 'wss:', 'http:', 'https:'],
+        fontSrc: ["'self'", 'data:', 'https://fonts.gstatic.com'],
+        styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+        imgSrc: ["'self'", 'data:', 'blob:'],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+      },
+    },
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: false,
+  });
+
+  // Enable HTTP Payload Compression
+  await app.register(compress, {
+    threshold: 1024,
+    encodings: ['gzip', 'deflate'],
+  });
+
+  // Enable Rate Limiting
+  await app.register(rateLimit, {
+    global: true,
+    max: env.NODE_ENV === 'test' ? 100_000 : 120,
+    timeWindow: 60_000,
+    keyGenerator: (req) => {
+      const user = (req as unknown as { user?: { id?: string } }).user;
+      return user?.id || req.ip;
+    },
+    errorResponseBuilder: (req, context) => ({
+      error: {
+        code: ERROR_CODES.RATE_LIMIT_EXCEEDED,
+        message: `Too many requests. Rate limit exceeded. Try again in ${Math.ceil(Number(context.after || 1000) / 1000)}s.`,
+      },
+      requestId: req.id,
+    }),
   });
 
   // Enable Cookies

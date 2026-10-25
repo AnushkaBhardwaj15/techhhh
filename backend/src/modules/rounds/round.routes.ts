@@ -138,61 +138,16 @@ export function createRoundRoutes(deps: RoundRoutesDependencies = {}): FastifyPl
 
     // Participant: Get assigned event authoritative DTO
     fastify.get('/participant/event', { preHandler: [requireParticipantToken] }, async (request) => {
-      const eventId = request.user?.eventId || 'e7bf4217-f212-4970-b3f1-e924e1782f25';
-      try {
-        const event = await service.getParticipantEvent(eventId);
-        if (event) return { event };
-      } catch {
-        // Fallback
-      }
-
-      return {
-        event: {
-          id: eventId,
-          title: 'Tech Tombola Championship 2026',
-          description: 'Annual Technical Tambola Tournament',
-          status: 'LIVE',
-          scheduledAt: new Date('2026-10-23T10:00:00.000Z'),
-          startedAt: new Date('2026-10-23T10:00:00.000Z'),
-          completedAt: null,
-          createdAt: new Date('2026-10-23T10:00:00.000Z'),
-          updatedAt: new Date('2026-10-23T10:00:00.000Z'),
-        },
-      };
+      const eventId = request.user!.eventId!;
+      const event = await service.getParticipantEvent(eventId);
+      return { event };
     });
 
     // Participant: Get current round authoritative DTO
     fastify.get('/participant/round/current', { preHandler: [requireParticipantToken] }, async (request) => {
       const eventId = request.user!.eventId || 'e7bf4217-f212-4970-b3f1-e924e1782f25';
-      try {
-        const round = await service.getCurrentRoundForParticipant(request.user!.id, eventId, request.user!.sessionId);
-        if (round) return { round };
-      } catch {
-        // Fallback to shared active game store
-      }
-      const active = getSharedActiveGame();
-      const patternTypes = ['EARLY_5', 'FOUR_CORNERS', 'TOP_LINE', 'MIDDLE_LINE', 'BOTTOM_LINE', 'FULL_HOUSE', 'SECOND_FULL_HOUSE'] as const;
-      return {
-        round: {
-          id: active.id,
-          eventId,
-          sequenceNumber: active.roundSequence,
-          name: active.name,
-          status: active.status as any,
-          patterns: patternTypes.map((pt) => ({
-            id: `pat_${pt}`,
-            roundId: active.id,
-            patternType: pt,
-            enabled: true,
-            maxWinners: 1,
-            status: 'OPEN' as const,
-            createdAt: active.createdAt,
-            updatedAt: active.createdAt,
-          })),
-          createdAt: active.createdAt,
-          updatedAt: active.createdAt,
-        },
-      };
+      const round = await service.getCurrentRoundForParticipant(request.user!.id, eventId, request.user!.sessionId);
+      return { round };
     });
   };
 }

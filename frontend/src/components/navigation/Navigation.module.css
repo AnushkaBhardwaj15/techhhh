@@ -3,9 +3,10 @@
   top: 0;
   z-index: 100;
   width: 100%;
-  background: var(--navy);
-  color: var(--ice);
-  border-bottom: 1px solid var(--border-dark);
+  background: var(--color-espresso, #302820);
+  color: var(--color-paper, #FAF7F0);
+  border-bottom: 2px solid #241F1A;
+  border-bottom-color: var(--color-espresso-deep, #241F1A);
 }
 .container,
 .topRow {
@@ -30,25 +31,27 @@
   min-height: 44px;
   align-items: center;
   gap: 8px;
-  color: var(--ice);
+  color: var(--color-paper, #FAF7F0);
   text-decoration: none;
   font-size: 15px;
   font-weight: 800;
   letter-spacing: 0.07em;
 }
 .badge {
-  padding: 5px 7px;
-  background: var(--cyan);
-  color: var(--navy);
+  padding: 5px 8px;
+  background: var(--color-oxblood, #8C4545);
+  color: var(--color-paper, #FAF7F0);
   font: 800 11px var(--mono);
   letter-spacing: 0.1em;
+  border-radius: var(--radius-xs, 2px);
 }
 .roleBanner {
   padding: 5px 8px;
-  border: 1px solid var(--border-dark);
-  border-radius: 4px;
-  background: var(--navy-raised);
-  color: var(--lime);
+  border: 1px solid #BFB29F;
+  border-color: var(--color-border-muted, #BFB29F);
+  border-radius: var(--radius-xs, 2px);
+  background: var(--color-espresso-deep, #241F1A);
+  color: var(--color-sandstone, #DCD0BD);
   font: 700 9px var(--mono);
   letter-spacing: 0.1em;
 }
@@ -67,23 +70,26 @@
   justify-content: center;
   gap: 7px;
   min-height: 44px;
-  padding: 9px 12px;
-  border: 1px solid var(--border-dark);
-  border-radius: 7px;
-  background: var(--navy-raised);
-  color: var(--ice);
+  padding: 9px 14px;
+  border: 1px solid #BFB29F;
+  border-color: var(--color-border-muted, #BFB29F);
+  border-radius: var(--radius-xs, 2px);
+  background: var(--color-espresso-deep, #241F1A);
+  color: var(--color-paper, #FAF7F0);
   font: 700 11px var(--mono);
   text-decoration: none;
   cursor: pointer;
+  transition: all 0.12s ease;
 }
 .liveLink {
-  color: var(--cyan);
+  color: var(--color-sandstone, #DCD0BD);
 }
 .profileButton:hover,
 .logoutButton:hover:not(:disabled),
 .liveLink:hover {
-  border-color: var(--cyan);
-  background: #183248;
+  border-color: var(--color-oxblood, #8C4545);
+  background: #3A3228;
+  color: #FFFFFF;
 }
 .logoutButton:disabled {
   opacity: 0.6;
@@ -92,7 +98,7 @@
   font-size: 16px;
 }
 .header :focus-visible {
-  outline-color: var(--cyan);
+  outline-color: var(--color-oxblood, #8C4545);
 }
 @media (max-width: 600px) {
   .container,

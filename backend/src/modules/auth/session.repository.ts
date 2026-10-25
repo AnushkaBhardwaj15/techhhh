@@ -87,8 +87,9 @@ export class SessionRepository implements ISessionRepository {
           user: { ...row.user, adminProfile: row.adminProfile, participantProfile: row.participantProfile },
         };
       }
+      return null;
     } catch {
-      // In-memory fallback
+      // In-memory fallback only when DB error
     }
 
     const mem = memSessions.get(id);

@@ -15,26 +15,14 @@ export const markRoutes: FastifyPluginAsync = async (fastify) => {
     const body = markCellBodySchema.parse(request.body);
     const eventId = request.user!.eventId || 'e7bf4217-f212-4970-b3f1-e924e1782f25';
 
-    try {
-      const result = await markService.markCell({
-        userId: request.user!.id,
-        eventId,
-        ticketId: params.ticketId,
-        cellId: body.cellId,
-      });
-      reply.status(200);
-      return result;
-    } catch {
-      reply.status(200);
-      return {
-        mark: {
-          id: `m_${body.cellId}`,
-          ticketId: params.ticketId,
-          cellId: body.cellId,
-          markedAt: new Date().toISOString(),
-        },
-      };
-    }
+    const result = await markService.markCell({
+      userId: request.user!.id,
+      eventId,
+      ticketId: params.ticketId,
+      cellId: body.cellId,
+    });
+    reply.status(200);
+    return result;
   });
 
   // Participant: Unmark a cell on ticket
@@ -42,18 +30,13 @@ export const markRoutes: FastifyPluginAsync = async (fastify) => {
     const params = unmarkTicketParamsSchema.parse(request.params);
     const eventId = request.user!.eventId || 'e7bf4217-f212-4970-b3f1-e924e1782f25';
 
-    try {
-      const result = await markService.unmarkCell({
-        userId: request.user!.id,
-        eventId,
-        ticketId: params.ticketId,
-        cellId: params.cellId,
-      });
-      reply.status(200);
-      return result;
-    } catch {
-      reply.status(200);
-      return { success: true };
-    }
+    const result = await markService.unmarkCell({
+      userId: request.user!.id,
+      eventId,
+      ticketId: params.ticketId,
+      cellId: params.cellId,
+    });
+    reply.status(200);
+    return result;
   });
 };

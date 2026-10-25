@@ -14,7 +14,7 @@ export function AdminTopBar({ onLogout, isLoggingOut = false }: AdminTopBarProps
     <header className={styles.header} role="banner">
       <div className={styles.container}>
         <div className={styles.brandCol}>
-          <Link to="/admin" className={styles.wordmark} aria-label="Admin operations dashboard">
+          <Link to="/admin" className={styles.wordmark} aria-label="Admin operations portal" tabIndex={-1}>
             <span className={styles.badge}>TECH</span>
             <strong>TAMBOLA</strong>
           </Link>
@@ -32,6 +32,7 @@ export function AdminTopBar({ onLogout, isLoggingOut = false }: AdminTopBarProps
             target="_blank"
             rel="noreferrer"
             className={styles.liveLink}
+            tabIndex={-1}
             title="Open projector live display in a new tab"
           >
             <span>Live Projector</span>

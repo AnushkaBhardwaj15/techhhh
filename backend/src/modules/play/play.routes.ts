@@ -116,6 +116,16 @@ export function createPlayRoutes(service: PlayService): FastifyPluginAsync {
         ),
     );
     app.post(
+      "/admin/play/rounds/:id/broadcast",
+      { preHandler: [requireAdmin] },
+      (request) =>
+        service.broadcast(
+          roundParams.parse(request.params).id,
+          actor(request),
+          z.object({ broadcast: z.boolean() }).parse(request.body).broadcast,
+        ),
+    );
+    app.post(
       "/participant/play/join",
       { preHandler: [requireParticipantToken] },
       (request) =>

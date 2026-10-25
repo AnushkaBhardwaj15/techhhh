@@ -104,3 +104,12 @@ export async function claimPlayPrize(id: string, pattern: PlayPattern) {
     ),
   );
 }
+
+export async function broadcastPlayRound(id: string, broadcast: boolean) {
+  return playStateSchema.parse(
+    await apiRequest(`/admin/play/rounds/${encodeURIComponent(id)}/broadcast`, {
+      method: "POST",
+      body: JSON.stringify({ broadcast }),
+    }),
+  );
+}

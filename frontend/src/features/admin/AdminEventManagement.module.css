@@ -4,13 +4,13 @@
   margin: 24px auto;
   min-height: 0;
   padding: clamp(20px, 3vw, 36px);
-  background: var(--ice);
+  background: var(--color-parchment, #F0E8D9);
   color: var(--ink);
   border-radius: 16px;
 }
 .eyebrow {
   margin: 0 0 0.7rem;
-  color: #668073;
+  color: var(--color-text-secondary, #62584C);
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.14em;
@@ -72,7 +72,7 @@
   border-radius: 0.7rem;
   background: var(--surface);
   text-align: left;
-  color: var(--navy-raised);
+  color: var(--color-espresso, #302820);
   cursor: pointer;
 }
 .list button[aria-current="true"] {
@@ -138,7 +138,7 @@
   border: 1px solid #b9c9bc;
   border-radius: 0.55rem;
   background: var(--surface);
-  color: var(--navy-raised);
+  color: var(--color-espresso, #302820);
   font: inherit;
 }
 .form input:focus-visible,
@@ -165,7 +165,7 @@
   border: 1px solid #b9c9bc;
   border-radius: 0.6rem;
   background: var(--surface);
-  color: var(--navy-raised);
+  color: var(--color-espresso, #302820);
   font: inherit;
   font-weight: 650;
   cursor: pointer;

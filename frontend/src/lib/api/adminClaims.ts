@@ -11,7 +11,13 @@ export async function verifyAdminClaim(id: string, idempotencyKey: string, signa
   return verifyAdminClaimResponseSchema.parse(response);
 }
 
-export async function rejectAdminClaim(id: string, idempotencyKey: string, signal?: AbortSignal) {
-  const response = await apiRequest<unknown>(`/admin/claims/${encodeURIComponent(id)}/reject`, { method: 'POST', headers: { 'Idempotency-Key': idempotencyKey }, signal });
+export async function rejectAdminClaim(id: string, idempotencyKey: string, reason?: string, signal?: AbortSignal) {
+  const options: RequestInit = {
+    method: 'POST',
+    headers: { 'Idempotency-Key': idempotencyKey, ...(reason ? { 'Content-Type': 'application/json' } : {}) },
+    ...(reason ? { body: JSON.stringify({ reason }) } : {}),
+    signal,
+  };
+  const response = await apiRequest<unknown>(`/admin/claims/${encodeURIComponent(id)}/reject`, options);
   return rejectAdminClaimResponseSchema.parse(response);
 }

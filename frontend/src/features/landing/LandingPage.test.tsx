@@ -60,7 +60,7 @@ describe('LandingPage', () => {
 
     const lobbyLinks = await screen.findAllByRole('link', { name: /ENTER LOBBY/i });
     expect(lobbyLinks.length).toBeGreaterThanOrEqual(1);
-    expect(lobbyLinks[0]).toHaveAttribute('href', '/participant');
+    expect(lobbyLinks[0]).toHaveAttribute('href', '/lobby');
   });
 
   it('adapts CTAs for an authenticated admin', async () => {

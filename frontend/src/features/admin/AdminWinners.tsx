@@ -37,6 +37,28 @@ export function AdminWinners() {
       ? winners.error.message
       : 'We could not read the Winner history response.';
 
+  function exportCsv() {
+    if (!winners.data?.data.length) return;
+    const headers = ['Participant Name', 'Event Title', 'Round ID', 'Winning Pattern', 'Verified At'];
+    const rows = winners.data.data.map((w) => [
+      `"${w.participantName.replace(/"/g, '""')}"`,
+      `"${w.eventTitle.replace(/"/g, '""')}"`,
+      `"${w.roundId}"`,
+      `"${patternLabel(w.patternType)}"`,
+      `"${w.verifiedAt}"`,
+    ]);
+    const csvContent = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `tech-tombola-winners-page-${page}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+
   return <main className={styles.page}>
     <p className={styles.eyebrow}>EVENT OPERATIONS / RESULTS</p>
     <header className={styles.heading}>
@@ -49,7 +71,25 @@ export function AdminWinners() {
     <section className={styles.panel} aria-labelledby="winner-history-title">
       <div className={styles.panelHeader}>
         <div><h2 id="winner-history-title">Verified Winners</h2>{winners.data && <span>{winners.data.total} total</span>}</div>
-        <button type="button" disabled={winners.isFetching} onClick={() => void winners.refetch()}>{winners.isFetching ? 'Refreshing…' : 'Refresh history'}</button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button
+            type="button"
+            disabled={!winners.data?.data.length}
+            onClick={exportCsv}
+            title="Download CSV for offline verification and prize distribution"
+          >
+            📥 Export CSV
+          </button>
+          <button
+            type="button"
+            disabled={!winners.data?.data.length}
+            onClick={() => window.print()}
+            title="Print prize distribution list"
+          >
+            🖨️ Print Sheet
+          </button>
+          <button type="button" disabled={winners.isFetching} onClick={() => void winners.refetch()}>{winners.isFetching ? 'Refreshing…' : 'Refresh history'}</button>
+        </div>
       </div>
       {winners.isPending && <p className={styles.state} role="status">Loading Winner history…</p>}
       {winners.error && <div className={styles.state}><p role="alert">{errorMessage}</p><button type="button" onClick={() => void winners.refetch()}>Retry Winner history</button></div>}

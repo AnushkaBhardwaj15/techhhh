@@ -167,6 +167,7 @@ export class WinnerService {
             patternType: claim.patternType,
             participantId: claim.participantId,
             participantName: context.participantName,
+            resourceName: `Verified: ${claim.patternType}`,
           },
         },
         tx
@@ -221,6 +222,7 @@ export class WinnerService {
     actorId: string;
     actorType: 'ADMIN' | 'SUPER_ADMIN';
     idempotencyKey: string;
+    reason?: string;
   }): Promise<{ claim: { id: string; status: string; rejectionReason: string } }> {
     this.validateIdempotencyKey(params.idempotencyKey);
     const storageKey = this.scopedKey(params.actorId, `reject:${params.claimId}`, params.idempotencyKey);
@@ -233,7 +235,7 @@ export class WinnerService {
         throw new ConflictError('Claim is already in a terminal state', 'CLAIM_ALREADY_TERMINAL');
       }
 
-      const rejectionReason = 'ADMIN_REJECTED';
+      const rejectionReason = params.reason || 'ADMIN_REJECTED';
       const updated = await this.claimRepo.updateStatus(
         claim.id,
         { status: 'REJECTED', rejectionReason },
@@ -251,6 +253,7 @@ export class WinnerService {
             patternType: claim.patternType,
             rejectionReason,
             participantId: claim.participantId,
+            resourceName: `Rejected: ${claim.patternType}`,
           },
         },
         tx

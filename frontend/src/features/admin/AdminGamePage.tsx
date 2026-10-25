@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ApiError } from "../../lib/api/client";
-import { listPlayRounds, commandPlayRound } from "../../lib/api/play";
+import { listPlayRounds, commandPlayRound, broadcastPlayRound } from "../../lib/api/play";
 import { usePlayState } from "../participant/usePlayState";
 import { QRCodeSvg } from "../../components/QRCodeSvg";
 import { ActionButton } from "../../components/ActionButton";
@@ -21,6 +21,7 @@ export function AdminGamePage() {
   const game = state.data;
   const [pending, setPending] = useState(false);
   const [recovering, setRecovering] = useState(false);
+  const [broadcasting, setBroadcasting] = useState(false);
   const [error, setError] = useState("");
   const [viewingIndex, setViewingIndex] = useState<number | null>(null);
   const busy = useRef(false);
@@ -28,6 +29,22 @@ export function AdminGamePage() {
     command: Parameters<typeof commandPlayRound>[1];
     key: string;
   } | null>(null);
+
+  async function handleToggleBroadcast() {
+    if (!game || broadcasting) return;
+    setBroadcasting(true);
+    setError("");
+    try {
+      const updated = await broadcastPlayRound(id, !game.isBroadcast);
+      client.setQueryData(["reference-play", "private", id], updated);
+      await client.invalidateQueries({ queryKey: ["reference-play"] });
+      await client.invalidateQueries({ queryKey: ["play-rounds"] });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to toggle broadcast.");
+    } finally {
+      setBroadcasting(false);
+    }
+  }
   async function run(
     command: Parameters<typeof commandPlayRound>[1],
     retrySame = false,
@@ -145,6 +162,22 @@ export function AdminGamePage() {
           </h1>
         </div>
         {state.isPending && <p role="status">Loading the saved game…</p>}
+        {!state.isPending && !game && !error && (
+          <div className={styles.mainCard} style={{ textAlign: 'center', padding: '48px 24px' }}>
+            <h2 style={{ fontSize: '22px', marginBottom: '12px' }}>No Active Game Loaded</h2>
+            <p style={{ color: 'var(--color-text-secondary, #62584C)', maxWidth: '460px', margin: '0 auto 24px', lineHeight: 1.5 }}>
+              There is currently no active game round selected. You can start a round from the Host Dashboard or choose from existing game rounds.
+            </p>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+              <Link className={styles.dashboardBackBtn} to="/admin" style={{ textDecoration: 'none' }}>
+                Return to Dashboard
+              </Link>
+              <Link className={styles.dashboardBackBtn} to="/admin/rounds" style={{ textDecoration: 'none' }}>
+                Manage Rounds
+              </Link>
+            </div>
+          </div>
+        )}
         {(error || state.isError || rounds.isError) && (
           <p className={playStyles.warning} role="alert">
             {error || "Could not load the game. Check your connection."}{" "}
@@ -158,9 +191,29 @@ export function AdminGamePage() {
         {game && (
           <div className={styles.mainCard}>
             <div className={styles.qrSection}>
-              <div className={styles.gameCodePill}>
-                <span className={styles.gameCodeLabel}>GAME CODE</span>
-                <strong className={styles.gameCodeValue}>{game.code}</strong>
+              <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center', marginBottom: '8px' }}>
+                <div className={styles.gameCodePill}>
+                  <span className={styles.gameCodeLabel}>GAME CODE</span>
+                  <strong className={styles.gameCodeValue}>{game.code}</strong>
+                </div>
+                <ActionButton
+                  type="button"
+                  busy={broadcasting}
+                  onClick={() => void handleToggleBroadcast()}
+                  style={{
+                    background: game.isBroadcast ? 'var(--retro-orange, #EE640F)' : '#FFFFFF',
+                    color: game.isBroadcast ? '#FFFFFF' : 'var(--retro-ink, #18130F)',
+                    border: '2px solid var(--retro-ink, #18130F)',
+                    boxShadow: '3px 3px 0 var(--retro-ink, #18130F)',
+                    fontSize: '13px',
+                    fontWeight: 900,
+                    padding: '8px 16px',
+                    cursor: 'pointer'
+                  }}
+                  title="Toggle whether participants see this game and 1-click join button in their lobby"
+                >
+                  {broadcasting ? 'UPDATING…' : game.isBroadcast ? '📢 BROADCASTING TO USERS (ON)' : '🔒 HIDDEN FROM USERS (OFF)'}
+                </ActionButton>
               </div>
               <div className={styles.qrFrame}>
                 <QRCodeSvg
@@ -170,7 +223,9 @@ export function AdminGamePage() {
                 />
               </div>
               <p className={styles.qrInstruction}>
-                Participants join with this code and wait in the lobby.
+                {game.isBroadcast
+                  ? "✅ This game is currently BROADCAST to participants' lobby with a 1-click Quick Join button."
+                  : "🔒 This game is HIDDEN from participants' lobby. Users must manually enter the 6-character code, or you can turn ON broadcast."}
               </p>
               <div className={styles.controlsBar}>
                 <span className={styles.statusBadge}>
@@ -244,8 +299,8 @@ export function AdminGamePage() {
                   <span
                     className={styles.statusBadge}
                     style={{
-                      background: "rgba(0, 229, 255, 0.15)",
-                      color: "#00e5ff",
+                      background: "rgba(140, 69, 69, 0.12)",
+                      color: "var(--color-oxblood, #8C4545)",
                       fontSize: "0.8rem",
                       padding: "0.2rem 0.6rem",
                     }}
@@ -330,11 +385,11 @@ export function AdminGamePage() {
                     key={draw.id}
                     style={{
                       borderLeft: isSelected
-                        ? "3px solid #00e5ff"
-                        : "3px solid transparent",
+                        ? "4px solid var(--color-oxblood, #8C4545)"
+                        : "4px solid transparent",
                       cursor: "pointer",
                       background: isSelected
-                        ? "rgba(0, 229, 255, 0.08)"
+                        ? "var(--color-sandstone, #DCD0BD)"
                         : undefined,
                     }}
                     onClick={() => setViewingIndex(drawIndex)}
@@ -384,13 +439,50 @@ export function AdminGamePage() {
               })}
             </section>
             <section className={playStyles.panel}>
-              <h2>Winners and points</h2>
+              <h2>Prize Tiers & Winners</h2>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px', marginBottom: '16px' }}>
+                {game.patterns.map((p) => {
+                  const patternLabels: Record<string, string> = {
+                    EARLY_5: 'Early 5 (Any 5)',
+                    FOUR_CORNERS: 'Four Corners',
+                    TOP_LINE: 'Top Line (Row 1)',
+                    MIDDLE_LINE: 'Middle Line (Row 2)',
+                    BOTTOM_LINE: 'Bottom Line (Row 3)',
+                    FULL_HOUSE: 'First Full House',
+                    SECOND_HOUSE: 'Second Full House',
+                    SECOND_FULL_HOUSE: 'Second Full House',
+                  };
+                  const label = patternLabels[p.pattern] ?? p.pattern.replace(/_/g, ' ');
+                  return (
+                    <div
+                      key={p.pattern}
+                      style={{
+                        padding: '10px 14px',
+                        borderRadius: '6px',
+                        background: p.closed ? 'var(--lime-soft, #e5f6d6)' : 'var(--color-paper, #FAF7F0)',
+                        border: `1.5px solid ${p.closed ? 'var(--color-success, #3D6B4F)' : 'var(--color-border-muted, #BFB29F)'}`,
+                        boxShadow: 'var(--shadow-brutal-sm, 2px 2px 0px var(--color-espresso))',
+                      }}
+                    >
+                      <strong style={{ display: 'block', fontSize: '13px', color: p.closed ? 'var(--color-success, #3D6B4F)' : 'var(--color-espresso, #302820)', fontWeight: 700 }}>
+                        {label}
+                      </strong>
+                      <span style={{ fontSize: '11px', color: p.closed ? 'var(--color-success, #3D6B4F)' : 'var(--color-text-secondary, #62584C)', fontWeight: 600, marginTop: '2px', display: 'inline-block' }}>
+                        {p.closed ? '✓ Awarded' : '○ Still available'}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
               {game.standings.length ? (
-                game.standings.map((row, index) => (
-                  <p key={index}>
-                    {row.name} — {row.points} points
-                  </p>
-                ))
+                <div>
+                  <h3 style={{ fontSize: '14px', color: 'var(--color-oxblood, #8C4545)', margin: '0 0 8px 0' }}>Verified Winners:</h3>
+                  {game.standings.map((row, index) => (
+                    <p key={index} style={{ margin: '4px 0', fontSize: '13px' }}>
+                      🏆 <strong>{row.name}</strong>
+                    </p>
+                  ))}
+                </div>
               ) : (
                 <p>No prizes awarded yet.</p>
               )}

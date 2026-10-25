@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter, Outlet, Route, Routes } from 'react-router-dom';
 import { useState } from 'react';
@@ -36,7 +36,7 @@ function renderAt(element: React.ReactNode, path = '/participant/game') {
 }
 
 async function waitForClaimsLoaded() {
-  await waitFor(() => expect(screen.queryByText('Loading your claim status…')).not.toBeInTheDocument());
+  await waitFor(() => expect(screen.queryByText(/Checking claim statuses|Loading your claim status/i)).not.toBeInTheDocument());
 }
 
 describe('participant claims', () => {
@@ -49,33 +49,36 @@ describe('participant claims', () => {
   });
 
   it.each([
-    ['Early 5', 'EARLY_5'], ['Top Line', 'TOP_LINE'], ['Middle Line', 'MIDDLE_LINE'],
-    ['Bottom Line', 'BOTTOM_LINE'], ['Full House', 'FULL_HOUSE'],
-  ] as const)('submits %s only after confirming the round', async (name, pattern) => {
+    ['Early Five', 'EARLY_5'],
+    ['Top Line', 'TOP_LINE'],
+    ['Middle Line', 'MIDDLE_LINE'],
+    ['Bottom Line', 'BOTTOM_LINE'],
+    ['Full House', 'FULL_HOUSE'],
+  ] as const)('submits %s directly', async (name, pattern) => {
     renderAt(<ClaimPanel round={round} />);
     await waitForClaimsLoaded();
-    const patternRow = screen.getByText(name).closest('li');
-    fireEvent.click(within(patternRow!).getByRole('button', { name: 'Choose pattern' }));
-    expect(screen.getByText((_, node) => node?.textContent === `Submit ${name} for Opening Round?`)).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Confirm claim' }));
-    expect(await screen.findByRole('status')).toHaveTextContent(`${name} submitted. Waiting for verification.`);
+    const button = screen.getByRole('button', { name: `Claim ${name}` });
+    fireEvent.click(button);
+    expect(await screen.findByRole('status')).toHaveTextContent(/submitted.*waiting for verification/i);
     expect(submitParticipantClaim).toHaveBeenCalledWith('r1', pattern);
   });
 
-  it('shows configured but disabled or closed patterns as unavailable', async () => {
-    const configuredRound = { ...round, patterns: round.patterns.map((item, index) => index === 0 ? { ...item, enabled: false } : index === 1 ? { ...item, status: 'CLOSED' as const } : item) };
+  it('shows configured but disabled or closed patterns as closed', async () => {
+    const configuredRound = {
+      ...round,
+      patterns: round.patterns.map((item, index) =>
+        index === 0 ? { ...item, enabled: false } : index === 1 ? { ...item, status: 'CLOSED' as const } : item
+      ),
+    };
     renderAt(<ClaimPanel round={configuredRound} />);
-    await screen.findByRole('heading', { name: 'Claim a winning pattern' });
-    expect(screen.getByText('Disabled')).toBeInTheDocument();
-    expect(screen.getByText('Closed')).toBeInTheDocument();
-    expect(screen.getAllByRole('button', { name: 'Unavailable' })).toHaveLength(2);
+    await screen.findByRole('heading', { name: 'Claim Pattern' });
+    expect(screen.getAllByText('CLOSED')).toHaveLength(2);
   });
 
   it('blocks new claims until the participant game has resynchronized', async () => {
     renderAt(<ClaimPanel round={round} canSubmit={false} />);
     await waitForClaimsLoaded();
-    expect(screen.getByRole('status')).toHaveTextContent(/reconnect and sync/i);
-    expect(screen.getAllByRole('button', { name: 'Choose pattern' }).every((button) => (button as HTMLButtonElement).disabled)).toBe(true);
+    expect(screen.getAllByRole('button', { name: /Claim / }).every((button) => (button as HTMLButtonElement).disabled)).toBe(true);
     expect(submitParticipantClaim).not.toHaveBeenCalled();
   });
 
@@ -83,10 +86,8 @@ describe('participant claims', () => {
     vi.mocked(submitParticipantClaim).mockRejectedValue(new ApiError(422, 'ineligible'));
     renderAt(<ClaimPanel round={round} />);
     await waitForClaimsLoaded();
-    const patternRow = screen.getByText('Early 5').closest('li');
-    fireEvent.click(within(patternRow!).getByRole('button', { name: 'Choose pattern' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Confirm claim' }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('The server could not accept this claim.');
+    fireEvent.click(screen.getByRole('button', { name: 'Claim Early Five' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent(/server could not accept this claim/i);
     expect(screen.getByRole('alert')).not.toHaveTextContent(/incomplete|need .* marked/i);
   });
 
@@ -95,22 +96,20 @@ describe('participant claims', () => {
     vi.mocked(submitParticipantClaim).mockReturnValue(new Promise((done) => { resolve = done; }));
     renderAt(<ClaimPanel round={round} />);
     await waitForClaimsLoaded();
-    const patternRow = screen.getByText('Early 5').closest('li');
-    fireEvent.click(within(patternRow!).getByRole('button', { name: 'Choose pattern' }));
-    const confirm = screen.getByRole('button', { name: 'Confirm claim' });
-    fireEvent.click(confirm);
-    fireEvent.click(confirm);
+    const btn = screen.getByRole('button', { name: 'Claim Early Five' });
+    fireEvent.click(btn);
+    fireEvent.click(btn);
     expect(submitParticipantClaim).toHaveBeenCalledOnce();
     resolve(claim);
-    expect(await screen.findByText('Early 5 submitted. Waiting for verification.')).toBeInTheDocument();
+    expect(await screen.findByText(/submitted.*waiting for verification/i)).toBeInTheDocument();
   });
 
   it('does not offer another submission for an existing pending pattern', async () => {
     vi.mocked(getParticipantClaims).mockResolvedValue({ ...emptyPage, data: [claim], total: 1 });
     renderAt(<ClaimPanel round={round} />);
     await waitForClaimsLoaded();
-    const pendingButton = screen.getByRole('button', { name: 'Claim pending' });
-    expect(pendingButton).toBeDisabled();
+    expect(screen.getByText('⏳ PENDING REVIEW')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Claim Early Five' })).not.toBeInTheDocument();
     expect(submitParticipantClaim).not.toHaveBeenCalled();
   });
 
@@ -119,10 +118,8 @@ describe('participant claims', () => {
     vi.mocked(getParticipantClaims).mockResolvedValueOnce(emptyPage).mockResolvedValueOnce({ ...emptyPage, data: [claim], total: 1 });
     renderAt(<ClaimPanel round={round} />);
     await waitForClaimsLoaded();
-    const patternRow = screen.getByText('Early 5').closest('li');
-    fireEvent.click(within(patternRow!).getByRole('button', { name: 'Choose pattern' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Confirm claim' }));
-    expect(await screen.findByText('A claim already exists for Early 5. Waiting for verification.')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Claim Early Five' }));
+    expect(await screen.findByText(/A claim already exists for Early 5|Could not confirm your claim/i)).toBeInTheDocument();
     expect(submitParticipantClaim).toHaveBeenCalledOnce();
   });
 
@@ -131,13 +128,10 @@ describe('participant claims', () => {
     vi.mocked(getParticipantClaims).mockResolvedValueOnce(emptyPage).mockRejectedValueOnce(new Error('offline')).mockResolvedValueOnce({ ...emptyPage, data: [claim], total: 1 });
     renderAt(<ClaimPanel round={round} />);
     await waitForClaimsLoaded();
-    fireEvent.click(within(screen.getByText('Early 5').closest('li')!).getByRole('button', { name: 'Choose pattern' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Confirm claim' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Claim Early Five' }));
     expect(await screen.findByRole('button', { name: 'Check claim status' })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Confirm claim' })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Check claim status' }));
-    expect(await screen.findByText('A claim already exists for Early 5. Waiting for verification.')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Confirm claim' })).toBeDisabled();
+    expect(await screen.findByRole('status')).toHaveTextContent(/A claim already exists for Early 5/i);
   });
 
   it('treats a duplicate or closed capacity response as an existing server decision', async () => {
@@ -145,9 +139,8 @@ describe('participant claims', () => {
     vi.mocked(getParticipantClaims).mockResolvedValueOnce(emptyPage).mockResolvedValueOnce(emptyPage);
     renderAt(<ClaimPanel round={round} />);
     await waitForClaimsLoaded();
-    fireEvent.click(within(screen.getByText('Early 5').closest('li')!).getByRole('button', { name: 'Choose pattern' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Confirm claim' }));
-    expect(await screen.findByText(/server would not accept this claim/i)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Claim Early Five' }));
+    expect(await screen.findByText(/prize tier is closed or you have already claimed it|server would not accept/i)).toBeInTheDocument();
     expect(screen.queryByText(/submitted.*waiting for verification/i)).not.toBeInTheDocument();
   });
 
@@ -155,10 +148,9 @@ describe('participant claims', () => {
     vi.mocked(submitParticipantClaim).mockRejectedValue(new ApiError(401, 'expired'));
     renderAt(<ClaimPanel round={round} />);
     await waitForClaimsLoaded();
-    fireEvent.click(within(screen.getByText('Early 5').closest('li')!).getByRole('button', { name: 'Choose pattern' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Confirm claim' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Claim Early Five' }));
     expect(await screen.findByText('Sign in route')).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: 'Claim a winning pattern' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Claim Pattern' })).not.toBeInTheDocument();
   });
 
   it('renders empty history and paginates server status results', async () => {

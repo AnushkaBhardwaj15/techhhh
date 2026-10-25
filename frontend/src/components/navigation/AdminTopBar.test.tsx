@@ -23,7 +23,7 @@ describe('AdminTopBar', () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByRole('link', { name: /Admin operations dashboard/i })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /Admin operations/i })).toHaveAttribute(
       'href',
       '/admin'
     );

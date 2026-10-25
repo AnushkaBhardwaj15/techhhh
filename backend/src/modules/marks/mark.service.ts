@@ -69,8 +69,9 @@ export class MarkService {
     }
     assertCellBelongsToTicket(cell, ticket.id);
 
-    // 5. Assert Cell is Populated
-    validateCellEligibleForMark(cell);
+    // 5. Assert Cell is Populated and Drawn
+    const drawnKeyIds = await this.drawRepo.getDrawnKeyIds(round.id);
+    validateCellEligibleForMark(cell, drawnKeyIds);
 
     // 6. Create or Get Mark
     const { mark, created } = await this.markRepo.createMark(ticketId, cellId);
@@ -88,6 +89,8 @@ export class MarkService {
           cellId,
           roundId: round.id,
           keyId: cell.keyId,
+          actorEmail: profile.email,
+          resourceName: 'Ticket cell mark',
         },
       });
     }
@@ -157,6 +160,8 @@ export class MarkService {
           ticketId,
           cellId,
           roundId: round.id,
+          actorEmail: profile.email,
+          resourceName: 'Ticket cell mark removed',
         },
       });
     }

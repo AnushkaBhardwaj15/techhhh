@@ -74,6 +74,7 @@ export interface PlayState {
   draws: PlayDraw[];
   ticket: PlayTicket | null;
   wins: PlayWin[];
+  isBroadcast?: boolean;
 }
 export interface PlaySummary {
   id: string;
@@ -83,6 +84,7 @@ export interface PlaySummary {
   status: PlayStatus;
   sequenceNumber: number;
   createdAt: string;
+  isBroadcast?: boolean;
 }
 export interface ClaimOutcome {
   accepted: boolean;
@@ -104,7 +106,8 @@ export interface PlayStore {
     }[],
   ): Promise<string>;
   read(id: string, actor?: PlayActor): Promise<PlayState>;
-  findCode(code: string, actor: PlayActor): Promise<string>;
+  findCode(code: string, actor: PlayActor): Promise<{ id: string; eventId: string } | string>;
+  broadcast(id: string, actor: PlayActor, broadcast: boolean): Promise<PlayState>;
   change<T>(
     id: string,
     actor: PlayActor,

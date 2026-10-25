@@ -11,6 +11,8 @@ export const auditRecordSchema = z.strictObject({
   action: z.string(),
   resourceType: z.string(),
   resourceId: z.string().nullable().optional(),
+  eventName: z.string().nullable().optional(),
+  resourceName: z.string().nullable().optional(),
   metadata: z.unknown().nullable().optional(),
   createdAt: z.string(),
 });

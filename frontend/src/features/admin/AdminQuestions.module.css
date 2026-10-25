@@ -4,7 +4,7 @@
   margin: 24px auto;
   min-height: 0;
   padding: clamp(20px, 3vw, 36px);
-  background: var(--ice);
+  background: var(--color-parchment, #F0E8D9);
   color: var(--ink);
   border-radius: 16px;
 }
@@ -79,7 +79,7 @@
   padding: 8px 10px;
   border: 1px solid var(--border);
   border-radius: 8px;
-  background: var(--ice);
+  background: var(--color-paper, #FAF7F0);
   color: var(--ink);
   font:
     14px/1.35 system-ui,
@@ -184,7 +184,7 @@
   padding: 8px 10px;
   border: 1px solid var(--border);
   border-radius: 8px;
-  background: var(--ice);
+  background: var(--color-paper, #FAF7F0);
   color: var(--ink);
   font:
     15px/1.35 system-ui,
@@ -225,7 +225,7 @@
   margin-top: 20px;
   padding: 16px;
   border: 1px solid var(--border);
-  background: var(--ice);
+  background: var(--color-paper, #FAF7F0);
   overflow-wrap: anywhere;
 }
 .detail h3 {

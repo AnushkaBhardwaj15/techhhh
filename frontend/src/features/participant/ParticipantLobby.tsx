@@ -13,11 +13,9 @@ import {
   getParticipantEvent,
 } from "../../lib/api/participant";
 import { getParticipantTicket } from "../../lib/api/ticket";
-import { formatTicketCode } from "../../types/ticket";
 import { SampleTicketDemo } from "../landing/components/SampleTicketDemo";
 import { useAuthUiStore } from "../auth/authStore";
 import { ActionButton } from "../../components/ActionButton";
-import { QRCodeSvg } from "../../components/QRCodeSvg";
 import {
   fetchActiveGame,
   subscribeToGameSync,
@@ -44,12 +42,12 @@ export function ParticipantLobby({ waiting = false }: { waiting?: boolean }) {
     refetchOnWindowFocus: "always",
   });
 
-  // 2. Current Round Query (polls every 1500ms for instant detection of game start)
+  // 2. Current Round Query (only poll if participant is in waiting state)
   const currentRound = useQuery({
     queryKey: ["participant", user.id, "round", event.data?.id],
     queryFn: ({ signal }) => getCurrentRound(signal),
-    enabled: !!event.data,
-    refetchInterval: 1500,
+    enabled: !!event.data && waiting,
+    refetchInterval: waiting ? 3000 : false,
     refetchOnWindowFocus: "always",
   });
 
@@ -67,11 +65,6 @@ export function ParticipantLobby({ waiting = false }: { waiting?: boolean }) {
     enabled: !!event.data?.id && !!currentRound.data?.id,
     retry: 1,
   });
-
-  // Calculate predefined code from server ticket if available, else empty string
-  const assignedCode = ticket.data
-    ? formatTicketCode(ticket.data.id)
-    : "";
 
   const [verifiedCode, setVerifiedCode] = useState(
     () => sessionStorage.getItem(`tt_verified_code_${user.id}`) || "",
@@ -129,8 +122,7 @@ export function ParticipantLobby({ waiting = false }: { waiting?: boolean }) {
 
   // The joined game's server-reported state controls the transition into play.
   const isRoundActive =
-    (currentRound.data?.id === joinedGameId &&
-      currentRound.data.status === "ACTIVE") ||
+    currentRound.data?.status === "ACTIVE" ||
     (activeGame?.id === joinedGameId && activeGame.status === "ACTIVE");
 
   useEffect(() => {
@@ -193,17 +185,10 @@ export function ParticipantLobby({ waiting = false }: { waiting?: boolean }) {
     }
   }, [params, waiting, verifyCode]);
 
-  function handleQuickJoin() {
-    verifyCode(activeGameCode);
-  }
-
   function handleCustomSubmit(e: React.FormEvent) {
     e.preventDefault();
     verifyCode(customCode);
   }
-
-  const activeGameCode = activeGame?.code || assignedCode;
-  const activeGameJoinUrl = `${window.location.origin}/lobby?code=${activeGameCode}`;
 
   if (waiting && !isVerified)
     return <Navigate to="/participant/lobby" replace />;
@@ -260,65 +245,67 @@ export function ParticipantLobby({ waiting = false }: { waiting?: boolean }) {
 
   return (
     <main className={styles.page}>
-      <div className={styles.outerCard}>
-        {/* SYNCHRONIZED QR & CODE BLOCK: SAME ON ADMIN & USER PAGE */}
-        <div className={styles.activeGameCard}>
-          <div className={styles.activeGameHeader}>
-            <span className={styles.activeGameLiveBadge}>
-              <span className={styles.pulseDotGreen}>●</span> ACTIVE GAME
-              SESSION
-            </span>
-            <span className={styles.activeGameTitle}>
-              {activeGame?.name || "Tech Tombola Live Arena"}
-            </span>
+      <section className={styles.welcome} style={{ marginBottom: "20px" }}>
+        <p className={styles.kicker}>PARTICIPANT LOBBY</p>
+        <h1>Welcome, <em>{user?.name ? user.name.split(' ')[0] : 'Ari'}.</em></h1>
+        {event.data && (
+          <div className={styles.eventCard} aria-label="Your event" style={{ marginTop: "10px" }}>
+            <span className={styles.label} style={{ fontSize: "11px", fontWeight: "bold", color: "var(--color-oxblood, #8C4545)" }}>YOUR EVENT</span>
+            <h2 style={{ margin: "4px 0", fontSize: "20px" }}>{event.data.title}</h2>
+            {event.data.description && <p style={{ margin: 0, fontSize: "14px", color: "var(--color-text-secondary, #62584C)" }}>{event.data.description}</p>}
           </div>
+        )}
+      </section>
 
-          <div className={styles.activeGameContent}>
-            {/* The SAME QR CODE as Admin Page */}
-            <div className={styles.qrCol}>
-              <div className={styles.qrWrapper}>
-                <QRCodeSvg
-                  value={activeGameJoinUrl}
-                  size={150}
-                  title={`QR Code for Game ${activeGameCode}`}
-                />
-              </div>
-              <span className={styles.qrAnnotation}>
-                Scan with phone to join
+      {isRoundActive && (
+        <div style={{ marginBottom: "16px" }}>
+          <Link className={styles.gameLink} to="/participant/game">
+            Open live game <span aria-hidden="true">↗</span>
+          </Link>
+        </div>
+      )}
+      <div className={styles.outerCard}>
+        {/* DIRECT QUICK JOIN BANNER: DISPLAYED ONLY WHEN HOST TURNS ON BROADCAST */}
+        {activeGame && activeGame.isBroadcast && (
+          <div className={styles.activeGameCard}>
+            <div className={styles.activeGameHeader}>
+              <span className={styles.activeGameLiveBadge}>
+                <span className={styles.pulseDotGreen}>●</span> ACTIVE GAME ANNOUNCED BY HOST
+              </span>
+              <span className={styles.activeGameTitle}>
+                {activeGame.name || "Tech Tombola Live Arena"}
               </span>
             </div>
 
-            {/* The SAME GAME CODE as Admin Page */}
-            <div className={styles.codeCol}>
+            <div className={styles.codeCol} style={{ padding: "16px 0 8px", width: "100%", alignItems: "center" }}>
               <span className={styles.codeBadgeTitle}>OFFICIAL GAME CODE</span>
               <div className={styles.activeCodeDisplay}>
                 <strong className={styles.activeCodeValue}>
-                  {activeGameCode}
+                  {activeGame.code}
                 </strong>
                 <button
                   type="button"
                   className={styles.copyActiveBtn}
-                  onClick={() => navigator.clipboard.writeText(activeGameCode)}
+                  onClick={() => navigator.clipboard.writeText(activeGame.code)}
                   title="Copy code"
                 >
                   📋 Copy
                 </button>
               </div>
 
-              {/* Requirement 1: Single button to join via respective code given on screen */}
               <ActionButton
                 type="button"
                 busy={joining}
                 className={styles.primaryJoinBtn}
-                onClick={handleQuickJoin}
+                onClick={() => verifyCode(activeGame.code)}
               >
                 {joining
                   ? "JOINING…"
-                  : `JOIN GAME WITH CODE #${activeGameCode}`}
+                  : `QUICK JOIN GAME (#${activeGame.code}) →`}
               </ActionButton>
             </div>
           </div>
-        </div>
+        )}
 
         {/* SECTION 1: TICKET VERIFICATION & ACCESS */}
         <p className={styles.kicker}>TICKET VERIFICATION &amp; ACCESS</p>
@@ -343,7 +330,7 @@ export function ParticipantLobby({ waiting = false }: { waiting?: boolean }) {
                   setCustomCode(e.target.value.toUpperCase());
                   setErrorMsg("");
                 }}
-                placeholder={`e.g. ${activeGameCode}`}
+                placeholder={activeGame?.isBroadcast ? `e.g. ${activeGame.code}` : "e.g. 1A2B3C"}
                 className={styles.customCodeInput}
                 autoCapitalize="characters"
               />

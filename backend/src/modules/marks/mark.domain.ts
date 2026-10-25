@@ -18,10 +18,13 @@ export function validateRoundActiveForMark(status: string): void {
  */
 export function validateCellEligibleForMark(
   cell: { id: string; keyId: string | null },
-  _drawnKeyIds?: Set<string>
+  drawnKeyIds?: Set<string>
 ): void {
   if (!cell.keyId) {
     throw new UnprocessableEntityError('Cannot mark an empty cell');
+  }
+  if (drawnKeyIds && !drawnKeyIds.has(cell.keyId)) {
+    throw new UnprocessableEntityError('Cannot mark a cell whose key has not been drawn');
   }
 }
 

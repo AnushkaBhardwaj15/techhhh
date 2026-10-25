@@ -1,7 +1,7 @@
 import { useState } from 'react';
+import { z } from 'zod';
 import { useQuery } from '@tanstack/react-query';
 import { useOutletContext } from 'react-router-dom';
-import { z } from 'zod';
 import { ApiError } from '../../lib/api/client';
 import { listAdminAudit } from '../../lib/api/adminOperations';
 import type { AuditFilters } from '../../lib/api/adminOperations';
@@ -12,11 +12,10 @@ import styles from './AdminAudit.module.css';
 import { formatAuditAction, formatAuditActor, formatAuditResource } from './auditFormatters';
 
 const PAGE_SIZE = 20;
-const auditActor = z.string().uuid();
 
 export function AdminAudit() {
   const user = useOutletContext<AuthenticatedUser>();
-  const [draft, setDraft] = useState({ actorId: '', action: '', from: '', to: '' });
+  const [draft, setDraft] = useState({ search: '', actorId: '', action: '', from: '', to: '' });
   const [filters, setFilters] = useState<AuditFilters>({});
   const [cursors, setCursors] = useState<Array<string | null>>([null]);
   const [filterError, setFilterError] = useState('');
@@ -28,11 +27,12 @@ export function AdminAudit() {
 
   function applyFilters(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const actorId = draft.actorId.trim();
-    if (actorId && !auditActor.safeParse(actorId).success) {
-      setFilterError('Enter a valid Actor ID or leave the field empty.');
+    const actorIdInput = draft.actorId.trim();
+    if (actorIdInput && !z.string().uuid().safeParse(actorIdInput).success) {
+      setFilterError('Enter a valid Actor ID (36-character UUID) or leave blank.');
       return;
     }
+    const search = draft.search.trim();
     const from = draft.from ? new Date(draft.from) : undefined;
     const to = draft.to ? new Date(draft.to) : undefined;
     if ((from && !Number.isFinite(from.getTime())) || (to && !Number.isFinite(to.getTime()))) {
@@ -46,7 +46,8 @@ export function AdminAudit() {
     setFilterError('');
     setCursors([null]);
     setFilters({
-      ...(actorId ? { actorId } : {}),
+      ...(actorIdInput ? { actorId: actorIdInput } : {}),
+      ...(search ? { search } : {}),
       ...(draft.action.trim() ? { action: draft.action.trim() } : {}),
       ...(from ? { from: from.toISOString() } : {}),
       ...(to ? { to: to.toISOString() } : {}),
@@ -58,11 +59,12 @@ export function AdminAudit() {
     : audit.error instanceof ApiError ? audit.error.message : 'We could not read the audit response.';
 
   return <main className={styles.page}>
-    <p className={styles.eyebrow}>EVENT OPERATIONS / RECORDS</p>
-    <header className={styles.heading}><div><h1>Audit log</h1><p>Read-only records returned by the server. Sensitive request details are not included in this view.</p></div></header>
+    <p className={styles.eyebrow}>OPERATIONS / RECORDS</p>
+    <header className={styles.heading}><div><h1>Audit log</h1><p>Human-readable operational records. Tracks participant interactions, host commands, claims, and game lifecycle.</p></div></header>
     <form className={styles.filters} onSubmit={applyFilters} aria-label="Filter audit records">
-      <label>Actor ID<input inputMode="text" value={draft.actorId} onChange={(event) => setDraft((current) => ({ ...current, actorId: event.target.value }))} /></label>
-      <label>Action<input value={draft.action} maxLength={100} onChange={(event) => setDraft((current) => ({ ...current, action: event.target.value }))} /></label>
+      <label>Search (User Email, Event, Keyword)<input inputMode="text" placeholder="e.g. alice@example.com or Tech Tombola" value={draft.search} onChange={(event) => setDraft((current) => ({ ...current, search: event.target.value }))} /></label>
+      <label>Actor ID<input placeholder="e.g. 9a453a90-d858-477c-9af0-cda050464bc1" value={draft.actorId} onChange={(event) => setDraft((current) => ({ ...current, actorId: event.target.value }))} /></label>
+      <label>Action<input placeholder="e.g. WIN_CLAIM or MARK" value={draft.action} maxLength={100} onChange={(event) => setDraft((current) => ({ ...current, action: event.target.value }))} /></label>
       <label>From<input type="datetime-local" value={draft.from} onChange={(event) => setDraft((current) => ({ ...current, from: event.target.value }))} /></label>
       <label>To<input type="datetime-local" value={draft.to} onChange={(event) => setDraft((current) => ({ ...current, to: event.target.value }))} /></label>
       <button type="submit">Apply filters</button>
@@ -82,13 +84,16 @@ export function AdminAudit() {
             <tr key={record.id}>
               <td><time dateTime={record.createdAt}>{new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(record.createdAt))}</time></td>
               <td>
-                <span style={{ fontWeight: 600, color: 'var(--color-primary-cyan, #00e5ff)', display: 'block' }}>{actorInfo.primary}</span>
+                <span style={{ fontWeight: 600, color: 'var(--retro-orange, #EE640F)', display: 'block' }}>{actorInfo.primary}</span>
                 <span style={{ fontSize: '12px', color: '#94a3b8' }}>{actorInfo.secondary}</span>
               </td>
-              <td><strong>{formatAuditAction(record.action, record.metadata)}</strong></td>
+              <td>
+                <strong>{record.action}</strong>
+                <span style={{ fontSize: '12px', color: '#94a3b8', display: 'block' }}>{formatAuditAction(record.action, record.metadata)}</span>
+              </td>
               <td>
                 <span style={{ fontWeight: 500, display: 'block' }}>{resourceInfo.primary}</span>
-                <span style={{ fontSize: '12px', color: '#94a3b8' }}>{resourceInfo.secondary}</span>
+                <span style={{ fontSize: '12px', color: '#94a3b8' }}>{record.resourceId ?? resourceInfo.secondary}</span>
               </td>
               <td>{record.metadata === null ? '—' : <details><summary>View metadata</summary><pre>{JSON.stringify(record.metadata, null, 2)}</pre></details>}</td>
             </tr>

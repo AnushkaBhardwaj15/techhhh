@@ -239,6 +239,7 @@ export function publicPlayState(state: PlayState, admin = false) {
     sequenceNumber: state.sequenceNumber,
     createdAt: state.createdAt,
     closingSequence: state.closingSequence,
+    isBroadcast: state.isBroadcast ?? false,
     ticket: state.ticket,
     score: state.ticket
       ? state.wins

@@ -5,6 +5,7 @@ import {
   claimIdParamsSchema,
   listClaimsQuerySchema,
   listWinnersQuerySchema,
+  rejectClaimBodySchema,
   submitClaimBodySchema,
 } from './claim.schemas.ts';
 import { claimService } from './claim.service.ts';
@@ -14,32 +15,31 @@ import { roundRepository } from '../rounds/round.repository.ts';
 export function createClaimRoutes(winnerService: WinnerService): FastifyPluginAsync {
   return async (fastify) => {
   // Participant: Submit win claim
-  fastify.post('/participant/claims', { preHandler: [requireParticipantToken] }, async (request, reply) => {
+  fastify.post(
+    '/participant/claims',
+    {
+      preHandler: [requireParticipantToken],
+      config: {
+        rateLimit: {
+          max: process.env.NODE_ENV === 'test' ? 100_000 : 30,
+          timeWindow: 60_000,
+        },
+      },
+    },
+    async (request, reply) => {
     const body = submitClaimBodySchema.parse(request.body);
     const round = await roundRepository.findById(body.roundId);
     const eventId = round?.eventId || request.user!.eventId || 'e7bf4217-f212-4970-b3f1-e924e1782f25';
 
-    try {
-      const result = await claimService.submitClaim({
-        userId: request.user!.id,
-        eventId,
-        roundId: body.roundId,
-        pattern: body.pattern,
-      });
+    const result = await claimService.submitClaim({
+      userId: request.user!.id,
+      eventId,
+      roundId: body.roundId,
+      pattern: body.pattern,
+    });
 
-      reply.status(200);
-      return result;
-    } catch {
-      reply.status(200);
-      return {
-        id: crypto.randomUUID(),
-        roundId: body.roundId,
-        participantId: request.user!.id,
-        pattern: body.pattern,
-        status: 'PENDING',
-        createdAt: new Date().toISOString(),
-      };
-    }
+    reply.status(200);
+    return result;
   });
 
   // Participant: List own claims
@@ -80,6 +80,8 @@ export function createClaimRoutes(winnerService: WinnerService): FastifyPluginAs
 
   fastify.post('/admin/claims/:id/reject', { preHandler: [requireAdmin] }, async (request) => {
     const { id } = claimIdParamsSchema.parse(request.params);
+    const bodyResult = rejectClaimBodySchema.safeParse(request.body);
+    const reason = bodyResult.success && bodyResult.data?.reason ? bodyResult.data.reason : 'ADMIN_REJECTED';
     const idempotencyKey = request.headers['idempotency-key'];
     if (typeof idempotencyKey !== 'string') {
       throw new ValidationError('Idempotency-Key header is required', 'IDEMPOTENCY_KEY_REQUIRED');
@@ -93,6 +95,7 @@ export function createClaimRoutes(winnerService: WinnerService): FastifyPluginAs
       actorId: request.user!.id,
       actorType: role,
       idempotencyKey,
+      reason,
     });
   });
 

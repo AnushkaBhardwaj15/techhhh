@@ -1,35 +1,80 @@
 :root {
-  font-family: "Segoe UI", system-ui, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
-  --navy: #081220;
-  --navy-raised: #122438;
-  --cyan: #00e5ff;
-  --cyan-hover: #73efff;
-  --cyan-soft: #d5f5f7;
-  --lime: #a3ff4b;
-  --lime-soft: #e5f6d6;
-  --ice: #e6f3f3;
-  --surface: #f8fcfb;
-  --surface-muted: #dce9ec;
-  --ink: #081220;
-  --muted: #48616d;
-  --muted-dark: #a6bfcc;
-  --border: #b5ccd2;
-  --border-dark: #35536a;
-  --accent-ink: #076f7d;
-  --success-ink: #315e18;
-  --danger-soft: #fce7e8;
-  --warning-soft: #fff2cb;
+
+  /* Retro Orange Neubrutalism Core Palette */
+  --retro-orange: #EE640F;
+  --retro-orange-hover: #D75508;
+  --retro-orange-active: #BF4803;
+  --retro-orange-soft: #FDE8DA;
+  --retro-orange-tint: #FFF4ED;
+  --retro-cream: #FAF4E8;
+  --retro-ink: #18130F;
+
+  /* Theme Core Mapping */
+  --color-parchment: #FAF4E8;
+  --color-espresso: #18130F;
+  --color-oxblood: #EE640F;
+  --color-sandstone: #F2E7D5;
+  --color-stone-olive: #68725E;
+  --color-paper: #FFFFFF;
+
+  /* Supporting Tokens */
+  --color-espresso-deep: #0F0C09;
+  --color-text-secondary: #584A3F;
+  --color-border-muted: #18130F;
+  --color-border-subtle: #D8CCA8;
+  --color-disabled: #ECE4D6;
+  --color-white: #FFFFFF;
+
+  /* Semantic State Tokens */
+  --color-success: #356644;
+  --color-warning: #EE640F;
+  --color-danger: #D64228;
+  --color-info: #2B5E6B;
+
+  /* Tactile Neubrutalist Borders, Radii & Hard Offset Shadows */
+  --radius-xs: 3px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --border-brutal: 2.5px solid var(--color-espresso, #18130F);
+  --shadow-brutal-xs: 2px 2px 0px var(--color-espresso, #18130F);
+  --shadow-brutal-sm: 3px 3px 0px var(--color-espresso, #18130F);
+  --shadow-brutal-md: 5px 5px 0px var(--color-espresso, #18130F);
+  --shadow-brutal-lg: 8px 8px 0px var(--color-espresso, #18130F);
+  --shadow-brutal-orange: 4px 4px 0px #EE640F;
+  --shadow-brutal-orange-lg: 6px 6px 0px #EE640F;
+
+  --navy: #18130F;
+  --navy-raised: #251E18;
+  --cyan: #EE640F;
+  --cyan-hover: #D75508;
+  --cyan-soft: #FDE8DA;
+  --lime: #356644;
+  --lime-soft: #E2F1E4;
+  --ice: #FDE8DA;
+  --surface: var(--color-paper, #FFFFFF);
+  --surface-muted: var(--color-sandstone, #F2E7D5);
+  --ink: var(--color-espresso, #18130F);
+  --muted: var(--color-text-secondary, #584A3F);
+  --muted-dark: #68725E;
+  --border: var(--color-espresso, #18130F);
+  --border-dark: var(--color-espresso-deep, #0F0C09);
+  --accent-ink: #EE640F;
+  --success-ink: #264B32;
+  --danger-soft: #FDE8E6;
+  --warning-soft: #FFF2DA;
   --mono: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
-  --display: "Segoe UI", system-ui, sans-serif;
-  /* Compatibility aliases keep existing components on the shared palette. */
-  --forest: var(--navy);
-  --cream: var(--ice);
-  --coral: var(--cyan);
+  --display: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --forest: var(--color-espresso, #18130F);
+  --cream: var(--color-parchment, #FAF4E8);
+  --coral: #EE640F;
   --serif: var(--display);
-  color: var(--ink);
-  background: var(--navy);
+
+  color: var(--color-espresso, #18130F);
+  background: var(--color-parchment, #FAF4E8);
   font-variant-numeric: tabular-nums;
 }
 
@@ -43,6 +88,8 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100dvh;
+  background: var(--retro-cream, #FAF4E8);
+  color: var(--retro-ink, #18130F);
 }
 button,
 input,
@@ -64,13 +111,14 @@ button:disabled {
   cursor: not-allowed;
 }
 :focus-visible {
-  outline: 3px solid var(--accent-ink);
-  outline-offset: 3px;
+  outline: 3px solid var(--retro-orange, #EE640F);
+  outline-offset: 2px;
 }
 h1,
 h2,
 h3 {
   text-wrap: balance;
+  color: var(--color-espresso);
 }
 p {
   text-wrap: pretty;
@@ -85,8 +133,8 @@ svg {
   padding: 32px;
   display: grid;
   place-content: center;
-  color: var(--ice);
-  background: var(--navy);
+  color: var(--retro-ink, #18130F);
+  background: var(--retro-cream, #FAF4E8);
   text-align: center;
 }
 .feedback h1 {
@@ -97,7 +145,8 @@ svg {
 }
 .role-page {
   min-height: 100dvh;
-  background: var(--navy);
+  background: var(--retro-cream, #FAF4E8);
+  color: var(--retro-ink, #18130F);
 }
 .role-page > header {
   display: block;
@@ -114,14 +163,15 @@ svg {
 .role-page
   :where(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
   max-width: 100%;
-  border-radius: 7px;
-  border: 1px solid var(--border);
-  color: var(--ink);
-  background: var(--surface);
-  font-size: 16px;
+  border-radius: var(--radius-xs, 2px);
+  border: 2px solid var(--color-espresso, #18130F);
+  box-shadow: 2px 2px 0 var(--color-espresso, #18130F);
+  color: var(--color-espresso, #18130F);
+  background: var(--color-paper, #FFFFFF);
+  font-size: 15px;
 }
 .role-page :where(button) {
-  border-radius: 7px;
+  border-radius: var(--radius-xs, 2px);
 }
 .role-page :where(h1) {
   font-family: var(--display);
@@ -138,22 +188,26 @@ svg {
 }
 .role-page :where(fieldset) {
   min-width: 0;
-  border-color: var(--border);
+  border: 2px solid var(--border);
 }
 .role-page :where(dialog) {
   max-width: calc(100% - 32px);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  background: var(--ice);
+  border: 2.5px solid var(--border);
+  border-top: 5px solid var(--retro-orange, #EE640F);
+  border-radius: var(--radius-sm, 4px);
+  box-shadow: 6px 6px 0 var(--color-espresso, #18130F);
+  background: var(--color-paper, #FFFFFF);
   color: var(--ink);
 }
 .role-page :where(dialog)::backdrop {
-  background: rgb(8 18 32 / 70%);
+  background: rgba(24, 19, 15, 0.7);
 }
 .session-error {
   padding: 12px 20px;
   background: var(--danger-soft);
   color: #842e28;
+  border: 2px solid #842e28;
+  box-shadow: 3px 3px 0 #842e28;
   font: 700 12px/1.5 var(--mono);
 }
 

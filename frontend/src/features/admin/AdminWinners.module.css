@@ -4,17 +4,17 @@
   margin: 24px auto;
   min-height: 0;
   padding: clamp(20px, 3vw, 36px);
-  background: var(--ice);
-  color: var(--ink);
-  border-radius: 16px;
+  background: var(--retro-cream, #FAF4E8);
+  color: var(--retro-ink, #18130F);
+  border-radius: var(--radius-sm, 4px);
 }
 .eyebrow {
   margin: 0 0 10px;
-  color: var(--accent-ink);
+  color: var(--retro-orange, #EE640F);
   font:
-    700 11px/1.4 ui-monospace,
-    monospace;
+    800 11px/1.4 var(--mono);
   letter-spacing: 0.16em;
+  text-transform: uppercase;
 }
 .heading {
   display: flex;
@@ -28,6 +28,8 @@
   font-size: clamp(36px, 5vw, 62px);
   line-height: 0.98;
   letter-spacing: -0.045em;
+  font-weight: 900;
+  color: var(--retro-ink, #18130F);
 }
 .heading p {
   max-width: 620px;
@@ -38,17 +40,25 @@
 .panelHeader button,
 .state button,
 .pagination button {
-  min-height: 44px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--cyan);
-  color: var(--ink);
+  min-height: 42px;
+  border: 2px solid var(--retro-ink, #18130F);
+  border-radius: var(--radius-xs, 2px);
+  background: var(--retro-orange, #EE640F);
+  color: #FFFFFF;
+  box-shadow: 2.5px 2.5px 0 var(--retro-ink, #18130F);
   font:
-    700 14px/1.2 system-ui,
-    sans-serif;
+    850 13px/1.2 var(--mono);
   text-decoration: none;
   cursor: pointer;
-  box-shadow: none;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+.heading a:hover,
+.panelHeader button:hover,
+.state button:hover,
+.pagination button:hover {
+  background: var(--retro-orange-hover, #D75508);
+  transform: translate(-1px, -1px);
+  box-shadow: 3.5px 3.5px 0 var(--retro-ink, #18130F);
 }
 .heading a {
   display: inline-flex;
@@ -57,8 +67,10 @@
   white-space: nowrap;
 }
 .panel {
-  border: 1px solid var(--border);
-  background: var(--ice);
+  border: 2.5px solid var(--retro-ink, #18130F);
+  border-top: 5px solid var(--retro-orange, #EE640F);
+  background: #FFFFFF;
+  box-shadow: 5px 5px 0 var(--retro-ink, #18130F);
 }
 .panelHeader {
   display: flex;
@@ -94,8 +106,8 @@
   overflow-x: auto;
 }
 .tableWrap:focus-visible {
-  outline: 3px solid var(--cyan);
-  outline-offset: 3px;
+  outline: 2px solid var(--color-oxblood, #8C4545);
+  outline-offset: 2px;
 }
 .scrollHint {
   display: none;
@@ -162,7 +174,7 @@ td code {
 .pagination button {
   min-height: 38px;
   padding: 0 10px;
-  background: var(--ice);
+  background: var(--color-paper, #FAF7F0);
   box-shadow: none;
 }
 .pagination button:disabled,
@@ -174,8 +186,8 @@ td code {
 .heading a:focus-visible,
 .panel button:focus-visible,
 .pagination button:focus-visible {
-  outline: 3px solid var(--cyan);
-  outline-offset: 3px;
+  outline: 2px solid var(--color-oxblood, #8C4545);
+  outline-offset: 2px;
 }
 .visuallyHidden {
   position: absolute;

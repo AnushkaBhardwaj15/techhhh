@@ -16,6 +16,7 @@ vi.mock('../../lib/gameSync', () => ({
 vi.mock('../../lib/api/play', () => ({
   createPlayRound: vi.fn(),
   validatePlayBank: vi.fn(),
+  commandPlayRound: vi.fn(),
 }));
 
 vi.mock('../../lib/api/adminOperations', () => ({

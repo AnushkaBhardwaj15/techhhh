@@ -23,6 +23,7 @@ const summary = z.object({
   ]),
   sequenceNumber: z.number().int().positive(),
   createdAt: z.string(),
+  isBroadcast: z.boolean().optional(),
 });
 const cell = z.object({
   id: z.string().uuid(),

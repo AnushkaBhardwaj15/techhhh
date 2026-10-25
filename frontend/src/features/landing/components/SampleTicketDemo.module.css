@@ -62,7 +62,8 @@
 }
 
 .simButton:hover {
-  background: var(--cyan-hover);
+  background: #733737;
+  color: var(--color-paper, #FAF7F0);
 }
 
 .simButton:active {
@@ -125,9 +126,9 @@
   font-weight: 800;
   letter-spacing: 0.1em;
   color: var(--accent-ink);
-  background: rgba(0, 161, 181, 0.15);
+  background: var(--color-sandstone, #DCD0BD);
   padding: 2px 6px;
-  border: 1px solid var(--coral);
+  border: 1px solid var(--color-border-muted, #BFB29F);
 }
 
 .revealedKeyBadge {
@@ -194,9 +195,9 @@
   font-family: var(--mono);
   font-size: 11px;
   color: var(--forest);
-  background: rgba(8, 123, 139, 0.1);
+  background: var(--color-sandstone, #DCD0BD);
   padding: 4px 8px;
-  border: 1px solid rgba(8, 123, 139, 0.25);
+  border: 1px solid var(--color-border-muted, #BFB29F);
 }
 
 .ticketScore strong {
@@ -245,7 +246,7 @@
 }
 
 .playableCell:hover {
-  background: var(--cyan-soft);
+  background: var(--color-sandstone, #DCD0BD);
 }
 
 .playableCell:active {
@@ -303,7 +304,7 @@
 }
 
 .cellMarked .checkIcon {
-  color: var(--navy);
+  color: var(--color-espresso, #302820);
 }
 
 /* Pattern Eligibility Status */
@@ -397,8 +398,8 @@
   background: var(--surface);
 }
 .cellMarked {
-  background: var(--lime);
-  color: var(--navy);
+  background: #C4D6B0;
+  color: var(--color-espresso, #302820);
 }
 @media (max-width: 600px) {
   .controlsBar {

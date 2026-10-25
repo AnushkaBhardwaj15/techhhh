@@ -23,18 +23,26 @@ export const healthRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   fastify.get('/ready', async () => {
-    let dbStatus = { ok: false, latencyMs: 0 };
+    const dbStatus = await checkDbHealth(1000);
+    if (!dbStatus.ok) {
+      throw new ServiceUnavailableError('Database is unavailable');
+    }
+
     try {
-      dbStatus = await checkDbHealth(1000);
-    } catch {
-      // Offline fallback
+      const migrationCheck = await checkMigrations();
+      if (!migrationCheck.isUpToDate) {
+        throw new ServiceUnavailableError('Database schema migrations mismatch');
+      }
+    } catch (err) {
+      if (err instanceof ServiceUnavailableError) throw err;
+      throw new ServiceUnavailableError('Database is unavailable');
     }
 
     return {
       status: 'ready',
       checks: {
-        database: dbStatus.ok ? 'ok' : 'in-memory',
-        migrations: dbStatus.ok ? 'ok' : 'skipped',
+        database: 'ok',
+        migrations: 'ok',
         config: 'ok',
       },
       latencyMs: dbStatus.latencyMs,

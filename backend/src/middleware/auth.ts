@@ -71,6 +71,8 @@ export const requireAdmin = requireRole(['ADMIN', 'SUPER_ADMIN']);
 export const requireSuperAdmin = requireRole(['SUPER_ADMIN']);
 export const requireParticipant = requireRole(['PARTICIPANT']);
 
+import { participantRepository } from '../modules/participants/participant.repository.ts';
+
 export async function requireParticipantToken(request: FastifyRequest): Promise<void> {
   verifyMutationOrigin(request);
   const token = request.cookies[SESSION_COOKIE_NAME];
@@ -78,13 +80,19 @@ export async function requireParticipantToken(request: FastifyRequest): Promise<
 
   const payload = verifyAuthToken(token);
   if (payload.role !== 'PARTICIPANT') throw new ForbiddenError('Insufficient permissions for this operation');
+  if (!payload.eventId) throw new UnauthorizedError('Participant token must be scoped to an event');
+
+  const profile = await participantRepository.findByUserIdAndEvent(payload.sub, payload.eventId);
+  if (!profile) {
+    throw new ForbiddenError('Participant profile not found for this event');
+  }
 
   request.user = {
     id: payload.sub,
     email: payload.email,
     name: payload.name,
     role: payload.role,
-    status: 'ACTIVE',
+    status: profile.status,
     eventId: payload.eventId,
     sessionId: payload.jti,
   };

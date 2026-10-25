@@ -12,9 +12,9 @@
   margin: 24px auto;
   min-height: 0;
   padding: clamp(20px, 3vw, 36px);
-  background: var(--ice);
-  color: var(--ink);
-  border-radius: 16px;
+  background: var(--color-parchment, #F0E8D9);
+  color: var(--color-espresso, #302820);
+  border-radius: var(--radius-sm, 4px);
 }
 
 /* ============================================================
@@ -23,12 +23,12 @@
 .dashboardCard {
   max-width: 960px;
   margin: 0 auto;
-  background-color: var(--surface);
-  border: 1px solid var(--border);
-  border-top: 3px solid var(--cyan);
-  border-radius: 16px;
+  background-color: var(--color-paper, #FFFFFF);
+  border: 2.5px solid var(--color-espresso, #18130F);
+  border-top: 5px solid var(--retro-orange, #EE640F);
+  border-radius: var(--radius-sm, 6px);
   padding: clamp(24px, 4vw, 38px);
-  box-shadow: none;
+  box-shadow: 6px 6px 0 var(--color-espresso, #18130F);
   box-sizing: border-box;
 }
 
@@ -39,43 +39,45 @@
   flex-wrap: wrap;
   gap: 16px;
   margin-bottom: 28px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 2px solid var(--color-espresso, #18130F);
   padding-bottom: 20px;
 }
 
 .titleGamesPlayed {
-  font-size: 22px;
-  font-weight: 950;
-  color: var(--ink);
+  font-size: 24px;
+  font-weight: 900;
+  color: var(--color-espresso, #18130F);
   margin: 0;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  font-family: var(--display);
 }
 
 .createGameBtn {
-  background-color: var(--coral);
-  color: var(--ink);
-  border: 1px solid var(--border);
-  border-radius: 10px;
+  background-color: var(--retro-orange, #EE640F);
+  color: #FFFFFF;
+  border: 2.5px solid var(--color-espresso, #18130F);
+  border-radius: var(--radius-sm, 6px);
   padding: 10px 24px;
-  font-size: 16px;
-  font-weight: 950;
+  font-size: 13px;
+  font-weight: 850;
+  font-family: var(--mono);
   letter-spacing: 0.05em;
   cursor: pointer;
-  box-shadow: none;
-  transition: all 0.12s ease;
+  box-shadow: 3px 3px 0 var(--color-espresso, #18130F);
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background-color 0.12s ease;
   text-transform: uppercase;
 }
 
 .createGameBtn:hover {
-  background-color: var(--cyan-hover);
-  transform: none;
-  box-shadow: none;
+  background-color: var(--retro-orange-hover, #D75508);
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0 var(--color-espresso, #18130F);
 }
 
 .createGameBtn:active {
-  transform: none;
-  box-shadow: none;
+  background-color: var(--retro-orange-active, #BF4803);
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--color-espresso, #18130F);
 }
 
 .gamesList {
@@ -91,18 +93,18 @@
   flex-wrap: wrap;
   gap: 16px;
   padding: 18px 22px;
-  background-color: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  box-shadow: none;
+  background-color: var(--color-paper, #FFFFFF);
+  border: 2px solid var(--color-espresso, #18130F);
+  border-radius: var(--radius-sm, 6px);
+  box-shadow: 3px 3px 0 var(--color-espresso, #18130F);
   transition:
     transform 0.12s ease,
     box-shadow 0.12s ease;
 }
 
 .gameListItem:hover {
-  transform: none;
-  box-shadow: none;
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0 var(--retro-orange, #EE640F);
 }
 
 .gameInfoCol {
@@ -119,20 +121,23 @@
 }
 
 .gameSeqBadge {
-  background: var(--forest);
-  color: var(--cream);
+  background: var(--color-espresso, #302820);
+  color: var(--color-paper, #FAF7F0);
   font-family: var(--mono);
   font-size: 10px;
   font-weight: 900;
   padding: 3px 7px;
-  border: 1.5px solid var(--ink);
+  border: 1px solid #302820;
+  border-color: var(--color-espresso, #302820);
+  border-radius: var(--radius-xs, 2px);
   letter-spacing: 0.05em;
 }
 
 .gameName {
   font-size: 18px;
-  font-weight: 900;
-  color: var(--ink);
+  font-weight: 850;
+  color: var(--color-espresso, #302820);
+  letter-spacing: -0.01em;
 }
 
 .gameMetaRow {
@@ -146,11 +151,12 @@
   font-family: var(--mono);
   font-size: 12px;
   font-weight: 900;
-  background: var(--cyan-soft);
-  color: var(--accent-ink);
+  background: var(--color-sandstone, #DCD0BD);
+  color: var(--color-espresso, #302820);
   padding: 3px 8px;
-  border-radius: 4px;
-  border: 1px solid var(--coral);
+  border-radius: var(--radius-xs, 2px);
+  border: 1px solid #302820;
+  border-color: var(--color-espresso, #302820);
 }
 
 .statusPill {
@@ -158,8 +164,9 @@
   font-size: 11px;
   font-weight: 800;
   padding: 3px 8px;
-  border-radius: 4px;
-  border: 1px solid var(--ink);
+  border-radius: var(--radius-xs, 2px);
+  border: 1px solid #302820;
+  border-color: var(--color-espresso, #302820);
   text-transform: uppercase;
 }
 
@@ -200,24 +207,24 @@
 }
 
 .manageGameBtn {
-  background: var(--ink);
-  color: var(--cream);
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  background: var(--color-espresso, #18130F);
+  color: #FFFFFF;
+  border: 2px solid var(--color-espresso, #18130F);
+  border-radius: var(--radius-sm, 6px);
   padding: 8px 18px;
   font-family: var(--mono);
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 850;
   cursor: pointer;
-  box-shadow: none;
-  transition: all 0.12s ease;
+  box-shadow: 2px 2px 0 var(--color-espresso, #18130F);
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.12s ease;
 }
 
 .manageGameBtn:hover {
-  background: var(--forest);
-  color: var(--surface);
-  transform: none;
-  box-shadow: none;
+  background: var(--retro-orange, #EE640F);
+  border-color: var(--color-espresso, #18130F);
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 var(--color-espresso, #18130F);
 }
 
 .emptyState {
@@ -232,29 +239,30 @@
 .emptyText {
   font-size: 18px;
   font-weight: 800;
-  color: var(--muted);
+  color: var(--color-espresso, #18130F);
   margin: 0 0 20px;
 }
 
 .createGameBtnCenter {
-  background-color: var(--coral);
-  color: var(--ink);
-  border: 1px solid var(--border);
-  border-radius: 12px;
+  background-color: var(--retro-orange, #EE640F);
+  color: #FFFFFF;
+  border: 2.5px solid var(--color-espresso, #18130F);
+  border-radius: var(--radius-sm, 6px);
   padding: 14px 36px;
-  font-size: 18px;
-  font-weight: 950;
-  letter-spacing: 0.06em;
+  font-size: 15px;
+  font-weight: 850;
+  font-family: var(--mono);
+  letter-spacing: 0.05em;
   cursor: pointer;
-  box-shadow: none;
-  transition: all 0.12s ease;
+  box-shadow: 4px 4px 0 var(--color-espresso, #18130F);
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background-color 0.12s ease;
   text-transform: uppercase;
 }
 
 .createGameBtnCenter:hover {
-  background-color: var(--cyan-hover);
-  transform: none;
-  box-shadow: none;
+  background-color: var(--retro-orange-hover, #D75508);
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 var(--color-espresso, #18130F);
 }
 
 /* ============================================================
@@ -300,12 +308,14 @@
 }
 
 .mainBox {
-  background-color: var(--surface);
-  border: 1px solid var(--border);
-  border-top: 3px solid var(--cyan);
-  border-radius: 16px;
+  background-color: var(--color-paper, #FAF7F0);
+  border: 2px solid #302820;
+  border-color: var(--color-espresso, #302820);
+  border-top: 4px solid #8C4545;
+  border-top-color: var(--color-oxblood, #8C4545);
+  border-radius: var(--radius-sm, 4px);
   padding: clamp(24px, 4vw, 40px);
-  box-shadow: none;
+  box-shadow: 4px 4px 0 var(--color-espresso, #302820);
   box-sizing: border-box;
 }
 
@@ -385,12 +395,12 @@
 }
 
 .codeTag {
-  background: var(--cyan-soft);
-  color: var(--accent-ink);
+  background: var(--color-sandstone, #DCD0BD);
+  color: var(--color-espresso, #302820);
   font-family: var(--mono);
   font-weight: 800;
   padding: 2px 6px;
-  border-radius: 4px;
+  border-radius: var(--radius-xs, 2px);
 }
 
 .gameControlsBar {
@@ -620,10 +630,10 @@
   font-family: var(--mono);
   font-size: 11px;
   font-weight: 900;
-  color: var(--forest);
-  background: rgba(8, 123, 139, 0.1);
+  color: var(--color-espresso, #302820);
+  background: var(--color-sandstone, #DCD0BD);
   padding: 2px 6px;
-  border-radius: 4px;
+  border-radius: var(--radius-xs, 2px);
 }
 
 .qPrompt {
@@ -680,10 +690,11 @@
   font-family: var(--mono);
   font-size: 11px;
   font-weight: 900;
-  color: #1e3a8a;
-  background: #dbeafe;
+  color: var(--color-oxblood, #8C4545);
+  background: var(--color-sandstone, #DCD0BD);
+  border: 1px solid var(--color-border-muted, #BFB29F);
   padding: 2px 6px;
-  border-radius: 4px;
+  border-radius: var(--radius-xs, 2px);
 }
 
 .drawBtn {
@@ -701,7 +712,8 @@
 }
 
 .drawBtn:hover:not(:disabled) {
-  background: var(--cyan-hover);
+  background: #733737;
+  color: var(--color-paper, #FAF7F0);
   transform: none;
   box-shadow: none;
 }
@@ -742,29 +754,31 @@
   background: var(--surface);
 }
 .gameSeqBadge {
-  background: var(--navy);
-  color: var(--cyan);
-  border-radius: 4px;
+  background: var(--color-espresso-deep, #241F1A);
+  color: var(--color-paper, #FAF7F0);
+  border: 1px solid #302820;
+  border-radius: var(--radius-xs, 2px);
 }
 .gameCodeBadge {
-  color: var(--accent-ink);
-  background: var(--cyan-soft);
+  color: var(--color-espresso, #302820);
+  background: var(--color-sandstone, #DCD0BD);
+  border: 1px solid #302820;
+  border-radius: var(--radius-xs, 2px);
 }
 .createGameBtn {
   min-height: 48px;
-  background: var(--cyan);
+  background: var(--color-oxblood, #8C4545);
+  color: var(--color-paper, #FAF7F0);
+  border: 2px solid #302820;
+  border-color: var(--color-espresso, #302820);
+  border-radius: var(--radius-xs, 2px);
+  box-shadow: 2px 2px 0 var(--color-espresso, #302820);
   font-size: 13px;
 }
 @media (max-width: 600px) {
   .headerRow {
     gap: 16px;
     align-items: stretch;
-  }
-  .createGameBtn {
-    width: 100%;
-  }
-  .gameListItem {
-    padding: 16px;
   }
 }
 
@@ -782,18 +796,25 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  background: var(--color-paper, #FFFFFF);
+  color: var(--color-espresso, #18130F);
+  border: 2px solid var(--color-espresso, #18130F);
+  border-radius: var(--radius-sm, 6px);
+  box-shadow: 2px 2px 0 var(--color-espresso, #18130F);
 }
 
 .settingsBtn:hover {
-  background: var(--cyan);
-  color: var(--ink);
+  background: var(--retro-orange-soft, #FDE8DA);
+  border-color: var(--retro-orange, #EE640F);
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 var(--color-espresso, #18130F);
 }
 
 .modalOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(10, 15, 29, 0.75);
-  backdrop-filter: blur(6px);
+  background: rgba(24, 19, 15, 0.65);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -802,15 +823,16 @@
 }
 
 .modalContent {
-  background: #0d1527;
-  color: #f8fafc;
-  border: 1px solid rgba(0, 229, 255, 0.3);
-  border-radius: 16px;
+  background: var(--color-paper, #FFFFFF);
+  color: var(--color-espresso, #18130F);
+  border: 2.5px solid var(--color-espresso, #18130F);
+  border-top: 5px solid var(--retro-orange, #EE640F);
+  border-radius: var(--radius-sm, 6px);
   width: 100%;
   max-width: 960px;
   max-height: 85vh;
   overflow-y: auto;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+  box-shadow: 8px 8px 0 var(--color-espresso, #18130F);
   display: flex;
   flex-direction: column;
 }
@@ -820,42 +842,45 @@
   align-items: center;
   justify-content: space-between;
   padding: 20px 24px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 2px solid var(--color-espresso, #18130F);
   position: sticky;
   top: 0;
-  background: #0d1527;
+  background: var(--color-parchment, #FAF4E8);
   z-index: 10;
 }
 
 .modalTitle {
-  font-size: 18px;
+  font-size: 20px;
   margin: 0 0 4px 0;
-  font-weight: 800;
-  color: var(--cyan);
+  font-weight: 900;
+  color: var(--color-espresso, #18130F);
 }
 
 .modalSubtitle {
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--color-text-secondary, #584A3F);
   margin: 0;
   font-family: var(--mono);
 }
 
 .modalCloseBtn {
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #cbd5e1;
-  border-radius: 8px;
-  padding: 6px 12px;
+  background: var(--color-paper, #FFFFFF);
+  border: 2px solid var(--color-espresso, #18130F);
+  color: var(--color-espresso, #18130F);
+  border-radius: var(--radius-sm, 6px);
+  padding: 6px 14px;
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 700;
-  transition: all 0.15s ease;
+  font-size: 13px;
+  font-weight: 850;
+  box-shadow: 2px 2px 0 var(--color-espresso, #18130F);
+  transition: all 0.12s ease;
 }
 
 .modalCloseBtn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
+  background: var(--retro-orange, #EE640F);
+  color: #FFFFFF;
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 var(--color-espresso, #18130F);
 }
 
 .modalBody {
@@ -863,16 +888,18 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+  background: var(--color-paper, #FFFFFF);
 }
 
 .roundInfoBar {
   display: flex;
   flex-wrap: wrap;
   gap: 24px;
-  background: rgba(255, 255, 255, 0.04);
-  padding: 14px 18px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--retro-orange-tint, #FFF4ED);
+  padding: 16px 20px;
+  border-radius: var(--radius-sm, 6px);
+  border: 2px solid var(--color-espresso, #18130F);
+  box-shadow: 3px 3px 0 var(--color-espresso, #18130F);
 }
 
 .roundInfoItem {
@@ -884,21 +911,21 @@
 .roundInfoLabel {
   font-size: 11px;
   text-transform: uppercase;
-  color: #94a3b8;
-  font-weight: 700;
-  letter-spacing: 0.04em;
+  color: var(--color-text-secondary, #584A3F);
+  font-weight: 800;
+  letter-spacing: 0.05em;
 }
 
 .roundInfoValue {
-  font-size: 14px;
-  font-weight: 800;
-  color: #f1f5f9;
+  font-size: 15px;
+  font-weight: 900;
+  color: var(--color-espresso, #18130F);
 }
 
 .auditSectionTitle {
-  font-size: 15px;
-  font-weight: 800;
-  color: #e2e8f0;
+  font-size: 16px;
+  font-weight: 900;
+  color: var(--color-espresso, #18130F);
   margin: 0;
   display: flex;
   align-items: center;
@@ -907,9 +934,10 @@
 
 .auditTableWrap {
   overflow-x: auto;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  background: rgba(15, 23, 42, 0.6);
+  border: 2px solid var(--color-espresso, #18130F);
+  border-radius: var(--radius-sm, 6px);
+  background: var(--color-paper, #FFFFFF);
+  box-shadow: 3px 3px 0 var(--color-espresso, #18130F);
 }
 
 .auditTable {
@@ -922,49 +950,50 @@
 .auditTable td {
   padding: 12px 16px;
   text-align: left;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--color-border-subtle, #D8CCA8);
 }
 
 .auditTable th {
-  background: rgba(255, 255, 255, 0.06);
-  color: #94a3b8;
-  font-weight: 700;
+  background: var(--color-sandstone, #F2E7D5);
+  color: var(--color-espresso, #18130F);
+  font-weight: 850;
   text-transform: uppercase;
   font-size: 11px;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
+  border-bottom: 2px solid var(--color-espresso, #18130F);
 }
 
 .auditTable tr:hover td {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--retro-orange-tint, #FFF4ED);
 }
 
 .auditActorEmail {
-  font-weight: 600;
-  color: var(--cyan);
+  font-weight: 700;
+  color: var(--retro-orange, #EE640F);
   display: block;
 }
 
 .auditActorRole {
   font-size: 11px;
-  color: #94a3b8;
+  color: var(--color-text-secondary, #584A3F);
   display: block;
   margin-top: 2px;
 }
 
 .auditActionText {
-  font-weight: 700;
-  color: #f8fafc;
+  font-weight: 800;
+  color: var(--color-espresso, #18130F);
 }
 
 .auditResourcePrimary {
-  font-weight: 500;
-  color: #e2e8f0;
+  font-weight: 600;
+  color: var(--color-espresso, #18130F);
   display: block;
 }
 
 .auditResourceSecondary {
   font-size: 11px;
-  color: #94a3b8;
+  color: var(--color-text-secondary, #584A3F);
   display: block;
   margin-top: 2px;
 }
@@ -972,7 +1001,7 @@
 .emptyAuditMsg {
   text-align: center;
   padding: 32px 16px;
-  color: #94a3b8;
+  color: var(--color-text-secondary, #584A3F);
   font-style: italic;
 }
 
