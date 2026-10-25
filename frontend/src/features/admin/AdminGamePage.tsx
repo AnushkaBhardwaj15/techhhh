@@ -75,6 +75,8 @@ export function AdminGamePage() {
           ? error.message
           : "Could not complete this action. Refresh the game before retrying.",
       );
+      await client.invalidateQueries({ queryKey: ["reference-play"] });
+      await client.invalidateQueries({ queryKey: ["play-rounds"] });
     } finally {
       busy.current = false;
       setPending(false);

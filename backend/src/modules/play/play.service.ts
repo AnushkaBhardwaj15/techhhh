@@ -137,6 +137,10 @@ export class PlayService {
           resume: "ACTIVE",
           end: "COMPLETED",
         };
+        if (input.action === "start" && s.status === "ACTIVE") return;
+        if (input.action === "resume" && s.status === "ACTIVE") return;
+        if (input.action === "pause" && s.status === "PAUSED") return;
+        if (input.action === "end" && s.status === "COMPLETED") return;
         if (
           (input.action === "start" && s.status !== "READY") ||
           (input.action === "resume" && s.status !== "PAUSED")

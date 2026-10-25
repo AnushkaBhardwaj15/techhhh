@@ -285,8 +285,12 @@ export class PlayRepository implements PlayStore {
           `SELECT id FROM rounds WHERE status='ACTIVE' AND id<>$1`,
           [id],
         );
-        if (active.length)
-          throw new ConflictError("Another round is already active.");
+        if (active.length) {
+          await tx.unsafe(
+            `UPDATE rounds SET status='PAUSED', updated_at=now() WHERE status='ACTIVE' AND id<>$1`,
+            [id],
+          );
+        }
         if (before.status === "READY") {
           const missing = await tx.unsafe<{ id: string }[]>(
             `SELECT p.id FROM participant_profiles p LEFT JOIN tickets t ON t.participant_id=p.id AND t.round_id=$1 WHERE p.event_id=$2 AND p.status='ACTIVE' AND t.id IS NULL`,
