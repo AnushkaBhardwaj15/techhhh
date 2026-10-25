@@ -26,14 +26,17 @@ const iso = (value: string | Date) => new Date(value).toISOString();
 export class PlayRepository implements PlayStore {
   private readonly bankCache = new Map<string, PlayQuestion[]>();
   constructor(private readonly connection = getSqlClient) {}
-  async list(actor?: PlayActor): Promise<PlaySummary[]> {
-    if (actor?.role === "PARTICIPANT" && !actor.eventId)
-      throw new ForbiddenError();
-    const rows = await this.connection().unsafe<PlaySummary[]>(
-      `SELECT id,event_id AS "eventId",name,game_code AS code,status,sequence_number AS "sequenceNumber",created_at AS "createdAt" FROM rounds WHERE game_code IS NOT NULL AND ($1::uuid IS NULL OR event_id=$1) ORDER BY (status='ACTIVE') DESC,created_at DESC`,
-      [actor?.role === "PARTICIPANT" ? actor.eventId! : null],
+  async list(_actor?: PlayActor): Promise<PlaySummary[]> {
+    const rows = await this.connection().unsafe<
+      (PlaySummary & { is_broadcast?: boolean })[]
+    >(
+      `SELECT id,event_id AS "eventId",name,game_code AS code,status,sequence_number AS "sequenceNumber",created_at AS "createdAt",COALESCE(is_broadcast,false) AS "isBroadcast" FROM rounds WHERE game_code IS NOT NULL ORDER BY (COALESCE(is_broadcast,false)=true) DESC, (status='ACTIVE') DESC, (status='READY') DESC, created_at DESC`,
     );
-    return rows.map((r) => ({ ...r, createdAt: iso(r.createdAt) }));
+    return rows.map((r) => ({
+      ...r,
+      createdAt: iso(r.createdAt),
+      isBroadcast: Boolean(r.isBroadcast),
+    }));
   }
   async findCode(code: string, actor: PlayActor) {
     return this.connection().begin(async (tx) => {
@@ -76,7 +79,7 @@ export class PlayRepository implements PlayStore {
           }
         }
       }
-      return round.id;
+      return { id: round.id, eventId: round.event_id };
     });
   }
   async create(
@@ -206,6 +209,34 @@ export class PlayRepository implements PlayStore {
       "isolation level repeatable read read only",
       (tx) => this.load(tx, id, actor),
     );
+  }
+  async broadcast(
+    id: string,
+    actor: PlayActor,
+    broadcast: boolean,
+  ): Promise<PlayState> {
+    return this.connection().begin(async (tx) => {
+      if (broadcast) {
+        await tx.unsafe(
+          "UPDATE rounds SET is_broadcast=false WHERE is_broadcast=true",
+        );
+        await tx.unsafe("UPDATE rounds SET is_broadcast=true WHERE id=$1", [
+          id,
+        ]);
+      } else {
+        await tx.unsafe("UPDATE rounds SET is_broadcast=false WHERE id=$1", [
+          id,
+        ]);
+      }
+      await this.audit(
+        tx,
+        actor,
+        id,
+        broadcast ? "ROUND_BROADCAST_ENABLED" : "ROUND_BROADCAST_DISABLED",
+        { roundId: id, broadcast },
+      );
+      return this.load(tx, id, actor);
+    });
   }
   async change<T>(
     id: string,
@@ -439,13 +470,26 @@ export class PlayRepository implements PlayStore {
     id: string,
     actor?: PlayActor,
   ): Promise<PlayState> {
-    const [round] = await sql.unsafe<PlayState[]>(
-      `SELECT id,event_id AS "eventId",name,game_code AS code,status,sequence_number AS "sequenceNumber",created_at AS "createdAt",closing_sequence AS "closingSequence" FROM rounds WHERE id=$1 AND game_code IS NOT NULL`,
+    const [round] = await sql.unsafe<
+      (PlayState & { is_broadcast?: boolean })[]
+    >(
+      `SELECT id,event_id AS "eventId",name,game_code AS code,status,sequence_number AS "sequenceNumber",created_at AS "createdAt",closing_sequence AS "closingSequence",COALESCE(is_broadcast,false) AS "isBroadcast" FROM rounds WHERE id=$1 AND game_code IS NOT NULL`,
       [id],
     );
     if (!round) throw new NotFoundError("Round not found.");
-    if (actor?.role === "PARTICIPANT" && actor.eventId !== round.eventId)
-      throw new NotFoundError("Round not found.");
+    if (
+      actor?.role === "PARTICIPANT" &&
+      actor.eventId &&
+      actor.eventId !== round.eventId
+    ) {
+      const [ticket] = await sql.unsafe<{ id: string }[]>(
+        `SELECT t.id FROM tickets t JOIN participant_profiles p ON p.id=t.participant_id WHERE p.user_id=$1 AND p.event_id=$2 AND t.round_id=$3`,
+        [actor.userId, actor.eventId, id],
+      );
+      if (!ticket) {
+        throw new NotFoundError("Round not found.");
+      }
+    }
     let bank = this.bankCache.get(id);
     if (!bank) {
       bank = await sql.unsafe<PlayQuestion[]>(
@@ -533,6 +577,7 @@ export class PlayRepository implements PlayStore {
     return {
       ...round,
       createdAt: iso(round.createdAt),
+      isBroadcast: Boolean(round.isBroadcast),
       bank: [...bank],
       draws: draws.map((d) => ({ ...d, drawnAt: iso(d.drawnAt) })),
       ticket,

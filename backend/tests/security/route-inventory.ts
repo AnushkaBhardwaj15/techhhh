@@ -74,6 +74,7 @@ export const routeInventory = [
   'GET /api/v1/play/rounds/:id',
   'POST /api/v1/admin/play/rounds',
   'POST /api/v1/admin/play/rounds/:id/commands',
+  'POST /api/v1/admin/play/rounds/:id/broadcast',
   'POST /api/v1/admin/play/validate-bank',
   'POST /api/v1/admin/quick-setup-game',
   'POST /api/v1/auth/quick-join',

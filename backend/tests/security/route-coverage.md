@@ -1,6 +1,6 @@
 # Runtime route coverage
 
-Generated from Fastify route registration. 81 declared operations/channels; implicit HEAD and CORS OPTIONS aliases are excluded.
+Generated from Fastify route registration. 82 declared operations/channels; implicit HEAD and CORS OPTIONS aliases are excluded.
 
 | Registered operation | Access class | Auth checks | Owner/Event scope evidence |
 |---|---|---|---|
@@ -60,6 +60,7 @@ Generated from Fastify route registration. 81 declared operations/channels; impl
 | `POST /api/v1/admin/participants` | admin | 401 unauthenticated; 403 wrong role | Event-scoped participant Profiles — participant + admin integration tests |
 | `POST /api/v1/admin/participants/import` | admin | 401 unauthenticated; 403 wrong role | Event-scoped participant Profiles — participant + admin integration tests |
 | `POST /api/v1/admin/play/rounds` | admin | 401 unauthenticated; 403 wrong role | N/A — role-global administrator operation |
+| `POST /api/v1/admin/play/rounds/:id/broadcast` | admin | 401 unauthenticated; 403 wrong role | N/A — role-global administrator operation |
 | `POST /api/v1/admin/play/rounds/:id/commands` | admin | 401 unauthenticated; 403 wrong role | N/A — role-global administrator operation |
 | `POST /api/v1/admin/play/validate-bank` | admin | 401 unauthenticated; 403 wrong role | N/A — role-global administrator operation |
 | `POST /api/v1/admin/questions` | admin | 401 unauthenticated; 403 wrong role | cross-Event Key/Question association — question integration tests |

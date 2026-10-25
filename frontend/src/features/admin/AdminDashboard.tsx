@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate, useOutletContext } from 'react-router-dom';
-import { createPlayRound, validatePlayBank, commandPlayRound } from '../../lib/api/play';
+import { createPlayRound, validatePlayBank, commandPlayRound, broadcastPlayRound } from '../../lib/api/play';
 import { listAdminAudit } from '../../lib/api/adminOperations';
 import type { AuthenticatedUser } from '../../types/auth';
 import { useAdminDashboard } from './useAdminDashboard';
@@ -43,6 +43,7 @@ export function AdminDashboard() {
   const [creationKey] = useState(() => crypto.randomUUID());
   const [games, setGames] = useState<SyncGameRecord[]>([]);
   const [commandingId, setCommandingId] = useState<string | null>(null);
+  const [broadcastingId, setBroadcastingId] = useState<string | null>(null);
   const [selectedRoundForAudit, setSelectedRoundForAudit] = useState<SyncGameRecord | null>(null);
 
   const roundAuditQuery = useQuery({
@@ -51,6 +52,21 @@ export function AdminDashboard() {
       listAdminAudit({ roundId: selectedRoundForAudit!.id, limit: 100 }, signal),
     enabled: !!selectedRoundForAudit,
   });
+
+  async function handleToggleBroadcast(gameId: string, currentStatus: boolean) {
+    if (broadcastingId) return;
+    setBroadcastingId(gameId);
+    setError('');
+    try {
+      await broadcastPlayRound(gameId, !currentStatus);
+      const { games: all } = await fetchActiveGame();
+      setGames(all);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not update lobby broadcast status.');
+    } finally {
+      setBroadcastingId(null);
+    }
+  }
 
   async function handleGameCommand(gameId: string, action: 'start' | 'pause' | 'resume') {
     if (commandingId) return;
@@ -418,6 +434,23 @@ export function AdminDashboard() {
                     >
                       {game.status}
                     </span>
+                    {game.isBroadcast && (
+                      <span
+                        style={{
+                          background: 'var(--retro-orange, #EE640F)',
+                          color: '#FFFFFF',
+                          fontFamily: 'var(--mono)',
+                          fontSize: '11px',
+                          fontWeight: 900,
+                          padding: '3px 8px',
+                          border: '1.5px solid var(--retro-ink, #18130F)',
+                          boxShadow: '1.5px 1.5px 0 var(--retro-ink, #18130F)',
+                          borderRadius: '2px',
+                        }}
+                      >
+                        📢 SHOWN IN LOBBY
+                      </span>
+                    )}
                     <span className={styles.dateText}>
                       {new Date(game.createdAt).toLocaleDateString()}
                     </span>
@@ -425,6 +458,20 @@ export function AdminDashboard() {
                 </div>
 
                 <div className={styles.gameActionCol}>
+                  <button
+                    type="button"
+                    className={styles.settingsBtn}
+                    style={{
+                      background: game.isBroadcast ? 'var(--retro-orange, #EE640F)' : '#FFFFFF',
+                      color: game.isBroadcast ? '#FFFFFF' : 'var(--retro-ink, #18130F)',
+                      fontWeight: 800,
+                    }}
+                    onClick={() => void handleToggleBroadcast(game.id, !!game.isBroadcast)}
+                    disabled={broadcastingId === game.id}
+                    title="Toggle whether participants see this game and quick-join directly in the lobby"
+                  >
+                    {broadcastingId === game.id ? 'Updating…' : game.isBroadcast ? '📢 Broadcast: ON' : '🔒 Broadcast: OFF'}
+                  </button>
                   {game.status === 'READY' && (
                     <button
                       type="button"

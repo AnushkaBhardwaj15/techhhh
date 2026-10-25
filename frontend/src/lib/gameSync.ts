@@ -28,6 +28,7 @@ export interface SyncGameRecord {
   status:
     "DRAFT" | "READY" | "ACTIVE" | "PAUSED" | "COMPLETED" | "RECOVERY_REQUIRED";
   qrUrl?: string;
+  isBroadcast?: boolean;
   createdAt: string;
   roundSequence: number;
   draws?: ActiveDrawRecord[];
@@ -35,6 +36,7 @@ export interface SyncGameRecord {
 }
 const summary = (game: PlaySummary): SyncGameRecord => ({
   ...game,
+  isBroadcast: game.isBroadcast ?? false,
   roundSequence: game.sequenceNumber,
 });
 export async function fetchActiveGame(): Promise<{
@@ -78,7 +80,7 @@ export function subscribeToGameSync(
       .catch(() => {
         /* The current UI keeps its last snapshot and reports query errors. */
       });
-  }, 1500);
+  }, 3500);
   return () => {
     stopped = true;
     clearInterval(timer);

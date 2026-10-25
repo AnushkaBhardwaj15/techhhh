@@ -11,6 +11,8 @@ import type { AuditQuery } from './operations.schemas.ts';
 
 export interface AuditFilters extends Pick<AuditQuery, 'roundId' | 'actorId' | 'action' | 'from' | 'to'> {
   limit: number;
+  actorEmail?: string;
+  search?: string;
   cursor?: { createdAt: string; id: string };
 }
 export interface DashboardReadModel {

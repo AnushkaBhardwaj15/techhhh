@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { requireAdmin, requireParticipantToken } from '../../middleware/auth.ts';
-import { ValidationError } from '../../shared/errors/app-error.ts';
+import { NotFoundError, ValidationError } from '../../shared/errors/app-error.ts';
 import {
   generateTicketsParamsSchema,
   getParticipantTicketQuerySchema,

@@ -61,6 +61,7 @@ const activeGameRecord: gameSync.SyncGameRecord = {
   name: 'Tech Tombola Live Arena',
   code: 'TOM123',
   status: 'ACTIVE',
+  isBroadcast: true,
   createdAt: timestamp,
   roundSequence: 1,
 };
@@ -122,17 +123,34 @@ describe('ParticipantLobby', () => {
     sessionStorage.clear();
   });
 
-  it('renders active game session header and QR code', async () => {
+  it('renders active game broadcast header when enabled and does not display QR code', async () => {
     renderLobby();
-    expect(await screen.findByText('ACTIVE GAME SESSION')).toBeInTheDocument();
+    expect(await screen.findByText(/ACTIVE GAME ANNOUNCED BY HOST/i)).toBeInTheDocument();
     expect(screen.getByText('Tech Tombola Live Arena')).toBeInTheDocument();
-    expect(screen.getByRole('img', { name: /QR Code for Game/i })).toBeInTheDocument();
     expect(screen.getByText('OFFICIAL GAME CODE')).toBeInTheDocument();
+    expect(screen.queryByRole('img', { name: /QR Code for Game/i })).not.toBeInTheDocument();
   });
 
-  it('allows joining via the primary action button', async () => {
+  it('by default does not show active game card when broadcast is disabled', async () => {
+    const unbroadcastGame = { ...activeGameRecord, isBroadcast: false };
+    vi.mocked(gameSync.fetchActiveGame).mockResolvedValue({
+      game: unbroadcastGame,
+      games: [unbroadcastGame],
+    });
+    vi.mocked(gameSync.subscribeToGameSync).mockImplementation((callback) => {
+      callback(unbroadcastGame);
+      return () => {};
+    });
+
     renderLobby();
-    const joinBtn = await screen.findByRole('button', { name: /JOIN GAME WITH CODE/i });
+    expect(screen.queryByText(/ACTIVE GAME ANNOUNCED BY HOST/i)).not.toBeInTheDocument();
+    expect(screen.getByText('GAME ENTRY & VERIFICATION')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /VERIFY & JOIN/i })).toBeInTheDocument();
+  });
+
+  it('allows joining via the primary action button when broadcast is on', async () => {
+    renderLobby();
+    const joinBtn = await screen.findByRole('button', { name: /QUICK JOIN GAME/i });
     fireEvent.click(joinBtn);
 
     await waitFor(() => {

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ApiError } from "../../lib/api/client";
-import { listPlayRounds, commandPlayRound } from "../../lib/api/play";
+import { listPlayRounds, commandPlayRound, broadcastPlayRound } from "../../lib/api/play";
 import { usePlayState } from "../participant/usePlayState";
 import { QRCodeSvg } from "../../components/QRCodeSvg";
 import { ActionButton } from "../../components/ActionButton";
@@ -21,6 +21,7 @@ export function AdminGamePage() {
   const game = state.data;
   const [pending, setPending] = useState(false);
   const [recovering, setRecovering] = useState(false);
+  const [broadcasting, setBroadcasting] = useState(false);
   const [error, setError] = useState("");
   const [viewingIndex, setViewingIndex] = useState<number | null>(null);
   const busy = useRef(false);
@@ -28,6 +29,22 @@ export function AdminGamePage() {
     command: Parameters<typeof commandPlayRound>[1];
     key: string;
   } | null>(null);
+
+  async function handleToggleBroadcast() {
+    if (!game || broadcasting) return;
+    setBroadcasting(true);
+    setError("");
+    try {
+      const updated = await broadcastPlayRound(id, !game.isBroadcast);
+      client.setQueryData(["reference-play", "private", id], updated);
+      await client.invalidateQueries({ queryKey: ["reference-play"] });
+      await client.invalidateQueries({ queryKey: ["play-rounds"] });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to toggle broadcast.");
+    } finally {
+      setBroadcasting(false);
+    }
+  }
   async function run(
     command: Parameters<typeof commandPlayRound>[1],
     retrySame = false,
@@ -174,9 +191,29 @@ export function AdminGamePage() {
         {game && (
           <div className={styles.mainCard}>
             <div className={styles.qrSection}>
-              <div className={styles.gameCodePill}>
-                <span className={styles.gameCodeLabel}>GAME CODE</span>
-                <strong className={styles.gameCodeValue}>{game.code}</strong>
+              <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center', marginBottom: '8px' }}>
+                <div className={styles.gameCodePill}>
+                  <span className={styles.gameCodeLabel}>GAME CODE</span>
+                  <strong className={styles.gameCodeValue}>{game.code}</strong>
+                </div>
+                <ActionButton
+                  type="button"
+                  busy={broadcasting}
+                  onClick={() => void handleToggleBroadcast()}
+                  style={{
+                    background: game.isBroadcast ? 'var(--retro-orange, #EE640F)' : '#FFFFFF',
+                    color: game.isBroadcast ? '#FFFFFF' : 'var(--retro-ink, #18130F)',
+                    border: '2px solid var(--retro-ink, #18130F)',
+                    boxShadow: '3px 3px 0 var(--retro-ink, #18130F)',
+                    fontSize: '13px',
+                    fontWeight: 900,
+                    padding: '8px 16px',
+                    cursor: 'pointer'
+                  }}
+                  title="Toggle whether participants see this game and 1-click join button in their lobby"
+                >
+                  {broadcasting ? 'UPDATING…' : game.isBroadcast ? '📢 BROADCASTING TO USERS (ON)' : '🔒 HIDDEN FROM USERS (OFF)'}
+                </ActionButton>
               </div>
               <div className={styles.qrFrame}>
                 <QRCodeSvg
@@ -186,7 +223,9 @@ export function AdminGamePage() {
                 />
               </div>
               <p className={styles.qrInstruction}>
-                Participants join with this code and wait in the lobby.
+                {game.isBroadcast
+                  ? "✅ This game is currently BROADCAST to participants' lobby with a 1-click Quick Join button."
+                  : "🔒 This game is HIDDEN from participants' lobby. Users must manually enter the 6-character code, or you can turn ON broadcast."}
               </p>
               <div className={styles.controlsBar}>
                 <span className={styles.statusBadge}>

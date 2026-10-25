@@ -51,6 +51,6 @@ describe('security route inventory', () => {
     expect(routeKeys.sort()).toEqual([...routeInventory].sort());
     const report = renderRouteCoverageReport(routeKeys);
     writeFileSync(join(import.meta.dir, 'route-coverage.md'), report);
-    expect(report).toContain('81 declared operations/channels');
+    expect(report).toContain('82 declared operations/channels');
   });
 });

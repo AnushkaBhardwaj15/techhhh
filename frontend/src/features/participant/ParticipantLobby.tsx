@@ -13,11 +13,9 @@ import {
   getParticipantEvent,
 } from "../../lib/api/participant";
 import { getParticipantTicket } from "../../lib/api/ticket";
-import { formatTicketCode } from "../../types/ticket";
 import { SampleTicketDemo } from "../landing/components/SampleTicketDemo";
 import { useAuthUiStore } from "../auth/authStore";
 import { ActionButton } from "../../components/ActionButton";
-import { QRCodeSvg } from "../../components/QRCodeSvg";
 import {
   fetchActiveGame,
   subscribeToGameSync,
@@ -44,12 +42,12 @@ export function ParticipantLobby({ waiting = false }: { waiting?: boolean }) {
     refetchOnWindowFocus: "always",
   });
 
-  // 2. Current Round Query (polls every 1500ms for instant detection of game start)
+  // 2. Current Round Query (only poll if participant is in waiting state)
   const currentRound = useQuery({
     queryKey: ["participant", user.id, "round", event.data?.id],
     queryFn: ({ signal }) => getCurrentRound(signal),
-    enabled: !!event.data,
-    refetchInterval: 1500,
+    enabled: !!event.data && waiting,
+    refetchInterval: waiting ? 3000 : false,
     refetchOnWindowFocus: "always",
   });
 
@@ -67,11 +65,6 @@ export function ParticipantLobby({ waiting = false }: { waiting?: boolean }) {
     enabled: !!event.data?.id && !!currentRound.data?.id,
     retry: 1,
   });
-
-  // Calculate predefined code from server ticket if available, else empty string
-  const assignedCode = ticket.data
-    ? formatTicketCode(ticket.data.id)
-    : "";
 
   const [verifiedCode, setVerifiedCode] = useState(
     () => sessionStorage.getItem(`tt_verified_code_${user.id}`) || "",
@@ -192,17 +185,10 @@ export function ParticipantLobby({ waiting = false }: { waiting?: boolean }) {
     }
   }, [params, waiting, verifyCode]);
 
-  function handleQuickJoin() {
-    verifyCode(activeGameCode);
-  }
-
   function handleCustomSubmit(e: React.FormEvent) {
     e.preventDefault();
     verifyCode(customCode);
   }
-
-  const activeGameCode = activeGame?.code || assignedCode;
-  const activeGameJoinUrl = `${window.location.origin}/lobby?code=${activeGameCode}`;
 
   if (waiting && !isVerified)
     return <Navigate to="/participant/lobby" replace />;
@@ -279,64 +265,47 @@ export function ParticipantLobby({ waiting = false }: { waiting?: boolean }) {
         </div>
       )}
       <div className={styles.outerCard}>
-        {/* SYNCHRONIZED QR & CODE BLOCK: SAME ON ADMIN & USER PAGE */}
-        <div className={styles.activeGameCard}>
-          <div className={styles.activeGameHeader}>
-            <span className={styles.activeGameLiveBadge}>
-              <span className={styles.pulseDotGreen}>●</span> ACTIVE GAME
-              SESSION
-            </span>
-            <span className={styles.activeGameTitle}>
-              {activeGame?.name || "Tech Tombola Live Arena"}
-            </span>
-          </div>
-
-          <div className={styles.activeGameContent}>
-            {/* The SAME QR CODE as Admin Page */}
-            <div className={styles.qrCol}>
-              <div className={styles.qrWrapper}>
-                <QRCodeSvg
-                  value={activeGameJoinUrl}
-                  size={150}
-                  title={`QR Code for Game ${activeGameCode}`}
-                />
-              </div>
-              <span className={styles.qrAnnotation}>
-                Scan with phone to join
+        {/* DIRECT QUICK JOIN BANNER: DISPLAYED ONLY WHEN HOST TURNS ON BROADCAST */}
+        {activeGame && activeGame.isBroadcast && (
+          <div className={styles.activeGameCard}>
+            <div className={styles.activeGameHeader}>
+              <span className={styles.activeGameLiveBadge}>
+                <span className={styles.pulseDotGreen}>●</span> ACTIVE GAME ANNOUNCED BY HOST
+              </span>
+              <span className={styles.activeGameTitle}>
+                {activeGame.name || "Tech Tombola Live Arena"}
               </span>
             </div>
 
-            {/* The SAME GAME CODE as Admin Page */}
-            <div className={styles.codeCol}>
+            <div className={styles.codeCol} style={{ padding: "16px 0 8px", width: "100%", alignItems: "center" }}>
               <span className={styles.codeBadgeTitle}>OFFICIAL GAME CODE</span>
               <div className={styles.activeCodeDisplay}>
                 <strong className={styles.activeCodeValue}>
-                  {activeGameCode}
+                  {activeGame.code}
                 </strong>
                 <button
                   type="button"
                   className={styles.copyActiveBtn}
-                  onClick={() => navigator.clipboard.writeText(activeGameCode)}
+                  onClick={() => navigator.clipboard.writeText(activeGame.code)}
                   title="Copy code"
                 >
                   📋 Copy
                 </button>
               </div>
 
-              {/* Requirement 1: Single button to join via respective code given on screen */}
               <ActionButton
                 type="button"
                 busy={joining}
                 className={styles.primaryJoinBtn}
-                onClick={handleQuickJoin}
+                onClick={() => verifyCode(activeGame.code)}
               >
                 {joining
                   ? "JOINING…"
-                  : `JOIN GAME WITH CODE #${activeGameCode}`}
+                  : `QUICK JOIN GAME (#${activeGame.code}) →`}
               </ActionButton>
             </div>
           </div>
-        </div>
+        )}
 
         {/* SECTION 1: TICKET VERIFICATION & ACCESS */}
         <p className={styles.kicker}>TICKET VERIFICATION &amp; ACCESS</p>
@@ -361,7 +330,7 @@ export function ParticipantLobby({ waiting = false }: { waiting?: boolean }) {
                   setCustomCode(e.target.value.toUpperCase());
                   setErrorMsg("");
                 }}
-                placeholder={`e.g. ${activeGameCode}`}
+                placeholder={activeGame?.isBroadcast ? `e.g. ${activeGame.code}` : "e.g. 1A2B3C"}
                 className={styles.customCodeInput}
                 autoCapitalize="characters"
               />
