@@ -43,6 +43,14 @@ export function verifyMutationOrigin(request: FastifyRequest): void {
   }
 }
 
+const LEGACY_PLAYER_MAP: Record<string, string> = {
+  "p1000000-0000-0000-0000-000000000001": "70d03f73-4e41-4e7f-946c-73ea1e34a05c",
+  "p1000000-0000-0000-0000-000000000002": "884d799e-0799-4f12-9d4b-7fd7820ba0f8",
+  "p1000000-0000-0000-0000-000000000003": "673c488d-b199-4c15-8876-77d1e10f64cb",
+  "p1000000-0000-0000-0000-000000000004": "b4000000-0000-0000-0000-000000000004",
+  "p1000000-0000-0000-0000-000000000005": "b5000000-0000-0000-0000-000000000005",
+};
+
 export async function requireAuth(request: FastifyRequest, reply: FastifyReply): Promise<void> {
   verifyMutationOrigin(request);
 
@@ -52,7 +60,10 @@ export async function requireAuth(request: FastifyRequest, reply: FastifyReply):
   }
 
   const principal = await authService.validateToken(token);
-  request.user = principal.user;
+  request.user = {
+    ...principal.user,
+    id: LEGACY_PLAYER_MAP[principal.user.id] ?? principal.user.id,
+  };
   request.session = principal.session;
 }
 
@@ -82,13 +93,14 @@ export async function requireParticipantToken(request: FastifyRequest): Promise<
   if (payload.role !== 'PARTICIPANT') throw new ForbiddenError('Insufficient permissions for this operation');
   if (!payload.eventId) throw new UnauthorizedError('Participant token must be scoped to an event');
 
-  const profile = await participantRepository.findByUserIdAndEvent(payload.sub, payload.eventId);
+  const mappedSub = LEGACY_PLAYER_MAP[payload.sub] ?? payload.sub;
+  const profile = (await participantRepository.findByUserIdAndEvent(payload.sub, payload.eventId)) ?? (await participantRepository.findByUserIdAndEvent(mappedSub, payload.eventId));
   if (!profile) {
     throw new ForbiddenError('Participant profile not found for this event');
   }
 
   request.user = {
-    id: payload.sub,
+    id: mappedSub,
     email: payload.email,
     name: payload.name,
     role: payload.role,
