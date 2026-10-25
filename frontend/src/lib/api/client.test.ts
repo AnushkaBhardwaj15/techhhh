@@ -65,7 +65,7 @@ describe('apiRequest', () => {
     vi.stubGlobal('fetch', vi.fn((_url, options: RequestInit) => new Promise((_, reject) => options.signal?.addEventListener('abort', () => reject(options.signal?.reason), { once: true }))));
     const request = apiRequest('/me');
     const result = expect(request).rejects.toMatchObject({ status: 0, message: 'The request timed out. Try again.' });
-    await vi.advanceTimersByTimeAsync(10_000);
+    await vi.advanceTimersByTimeAsync(25_000);
     await result;
     vi.useRealTimers();
   });

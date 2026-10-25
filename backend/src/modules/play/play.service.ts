@@ -45,7 +45,10 @@ export class PlayService {
       if (!broadcastGame) {
         return { game: null, games: summaries };
       }
-      const state = await this.store.read(broadcastGame.id, actor);
+      const state = await this.store.read(broadcastGame.id, {
+        ...actor,
+        eventId: broadcastGame.eventId,
+      });
       return {
         game: publicPlayState(state, false),
         games: summaries,
@@ -134,6 +137,10 @@ export class PlayService {
           resume: "ACTIVE",
           end: "COMPLETED",
         };
+        if (input.action === "start" && s.status === "ACTIVE") return;
+        if (input.action === "resume" && s.status === "ACTIVE") return;
+        if (input.action === "pause" && s.status === "PAUSED") return;
+        if (input.action === "end" && s.status === "COMPLETED") return;
         if (
           (input.action === "start" && s.status !== "READY") ||
           (input.action === "resume" && s.status !== "PAUSED")
@@ -170,9 +177,7 @@ export class PlayService {
   }
   async mark(id: string, actor: PlayActor, cellId: string, marked: boolean) {
     this.participant(actor);
-    const { state } = await this.store.change(id, actor, (s) =>
-      togglePlayMark(s, cellId, marked),
-    );
+    const state = await this.store.markCell(id, actor, cellId, marked);
     return publicPlayState(state);
   }
   async claim(id: string, actor: PlayActor, pattern: PlayPattern) {

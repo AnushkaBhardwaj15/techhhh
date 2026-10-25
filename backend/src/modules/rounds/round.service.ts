@@ -636,15 +636,17 @@ export class RoundService {
       const read = await this.repo.findCurrentRoundForSession(sessionId, userId, eventId);
       if (!read) throw new UnauthorizedError('Authentication required');
       assertActiveParticipant(read);
-      if (!read.round) throw new NotFoundError('No current round found for this event');
-      return read.round;
+      if (read.round) return read.round;
+      const active = await this.repo.findActiveRound();
+      if (active) return active;
+      throw new NotFoundError('No current round found for this event');
     }
 
     const current = await this.repo.findCurrentRoundForParticipant(userId, eventId);
-    if (!current) {
-      throw new NotFoundError('No current round found for this event');
-    }
-    return current;
+    if (current) return current;
+    const active = await this.repo.findActiveRound();
+    if (active) return active;
+    throw new NotFoundError('No current round found for this event');
   }
 
   async getParticipantEvent(eventId: string) {

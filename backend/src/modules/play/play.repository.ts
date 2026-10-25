@@ -5,6 +5,7 @@ import {
   ConflictError,
   ForbiddenError,
   NotFoundError,
+  ValidationError,
 } from "../../shared/errors/index.ts";
 import { DEFAULT_TECHNICAL_BANK } from "./technical-bank.ts";
 import { generateReferenceCells, PLAY_POINTS } from "./play.domain.ts";
@@ -145,44 +146,63 @@ export class PlayRepository implements PlayStore {
               codeSnippet: item.codeSnippet ?? null,
             }))
           : DEFAULT_TECHNICAL_BANK;
-      const bank: PlayQuestion[] = [];
-      for (const item of bankItems) {
-        const [keyRow] = await tx.unsafe<{ id: string }[]>(
-          `INSERT INTO event_keys(event_id,value,normalized_value,item_number) VALUES($1,$2,$3,$4) ON CONFLICT(event_id,normalized_value) DO UPDATE SET item_number=EXCLUDED.item_number RETURNING id`,
-          [
-            event!.id,
-            item.term,
-            item.term.trim().replace(/\s+/g, " ").toUpperCase(),
-            item.id,
-          ],
-        );
-        const questionId = crypto.randomUUID();
-        await tx.unsafe(
-          `INSERT INTO round_questions(id,round_id,key_id,question_text,category,code_snippet) VALUES($1,$2,$3,$4,$5,$6)`,
-          [
-            questionId,
-            id,
-            keyRow!.id,
-            item.clue,
-            item.category,
-            item.codeSnippet ?? null,
-          ],
-        );
-        bank.push({
-          id: questionId,
-          keyId: keyRow!.id,
-          number: item.id,
-          term: item.term,
-          clue: item.clue,
+      const eventKeyRows = bankItems.map((item) => ({
+        event_id: event!.id,
+        value: item.term,
+        normalized_value: item.term.trim().replace(/\s+/g, " ").toUpperCase(),
+        item_number: item.id,
+      }));
+
+      const keyRows = await tx.unsafe<
+        { id: string; normalized_value: string; item_number: number }[]
+      >(
+        `INSERT INTO event_keys(event_id, value, normalized_value, item_number)
+         SELECT event_id, value, normalized_value, item_number
+         FROM jsonb_to_recordset($1::text::jsonb) AS x(event_id uuid, value text, normalized_value text, item_number integer)
+         ON CONFLICT(event_id, normalized_value)
+         DO UPDATE SET item_number = EXCLUDED.item_number
+         RETURNING id, normalized_value, item_number`,
+        [JSON.stringify(eventKeyRows)],
+      );
+
+      const keyIdByNormalized = new Map(
+        keyRows.map((r) => [r.normalized_value, r.id]),
+      );
+
+      const questionRows = bankItems.map((item) => {
+        const norm = item.term.trim().replace(/\s+/g, " ").toUpperCase();
+        const keyId = keyIdByNormalized.get(norm)!;
+        return {
+          id: crypto.randomUUID(),
+          round_id: id,
+          key_id: keyId,
+          question_text: item.clue,
           category: item.category,
-          codeSnippet: item.codeSnippet ?? null,
-        });
-      }
-      for (const pattern of PLAY_PATTERNS)
-        await tx.unsafe(
-          `INSERT INTO round_patterns(round_id,pattern_type,enabled,max_winners,status) VALUES($1,$2,true,1,'OPEN')`,
-          [id, pattern],
-        );
+          code_snippet: item.codeSnippet ?? null,
+        };
+      });
+
+      await tx.unsafe(
+        `INSERT INTO round_questions(id, round_id, key_id, question_text, category, code_snippet)
+         SELECT id, round_id, key_id, question_text, category, code_snippet
+         FROM jsonb_to_recordset($1::text::jsonb) AS x(id uuid, round_id uuid, key_id uuid, question_text text, category text, code_snippet text)`,
+        [JSON.stringify(questionRows)],
+      );
+
+      const patternRows = PLAY_PATTERNS.map((pattern) => ({
+        round_id: id,
+        pattern_type: pattern,
+        enabled: true,
+        max_winners: 1,
+        status: "OPEN",
+      }));
+
+      await tx.unsafe(
+        `INSERT INTO round_patterns(round_id, pattern_type, enabled, max_winners, status)
+         SELECT round_id, pattern_type, enabled, max_winners, status
+         FROM jsonb_to_recordset($1::text::jsonb) AS x(round_id uuid, pattern_type text, enabled boolean, max_winners integer, status text)`,
+        [JSON.stringify(patternRows)],
+      );
       const profiles = await tx.unsafe<{ id: string }[]>(
         `SELECT p.id FROM participant_profiles p JOIN users u ON u.id=p.user_id WHERE p.event_id=$1 AND p.status='ACTIVE' AND u.status='ACTIVE'`,
         [event!.id],
@@ -205,10 +225,7 @@ export class PlayRepository implements PlayStore {
     });
   }
   async read(id: string, actor?: PlayActor) {
-    return this.connection().begin(
-      "isolation level repeatable read read only",
-      (tx) => this.load(tx, id, actor),
-    );
+    return this.connection().begin((tx) => this.load(tx, id, actor));
   }
   async broadcast(
     id: string,
@@ -235,6 +252,50 @@ export class PlayRepository implements PlayStore {
         broadcast ? "ROUND_BROADCAST_ENABLED" : "ROUND_BROADCAST_DISABLED",
         { roundId: id, broadcast },
       );
+      return this.load(tx, id, actor);
+    });
+  }
+  async markCell(
+    id: string,
+    actor: PlayActor,
+    cellId: string,
+    marked: boolean,
+  ): Promise<PlayState> {
+    return this.connection().begin(async (tx) => {
+      const [round] = await tx.unsafe<{ status: string; event_id: string }[]>(
+        "SELECT status, event_id FROM rounds WHERE id=$1",
+        [id],
+      );
+      if (!round || !["ACTIVE", "PAUSED"].includes(round.status)) {
+        throw new ConflictError("Action unavailable in current game state.");
+      }
+
+      // Verify cell belongs to the participant's ticket in this round
+      const [ticketCell] = await tx.unsafe<{ ticket_id: string }[]>(
+        `SELECT tc.ticket_id 
+         FROM ticket_cells tc
+         JOIN tickets t ON t.id = tc.ticket_id
+         JOIN participant_profiles p ON p.id = t.participant_id
+         WHERE tc.id = $1 AND t.round_id = $2 AND p.user_id = $3`,
+        [cellId, id, actor.userId],
+      );
+
+      if (!ticketCell) {
+        throw new ValidationError("This cell does not belong to your assigned ticket.");
+      }
+
+      if (marked) {
+        await tx.unsafe(
+          `INSERT INTO ticket_marks(ticket_id, cell_id) VALUES($1, $2) ON CONFLICT(ticket_id, cell_id) DO NOTHING`,
+          [ticketCell.ticket_id, cellId],
+        );
+      } else {
+        await tx.unsafe(
+          `DELETE FROM ticket_marks WHERE ticket_id=$1 AND cell_id=$2`,
+          [ticketCell.ticket_id, cellId],
+        );
+      }
+
       return this.load(tx, id, actor);
     });
   }
@@ -269,8 +330,12 @@ export class PlayRepository implements PlayStore {
           `SELECT id FROM rounds WHERE status='ACTIVE' AND id<>$1`,
           [id],
         );
-        if (active.length)
-          throw new ConflictError("Another round is already active.");
+        if (active.length) {
+          await tx.unsafe(
+            `UPDATE rounds SET status='PAUSED', updated_at=now() WHERE status='ACTIVE' AND id<>$1`,
+            [id],
+          );
+        }
         if (before.status === "READY") {
           const missing = await tx.unsafe<{ id: string }[]>(
             `SELECT p.id FROM participant_profiles p LEFT JOIN tickets t ON t.participant_id=p.id AND t.round_id=$1 WHERE p.event_id=$2 AND p.status='ACTIVE' AND t.id IS NULL`,

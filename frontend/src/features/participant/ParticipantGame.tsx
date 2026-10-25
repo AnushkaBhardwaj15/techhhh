@@ -59,33 +59,55 @@ function ReferenceParticipantGame({ id, user: _user }: { id: string; user: Authe
   const query = usePlayState(id);
   const game = query.data;
   const client = useQueryClient();
-  const [pending, setPending] = useState(false);
-  const busy = useRef(false);
+  const [claimingPattern, setClaimingPattern] = useState<string | null>(null);
+  const [pendingCellIds, setPendingCellIds] = useState<Set<string>>(new Set());
+  const pendingCellsRef = useRef<Set<string>>(new Set());
+  const busyClaim = useRef(false);
   const [feedback, setFeedback] = useState('');
   const [accepted, setAccepted] = useState(false);
 
   async function mark(cellId: string, marked: boolean) {
-    if (busy.current) return;
-    busy.current = true;
-    setPending(true);
+    if (pendingCellsRef.current.has(cellId)) return;
+    pendingCellsRef.current.add(cellId);
+    setPendingCellIds(new Set(pendingCellsRef.current));
     setFeedback('');
+
+    // 1. Optimistic Update in cache immediately (0ms visual delay)
+    const previousGame = client.getQueryData<PlayState>(['reference-play', 'private', id]);
+    if (previousGame?.ticket) {
+      const optimisticGame: PlayState = {
+        ...previousGame,
+        ticket: {
+          ...previousGame.ticket,
+          cells: previousGame.ticket.cells.map((c) =>
+            c.id === cellId ? { ...c, marked } : c
+          ),
+        },
+      };
+      client.setQueryData(['reference-play', 'private', id], optimisticGame);
+    }
+
     try {
       const updated = await markPlayCell(id, cellId, marked);
       client.setQueryData(['reference-play', 'private', id], updated);
     } catch {
+      // Rollback on network or server error
+      if (previousGame) {
+        client.setQueryData(['reference-play', 'private', id], previousGame);
+      }
       setAccepted(false);
       setFeedback('We could not confirm that mark. Check the saved ticket before trying again.');
       void query.refetch();
     } finally {
-      busy.current = false;
-      setPending(false);
+      pendingCellsRef.current.delete(cellId);
+      setPendingCellIds(new Set(pendingCellsRef.current));
     }
   }
 
   async function claim(pattern: PlayState['patterns'][number]['pattern']) {
-    if (busy.current) return;
-    busy.current = true;
-    setPending(true);
+    if (busyClaim.current) return;
+    busyClaim.current = true;
+    setClaimingPattern(pattern);
     setFeedback('');
     try {
       const result = await claimPlayPrize(id, pattern);
@@ -101,8 +123,8 @@ function ReferenceParticipantGame({ id, user: _user }: { id: string; user: Authe
       setAccepted(false);
       setFeedback('Could not confirm the claim. Check the latest winners before retrying. No penalty was applied.');
     } finally {
-      busy.current = false;
-      setPending(false);
+      busyClaim.current = false;
+      setClaimingPattern(null);
     }
   }
 
@@ -173,7 +195,11 @@ function ReferenceParticipantGame({ id, user: _user }: { id: string; user: Authe
               revealed={latest.revealed}
             />
           )}
-          <ReferenceTicket game={game} pending={pending} onMark={mark} />
+          <ReferenceTicket
+            game={game}
+            pendingCellIds={pendingCellIds}
+            onMark={mark}
+          />
           <section className={refStyles.panel} aria-label="Available prizes">
             <h2>Available prizes</h2>
             <div className={refStyles.claimList}>
@@ -184,8 +210,8 @@ function ReferenceParticipantGame({ id, user: _user }: { id: string; user: Authe
                     <span className={refStyles.points}>{p.points} PTS</span>
                   </div>
                   <ActionButton
-                    busy={pending}
-                    disabled={game.status !== 'ACTIVE' || p.closed || pending}
+                    busy={claimingPattern === p.pattern}
+                    disabled={game.status !== 'ACTIVE' || p.closed || Boolean(claimingPattern)}
                     onClick={() => void claim(p.pattern)}
                   >
                     {p.closed ? 'Already won' : `Claim ${labels[p.pattern]}`}
@@ -250,11 +276,11 @@ function ReferenceQuestionCard({
 
 function ReferenceTicket({
   game,
-  pending,
+  pendingCellIds = new Set<string>(),
   onMark,
 }: {
   game: PlayState;
-  pending: boolean;
+  pendingCellIds?: ReadonlySet<string>;
   onMark: (id: string, marked: boolean) => void;
 }) {
   const [numbers, setNumbers] = useState(false);
@@ -287,11 +313,12 @@ function ReferenceTicket({
       </p>
       <TicketGrid
         ticket={ticket}
-        canMark={game.status === 'ACTIVE' && !pending}
+        canMark={game.status === 'ACTIVE'}
+        pendingCellIds={pendingCellIds}
         onToggleCell={(cell) => onMark(cell.id, !cell.marked)}
       />
       <p className={refStyles.hint}>
-        {pending ? 'Saving your action…' : 'Your marks are saved by the server.'}
+        {pendingCellIds.size > 0 ? 'Syncing with server…' : 'Your marks are saved instantly.'}
       </p>
     </section>
   );

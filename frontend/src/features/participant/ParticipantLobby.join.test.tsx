@@ -49,6 +49,7 @@ const game: SyncGameRecord = {
   status: "READY",
   roundSequence: 1,
   createdAt: stamp.createdAt,
+  isBroadcast: true,
 };
 let publish: (game: SyncGameRecord) => void;
 let client: QueryClient;
@@ -166,7 +167,7 @@ describe("code entry and waiting lobby", () => {
     const person = mount();
     await person.click(
       await screen.findByRole("button", {
-        name: "JOIN GAME WITH CODE #ABC123",
+        name: /QUICK JOIN GAME/i,
       }),
     );
     expect(
@@ -212,7 +213,7 @@ describe("code entry and waiting lobby", () => {
     const person = mount();
     await person.click(
       await screen.findByRole("button", {
-        name: "JOIN GAME WITH CODE #ABC123",
+        name: /QUICK JOIN GAME/i,
       }),
     );
     expect(await screen.findByRole("alert")).toHaveTextContent(
@@ -234,7 +235,7 @@ describe("code entry and waiting lobby", () => {
     const person = mount();
     await person.click(
       await screen.findByRole("button", {
-        name: "JOIN GAME WITH CODE #ABC123",
+        name: /QUICK JOIN GAME/i,
       }),
     );
     for (const button of screen.getAllByRole("button", { name: "JOINING…" }))
