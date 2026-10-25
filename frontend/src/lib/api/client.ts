@@ -1,7 +1,7 @@
 import { reportDiagnostic } from '../diagnostics';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '';
-const TIMEOUT_MS = 10_000;
+const TIMEOUT_MS = 25_000;
 
 export class ApiError extends Error {
   constructor(public readonly status: number, message: string, public readonly code?: string) {

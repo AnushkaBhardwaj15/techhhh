@@ -45,7 +45,10 @@ export class PlayService {
       if (!broadcastGame) {
         return { game: null, games: summaries };
       }
-      const state = await this.store.read(broadcastGame.id, actor);
+      const state = await this.store.read(broadcastGame.id, {
+        ...actor,
+        eventId: broadcastGame.eventId,
+      });
       return {
         game: publicPlayState(state, false),
         games: summaries,

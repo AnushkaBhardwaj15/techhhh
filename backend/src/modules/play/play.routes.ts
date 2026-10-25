@@ -13,7 +13,8 @@ const roundParams = z.object({ id: z.string().uuid() });
 const actor = (request: FastifyRequest): PlayActor => ({
   userId: request.user!.id,
   role: request.user!.role ?? "PARTICIPANT",
-  eventId: request.user!.eventId,
+  eventId:
+    request.user!.role === "PARTICIPANT" ? undefined : request.user!.eventId,
 });
 const commands = z.discriminatedUnion("action", [
   z.object({ action: z.enum(["start", "pause", "resume", "end"]) }).strict(),

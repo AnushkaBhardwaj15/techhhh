@@ -8,14 +8,14 @@ let dbInstance: ReturnType<typeof drizzle<typeof schema>> | null = null;
 
 export function getSqlClient(overrideUrl?: string): postgres.Sql {
   if (overrideUrl) {
-    return postgres(overrideUrl, { max: 5, connect_timeout: 3 });
+    return postgres(overrideUrl, { max: 5, connect_timeout: 15 });
   }
 
   if (!sqlClient) {
     const env = getEnv();
     sqlClient = postgres(env.DATABASE_URL, {
       max: env.NODE_ENV === 'test' ? 5 : 20,
-      connect_timeout: 3,
+      connect_timeout: 15,
       idle_timeout: 20,
     });
   }

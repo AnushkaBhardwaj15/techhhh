@@ -40,7 +40,6 @@ export function AdminDashboard() {
   const dashboard = useAdminDashboard(user?.id ?? 'admin');
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState('');
-  const [creationKey] = useState(() => crypto.randomUUID());
   const [games, setGames] = useState<SyncGameRecord[]>([]);
   const [commandingId, setCommandingId] = useState<string | null>(null);
   const [broadcastingId, setBroadcastingId] = useState<string | null>(null);
@@ -106,10 +105,11 @@ export function AdminDashboard() {
     setCreating(true);
     setError('');
     try {
-      const game = await createPlayRound(creationKey, customBank);
+      const key = crypto.randomUUID();
+      const game = await createPlayRound(key, customBank);
       navigate(`/game?gameId=${game.id}`);
-    } catch {
-      setError('Could not create the game. Try again; the same request will not create a duplicate.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not create the game. Try again.');
     } finally {
       setCreating(false);
     }
