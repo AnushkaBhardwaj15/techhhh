@@ -61,8 +61,8 @@
   font-size: 10px;
   font-weight: 900;
   letter-spacing: 0.12em;
-  background: var(--neo-yellow);
-  color: var(--neo-ink);
+  background: var(--neo-orange);
+  color: #FFFFFF;
   padding: 4px 8px;
   border: 1.5px solid var(--neo-ink);
   border-radius: var(--radius-xs, 2px);
@@ -100,10 +100,10 @@
   font-weight: 900;
   letter-spacing: 0.06em;
   text-decoration: none;
-  color: var(--neo-ink);
+  color: #FFFFFF;
   padding: 5px 10px;
   border: 1.5px solid var(--neo-ink);
-  background: var(--neo-yellow);
+  background: var(--neo-orange);
   border-radius: var(--radius-xs, 2px);
   box-shadow: 2px 2px 0px var(--neo-ink);
   transition: transform 0.1s ease, box-shadow 0.1s ease;
@@ -200,8 +200,8 @@
   font-size: 11px;
   font-weight: 900;
   letter-spacing: 0.14em;
-  background: var(--neo-yellow);
-  color: var(--neo-ink);
+  background: var(--neo-orange);
+  color: #FFFFFF;
   padding: 4px 10px;
   border: 1.5px solid #000;
   border-radius: var(--radius-xs, 2px);
@@ -232,7 +232,7 @@
 
 .heroHeadline em {
   font-style: normal;
-  color: var(--neo-yellow);
+  color: var(--neo-orange);
   text-decoration: underline;
   text-decoration-thickness: 6px;
   text-underline-offset: 8px;
@@ -248,9 +248,9 @@
 
 .heroSubtitle strong {
   color: #FFFFFF;
-  background: rgba(255, 230, 0, 0.18);
+  background: rgba(238, 100, 15, 0.18);
   padding: 1px 4px;
-  border-bottom: 2px solid var(--neo-yellow);
+  border-bottom: 2px solid var(--neo-orange);
 }
 
 .heroCtaGroup {
@@ -268,8 +268,8 @@
   gap: 12px;
   min-height: 52px;
   padding: 0 26px;
-  background: var(--neo-yellow);
-  color: var(--neo-ink);
+  background: var(--neo-orange);
+  color: #FFFFFF;
   text-decoration: none;
   font-family: var(--mono);
   font-size: 13px;
@@ -412,8 +412,8 @@
 .quickJoinBtn {
   min-height: 44px;
   padding: 0 20px;
-  background: var(--neo-yellow);
-  color: var(--neo-ink);
+  background: var(--neo-orange);
+  color: #FFFFFF;
   border: var(--neo-border);
   border-radius: var(--radius-xs, 2px);
   font-family: var(--mono);
@@ -427,7 +427,7 @@
 }
 
 .quickJoinBtn:hover:not(:disabled) {
-  background: #FFF152;
+  background: var(--neo-orange-hover);
   transform: translate(-1px, -1px);
   box-shadow: 4px 4px 0px var(--neo-ink);
 }
@@ -470,7 +470,7 @@
   font-family: var(--mono);
   font-size: 22px;
   font-weight: 900;
-  color: var(--neo-yellow);
+  color: var(--neo-orange);
   letter-spacing: 0.02em;
 }
 
@@ -580,8 +580,8 @@
   font-family: var(--mono);
   font-size: 12px;
   font-weight: 900;
-  color: var(--neo-ink);
-  background: var(--neo-yellow);
+  color: #FFFFFF;
+  background: var(--neo-orange);
   border: 1.5px solid var(--neo-ink);
   padding: 2px 8px;
   border-radius: var(--radius-xs, 2px);
@@ -637,7 +637,7 @@
 }
 
 .fullHouseCard {
-  background: #FFFDE6;
+  background: var(--retro-orange-tint, #FFF4ED);
   border-color: var(--neo-ink);
 }
 
@@ -665,8 +665,8 @@
   font-size: 10px;
   font-weight: 900;
   letter-spacing: 0.1em;
-  color: var(--neo-ink);
-  background: var(--neo-yellow);
+  color: #FFFFFF;
+  background: var(--neo-orange);
   padding: 3px 8px;
   border: 1.5px solid var(--neo-ink);
   border-radius: var(--radius-xs, 2px);
@@ -724,8 +724,8 @@
 }
 
 .miniMarkedFull {
-  background: var(--neo-yellow) !important;
-  color: var(--neo-ink) !important;
+  background: var(--neo-orange) !important;
+  color: #FFFFFF !important;
   border-color: #000000 !important;
 }
 
@@ -751,7 +751,7 @@
   font-size: 11px;
   font-weight: 900;
   letter-spacing: 0.14em;
-  color: var(--neo-yellow);
+  color: var(--neo-orange);
   display: inline-block;
   margin-bottom: 12px;
   text-transform: uppercase;
@@ -784,8 +784,8 @@
   gap: 12px;
   min-height: 52px;
   padding: 0 28px;
-  background: var(--neo-yellow);
-  color: var(--neo-ink);
+  background: var(--neo-orange);
+  color: #FFFFFF;
   text-decoration: none;
   font-family: var(--mono);
   font-size: 13px;

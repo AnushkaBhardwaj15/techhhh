@@ -19,7 +19,7 @@
 
 .brandBadge {
   background: var(--neo-ink, #121212);
-  color: var(--neo-yellow, #FFE600);
+  color: var(--neo-orange, #EE640F);
   border: 2px solid var(--neo-ink, #121212);
   padding: 4px 12px;
   font-size: 13px;
@@ -67,8 +67,8 @@
   display: inline-block;
   margin: 0 0 14px;
   padding: 3px 8px;
-  background: var(--neo-yellow, #FFE600);
-  color: var(--neo-ink, #121212);
+  background: var(--neo-orange, #EE640F);
+  color: #FFFFFF;
   border: 2px solid var(--neo-ink, #121212);
   box-shadow: 2px 2px 0px var(--neo-ink, #121212);
   font-family: var(--font-mono, monospace);
@@ -97,7 +97,8 @@
 
 .signInLabel em {
   font-style: normal;
-  background: var(--neo-yellow, #FFE600);
+  background: var(--retro-orange-soft, #FDE8DA);
+  color: var(--retro-orange, #EE640F);
   padding: 0 4px;
   border: 1px solid var(--neo-ink, #121212);
 }
@@ -166,7 +167,7 @@
 }
 
 .presetBtn:hover {
-  background: var(--neo-yellow, #FFE600);
+  background: var(--retro-orange-soft, #FDE8DA);
   transform: translate(-1px, -1px);
   box-shadow: 3px 3px 0px var(--neo-ink, #121212);
 }
@@ -178,7 +179,8 @@
 }
 
 .presetActive {
-  background: var(--neo-yellow, #FFE600) !important;
+  background: var(--neo-orange, #EE640F) !important;
+  color: #FFFFFF !important;
   transform: translate(2px, 2px);
   box-shadow: 0px 0px 0px var(--neo-ink, #121212) !important;
   border-color: var(--neo-ink, #121212);

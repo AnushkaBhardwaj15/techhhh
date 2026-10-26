@@ -51,26 +51,27 @@
 
 .cardGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-  gap: 16px;
-  margin-bottom: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
 }
 
 .claimCard {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 18px;
+  padding: 12px 14px;
   background: #FFFFFF;
   border: 2px solid var(--retro-ink, #18130F);
-  box-shadow: 3.5px 3.5px 0 var(--retro-ink, #18130F);
+  box-shadow: 3px 3px 0 var(--retro-ink, #18130F);
   border-radius: var(--radius-xs, 2px);
+  min-height: 110px;
   transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
 
 .claimCard:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: 5.5px 5.5px 0 var(--retro-ink, #18130F);
+  transform: translate(-1.5px, -1.5px);
+  box-shadow: 4.5px 4.5px 0 var(--retro-ink, #18130F);
 }
 
 .cardWinner {

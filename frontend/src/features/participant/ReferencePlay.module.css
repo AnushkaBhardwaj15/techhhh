@@ -1,7 +1,7 @@
 .page {
   max-width: 1100px;
   margin: 0 auto;
-  padding: 24px 16px 60px;
+  padding: 16px 16px 40px;
   color: var(--retro-ink, #18130F);
   background: var(--retro-cream, #FAF4E8);
   min-height: 100vh;
@@ -9,15 +9,15 @@
 
 .back {
   display: inline-flex;
-  min-height: 40px;
+  min-height: 36px;
   align-items: center;
-  padding: 6px 14px;
+  padding: 5px 12px;
   background: #FFFFFF;
   color: var(--retro-ink, #18130F);
   border: 2px solid var(--retro-ink, #18130F);
-  box-shadow: 2.5px 2.5px 0 var(--retro-ink, #18130F);
-  font: 800 12px var(--mono);
-  margin-bottom: 20px;
+  box-shadow: 2px 2px 0 var(--retro-ink, #18130F);
+  font: 800 11.5px var(--mono);
+  margin-bottom: 12px;
   text-decoration: none;
   transition: transform 0.1s ease, box-shadow 0.1s ease;
 }
@@ -35,21 +35,21 @@
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 16px;
-  margin-bottom: 22px;
+  gap: 12px;
+  margin-bottom: 14px;
 }
 
 .heading h1 {
-  margin: 8px 0;
-  font-size: clamp(30px, 5vw, 44px);
+  margin: 4px 0;
+  font-size: clamp(24px, 4vw, 36px);
   letter-spacing: -0.04em;
   font-weight: 900;
   color: var(--retro-ink, #18130F);
 }
 
 .kicker {
-  margin: 0 0 8px;
-  font: 800 11px/1.5 var(--mono);
+  margin: 0 0 4px;
+  font: 800 10.5px/1.4 var(--mono);
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -61,37 +61,37 @@
 }
 
 .score {
-  padding: 14px 22px;
-  border: 2.5px solid var(--retro-ink, #18130F);
+  padding: 8px 18px;
+  border: 2px solid var(--retro-ink, #18130F);
   border-radius: var(--radius-xs, 2px);
-  font: 900 32px var(--mono);
+  font: 900 24px var(--mono);
   color: var(--retro-orange, #EE640F);
   background: #FFFFFF;
-  box-shadow: 4px 4px 0 var(--retro-ink, #18130F);
+  box-shadow: 3px 3px 0 var(--retro-ink, #18130F);
 }
 
 .score span {
   display: block;
-  margin-top: 4px;
-  font-size: 10px;
+  margin-top: 2px;
+  font-size: 9.5px;
   font-weight: 800;
   color: var(--retro-ink, #18130F);
 }
 
 .clue {
-  padding: clamp(20px, 4vw, 34px);
+  padding: clamp(16px, 3vw, 24px);
   background: #FFFFFF;
   color: var(--retro-ink, #18130F);
-  border: 2.5px solid var(--retro-ink, #18130F);
-  border-top: 6px solid var(--retro-orange, #EE640F);
+  border: 2px solid var(--retro-ink, #18130F);
+  border-top: 5px solid var(--retro-orange, #EE640F);
   border-radius: var(--radius-sm, 4px);
-  box-shadow: 6px 6px 0 var(--retro-ink, #18130F);
-  margin-bottom: 26px;
+  box-shadow: 4px 4px 0 var(--retro-ink, #18130F);
+  margin-bottom: 16px;
 }
 
 .clue h2 {
-  margin: 12px 0 20px;
-  font-size: clamp(24px, 4vw, 36px);
+  margin: 8px 0 14px;
+  font-size: clamp(20px, 3.2vw, 30px);
   line-height: 1.25;
   font-weight: 900;
   color: var(--retro-ink, #18130F);
@@ -250,95 +250,272 @@
 }
 
 .claimList {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-top: 12px;
 }
 
 .claimItem {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   justify-content: space-between;
-  gap: 12px;
-  padding: 14px 18px;
+  gap: 8px;
+  padding: 12px 14px;
   border: 2px solid var(--retro-ink, #18130F);
   background: #FFFFFF;
   box-shadow: 3px 3px 0 var(--retro-ink, #18130F);
   border-radius: var(--radius-xs, 2px);
+  min-height: 94px;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.claimItem:hover {
+  transform: translate(-1.5px, -1.5px);
+  box-shadow: 4.5px 4.5px 0 var(--retro-ink, #18130F);
+}
+
+.claimItemHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
 }
 
 .claimName {
   display: block;
-  font-size: 15px;
-  font-weight: 850;
+  font-size: 13.5px;
+  font-weight: 900;
   color: var(--retro-ink, #18130F);
+  line-height: 1.2;
 }
 
 .points {
-  display: block;
-  font: 800 11px var(--mono);
+  display: inline-block;
+  font: 900 10px var(--mono);
   color: var(--retro-orange, #EE640F);
-  margin-top: 2px;
+  background: var(--retro-orange-soft, #FDE8DA);
+  padding: 1px 5px;
+  border: 1px solid var(--retro-ink, #18130F);
+  border-radius: 2px;
+  white-space: nowrap;
+}
+
+.claimItem button {
+  width: 100%;
+  margin-top: auto;
+  font-size: 11px;
+  padding: 6px 8px;
+  min-height: 34px;
+}
+
+/* Sticky Question / Clue Banner (Visible on Scroll) */
+.stickyQuestionBanner {
+  position: fixed;
+  top: 54px;
+  left: 0;
+  right: 0;
+  z-index: 95;
+  background: rgba(255, 255, 255, 0.97);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 2.5px solid var(--retro-ink, #18130F);
+  box-shadow: 0 4px 14px rgba(24, 19, 15, 0.12);
+  animation: bannerSlideIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes bannerSlideIn {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.stickyQuestionInner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.stickyQuestionMain {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  flex: 1;
+}
+
+.stickyQuestionMeta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.stickyQuestionBadge {
+  font: 900 11px var(--mono);
+  background: var(--retro-orange, #EE640F);
+  color: #FFFFFF;
+  padding: 3px 8px;
+  border: 1.5px solid var(--retro-ink, #18130F);
+  border-radius: var(--radius-xs, 2px);
+  box-shadow: 1.5px 1.5px 0 var(--retro-ink, #18130F);
+  white-space: nowrap;
+}
+
+.stickyQuestionCat {
+  font: 800 10px var(--mono);
+  color: var(--retro-ink, #18130F);
+  background: var(--retro-orange-soft, #FDE8DA);
+  padding: 2px 6px;
+  border: 1.5px solid var(--retro-ink, #18130F);
+  border-radius: var(--radius-xs, 2px);
+  white-space: nowrap;
+}
+
+.stickyQuestionText {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 850;
+  color: var(--retro-ink, #18130F);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.3;
+}
+
+.stickyQuestionAnswerCol {
+  flex-shrink: 0;
+}
+
+.stickyAnswerBox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--retro-orange-soft, #FDE8DA);
+  border: 1.5px solid var(--retro-ink, #18130F);
+  padding: 3px 8px;
+  border-radius: var(--radius-xs, 2px);
+  box-shadow: 1.5px 1.5px 0 var(--retro-ink, #18130F);
+}
+
+.stickyAnswerLabel {
+  font: 800 10px var(--mono);
+  color: var(--retro-orange, #EE640F);
+}
+
+.stickyAnswerValue {
+  font-size: 13.5px;
+  font-weight: 900;
+  color: var(--retro-ink, #18130F);
+}
+
+.stickyActiveBadge {
+  font: 900 10.5px var(--mono);
+  background: #FFFFFF;
+  color: var(--retro-orange, #EE640F);
+  border: 1.5px solid var(--retro-ink, #18130F);
+  padding: 3px 8px;
+  border-radius: var(--radius-xs, 2px);
+  box-shadow: 1.5px 1.5px 0 var(--retro-ink, #18130F);
+  white-space: nowrap;
+}
+
+@media (max-width: 992px) {
+  .claimList {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 @media (max-width: 768px) {
   .page {
-    padding: 14px 10px 48px;
+    padding: 12px 10px 36px;
   }
   .heading h1 {
-    font-size: clamp(22px, 5.5vw, 32px);
+    font-size: clamp(20px, 5vw, 28px);
   }
   .score {
-    padding: 8px 14px;
-    font-size: 22px;
-    box-shadow: 2.5px 2.5px 0 var(--retro-ink, #18130F);
+    padding: 6px 12px;
+    font-size: 20px;
+    box-shadow: 2px 2px 0 var(--retro-ink, #18130F);
   }
   .score span {
-    font-size: 9px;
+    font-size: 8.5px;
   }
   .clue {
-    padding: 14px 10px;
-    box-shadow: 4px 4px 0 var(--retro-ink, #18130F);
+    padding: 12px 10px;
+    margin-bottom: 14px;
+    box-shadow: 3.5px 3.5px 0 var(--retro-ink, #18130F);
   }
   .clue h2 {
-    font-size: clamp(17px, 4.5vw, 24px);
-    margin: 8px 0 12px;
+    font-size: clamp(16px, 4vw, 22px);
+    margin: 6px 0 10px;
   }
   .code {
-    font-size: 12px;
-    padding: 10px;
+    font-size: 11px;
+    padding: 8px;
     max-width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
   .answer strong {
-    font-size: clamp(22px, 5.5vw, 32px);
+    font-size: clamp(20px, 5vw, 28px);
   }
   .panel {
-    padding: 14px 10px;
-    margin: 18px 0;
-    box-shadow: 4px 4px 0 var(--retro-ink, #18130F);
+    padding: 12px 10px;
+    margin: 14px 0;
+    box-shadow: 3.5px 3.5px 0 var(--retro-ink, #18130F);
+  }
+  .claimList {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
   }
   .claimItem {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
-    padding: 12px;
-  }
-  .claimItem > div {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    padding: 10px 12px;
+    min-height: 84px;
   }
   .claimItem button {
     width: 100%;
-    min-height: 42px;
+    min-height: 32px;
+    font-size: 10.5px;
   }
   .actions > button {
     width: 100%;
   }
   .pattern {
-    padding: 14px;
+    padding: 12px;
+  }
+}
+
+@media (max-width: 640px) {
+  .stickyQuestionBanner {
+    top: 50px;
+  }
+  .stickyQuestionInner {
+    padding: 5px 8px;
+    gap: 6px;
+  }
+  .stickyQuestionMain {
+    gap: 6px;
+  }
+  .stickyQuestionText {
+    font-size: 11.5px;
+  }
+  .stickyAnswerValue {
+    font-size: 11.5px;
+  }
+}
+
+@media (max-width: 380px) {
+  .claimList {
+    grid-template-columns: 1fr;
   }
 }

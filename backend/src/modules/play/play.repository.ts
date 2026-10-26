@@ -422,7 +422,10 @@ export class PlayRepository implements PlayStore {
       };
       for (const win of state.wins.slice(before.wins.length)) {
         await tx.unsafe(
-          `INSERT INTO claims(id,round_id,participant_id,ticket_id,pattern_type,status,verified_by,verified_at) VALUES($1,$2,$3,$4,$5,'VERIFIED',$6,$7)`,
+          `INSERT INTO claims(id,round_id,participant_id,ticket_id,pattern_type,status,verified_by,verified_at)
+           VALUES($1,$2,$3,$4,$5,'VERIFIED',$6,$7)
+           ON CONFLICT (round_id,participant_id,pattern_type)
+           DO UPDATE SET status='VERIFIED', verified_by=$6, verified_at=$7, updated_at=now()`,
           [
             win.claimId,
             id,
@@ -434,7 +437,9 @@ export class PlayRepository implements PlayStore {
           ],
         );
         await tx.unsafe(
-          `INSERT INTO winners(id,claim_id,participant_id,round_id,event_id,pattern_type,verified_by,verified_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8)`,
+          `INSERT INTO winners(id,claim_id,participant_id,round_id,event_id,pattern_type,verified_by,verified_at)
+           VALUES($1,$2,$3,$4,$5,$6,$7,$8)
+           ON CONFLICT DO NOTHING`,
           [
             win.id,
             win.claimId,

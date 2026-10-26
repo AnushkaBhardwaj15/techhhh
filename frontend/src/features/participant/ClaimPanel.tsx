@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useOutletContext } from 'react-router-dom';
 import { ApiError } from '../../lib/api/client';
 import { type ClaimPattern } from '../../types/claims';
@@ -141,9 +141,14 @@ function checkPatternBoxes(pattern: ClaimPattern, ticket?: Ticket | null): Patte
       };
     }
     case 'FOUR_CORNERS': {
-      const corners = cells.filter(
-        (c) => (c.rowIndex === 0 || c.rowIndex === 2) && (c.colIndex === 0 || c.colIndex === 8)
-      );
+      const row0 = [...cells.filter((c) => c.rowIndex === 0)].sort((a, b) => a.colIndex - b.colIndex);
+      const row2 = [...cells.filter((c) => c.rowIndex === 2)].sort((a, b) => a.colIndex - b.colIndex);
+      const corners =
+        row0.length >= 2 && row2.length >= 2
+          ? [row0[0], row0[row0.length - 1], row2[0], row2[row2.length - 1]]
+          : cells.filter(
+              (c) => (c.rowIndex === 0 || c.rowIndex === 2) && (c.colIndex === 0 || c.colIndex === 8)
+            );
       const markedCount = corners.filter((c) => c.marked).length;
       const requiredCount = corners.length || 4;
       const valid = corners.length > 0 && markedCount === requiredCount;
@@ -192,8 +197,15 @@ export function ClaimPanel({
   const [selectedPattern, setSelectedPattern] = useState<ClaimPattern>();
   const [validationWarning, setValidationWarning] = useState<string | null>(null);
 
+  const ticketQuery = useQuery<Ticket>({
+    queryKey: ['participant', user.id, 'ticket', round.eventId, round.id],
+    enabled: !ticket,
+    refetchOnWindowFocus: 'always',
+  });
+
   const effectiveTicket =
     ticket ??
+    ticketQuery.data ??
     queryClient.getQueryData<Ticket>(['participant', user.id, 'ticket', round.eventId, round.id]);
 
   const roundPatternsMap = new Map(round.patterns.map((p) => [p.patternType, p]));

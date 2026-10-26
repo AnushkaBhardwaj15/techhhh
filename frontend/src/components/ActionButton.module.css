@@ -7,8 +7,8 @@
   padding: 10px 20px;
   border: var(--neo-border);
   border-radius: var(--radius-sm, 4px);
-  background: var(--neo-yellow);
-  color: var(--neo-ink);
+  background: var(--neo-orange, #EE640F);
+  color: #FFFFFF;
   font-family: var(--mono);
   font-size: 13px;
   font-weight: 900;
@@ -21,7 +21,7 @@
 }
 
 .button:hover:not(:disabled) {
-  background: #FFF04D;
+  background: var(--neo-orange-hover, #D75508);
   transform: translate(-1px, -1px);
   box-shadow: var(--neo-shadow-lg);
 }

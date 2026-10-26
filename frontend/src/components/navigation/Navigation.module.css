@@ -42,8 +42,8 @@
 
 .badge {
   padding: 4px 8px;
-  background: var(--neo-yellow);
-  color: var(--neo-ink);
+  background: var(--neo-orange);
+  color: #FFFFFF;
   font: 900 11px var(--mono);
   letter-spacing: 0.1em;
   border: 1.5px solid #000;
@@ -90,13 +90,18 @@
 }
 
 .liveLink {
-  background: var(--neo-yellow);
-  color: var(--neo-ink);
+  background: var(--neo-orange);
+  color: #FFFFFF;
 }
 
 .profileButton:hover,
-.logoutButton:hover:not(:disabled),
+.logoutButton:hover:not(:disabled) {
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px #000;
+}
+
 .liveLink:hover {
+  background: var(--neo-orange-hover);
   transform: translate(-1px, -1px);
   box-shadow: 3px 3px 0px #000;
 }

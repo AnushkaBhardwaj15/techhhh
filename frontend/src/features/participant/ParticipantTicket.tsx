@@ -194,6 +194,16 @@ export function TicketGrid({
                     const showButton = onMark
                       ? (!cell?.marked && drawnKeys.has(cell?.keyValue ?? ''))
                       : (Boolean(canMark) && Boolean(cell));
+                    const handleDesktopCellClick = () => {
+                      if (!cell || !showButton || !canMark || pending || uncertain) return;
+                      if (cell.marked) {
+                        playUnmarkSound();
+                      } else {
+                        playMarkSound();
+                      }
+                      onMark?.(cell.id);
+                      onToggleCell?.(cell);
+                    };
                     return (
                       <td
                         ref={matched ? matchRef : undefined}
@@ -207,6 +217,8 @@ export function TicketGrid({
                         data-cell-id={cell?.id}
                         data-marked={cell?.marked ?? undefined}
                         data-winning={winning || undefined}
+                        onClick={handleDesktopCellClick}
+                        style={{ cursor: cell && showButton && canMark && !pending && !uncertain ? 'pointer' : undefined }}
                       >
                         {cell ? (
                           <div className={styles.cellContent}>
@@ -226,14 +238,9 @@ export function TicketGrid({
                                 }
                                 aria-busy={pending || undefined}
                                 disabled={!canMark || pending || uncertain}
-                                onClick={() => {
-                                  if (cell.marked) {
-                                    playUnmarkSound();
-                                  } else {
-                                    playMarkSound();
-                                  }
-                                  onMark?.(cell.id);
-                                  onToggleCell?.(cell);
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDesktopCellClick();
                                 }}
                               >
                                 {pending ? 'Saving…' : uncertain ? 'Status unknown' : cell.marked ? 'Marked' : 'Mark'}
@@ -340,6 +347,12 @@ export function ParticipantTicket({
   });
 
   const effectiveTicket: Ticket = propTicket || ticket.data || localTicket;
+
+  useEffect(() => {
+    if (effectiveTicket) {
+      onTicketChange?.(effectiveTicket);
+    }
+  }, [effectiveTicket, onTicketChange]);
 
   useEffect(() => {
     if ([event.error, round.error, ticket.error].some((error) => error instanceof ApiError && error.status === 401)) {

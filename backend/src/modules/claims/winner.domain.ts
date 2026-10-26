@@ -155,8 +155,17 @@ export function evaluatePattern(
       return isLineCompleted(cells, 1, drawnKeyIds);
     case 'BOTTOM_LINE':
       return isLineCompleted(cells, 2, drawnKeyIds);
-    case 'FOUR_CORNERS':
+    case 'FOUR_CORNERS': {
+      const row0 = [...cells.filter((c) => c.rowIndex === 0)].sort((a, b) => a.colIndex - b.colIndex);
+      const row2 = [...cells.filter((c) => c.rowIndex === 2)].sort((a, b) => a.colIndex - b.colIndex);
+      if (row0.length >= 2 && row2.length >= 2) {
+        const corners = [row0[0], row0[row0.length - 1], row2[0], row2[row2.length - 1]];
+        if (corners.every((c) => drawnKeyIds.has(c.keyId))) {
+          return true;
+        }
+      }
       return [ [0,0], [0,8], [2,0], [2,8] ].every(([r,c]) => cells.some(cell => cell.rowIndex === r && cell.colIndex === c && drawnKeyIds.has(cell.keyId)));
+    }
     case 'SECOND_FULL_HOUSE':
     case 'FULL_HOUSE':
       return isFullHouse(cells, drawnKeyIds);
@@ -201,7 +210,17 @@ export function selectWinningCellIds(
     MIDDLE_LINE: 1,
     BOTTOM_LINE: 2,
   };
-  if (patternType === 'FOUR_CORNERS') return cells.filter(cell => (cell.rowIndex === 0 || cell.rowIndex === 2) && (cell.colIndex === 0 || cell.colIndex === 8)).map(cell => cell.cellId);
+  if (patternType === 'FOUR_CORNERS') {
+    const row0 = [...cells.filter((c) => c.rowIndex === 0)].sort((a, b) => a.colIndex - b.colIndex);
+    const row2 = [...cells.filter((c) => c.rowIndex === 2)].sort((a, b) => a.colIndex - b.colIndex);
+    if (row0.length >= 2 && row2.length >= 2) {
+      const corners = [row0[0], row0[row0.length - 1], row2[0], row2[row2.length - 1]];
+      if (corners.every((c) => drawnKeyIds.has(c.keyId))) {
+        return corners.map((c) => c.cellId);
+      }
+    }
+    return cells.filter(cell => (cell.rowIndex === 0 || cell.rowIndex === 2) && (cell.colIndex === 0 || cell.colIndex === 8)).map(cell => cell.cellId);
+  }
   const rowIndex = rowIndexByPattern[patternType];
   return cells
     .filter((cell) => rowIndex === undefined || cell.rowIndex === rowIndex)

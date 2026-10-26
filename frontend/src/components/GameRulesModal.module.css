@@ -35,7 +35,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: var(--neo-yellow);
+  background: var(--retro-orange, #EE640F);
 }
 
 .titleGroup h2 {
@@ -46,14 +46,14 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  color: var(--neo-ink);
+  color: #FFFFFF;
   letter-spacing: -0.02em;
   text-transform: uppercase;
 }
 
 .titleGroup p {
   font-size: 0.8rem;
-  color: var(--neo-ink-secondary);
+  color: rgba(255, 255, 255, 0.9);
   margin: 4px 0 0;
   font-family: var(--mono);
 }
@@ -157,8 +157,8 @@
   font-family: var(--mono);
   font-size: 0.72rem;
   font-weight: 900;
-  color: var(--neo-ink);
-  background: var(--neo-yellow);
+  color: #FFFFFF;
+  background: var(--retro-orange, #EE640F);
   border: 1.5px solid var(--neo-ink);
   padding: 2px 8px;
   border-radius: var(--radius-xs, 2px);
@@ -230,8 +230,8 @@
 }
 
 .gotItBtn {
-  background: var(--neo-yellow);
-  color: var(--neo-ink);
+  background: var(--neo-orange, #EE640F);
+  color: #FFFFFF;
   border: var(--neo-border);
   border-radius: var(--radius-xs, 2px);
   padding: 10px 22px;
@@ -246,7 +246,7 @@
 }
 
 .gotItBtn:hover {
-  background: #FFF04D;
+  background: var(--neo-orange-hover, #D75508);
   transform: translate(-1px, -1px);
   box-shadow: var(--neo-shadow-md);
 }

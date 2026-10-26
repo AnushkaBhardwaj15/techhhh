@@ -11,6 +11,7 @@ import { mergeParticipantDraws, useParticipantRealtime, type ConnectionStatus, t
 import { playNewClueSound } from '../../lib/audio';
 import type { AuthenticatedUser } from '../../types/auth';
 import type { PlayState } from '../../types/play';
+import type { ParticipantTicket as Ticket } from '../../types/ticket';
 import { ActionButton } from '../../components/ActionButton';
 import { ParticipantTicket, TicketGrid } from './ParticipantTicket';
 import { ClaimPanel } from './ClaimPanel';
@@ -179,19 +180,28 @@ function ReferenceParticipantGame({ id, user: _user }: { id: string; user: Authe
             </div>
           )}
           {latest && (
-            <ReferenceQuestionCard
-              draw={{
-                id: latest.id,
-                roundId: game.id,
-                sequenceNumber: latest.sequence,
-                questionText: latest.prompt,
-                keyValue: latest.answer ?? '',
-                drawnAt: latest.drawnAt,
-              }}
-              category={latest.category}
-              codeSnippet={latest.codeSnippet}
-              revealed={latest.revealed}
-            />
+            <>
+              <StickyQuestionBanner
+                seq={latest.sequence}
+                category={latest.category}
+                prompt={latest.prompt}
+                answer={latest.answer}
+                revealed={latest.revealed}
+              />
+              <ReferenceQuestionCard
+                draw={{
+                  id: latest.id,
+                  roundId: game.id,
+                  sequenceNumber: latest.sequence,
+                  questionText: latest.prompt,
+                  keyValue: latest.answer ?? '',
+                  drawnAt: latest.drawnAt,
+                }}
+                category={latest.category}
+                codeSnippet={latest.codeSnippet}
+                revealed={latest.revealed}
+              />
+            </>
           )}
           <ReferenceTicket
             game={game}
@@ -203,7 +213,7 @@ function ReferenceParticipantGame({ id, user: _user }: { id: string; user: Authe
             <div className={refStyles.claimList}>
               {game.patterns.map((p) => (
                 <div key={p.pattern} className={refStyles.claimItem}>
-                  <div>
+                  <div className={refStyles.claimItemHeader}>
                     <span className={refStyles.claimName}>{labels[p.pattern]}</span>
                     <span className={refStyles.points}>{p.points} PTS</span>
                   </div>
@@ -226,6 +236,59 @@ function ReferenceParticipantGame({ id, user: _user }: { id: string; user: Authe
         </>
       )}
     </main>
+  );
+}
+
+function StickyQuestionBanner({
+  seq,
+  category,
+  prompt,
+  answer,
+  revealed,
+}: {
+  seq: number;
+  category?: string | null;
+  prompt: string;
+  answer?: string | null;
+  revealed: boolean;
+}) {
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 90);
+    };
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  if (!scrolled) return null;
+
+  return (
+    <aside className={refStyles.stickyQuestionBanner} aria-label="Current question banner" role="region">
+      <div className={refStyles.stickyQuestionInner}>
+        <div className={refStyles.stickyQuestionMain}>
+          <div className={refStyles.stickyQuestionMeta}>
+            <span className={refStyles.stickyQuestionBadge}>CALL #{seq}</span>
+            {category && <span className={refStyles.stickyQuestionCat}>{category}</span>}
+          </div>
+          <p className={refStyles.stickyQuestionText} title={prompt}>
+            {prompt}
+          </p>
+        </div>
+        <div className={refStyles.stickyQuestionAnswerCol}>
+          {revealed && answer ? (
+            <div className={refStyles.stickyAnswerBox}>
+              <span className={refStyles.stickyAnswerLabel}>ANSWER:</span>
+              <strong className={refStyles.stickyAnswerValue}>{answer}</strong>
+            </div>
+          ) : (
+            <span className={refStyles.stickyActiveBadge}>ACTIVE CLUE</span>
+          )}
+        </div>
+      </div>
+    </aside>
   );
 }
 
@@ -329,6 +392,7 @@ function AuthoritativeParticipantGame({
   user: AuthenticatedUser;
   event: ReturnType<typeof useQuery<any, any>>;
 }) {
+  const [sharedTicket, setSharedTicket] = useState<Ticket | null>(null);
   const queryClient = useQueryClient();
   const round = useQuery({
     queryKey: ['participant', user.id, 'round', event.data?.id],
@@ -444,7 +508,16 @@ function AuthoritativeParticipantGame({
         {draws.data && draws.error && <p className={styles.stale} role="status">Showing the last draw history received from the server.</p>}
 
         {latest ? (
-          <QuestionCard draw={latest} animate={animateSequence === latest.sequenceNumber} />
+          <>
+            <StickyQuestionBanner
+              seq={latest.sequenceNumber}
+              category={null}
+              prompt={latest.questionText}
+              answer={latest.keyValue}
+              revealed={Boolean(latest.keyValue)}
+            />
+            <QuestionCard draw={latest} animate={animateSequence === latest.sequenceNumber} />
+          </>
         ) : draws.data ? (
           <p className={styles.empty}>No questions have been drawn in this round yet.</p>
         ) : null}
@@ -458,9 +531,10 @@ function AuthoritativeParticipantGame({
         animateReveal={animateSequence === latest?.sequenceNumber}
         drawnKeys={drawnKeys}
         canMark={round.data?.status === 'ACTIVE' && !round.error && !event.error && realtime.status === 'CONNECTED' && !draws.isFetching && !draws.error}
+        onTicketChange={setSharedTicket}
       />
       {event.data && round.data && (
-        <ClaimPanel round={round.data} canSubmit={realtime.status === 'CONNECTED' && !event.error && !round.error} />
+        <ClaimPanel round={round.data} ticket={sharedTicket} canSubmit={realtime.status === 'CONNECTED' && !event.error && !round.error} />
       )}
     </div>
   );

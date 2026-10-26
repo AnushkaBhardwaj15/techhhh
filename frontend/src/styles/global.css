@@ -12,9 +12,17 @@
   --neo-ink-secondary: #4B4B52;     /* High-legibility secondary text */
   --neo-sand: #ECE7DA;              /* Elevated neutral track / empty slots */
 
-  /* High-Voltage Neobrutalist Accents */
-  --neo-yellow: #FFE600;            /* Canary Yellow (Primary Tournament Punch) */
-  --neo-orange: #FF4800;            /* Hazard / International Orange (Claims & Urgency) */
+  /* High-Voltage Neobrutalist Accents - Unified Pure Orange Theme */
+  --neo-orange: #EE640F;            /* Retro Orange (Primary Tournament Accent) */
+  --neo-orange-hover: #D75508;
+  --neo-orange-soft: #FDE8DA;
+  --neo-orange-tint: #FFF4ED;
+  --neo-yellow: #EE640F;            /* Unified to Retro Orange (Eliminating Yellow) */
+  --neo-yellow-hover: #D75508;
+  --retro-orange: #EE640F;
+  --retro-orange-hover: #D75508;
+  --retro-orange-soft: #FDE8DA;
+  --retro-orange-tint: #FFF4ED;
   --neo-mint: #00D084;              /* Verified Win Emerald */
   --neo-blue: #2563EB;              /* Telemetry Electric Blue */
   --neo-danger: #D92D20;            /* Error / Rejection Red */
@@ -50,7 +58,7 @@
   --color-disabled: #E4DED3;
   --color-white: #FFFFFF;
   --color-success: var(--neo-mint);
-  --color-warning: var(--neo-yellow);
+  --color-warning: var(--neo-orange);
   --color-danger: var(--neo-danger);
   --color-info: var(--neo-blue);
 
@@ -60,7 +68,7 @@
   --navy: #121316;
   --navy-raised: #1A1C23;
   --cyan: var(--neo-blue);
-  --lime: var(--neo-yellow);
+  --lime: var(--neo-orange);
   --surface: var(--neo-surface);
   --surface-muted: var(--neo-sand);
   --ink: var(--neo-ink);
@@ -71,7 +79,7 @@
   --accent-ink: var(--neo-orange);
   --cream: var(--neo-bg);
   --forest: var(--neo-ink);
-  --coral: var(--neo-yellow);
+  --coral: var(--neo-orange);
   --mono: "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   --display: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
   --serif: var(--display);

@@ -244,7 +244,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
       reply.status(statusCode).send({
         error: {
           code: errorCode,
-          message: error.message || 'Request failed',
+          message: (error as any)?.message || 'Request failed',
         },
         requestId,
       });

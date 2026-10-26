@@ -16,7 +16,7 @@
   margin: 0 0 20px;
   font: 900 11px/1.4 var(--font-mono, monospace);
   letter-spacing: 0.14em;
-  color: var(--neo-yellow, #FFE600);
+  color: var(--neo-orange, #EE640F);
   text-transform: uppercase;
   border-bottom: 2px dashed #333333;
   padding-bottom: 12px;
@@ -52,14 +52,14 @@
 }
 
 .navLink:focus-visible {
-  outline: 2px solid var(--neo-yellow, #FFE600);
+  outline: 2px solid var(--neo-orange, #EE640F);
   outline-offset: 2px;
 }
 
 .active {
-  background: var(--neo-yellow, #FFE600);
-  border: 2px solid var(--neo-yellow, #FFE600);
-  color: var(--neo-ink, #121212);
+  background: var(--neo-orange, #EE640F);
+  border: 2px solid var(--neo-orange, #EE640F);
+  color: #FFFFFF;
   font-weight: 900;
   box-shadow: 2px 2px 0px #000000;
 }

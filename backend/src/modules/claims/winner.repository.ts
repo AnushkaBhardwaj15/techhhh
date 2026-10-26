@@ -113,6 +113,7 @@ export class WinnerRepository implements IWinnerRepository {
     try {
       const db = getDb();
       const { page, limit } = options;
+      const offset = (page - 1) * limit;
       const where = participantId
         ? or(eq(winners.participantId, participantId), eq(participantProfiles.userId, participantId))
         : undefined;

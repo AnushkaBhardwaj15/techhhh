@@ -88,10 +88,19 @@ export class ClaimService {
     // 5. Check if claim already exists
     const existingClaim = await this.claimRepo.findExistingClaim(roundId, profile.id, pattern);
     if (existingClaim) {
-      throw new ConflictError(
-        'A claim for this pattern has already been submitted by this participant',
-        'CLAIM_ALREADY_EXISTS'
-      );
+      if (existingClaim.status === 'VERIFIED') {
+        throw new ConflictError(
+          'A claim for this pattern has already been awarded to this participant',
+          'CLAIM_ALREADY_EXISTS'
+        );
+      }
+      if (existingClaim.status === 'PENDING_VERIFICATION') {
+        throw new ConflictError(
+          'A claim for this pattern has already been submitted and is pending verification',
+          'CLAIM_ALREADY_EXISTS'
+        );
+      }
+      // If previous status was REJECTED, participant is allowed to re-claim once eligible
     }
 
     // 6. Recalculate Eligibility Server-Side from Official Draws + Ticket Layout
@@ -112,16 +121,25 @@ export class ClaimService {
 
     // 7. Persist Claim inside Transaction
     const claim = await db.transaction(async (tx) => {
-      const created = await this.claimRepo.create(
-        {
-          roundId,
-          participantId: profile.id,
-          ticketId: ticket.id,
-          patternType: pattern,
-          status: 'PENDING_VERIFICATION',
-        },
-        tx
-      );
+      let created: any;
+      if (existingClaim && existingClaim.status.startsWith('REJECTED')) {
+        created = await this.claimRepo.updateStatus(
+          existingClaim.id,
+          { status: 'PENDING_VERIFICATION', rejectionReason: null },
+          tx
+        );
+      } else {
+        created = await this.claimRepo.create(
+          {
+            roundId,
+            participantId: profile.id,
+            ticketId: ticket.id,
+            patternType: pattern,
+            status: 'PENDING_VERIFICATION',
+          },
+          tx
+        );
+      }
 
       await this.audit.record(
         {
