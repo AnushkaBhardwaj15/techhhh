@@ -29,7 +29,7 @@ export function createAuthRoutes({ onSessionRevoked }: AuthRouteDependencies = {
       const quickJoinSchema = z.object({
         name: z.string().min(1, 'Name is required'),
         email: z.string().email('Valid email is required'),
-        password: z.string().min(6).optional(),
+        password: z.string().min(8).max(256),
         eventId: z.string().uuid().optional(),
       });
       const body = quickJoinSchema.parse(request.body);
@@ -72,16 +72,19 @@ export function createAuthRoutes({ onSessionRevoked }: AuthRouteDependencies = {
 
     fastify.post('/auth/logout', async (request, reply) => {
       const token = request.cookies[SESSION_COOKIE_NAME];
+      reply.clearCookie(SESSION_COOKIE_NAME, { path: '/' });
       if (token) {
+        let sessionId: string | undefined;
         try {
-          const payload = verifyAuthToken(token);
-          await authService.logout(payload.jti);
-          onSessionRevoked?.(payload.jti);
+          sessionId = verifyAuthToken(token).jti;
         } catch {
-          // Logout is idempotent and its cookie is always cleared.
+          // Invalid or expired cookies can be cleared without a database write.
+        }
+        if (sessionId) {
+          await authService.logout(sessionId);
+          onSessionRevoked?.(sessionId);
         }
       }
-      reply.clearCookie(SESSION_COOKIE_NAME, { path: '/' });
       return { message: 'Successfully logged out' };
     });
 

@@ -29,6 +29,7 @@ function makeHarness(options: { drawn?: boolean; capacity?: number; count?: numb
   let committed = false;
 
   const claimRepo = {
+    findById: async () => claim,
     lockById: async () => claim,
     lockRoundPattern: async () => pattern,
     getEventAndParticipantName: async () => ({ eventId: ids.event, participantName: 'Tombola Player' }),
@@ -37,6 +38,8 @@ function makeHarness(options: { drawn?: boolean; capacity?: number; count?: numb
     listAll: async () => ({ data: [], total: 0 }),
   };
   const winnerRepo: any = {
+    lockReferenceRound: async () => null,
+    updateReferenceRound: async () => {},
     countByRoundPattern: async () => options.count ?? 0,
     create: async (data: any) => {
       const winner = { id: '70000000-0000-4000-8000-000000000001', ...data };
@@ -107,6 +110,13 @@ const verify = (overrides: Partial<{ claimId: string; actorId: string; actorType
 });
 
 describe('WinnerService verification and rejection', () => {
+  it('does not allow a legacy override to bypass eligibility or closed pattern capacity', async () => {
+    for (const options of [{ drawn: false }, { patternStatus: 'CLOSED', count: 1 }, { enabled: false }]) {
+      const h = makeHarness(options);
+      await expect(h.service.verifyClaim({ ...verify(), adminOverride: true })).rejects.toMatchObject({ statusCode: 409 });
+      expect(h.winners).toHaveLength(0);
+    }
+  });
   it('atomically verifies an eligible Claim and closes the Pattern at capacity', async () => {
     const h = makeHarness();
     let broadcastAfterCommit = false;

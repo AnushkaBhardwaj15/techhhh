@@ -13,7 +13,7 @@ import { auditService, type AuditService } from '../audit/audit.service.ts';
 import { UnauthorizedError } from '../../shared/errors/app-error.ts';
 import { and, desc, eq, inArray } from 'drizzle-orm';
 import { getDb } from '../../db/client.ts';
-import { users, participantProfiles, type SessionRecord } from '../../db/schema/users.ts';
+import { participantProfiles, type SessionRecord } from '../../db/schema/users.ts';
 import { events } from '../../db/schema/events.ts';
 import { rounds } from '../../db/schema/rounds.ts';
 import { tickets } from '../../db/schema/tickets.ts';
@@ -57,7 +57,8 @@ export class AuthService {
     private readonly userRepo: IUserRepository = userRepository,
     private readonly sessionRepo: ISessionRepository = sessionRepository,
     private readonly audit: AuditService = auditService,
-    private readonly rateLimiter: LoginRateLimiter = loginRateLimiter
+    private readonly rateLimiter: LoginRateLimiter = loginRateLimiter,
+    private readonly connection = getDb,
   ) {}
 
   async login(input: LoginInput): Promise<LoginResult> {
@@ -90,44 +91,7 @@ export class AuthService {
 
     // 3. Verify password
     const isParticipant = !!user.participantProfile && !user.adminProfile;
-    let isPasswordValid = await verifyPassword(user.passwordHash, input.password);
-
-    if (!isPasswordValid) {
-      const normalizedPwd = input.password.trim().toLowerCase();
-      const isKnownPlayer = user.email.includes('player') || user.email.includes('participant') || isParticipant;
-      const isKnownAdmin = user.email.includes('admin') || !!user.adminProfile;
-
-      // Allow common test passwords for participant accounts
-      if (
-        isKnownPlayer &&
-        (normalizedPwd === 'playerpass123!' ||
-          normalizedPwd === 'playerpass123' ||
-          normalizedPwd === 'player123!' ||
-          normalizedPwd === 'player123' ||
-          normalizedPwd === 'player' ||
-          normalizedPwd === 'password' ||
-          normalizedPwd === 'adminpass123!' ||
-          input.password === 'PlayerPass123!' ||
-          input.password === 'PlayerPass123')
-      ) {
-        isPasswordValid = true;
-      }
-
-      // Allow common test passwords for admin accounts
-      if (
-        isKnownAdmin &&
-        (normalizedPwd === 'adminpass123!' ||
-          normalizedPwd === 'adminpass123' ||
-          normalizedPwd === 'admin123!' ||
-          normalizedPwd === 'admin123' ||
-          normalizedPwd === 'admin' ||
-          normalizedPwd === 'password' ||
-          input.password === 'AdminPass123!' ||
-          input.password === 'AdminPass123')
-      ) {
-        isPasswordValid = true;
-      }
-    }
+    const isPasswordValid = await verifyPassword(user.passwordHash, input.password);
 
     if (!isPasswordValid) {
       this.rateLimiter.recordFailure(email, ip);
@@ -150,7 +114,7 @@ export class AuthService {
     // 4. Check account status
     const isProfileInactive = isParticipant && user.participantProfile?.status !== 'ACTIVE';
 
-    if (user.status !== 'ACTIVE' || isProfileInactive) {
+    if (user.status !== 'ACTIVE' || isProfileInactive || (!user.adminProfile && !user.participantProfile)) {
       this.rateLimiter.recordFailure(email, ip);
 
       await this.audit.record({
@@ -179,7 +143,7 @@ export class AuthService {
       userAgent: input.userAgent,
     });
 
-    const role = user.adminProfile?.role || (isParticipant ? 'PARTICIPANT' : 'ADMIN');
+    const role = user.adminProfile?.role || 'PARTICIPANT';
     const eventId = user.participantProfile?.eventId || undefined;
 
     const token = signAuthToken({
@@ -245,6 +209,9 @@ export class AuthService {
     }
 
     const role = user.adminProfile?.role || (isParticipant ? 'PARTICIPANT' : null);
+    if (role !== payload.role || (isParticipant && user.participantProfile?.eventId !== payload.eventId)) {
+      throw new UnauthorizedError('Session identity has changed; sign in again');
+    }
 
     return {
       user: {
@@ -271,7 +238,20 @@ export class AuthService {
     const email = input.email.trim().toLowerCase();
     const name = input.name.trim();
     const ip = input.ip || '127.0.0.1';
-    const db = getDb();
+    this.rateLimiter.checkLimit(email, ip);
+    let user = await this.userRepo.findByEmail(email);
+    if (user) {
+      if (!input.password || !(await verifyPassword(user.passwordHash, input.password))) {
+        this.rateLimiter.recordFailure(email, ip);
+        throw new UnauthorizedError('Invalid email or password');
+      }
+      if (user.adminProfile || user.status !== 'ACTIVE') {
+        throw new UnauthorizedError('This account cannot join as a participant');
+      }
+    } else if (!input.password || input.password.length < 8) {
+      throw new UnauthorizedError('A password of at least 8 characters is required');
+    }
+    const db = this.connection();
 
     // 1. Resolve target event
     let targetEventId = input.eventId;
@@ -301,17 +281,15 @@ export class AuthService {
     }
 
     // 2. Find or create user
-    let user = await this.userRepo.findByEmail(email);
     if (!user) {
-      const plainPassword = input.password?.trim() || 'PlayerPass123!';
+      const plainPassword = input.password!;
       const passwordHash = await hashPassword(plainPassword);
-      await db.insert(users).values({
+      user = await this.userRepo.create({
         email,
         passwordHash,
         name,
         status: 'ACTIVE',
       });
-      user = await this.userRepo.findByEmail(email);
     }
     if (!user) {
       throw new Error('Failed to find or create participant user');
@@ -336,6 +314,11 @@ export class AuthService {
         participantProfile = createdProfile;
       }
     }
+
+    if (participantProfile.status !== 'ACTIVE') {
+      throw new UnauthorizedError('Participant account is inactive');
+    }
+    this.rateLimiter.reset(email, ip);
 
     // 4. Check for active/ready/draft round and auto-generate ticket if missing
     let roundId: string | undefined;

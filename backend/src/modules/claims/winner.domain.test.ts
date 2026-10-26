@@ -1,5 +1,25 @@
 import { describe, expect, it } from 'bun:test';
-import { evaluateWinnerCapacity, evaluateWinnerVerification } from './winner.domain.ts';
+import { evaluatePattern, evaluateReferenceWinTransition, evaluateWinnerCapacity, evaluateWinnerVerification } from './winner.domain.ts';
+
+it('starts reference closing only on verified Full House and completes only a different second-house participant', () => {
+  const context = { status: 'ACTIVE', drawCount: 42, closingSequence: null, firstHouseParticipantId: null };
+  expect(evaluateReferenceWinTransition('EARLY_5', 'p1', context)).toEqual({});
+  expect(evaluateReferenceWinTransition('FULL_HOUSE', 'p1', context)).toEqual({ closingSequence: 42 });
+  expect(evaluateReferenceWinTransition('FULL_HOUSE', 'p1', { ...context, closingSequence: 30 })).toEqual({});
+  expect(() => evaluateReferenceWinTransition('SECOND_FULL_HOUSE', 'p1', context)).toThrow();
+  expect(() => evaluateReferenceWinTransition('SECOND_FULL_HOUSE', 'p1', { ...context, firstHouseParticipantId: 'p1' })).toThrow();
+  expect(evaluateReferenceWinTransition('SECOND_FULL_HOUSE', 'p2', { ...context, firstHouseParticipantId: 'p1' })).toEqual({ status: 'COMPLETED' });
+  expect(evaluateReferenceWinTransition('SECOND_FULL_HOUSE', 'p2', { ...context, status: 'COMPLETED', firstHouseParticipantId: 'p1' })).toEqual({});
+});
+
+it('rejects partial and duplicate-key line/full-house evidence', () => {
+  const one = [{ rowIndex: 0, colIndex: 0, keyId: 'key' }];
+  expect(evaluatePattern('TOP_LINE', one, new Set(['key']))).toBe(false);
+  expect(evaluatePattern('FULL_HOUSE', one, new Set(['key']))).toBe(false);
+  const duplicates = Array.from({ length: 15 }, (_, i) => ({ rowIndex: Math.floor(i / 5), colIndex: i % 5, keyId: 'key' }));
+  expect(evaluatePattern('EARLY_5', duplicates, new Set(['key']))).toBe(false);
+  expect(evaluatePattern('FULL_HOUSE', duplicates, new Set(['key']))).toBe(false);
+});
 
 describe('evaluateWinnerCapacity', () => {
   it('allows the final configured winner and closes a one-winner pattern', () => {

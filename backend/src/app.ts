@@ -75,10 +75,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
     origin: (origin, cb) => {
       if (
         !origin ||
-        allowedOrigins.includes(origin) ||
-        origin.endsWith('.vercel.app') ||
-        origin.includes('localhost') ||
-        origin.includes('127.0.0.1')
+        allowedOrigins.includes(origin)
       ) {
         cb(null, true);
       } else {
@@ -88,7 +85,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
     credentials: true,
     methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Idempotency-Key', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
-    exposedHeaders: ['Set-Cookie'],
+    exposedHeaders: ['Set-Cookie', 'X-Request-Id'],
   });
 
   // Enable Security Headers
