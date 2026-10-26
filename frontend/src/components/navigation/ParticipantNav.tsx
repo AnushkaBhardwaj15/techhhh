@@ -47,7 +47,7 @@ export function ParticipantNav({ user, onLogout, isLoggingOut = false }: Partici
               tabIndex={-1}
             >
               <span aria-hidden="true">📖</span>
-              <span>Rules</span>
+              <span className={styles.btnLabel}>Rules</span>
             </button>
             <button
               type="button"
@@ -58,7 +58,7 @@ export function ParticipantNav({ user, onLogout, isLoggingOut = false }: Partici
               tabIndex={-1}
             >
               <span aria-hidden="true">{soundOn ? '🔊' : '🔇'}</span>
-              <span>{soundOn ? 'Sound' : 'Muted'}</span>
+              <span className={styles.btnLabel}>{soundOn ? 'Sound' : 'Muted'}</span>
             </button>
             <Link
               to="/participant/profile"
@@ -67,7 +67,7 @@ export function ParticipantNav({ user, onLogout, isLoggingOut = false }: Partici
               tabIndex={-1}
             >
               <span aria-hidden="true">👤</span>
-              <span>Profile</span>
+              <span className={styles.btnLabel}>Profile</span>
             </Link>
             <ActionButton
               type="button"

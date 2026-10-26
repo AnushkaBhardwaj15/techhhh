@@ -11,37 +11,43 @@
 .container,
 .topRow {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: row;
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: clamp(8px, 1.5vw, 16px);
   max-width: 1440px;
   margin: 0 auto;
-  padding: 12px 24px;
+  padding: 10px clamp(10px, 2.5vw, 24px);
+  min-height: 52px;
+  box-sizing: border-box;
 }
 
 .brandCol,
 .brandGroup {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: row;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: 12px;
+  flex-shrink: 0;
+  gap: clamp(6px, 1.2vw, 12px);
 }
 
 .wordmark {
   display: inline-flex;
-  min-height: 44px;
+  min-height: 36px;
   align-items: center;
   gap: 8px;
   color: #FFFFFF;
   text-decoration: none;
-  font-size: 15px;
+  font-size: clamp(13px, 1.4vw, 15px);
   font-weight: 900;
   letter-spacing: 0.08em;
+  white-space: nowrap;
 }
 
 .badge {
-  padding: 4px 8px;
+  padding: 3px 7px;
   background: var(--neo-orange);
   color: #FFFFFF;
   font: 900 11px var(--mono);
@@ -52,21 +58,24 @@
 }
 
 .roleBanner {
-  padding: 4px 8px;
+  padding: 3px 8px;
   border: 1.5px solid rgba(255, 255, 255, 0.4);
   border-radius: var(--radius-xs, 2px);
   background: #1E2026;
   color: var(--neo-sand);
   font: 800 10px var(--mono);
   letter-spacing: 0.1em;
+  white-space: nowrap;
 }
 
 .actionsCol,
 .userActions {
   display: flex;
+  flex-direction: row;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+  gap: clamp(4px, 1vw, 10px);
 }
 
 .profileButton,
@@ -75,9 +84,9 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  min-height: 40px;
-  padding: 8px 16px;
+  gap: 6px;
+  min-height: 36px;
+  padding: 6px clamp(8px, 1.2vw, 14px);
   border: 1.5px solid #000;
   border-radius: var(--radius-xs, 2px);
   background: #252830;
@@ -87,6 +96,8 @@
   cursor: pointer;
   box-shadow: 2px 2px 0px #000;
   transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .liveLink {
@@ -122,20 +133,36 @@
   font-size: 14px;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 640px) {
   .container,
   .topRow {
-    padding: 10px 14px;
-    gap: 8px;
+    padding: 8px 10px;
+    gap: 6px;
+    flex-wrap: nowrap;
   }
-  .brandCol,
-  .brandGroup {
-    width: 100%;
-    justify-content: space-between;
+  .roleBanner {
+    display: none;
   }
-  .actionsCol,
-  .userActions {
-    width: 100%;
-    justify-content: flex-end;
+  .profileButton,
+  .logoutButton,
+  .liveLink {
+    min-height: 32px;
+    padding: 5px 8px;
+    font-size: 10px;
+    gap: 4px;
+  }
+}
+
+@media (max-width: 480px) {
+  .btnLabel {
+    display: none;
+  }
+  .profileButton {
+    padding: 6px 8px;
+    min-width: 32px;
+  }
+  .logoutButton {
+    padding: 5px 8px;
+    font-size: 10px;
   }
 }
