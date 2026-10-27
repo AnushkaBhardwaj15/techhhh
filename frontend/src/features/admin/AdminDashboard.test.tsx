@@ -78,7 +78,7 @@ describe('admin dashboard', () => {
     renderPage();
     expect(await screen.findByRole('heading', { level: 1, name: 'Your games' })).toBeVisible();
     expect(screen.getAllByRole('button', { name: '+ Create Game' })[0]).toBeVisible();
-    expect(screen.getByRole('button', { name: '📥 Import Excel Bank' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Import Excel Bank' })).toBeVisible();
   });
 
   it('renders empty state when no games exist', async () => {
@@ -96,7 +96,7 @@ describe('admin dashboard', () => {
     expect(await screen.findByText('Tech Tambola — Game 1')).toBeVisible();
     expect(screen.getByText('GAME #1')).toBeVisible();
     expect(screen.getByText('CODE: #8679DE')).toBeVisible();
-    expect(screen.getByRole('button', { name: '⚙ Settings' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Settings' })).toBeVisible();
     expect(screen.getByRole('button', { name: 'Open Game Control →' })).toBeVisible();
   });
 
@@ -129,14 +129,14 @@ describe('admin dashboard', () => {
 
   it('toggles the Excel import panel', async () => {
     renderPage();
-    const importBtn = await screen.findByRole('button', { name: '📥 Import Excel Bank' });
+    const importBtn = await screen.findByRole('button', { name: 'Import Excel Bank' });
     expect(screen.queryByText('Import Questions from Excel / Spreadsheet')).not.toBeInTheDocument();
 
     fireEvent.click(importBtn);
     expect(screen.getByText('Import Questions from Excel / Spreadsheet')).toBeVisible();
-    expect(screen.getByText('✕ Close Import')).toBeVisible();
+    expect(screen.getByText('Close Import')).toBeVisible();
 
-    fireEvent.click(screen.getByText('✕ Close Import'));
+    fireEvent.click(screen.getByText('Close Import'));
     expect(screen.queryByText('Import Questions from Excel / Spreadsheet')).not.toBeInTheDocument();
   });
 

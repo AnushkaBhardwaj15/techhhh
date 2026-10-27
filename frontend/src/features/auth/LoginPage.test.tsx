@@ -74,6 +74,7 @@ describe('LoginPage', () => {
   });
   it('renders the new title and fills participant and admin presets', async () => {
     const user = setup();
+    expect(screen.getByRole('link', { name: /Back to home/i })).toHaveAttribute('href', '/');
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Tech Tambola');
     await user.click(screen.getByRole('button', { name: 'Player 2' }));
     expect(screen.getByRole('textbox', { name: /Email address/ })).toHaveValue('player2@techtombola.internal');

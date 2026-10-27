@@ -25,14 +25,16 @@ describe('LandingPage', () => {
     vi.clearAllMocks();
   });
 
-  it('renders the hero section with the core Tech Tombola message', async () => {
+  it('renders the hero section with the core Tech Tambola message', async () => {
     vi.mocked(authApi.getMe).mockRejectedValue(new ApiError(401, 'Authentication required'));
     renderLanding();
 
     expect(
       screen.getByRole('heading', { name: /Listen for the clue\..*Spot the key\..*Claim the win\./i })
     ).toBeInTheDocument();
-    expect(screen.getByText(/Tech Tombola is/i)).toBeInTheDocument();
+    expect(screen.getByText(/Tech Tambola is/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Tech Tambola Home/i })).toBeInTheDocument();
+    expect(screen.queryByText(/TOMBOLA/i)).not.toBeInTheDocument();
     expect(screen.getByText(/not a quiz/i)).toBeInTheDocument();
   });
 
@@ -45,7 +47,8 @@ describe('LandingPage', () => {
     expect(screen.getByRole('link', { name: /How to Play/i })).toHaveAttribute('href', '#how-it-works');
     expect(screen.getByRole('link', { name: /Interactive Card/i })).toHaveAttribute('href', '#sample-ticket');
     expect(screen.getByRole('link', { name: /Winning Patterns/i })).toHaveAttribute('href', '#patterns');
-    expect(screen.getAllByRole('link', { name: /Live Board/i }).length).toBeGreaterThan(0);
+    expect(screen.queryByRole('link', { name: /Live Board/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /Launch Live Projector Screen/i })).not.toBeInTheDocument();
   });
 
   it('adapts CTAs for an authenticated participant', async () => {

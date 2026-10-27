@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { DownloadSimple, Printer } from '@phosphor-icons/react';
 import { Link, useOutletContext, useSearchParams } from 'react-router-dom';
 import { ApiError } from '../../lib/api/client';
 import { listAdminWinners } from '../../lib/api/adminWinners';
@@ -78,7 +79,7 @@ export function AdminWinners() {
             onClick={exportCsv}
             title="Download CSV for offline verification and prize distribution"
           >
-            📥 Export CSV
+            <DownloadSimple size={17} weight="bold" aria-hidden="true" /> Export CSV
           </button>
           <button
             type="button"
@@ -86,7 +87,7 @@ export function AdminWinners() {
             onClick={() => window.print()}
             title="Print prize distribution list"
           >
-            🖨️ Print Sheet
+            <Printer size={17} weight="bold" aria-hidden="true" /> Print Sheet
           </button>
           <button type="button" disabled={winners.isFetching} onClick={() => void winners.refetch()}>{winners.isFetching ? 'Refreshing…' : 'Refresh history'}</button>
         </div>

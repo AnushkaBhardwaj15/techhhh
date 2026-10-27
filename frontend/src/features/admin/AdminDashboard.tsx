@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Broadcast, DownloadSimple, Gear, LockKey, Pause, Play } from '@phosphor-icons/react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { createPlayRound, validatePlayBank, commandPlayRound, broadcastPlayRound } from '../../lib/api/play';
@@ -228,7 +229,7 @@ export function AdminDashboard() {
                   marginBottom: '4px',
                 }}
               >
-                {isPaused ? '⏸ EVENT PAUSED' : '● LIVE EVENT IN PROGRESS'}
+                {isPaused ? <><Pause size={14} weight="fill" aria-hidden="true" /> EVENT PAUSED</> : <><Broadcast size={14} weight="bold" aria-hidden="true" /> LIVE EVENT IN PROGRESS</>}
               </span>
               <h2 style={{ margin: '2px 0 0 0', fontSize: '18px', color: 'var(--color-espresso, #302820)' }}>
                 {liveGame.name} (Code: {liveGame.code})
@@ -243,7 +244,7 @@ export function AdminDashboard() {
                   onClick={() => void handleGameCommand(liveGame.id, 'resume')}
                   disabled={commandingId === liveGame.id}
                 >
-                  ▶ Resume Event
+                  <Play size={16} weight="fill" aria-hidden="true" /> Resume Event
                 </button>
               ) : (
                 <button
@@ -253,7 +254,7 @@ export function AdminDashboard() {
                   onClick={() => void handleGameCommand(liveGame.id, 'pause')}
                   disabled={commandingId === liveGame.id}
                 >
-                  ⏸ Pause Event
+                  <Pause size={16} weight="fill" aria-hidden="true" /> Pause Event
                 </button>
               )}
               <button
@@ -288,7 +289,7 @@ export function AdminDashboard() {
                 setValidationResult(null);
               }}
             >
-              {showImport ? '✕ Close Import' : '📥 Import Excel Bank'}
+              {showImport ? 'Close Import' : <><DownloadSimple size={18} weight="bold" aria-hidden="true" /> Import Excel Bank</>}
             </button>
             <button
               type="button"
@@ -449,7 +450,7 @@ export function AdminDashboard() {
                           borderRadius: '2px',
                         }}
                       >
-                        📢 SHOWN IN LOBBY
+                        <Broadcast size={16} weight="bold" aria-hidden="true" /> SHOWN IN LOBBY
                       </span>
                     )}
                     <span className={styles.dateText}>
@@ -471,7 +472,7 @@ export function AdminDashboard() {
                     disabled={broadcastingId === game.id}
                     title="Toggle whether participants see this game and quick-join directly in the lobby"
                   >
-                    {broadcastingId === game.id ? 'Updating…' : game.isBroadcast ? '📢 Broadcast: ON' : '🔒 Broadcast: OFF'}
+                    {broadcastingId === game.id ? 'Updating…' : <>{game.isBroadcast ? <Broadcast size={17} weight="bold" aria-hidden="true" /> : <LockKey size={17} weight="bold" aria-hidden="true" />} Broadcast: {game.isBroadcast ? 'ON' : 'OFF'}</>}
                   </button>
                   {game.status === 'READY' && (
                     <button
@@ -481,7 +482,7 @@ export function AdminDashboard() {
                       onClick={() => void handleGameCommand(game.id, 'start')}
                       disabled={commandingId === game.id}
                     >
-                      {commandingId === game.id ? 'Starting…' : '▶ Start Event'}
+                      {commandingId === game.id ? 'Starting…' : <><Play size={16} weight="fill" aria-hidden="true" /> Start Event</>}
                     </button>
                   )}
                   {game.status === 'ACTIVE' && (
@@ -492,7 +493,7 @@ export function AdminDashboard() {
                       onClick={() => void handleGameCommand(game.id, 'pause')}
                       disabled={commandingId === game.id}
                     >
-                      {commandingId === game.id ? 'Pausing…' : '⏸ Pause Event'}
+                      {commandingId === game.id ? 'Pausing…' : <><Pause size={16} weight="fill" aria-hidden="true" /> Pause Event</>}
                     </button>
                   )}
                   {game.status === 'PAUSED' && (
@@ -503,7 +504,7 @@ export function AdminDashboard() {
                       onClick={() => void handleGameCommand(game.id, 'resume')}
                       disabled={commandingId === game.id}
                     >
-                      {commandingId === game.id ? 'Resuming…' : '▶ Resume Event'}
+                      {commandingId === game.id ? 'Resuming…' : <><Play size={16} weight="fill" aria-hidden="true" /> Resume Event</>}
                     </button>
                   )}
                   <button
@@ -511,7 +512,7 @@ export function AdminDashboard() {
                     className={styles.settingsBtn}
                     onClick={() => setSelectedRoundForAudit(game)}
                   >
-                    ⚙ Settings
+                    <><Gear size={17} weight="bold" aria-hidden="true" /> Settings</>
                   </button>
                   <button
                     type="button"

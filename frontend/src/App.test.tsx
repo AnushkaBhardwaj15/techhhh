@@ -57,6 +57,7 @@ describe('application role routes', () => {
     render(<App />);
     expect(await screen.findByRole('heading', { name: 'Administrator accounts' }, { timeout: 5000 })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Administrators' })).toHaveAttribute('href', '/admin/administrators');
+    expect(screen.getByRole('link', { name: /Back to dashboard/i })).toHaveAttribute('href', '/admin');
     expect(listSuperAdminAccounts).toHaveBeenCalled();
   });
 
