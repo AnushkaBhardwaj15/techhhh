@@ -67,6 +67,7 @@ export const participantProfiles = pgTable(
       .notNull()
       .references(() => events.id, { onDelete: 'restrict' }),
     externalId: varchar('external_id', { length: 255 }),
+    batchName: varchar('batch_name', { length: 100 }),
     status: varchar('status', { length: 50 }).notNull().default('ACTIVE'),
     emailDeliveryStatus: varchar('email_delivery_status', { length: 50 }).notNull().default('PENDING'),
     emailDeliveryError: text('email_delivery_error'),

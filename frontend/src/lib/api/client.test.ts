@@ -77,4 +77,20 @@ describe('apiRequest', () => {
     await result;
     vi.useRealTimers();
   });
+  it('allows a bounded longer timeout for bulk imports without sending it to Fetch', async () => {
+    vi.useFakeTimers();
+    let resolve!: (response: Response) => void;
+    const fetch = vi.fn().mockImplementation(() => new Promise<Response>((done) => { resolve = done; }));
+    vi.stubGlobal('fetch', fetch);
+    try {
+      const pending = apiRequest('/admin/participants/import', { timeoutMs: 600_000 });
+      await vi.advanceTimersByTimeAsync(25_001);
+      const options = fetch.mock.calls[0]?.[1];
+      expect(options.signal.aborted).toBe(false);
+      expect(options).not.toHaveProperty('timeoutMs');
+      resolve(new Response('{}', { headers: { 'content-type': 'application/json' } }));
+      await pending;
+    } finally { vi.useRealTimers(); }
+  });
+
 });

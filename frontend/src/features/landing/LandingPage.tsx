@@ -1,7 +1,6 @@
-import { useState, type FormEvent } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Link, useNavigate } from 'react-router-dom';
-import { getMe, quickJoin } from '../../lib/api/auth';
+import { useQuery } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
+import { getMe } from '../../lib/api/auth';
 import { useAuthUiStore } from '../auth/authStore';
 import { roleHomePath } from '../auth/routing';
 import { SampleTicketDemo } from './components/SampleTicketDemo';

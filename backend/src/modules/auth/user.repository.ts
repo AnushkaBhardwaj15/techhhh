@@ -26,8 +26,9 @@ export interface IUserRepository {
 }
 
 export class UserRepository implements IUserRepository {
+  constructor(private readonly database: typeof getDb = getDb) {}
   private getClient(tx?: any) {
-    return tx || getDb();
+    return tx || this.database();
   }
 
   async findByEmail(email: string, tx?: any): Promise<UserWithProfile | null> {

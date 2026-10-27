@@ -5,6 +5,7 @@ export interface ParsedCsvRow {
   name: string;
   email: string;
   externalId: string | null;
+  password?: string;
 }
 
 export function parseParticipantCsv(rawContent: string): ParsedCsvRow[] {
@@ -26,13 +27,15 @@ export function parseParticipantCsv(rawContent: string): ParsedCsvRow[] {
 
   // 3. Header inspection
   const header = records[0].map((col) => col.trim().toLowerCase());
+  if (header.length > 100 || new Set(header).size !== header.length) throw new ValidationError('CSV contains too many or duplicate columns');
   const nameIdx = header.indexOf('name');
+  const passwordIdx = header.indexOf('password');
   const emailIdx = header.indexOf('email');
   const externalIdIdx = header.indexOf('external_id');
 
-  if (nameIdx === -1 || emailIdx === -1) {
+  if (emailIdx === -1 || (nameIdx === -1 && passwordIdx === -1)) {
     throw new ValidationError(
-      "CSV header must contain at least 'name' and 'email' columns"
+      "CSV header must contain 'email' and either 'password' or 'name' columns"
     );
   }
 
@@ -56,7 +59,7 @@ export function parseParticipantCsv(rawContent: string): ParsedCsvRow[] {
       continue;
     }
 
-    const name = row[nameIdx] !== undefined ? row[nameIdx].trim() : '';
+    const name = nameIdx === -1 ? (row[emailIdx]?.trim() ?? '') : (row[nameIdx]?.trim() ?? '');
     const email = row[emailIdx] !== undefined ? row[emailIdx].trim().toLowerCase() : '';
     const rawExternalId = externalIdIdx !== -1 && row[externalIdIdx] !== undefined ? row[externalIdIdx].trim() : '';
     const externalId = rawExternalId ? rawExternalId : null;
@@ -66,6 +69,7 @@ export function parseParticipantCsv(rawContent: string): ParsedCsvRow[] {
       name,
       email,
       externalId,
+      ...(passwordIdx === -1 ? {} : { password: row[passwordIdx] ?? '' }),
     });
   }
 
@@ -74,58 +78,42 @@ export function parseParticipantCsv(rawContent: string): ParsedCsvRow[] {
 
 function parseCsvRecords(text: string): string[][] {
   const records: string[][] = [];
-  let currentRecord: string[] = [];
-  let currentField = '';
+  let record: string[] = [];
+  let field = '';
   let inQuotes = false;
-
+  let afterQuote = false;
+  const finishField = () => {
+    if (record.length >= 100) throw new ValidationError('CSV rows may contain at most 100 columns');
+    record.push(field);
+    field = '';
+    afterQuote = false;
+  };
+  const finishRecord = () => {
+    finishField();
+    if (record.some((value) => value.trim())) records.push(record);
+    record = [];
+    if (records.length > 501) throw new ValidationError('CSV file exceeds maximum limit of 500 data rows');
+  };
   for (let i = 0; i < text.length; i++) {
     const char = text[i];
-    const nextChar = text[i + 1];
-
     if (inQuotes) {
-      if (char === '"' && nextChar === '"') {
-        currentField += '"';
-        i++; // skip escaped quote
-      } else if (char === '"') {
-        inQuotes = false;
-      } else {
-        currentField += char;
-      }
-    } else {
-      if (char === '"') {
-        inQuotes = true;
-      } else if (char === ',') {
-        currentRecord.push(currentField);
-        currentField = '';
-      } else if (char === '\r') {
-        if (nextChar === '\n') {
-          i++; // skip LF
-        }
-        currentRecord.push(currentField);
-        currentField = '';
-        if (currentRecord.some((f) => f.trim().length > 0)) {
-          records.push(currentRecord);
-        }
-        currentRecord = [];
-      } else if (char === '\n') {
-        currentRecord.push(currentField);
-        currentField = '';
-        if (currentRecord.some((f) => f.trim().length > 0)) {
-          records.push(currentRecord);
-        }
-        currentRecord = [];
-      } else {
-        currentField += char;
-      }
+      if (char === '"' && text[i + 1] === '"') { field += '"'; i++; }
+      else if (char === '"') { inQuotes = false; afterQuote = true; }
+      else field += char;
+      continue;
     }
+    if (char === ',') finishField();
+    else if (char === '\r' || char === '\n') {
+      if (char === '\r' && text[i + 1] === '\n') i++;
+      finishRecord();
+    } else if (afterQuote) {
+      if (!/^[ \t]$/.test(char)) throw new ValidationError('Unexpected character after a quoted CSV field');
+    } else if (char === '"') {
+      if (field.length) throw new ValidationError('Unexpected quote inside an unquoted CSV field');
+      inQuotes = true;
+    } else field += char;
   }
-
-  if (currentField || currentRecord.length > 0) {
-    currentRecord.push(currentField);
-    if (currentRecord.some((f) => f.trim().length > 0)) {
-      records.push(currentRecord);
-    }
-  }
-
+  if (inQuotes) throw new ValidationError('CSV contains an unclosed quoted field');
+  if (field.length || record.length || afterQuote) finishRecord();
   return records;
 }

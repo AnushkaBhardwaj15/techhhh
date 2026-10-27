@@ -10,6 +10,7 @@ import { claimPlayPrize, markPlayCell } from '../../lib/api/play';
 import { mergeParticipantDraws, useParticipantRealtime, type ConnectionStatus, type DisplayDraw } from '../../lib/realtime';
 import { playNewClueSound } from '../../lib/audio';
 import type { AuthenticatedUser } from '../../types/auth';
+import type { ParticipantEvent } from '../../types/participant';
 import type { PlayState } from '../../types/play';
 import type { ParticipantTicket as Ticket } from '../../types/ticket';
 import { ActionButton } from '../../components/ActionButton';
@@ -116,7 +117,7 @@ function ReferenceParticipantGame({ id }: { id: string }) {
       setAccepted(result.accepted);
       setFeedback(
         result.accepted
-          ? `${labels[pattern]} submitted! Awaiting host verification.`
+          ? result.points ? `You earned ${result.points} points for ${labels[pattern]}.` : `${labels[pattern]} submitted! Awaiting host verification.`
           : (result.warning ?? 'This claim is not ready yet. No penalty was applied.')
       );
       await client.invalidateQueries({ queryKey: ['reference-play'] });
@@ -130,6 +131,8 @@ function ReferenceParticipantGame({ id }: { id: string }) {
   }
 
 
+
+  if (game?.status === 'READY') return <Navigate to="/participant/waiting" replace />;
 
   const latest = game?.draws.at(-1);
 

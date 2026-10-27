@@ -18,6 +18,11 @@ export class AuditRepository implements IAuditRepository {
   }
 
   async append(payload: AuditRecordPayload, tx?: any): Promise<AuditLogRecord> {
+    // Transactional mutations must roll back when durable auditing fails.
+    if (tx) {
+      const [record] = await tx.insert(auditLogs).values(payload).returning();
+      return record;
+    }
     const memRecord: AuditLogRecord = {
       id: crypto.randomUUID(),
       actorId: payload.actorId ?? null,

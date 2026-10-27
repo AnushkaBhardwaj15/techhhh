@@ -6,12 +6,19 @@ import {
   type UserRecord,
   type ParticipantProfileRecord,
 } from '../../db/schema/users.ts';
+import { events } from '../../db/schema/events.ts';
+import type { BatchTransaction } from './participant-batch.repository.ts';
 import type { ParticipantSummary } from './participant.types.ts';
 
+export async function lockParticipantEvent(eventId: string, tx: BatchTransaction) {
+  await tx.select({ id: events.id }).from(events).where(eq(events.id, eventId)).for('update');
+}
+
 export interface IParticipantRepository {
+  lockEvent(eventId: string, tx: BatchTransaction): Promise<void>;
   create(
     userData: { email: string; name: string; passwordHash: string },
-    profileData: { eventId: string; externalId?: string | null },
+    profileData: { eventId: string; externalId?: string | null; batchName?: string; emailDeliveryStatus?: 'PENDING' | 'NOT_REQUIRED' },
     tx?: any
   ): Promise<ParticipantSummary>;
   findById(id: string, tx?: any): Promise<ParticipantSummary | null>;
@@ -44,6 +51,7 @@ export interface IParticipantRepository {
 }
 
 export class ParticipantRepository implements IParticipantRepository {
+  lockEvent = lockParticipantEvent;
   private getClient(tx?: any) {
     return tx || getDb();
   }
@@ -56,6 +64,7 @@ export class ParticipantRepository implements IParticipantRepository {
       email: user.email,
       name: user.name,
       externalId: profile.externalId,
+      batchName: profile.batchName,
       status: profile.status as any,
       emailDeliveryStatus: profile.emailDeliveryStatus as any,
       emailDeliveryError: profile.emailDeliveryError,
@@ -66,7 +75,7 @@ export class ParticipantRepository implements IParticipantRepository {
 
   async create(
     userData: { email: string; name: string; passwordHash: string },
-    profileData: { eventId: string; externalId?: string | null },
+    profileData: { eventId: string; externalId?: string | null; batchName?: string; emailDeliveryStatus?: 'PENDING' | 'NOT_REQUIRED' },
     tx?: any
   ): Promise<ParticipantSummary> {
     const client = this.getClient(tx);
@@ -101,8 +110,9 @@ export class ParticipantRepository implements IParticipantRepository {
         userId: user.id,
         eventId: profileData.eventId,
         externalId: profileData.externalId ? profileData.externalId.trim() : null,
+        batchName: profileData.batchName ?? null,
         status: 'ACTIVE',
-        emailDeliveryStatus: 'PENDING',
+        emailDeliveryStatus: profileData.emailDeliveryStatus ?? 'PENDING',
       })
       .returning();
 
