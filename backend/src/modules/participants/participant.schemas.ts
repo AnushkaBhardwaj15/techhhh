@@ -4,6 +4,8 @@ export const createParticipantSchema = z.object({
   eventId: z.string().uuid('Invalid event ID format'),
   email: z.string().trim().email('Invalid email address format').max(255),
   name: z.string().trim().min(1, 'Name is required').max(255),
+  password: z.string().min(8).max(128).optional(),
+  batchName: z.string().trim().min(1).max(100).optional(),
   externalId: z.string().trim().min(1).max(255).optional().nullable(),
 });
 
@@ -28,3 +30,5 @@ export const participantPaginationSchema = z.object({
 export const participantIdParamSchema = z.object({
   id: z.string().uuid('Invalid participant ID format'),
 });
+
+export const batchScopeSchema = z.object({ eventId: z.string().uuid(), batchName: z.string().trim().min(1).max(100) });

@@ -115,4 +115,25 @@ describe('Admin Participant CSV import', () => {
     expect(await screen.findByText(/server did not accept the import/)).toHaveAttribute('role', 'status');
     expect(screen.queryByRole('button', { name: /deliberate retry/ })).not.toBeInTheDocument();
   });
+  it('imports a named email/password batch without revealing passwords in the preview', async () => {
+    renderImport();
+    await chooseCsv('email,password\na@test.com,SecretPass123');
+    fireEvent.change(screen.getByLabelText('Batch name'), { target: { value: 'testing1' } });
+    expect(screen.queryByText('SecretPass123')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm import of 1 rows' }));
+    await screen.findByRole('heading', { name: 'Import results' });
+    expect(importAdminParticipants).toHaveBeenCalledWith(expect.objectContaining({ batchName: 'testing1' }));
+  });
+
+  it('sends Excel files for server validation and requires a batch name', async () => {
+    renderImport();
+    fireEvent.change(screen.getByLabelText('CSV file'), { target: { files: [new File(['workbook bytes'], 'testing2.xlsx')] } });
+    fireEvent.change(screen.getByLabelText('Batch name'), { target: { value: '' } });
+    expect(screen.getByRole('button', { name: 'Confirm Excel import' })).toBeDisabled();
+    fireEvent.change(screen.getByLabelText('Batch name'), { target: { value: 'testing2' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm Excel import' }));
+    await screen.findByRole('heading', { name: 'Import results' });
+    expect(importAdminParticipants).toHaveBeenCalledWith(expect.objectContaining({ batchName: 'testing2', file: expect.any(File) }));
+  });
+
 });

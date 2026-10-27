@@ -45,7 +45,7 @@ export function parseParticipantCsv(content: string): ParticipantCsvPreview {
   const tooManyRows = () => records.length > PARTICIPANT_CSV_MAX_ROWS + 1;
   const rowLimitPreview = (): ParticipantCsvPreview => ({
     headers: (records[0] ?? []).map((value) => value.trim()),
-    rows: records.slice(1, PARTICIPANT_CSV_PREVIEW_ROWS + 1),
+    rows: records.slice(1, PARTICIPANT_CSV_PREVIEW_ROWS + 1).map((row) => row.map((value, index) => records[0]?.[index]?.trim().toLowerCase() === 'password' ? '••••••••' : value)),
     totalRows: records.length - 1,
     issues: [...issues, `This file has more than ${PARTICIPANT_CSV_MAX_ROWS} data rows; the server accepts up to ${PARTICIPANT_CSV_MAX_ROWS}.`],
   });
@@ -87,7 +87,8 @@ export function parseParticipantCsv(content: string): ParticipantCsvPreview {
   const normalizedHeaders = headers.map((header) => header.toLowerCase());
   const duplicateHeaders = normalizedHeaders.filter((header, index) => header && normalizedHeaders.indexOf(header) !== index);
   if (duplicateHeaders.length) issues.add(`Duplicate header: ${[...new Set(duplicateHeaders)].join(', ')}.`);
-  for (const required of ['name', 'email']) if (!normalizedHeaders.includes(required)) issues.add(`The header row must include a ${required} column.`);
+  if (!normalizedHeaders.includes('name') && !normalizedHeaders.includes('password')) issues.add('The header row must include a password column.');
+  for (const required of ['email']) if (!normalizedHeaders.includes(required)) issues.add(`The header row must include a ${required} column.`);
 
   const data = records.slice(1);
   if (data.length > PARTICIPANT_CSV_MAX_ROWS) issues.add(`This file has ${data.length} data rows; the server accepts up to ${PARTICIPANT_CSV_MAX_ROWS}.`);
@@ -95,5 +96,5 @@ export function parseParticipantCsv(content: string): ParticipantCsvPreview {
     if (row.length !== headers.length) issues.add(`Record ${index + 2} has ${row.length} columns; the header has ${headers.length}.`);
   });
 
-  return { headers, rows: data.slice(0, PARTICIPANT_CSV_PREVIEW_ROWS), totalRows: data.length, issues: [...issues] };
+  return { headers, rows: data.slice(0, PARTICIPANT_CSV_PREVIEW_ROWS).map((row) => row.map((value, index) => normalizedHeaders[index] === 'password' ? '••••••••' : value)), totalRows: data.length, issues: [...issues] };
 }

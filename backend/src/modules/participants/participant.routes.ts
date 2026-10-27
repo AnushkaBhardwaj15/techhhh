@@ -2,12 +2,16 @@ import type { FastifyPluginAsync } from 'fastify';
 import { requireAdmin } from '../../middleware/auth.ts';
 import {
   createParticipantSchema,
+  batchScopeSchema,
   participantIdParamSchema,
   participantPaginationSchema,
   updateParticipantSchema,
 } from './participant.schemas.ts';
 import { participantService } from './participant.service.ts';
 import { importService } from './import/import.service.ts';
+import { z } from 'zod';
+import { participantFileToCsv } from './import/spreadsheet.ts';
+import { participantBatchService } from './participant-batch.service.ts';
 import { ValidationError } from '../../shared/errors/app-error.ts';
 
 export const participantRoutes: FastifyPluginAsync = async (fastify) => {
@@ -22,6 +26,19 @@ export const participantRoutes: FastifyPluginAsync = async (fastify) => {
       search: query.search,
       status: query.status,
     });
+  });
+
+  fastify.get('/admin/participant-batches', async (request) => {
+    const { eventId } = z.object({ eventId: z.string().uuid() }).parse(request.query);
+    return { batches: await participantBatchService.list(eventId) };
+  });
+
+  fastify.delete('/admin/participant-batches', async (request) => {
+    return participantBatchService.remove(request.user!.id, batchScopeSchema.parse(request.body));
+  });
+
+  fastify.delete('/admin/participants/:id', async (request) => {
+    return participantBatchService.remove(request.user!.id, participantIdParamSchema.parse(request.params));
   });
 
   fastify.get('/admin/participants/:id', async (request) => {
@@ -51,15 +68,20 @@ export const participantRoutes: FastifyPluginAsync = async (fastify) => {
 
     let eventId = (request.query as any)?.eventId || '';
     let csvContent = '';
+    let fileCount = 0;
+    let batchName: unknown;
 
     if (request.isMultipart()) {
       const parts = request.parts();
       for await (const part of parts) {
         if (part.type === 'file') {
+          if (++fileCount > 1) throw new ValidationError('Upload exactly one participant file');
           const buffer = await part.toBuffer();
-          csvContent = buffer.toString('utf-8');
+          csvContent = participantFileToCsv(part.filename, buffer);
         } else if (part.type === 'field' && part.fieldname === 'eventId') {
           eventId = part.value as string;
+        } else if (part.type === 'field' && part.fieldname === 'batchName') {
+          batchName = part.value;
         }
       }
     } else {
@@ -67,6 +89,7 @@ export const participantRoutes: FastifyPluginAsync = async (fastify) => {
       if (body && typeof body === 'object') {
         eventId = body.eventId || eventId;
         csvContent = body.csvContent || '';
+        batchName = body.batchName;
       } else if (typeof body === 'string') {
         csvContent = body;
       }
@@ -75,6 +98,10 @@ export const participantRoutes: FastifyPluginAsync = async (fastify) => {
     if (!eventId) {
       throw new ValidationError('eventId is required');
     }
+
+    z.string().uuid().parse(eventId);
+    z.string().max(10 * 1024 * 1024).parse(csvContent);
+    const parsedBatch = batchName === undefined ? undefined : z.string().trim().min(1).max(100).parse(batchName);
 
     const report = await importService.importParticipantsFromCsv(
       request.user!.id,
@@ -85,7 +112,8 @@ export const participantRoutes: FastifyPluginAsync = async (fastify) => {
         ip: request.ip,
         userAgent: request.headers['user-agent'],
         requestId: request.id,
-      }
+      },
+      parsedBatch
     );
 
     reply.status(200);

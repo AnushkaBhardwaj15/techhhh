@@ -10,9 +10,10 @@ export class ApiError extends Error {
   }
 }
 
-export async function apiRequest<T>(path: string, options: RequestInit = {}): Promise<T | undefined> {
+export async function apiRequest<T>(path: string, options: RequestInit & { timeoutMs?: number } = {}): Promise<T | undefined> {
+  const { timeoutMs = TIMEOUT_MS, ...requestOptions } = options;
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(new DOMException('Request timed out', 'TimeoutError')), TIMEOUT_MS);
+  const timeout = setTimeout(() => controller.abort(new DOMException('Request timed out', 'TimeoutError')), timeoutMs);
   const signal = options.signal
     ? AbortSignal.any([options.signal, controller.signal])
     : controller.signal;
@@ -23,7 +24,7 @@ export async function apiRequest<T>(path: string, options: RequestInit = {}): Pr
 
   try {
     const response = await fetch(`${API_BASE}/api/v1${path}`, {
-      ...options,
+      ...requestOptions,
       signal,
       credentials: 'include',
       headers,

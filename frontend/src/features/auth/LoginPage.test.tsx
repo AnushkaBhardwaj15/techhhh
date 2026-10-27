@@ -72,15 +72,12 @@ describe('LoginPage', () => {
     expect(await screen.findByText(label)).toBeInTheDocument();
     expect(authApi.login).toHaveBeenCalledWith('attendee@example.test', 'password');
   });
-  it('renders the new title and fills participant and admin presets', async () => {
-    const user = setup();
+  it('shows email/password login without public demo credentials', () => {
+    setup();
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Tech Tambola');
-    await user.click(screen.getByRole('button', { name: 'Player 2' }));
-    expect(screen.getByRole('textbox', { name: /Email address/ })).toHaveValue('player2@techtombola.internal');
-    expect(screen.getByLabelText('Password')).toHaveValue('PlayerPass123!');
-    await user.click(screen.getByRole('button', { name: 'Admin 3' }));
-    expect(screen.getByRole('textbox', { name: /Email address/ })).toHaveValue('admin3@techtombola.internal');
-    expect(authApi.login).not.toHaveBeenCalled();
+    expect(screen.queryByRole('button', { name: 'Player 2' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Admin 3' })).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Password')).toHaveValue('');
   });
   it('toggles password visibility without submitting', async () => {
     const user = setup();

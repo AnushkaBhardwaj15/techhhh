@@ -197,7 +197,7 @@ Tech Tombola is engineered to run natively with Bun without requiring Docker con
 cd backend
 bun install
 bun run db:migrate   # Applies database migrations
-bun run db:seed      # Seeds default tech questions, admin, and round
+bun run db:seed      # Creates only the initial configured Super Admin
 bun run dev          # Starts backend on http://localhost:3000
 
 # 2. Frontend (Vite + React on Bun)
@@ -222,3 +222,25 @@ Contributors and AI assistants follow a disciplined 16-step development process 
 ## 📄 License
 
 This project is licensed under the [MIT License](LICENSE).
+
+
+### Initial authentication setup and participant batches
+
+Set `SUPER_ADMIN_EMAIL`, `SUPER_ADMIN_PASSWORD` (12–128 characters),
+`SUPER_ADMIN_NAME`, and `SUPER_ADMIN_BOOTSTRAP_SECRET` (at least 32 characters)
+in the backend environment, then run `bun run db:migrate` and `bun run db:seed`
+from `backend/`. The seed creates one Super Admin, never resets existing
+credentials, and creates no demo participants, administrators, or game data.
+
+The Super Admin signs in with email/password and creates administrators from
+Administrator management. Both roles can import participants from Participant
+management: select an Event, choose CSV/Excel, and enter a batch name. Required
+columns are `email,password`; `name,external_id` are optional. Passwords must
+contain 8–128 characters. Use plain text cell values in a single Excel sheet.
+Both college and personal emails are supported. An Event must exist before
+participant enrollment; it can be created from Event management.
+
+Use Participant batches to remove a test group. Groups with tickets are disabled
+and sessions revoked, preserving history. Unused groups are permanently deleted;
+other groups and Events are preserved. Old installations are not automatically
+cleared by the seed.

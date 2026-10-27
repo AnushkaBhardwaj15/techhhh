@@ -22,7 +22,7 @@ describe('game reveal animations', () => {
     animation.fromTo.mockClear();
     animation.timelineFromTo.mockClear();
     motionListeners = [];
-    Object.defineProperty(window, 'matchMedia', { configurable: true, value: vi.fn().mockReturnValue({ matches: false, addEventListener: (_type: string, listener: (event: { matches: boolean }) => void) => { motionListeners.push(listener); }, removeEventListener: (_type: string, listener: (event: { matches: boolean }) => void) => { motionListeners = motionListeners.filter((candidate) => candidate !== listener); } }) });
+    Object.defineProperty(window, 'matchMedia', { configurable: true, value: vi.fn().mockImplementation((query: string) => ({ matches: false, addEventListener: (_type: string, listener: (event: { matches: boolean }) => void) => { if (query === '(prefers-reduced-motion: reduce)') motionListeners.push(listener); }, removeEventListener: (_type: string, listener: (event: { matches: boolean }) => void) => { motionListeners = motionListeners.filter((candidate) => candidate !== listener); } })) });
   });
   afterEach(() => {
     cleanup();

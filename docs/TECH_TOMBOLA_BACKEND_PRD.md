@@ -1174,31 +1174,42 @@ the method list aligned with registered routes when the API changes.
 
 # 41. Participant Import
 
-The backend must support bulk participant import.
+Admins and Super Admins can import up to 500 participants from a UTF-8 CSV
+or a single-sheet Excel workbook (`.xlsx` or `.xls`), at most 10 MiB.
 
-CSV fields:
+For supplied credentials, required columns are `email,password`; optional
+columns are `name,external_id`. Personal and college email addresses are
+accepted. If no name is supplied, use the email as the display name.
+Passwords must contain 8–128 characters and are hashed with Argon2id;
+leading and trailing password whitespace is significant.
 
-``` text
-name
-email
-optional external_id
-```
+The operator supplies a **batch name separately from the file**, for example
+`testing1` (5 participants), `testing2` (100), or `prod` (500). Batch names
+are scoped to an Event, contain 1–100 characters, and group enrollments for
+listing and removal. They are not academic cohorts or login identifiers.
 
-Import processing must:
+Existing `name,email,external_id` CSV imports without supplied passwords
+remain supported and generate credentials for email delivery. Named batch
+imports require supplied passwords. Supplied credentials are distributed by
+the operator and have delivery status `NOT_REQUIRED`; the backend does not
+email them or return them in reports. Existing account passwords and batch
+memberships must never be overwritten by an import.
 
--   validate email;
--   detect duplicates;
--   report invalid rows;
--   create valid accounts;
--   generate initial credentials;
--   assign tickets where configured;
--   produce an import result report.
+Imports validate rows independently and report created, skipped, and failed
+rows. A bad row does not roll back valid rows. Duplicate emails or external
+IDs are skipped. Exact retries are scoped to actor, Event, batch and file.
+Reports, audit records and retry records never contain plaintext passwords.
 
-Import is transactional per participant and returns a complete report
-of created, skipped, and failed rows. A bad row does not roll back valid
-rows. The MVP accepts CSV with `name`, `email`, and optional
-`external_id`; JSON import and participant phone numbers are outside
-scope.
+Both administrator roles may add or remove individual participants, list
+named batches and remove all participants in a selected batch. If any member
+has a ticket, disable the entire selected group and revoke its sessions while
+preserving all game history. Otherwise, permanently delete those enrollments
+and orphaned participant accounts. Other batches, Events and administrator
+accounts are preserved. Removal and its audit record commit atomically.
+
+New installations start with exactly one configured Super Admin and no
+demo administrators or participants. Only Super Admins manage administrators.
+Public self-registration and demo password shortcuts are unavailable.
 
 ------------------------------------------------------------------------
 
@@ -1206,7 +1217,7 @@ scope.
 
 Participant credentials must be deliverable by email.
 
-The backend should integrate with an external transactional email
+For generated credentials, the backend should integrate with an external transactional email
 provider rather than operating its own mail server.
 
 Credential email is sent after the participant transaction commits.

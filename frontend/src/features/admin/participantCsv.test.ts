@@ -18,7 +18,7 @@ describe('Participant CSV preview', () => {
       'Duplicate header: email.',
     ]));
     expect(parseParticipantCsv('full_name,contact\nSam,sam@example.test').issues).toEqual(expect.arrayContaining([
-      'The header row must include a name column.', 'The header row must include a email column.',
+      'The header row must include a password column.', 'The header row must include a email column.',
     ]));
   });
 
@@ -61,4 +61,17 @@ describe('Participant CSV preview', () => {
     const invalidUtf8 = new File([new Uint8Array([0xff])], 'invalid.csv');
     await expect(readParticipantCsvFile(invalidUtf8)).rejects.toThrow('valid UTF-8 CSV');
   });
+});
+
+it('masks supplied passwords in the preview', () => {
+  const preview = parseParticipantCsv('email,password\na@test.com,KeepThisSecret123');
+  expect(preview.issues).toEqual([]);
+  expect(preview.rows[0]).toEqual(['a@test.com', '••••••••']);
+  expect(JSON.stringify(preview)).not.toContain('KeepThisSecret123');
+});
+
+it('also masks passwords when a file exceeds the row limit', () => {
+  const preview = parseParticipantCsv('email,password\n' + Array.from({ length: 501 }, (_, i) => `p${i}@test.com,SecretPass123`).join('\n'));
+  expect(preview.issues.length).toBeGreaterThan(0);
+  expect(JSON.stringify(preview)).not.toContain('SecretPass123');
 });

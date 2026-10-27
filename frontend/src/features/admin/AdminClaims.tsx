@@ -39,7 +39,7 @@ export function AdminClaims() {
   const claims = useQuery({
     queryKey: claimsKey(user.id, page),
     queryFn: ({ signal }) => listAdminClaims({ page, limit: PAGE_SIZE, signal }),
-    refetchInterval: 1000,
+    refetchInterval: 15_000,
     refetchIntervalInBackground: true,
     refetchOnReconnect: 'always',
   });

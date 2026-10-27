@@ -19,15 +19,7 @@ const patternNames: Record<string, string> = {
 
 export function ParticipantProfile() {
   const user = useOutletContext<AuthenticatedUser>();
-  const [showPassword, setShowPassword] = useState(false);
-  const [copied, setCopied] = useState(false);
   const [filter, setFilter] = useState<'ALL' | 'VERIFIED' | 'REJECTED' | 'PENDING'>('ALL');
-
-  // Load password from storage or fallback to default
-  const storedPassword =
-    localStorage.getItem('tt_participant_pwd') ||
-    sessionStorage.getItem('tt_participant_pwd') ||
-    'PlayerPass123!';
 
   // Event & Round context
   const event = useQuery({
@@ -70,13 +62,6 @@ export function ParticipantProfile() {
       ? pendingClaims
       : claims;
 
-  function handleCopyPassword() {
-    navigator.clipboard?.writeText(storedPassword).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
-  }
-
   const backLink =
     round.data?.status === 'ACTIVE' ? '/participant/game' : '/participant/lobby';
   const backLabel =
@@ -96,7 +81,7 @@ export function ParticipantProfile() {
           <p className={styles.eyebrow}>ACCOUNT & CLAIM HISTORY</p>
           <h1>Profile & Credentials</h1>
           <p className={styles.subhead}>
-            View your registered participant email, login credentials, and full record of accepted
+            View your registered participant email and full record of accepted
             and rejected win claims.
           </p>
         </header>
@@ -120,33 +105,6 @@ export function ParticipantProfile() {
               <dt>Registered Email</dt>
               <dd>
                 <code className={styles.emailCode}>{user.email}</code>
-              </dd>
-            </div>
-
-            <div className={styles.detailRow}>
-              <dt>Password</dt>
-              <dd className={styles.passwordCell}>
-                <span className={styles.passwordText}>
-                  {showPassword ? storedPassword : '••••••••••••'}
-                </span>
-                <div className={styles.passwordActions}>
-                  <button
-                    type="button"
-                    className={styles.toggleButton}
-                    onClick={() => setShowPassword((prev) => !prev)}
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  >
-                    {showPassword ? 'Hide' : 'Show'}
-                  </button>
-                  <button
-                    type="button"
-                    className={styles.copyButton}
-                    onClick={handleCopyPassword}
-                    title="Copy password to clipboard"
-                  >
-                    {copied ? 'Copied!' : 'Copy'}
-                  </button>
-                </div>
               </dd>
             </div>
 

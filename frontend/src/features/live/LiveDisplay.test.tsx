@@ -71,7 +71,7 @@ describe("reference live display", () => {
     };
     mount();
     expect(await screen.findByText("OFFICIAL ANSWER")).toBeVisible();
-    expect(screen.getAllByText("Docker")).toHaveLength(2);
+    expect(screen.getByText("Docker")).toBeVisible();
   });
   it("shows standings supplied by the server", async () => {
     game.standings = [{ name: "Ari", points: 50 }];

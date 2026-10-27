@@ -10,7 +10,8 @@ import type { AuthenticatedUser } from '../../types/auth';
 import { AdminParticipants } from './AdminParticipants';
 
 vi.mock('../../lib/api/adminEvents', () => ({ listAdminEvents: vi.fn() }));
-vi.mock('../../lib/api/adminParticipants', () => ({ createAdminParticipant: vi.fn(), getAdminParticipant: vi.fn(), listAdminParticipants: vi.fn(), updateAdminParticipant: vi.fn() }));
+vi.mock('./AdminParticipantBatches', () => ({ AdminParticipantBatches: () => null }));
+vi.mock('../../lib/api/adminParticipants', () => ({ removeAdminParticipant: vi.fn(), createAdminParticipant: vi.fn(), getAdminParticipant: vi.fn(), listAdminParticipants: vi.fn(), updateAdminParticipant: vi.fn() }));
 
 const admin: AuthenticatedUser = { id: 'admin-1', email: 'admin@example.test', name: 'Admin', role: 'ADMIN', status: 'ACTIVE' };
 const eventId = '0d3aa3e6-4c58-4c36-b363-d5f11640ba52';
@@ -161,11 +162,12 @@ describe('Admin Participant management', () => {
     expect(client.getQueryState(['admin-participants', admin.id, eventId, 'detail', personId])?.isInvalidated).toBe(true);
   });
 
-  it('does not offer a password field in Participant creation', async () => {
+  it('offers a supplied password and batch field in Participant creation', async () => {
     renderPage();
     await screen.findByText('Sam Rivera');
     fireEvent.click(screen.getByRole('button', { name: 'Add Participant' }));
-    expect(screen.queryByLabelText(/password/i)).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Password')).toHaveAttribute('type', 'password');
+    expect(screen.getByLabelText('Batch name (optional)')).toBeInTheDocument();
   });
 
   it('updates name and external ID using supported fields', async () => {

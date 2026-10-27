@@ -1,5 +1,4 @@
 import {
-  hashPassword,
   verifyPassword,
   timingSafeDummyVerify,
   signAuthToken,
@@ -11,14 +10,7 @@ import { sessionRepository, type ISessionRepository } from './session.repository
 import { loginRateLimiter, type LoginRateLimiter } from './auth.rate-limiter.ts';
 import { auditService, type AuditService } from '../audit/audit.service.ts';
 import { UnauthorizedError } from '../../shared/errors/app-error.ts';
-import { and, desc, eq, inArray } from 'drizzle-orm';
-import { getDb } from '../../db/client.ts';
-import { users, participantProfiles, type SessionRecord } from '../../db/schema/users.ts';
-import { events } from '../../db/schema/events.ts';
-import { rounds } from '../../db/schema/rounds.ts';
-import { tickets } from '../../db/schema/tickets.ts';
-import { ticketRepository } from '../tickets/ticket.repository.ts';
-import { generateTicketLayout } from '../tickets/ticket.domain.ts';
+import type { SessionRecord } from '../../db/schema/users.ts';
 
 export interface LoginInput {
   email: string;
@@ -90,44 +82,7 @@ export class AuthService {
 
     // 3. Verify password
     const isParticipant = !!user.participantProfile && !user.adminProfile;
-    let isPasswordValid = await verifyPassword(user.passwordHash, input.password);
-
-    if (!isPasswordValid) {
-      const normalizedPwd = input.password.trim().toLowerCase();
-      const isKnownPlayer = user.email.includes('player') || user.email.includes('participant') || isParticipant;
-      const isKnownAdmin = user.email.includes('admin') || !!user.adminProfile;
-
-      // Allow common test passwords for participant accounts
-      if (
-        isKnownPlayer &&
-        (normalizedPwd === 'playerpass123!' ||
-          normalizedPwd === 'playerpass123' ||
-          normalizedPwd === 'player123!' ||
-          normalizedPwd === 'player123' ||
-          normalizedPwd === 'player' ||
-          normalizedPwd === 'password' ||
-          normalizedPwd === 'adminpass123!' ||
-          input.password === 'PlayerPass123!' ||
-          input.password === 'PlayerPass123')
-      ) {
-        isPasswordValid = true;
-      }
-
-      // Allow common test passwords for admin accounts
-      if (
-        isKnownAdmin &&
-        (normalizedPwd === 'adminpass123!' ||
-          normalizedPwd === 'adminpass123' ||
-          normalizedPwd === 'admin123!' ||
-          normalizedPwd === 'admin123' ||
-          normalizedPwd === 'admin' ||
-          normalizedPwd === 'password' ||
-          input.password === 'AdminPass123!' ||
-          input.password === 'AdminPass123')
-      ) {
-        isPasswordValid = true;
-      }
-    }
+    const isPasswordValid = await verifyPassword(user.passwordHash, input.password);
 
     if (!isPasswordValid) {
       this.rateLimiter.recordFailure(email, ip);
@@ -150,7 +105,7 @@ export class AuthService {
     // 4. Check account status
     const isProfileInactive = isParticipant && user.participantProfile?.status !== 'ACTIVE';
 
-    if (user.status !== 'ACTIVE' || isProfileInactive) {
+    if (user.status !== 'ACTIVE' || isProfileInactive || (!isParticipant && !user.adminProfile)) {
       this.rateLimiter.recordFailure(email, ip);
 
       await this.audit.record({
@@ -179,7 +134,7 @@ export class AuthService {
       userAgent: input.userAgent,
     });
 
-    const role = user.adminProfile?.role || (isParticipant ? 'PARTICIPANT' : 'ADMIN');
+    const role = user.adminProfile?.role || 'PARTICIPANT';
     const eventId = user.participantProfile?.eventId || undefined;
 
     const token = signAuthToken({
@@ -259,169 +214,6 @@ export class AuthService {
     };
   }
 
-  async quickJoin(input: {
-    name: string;
-    email: string;
-    password?: string;
-    eventId?: string;
-    ip?: string;
-    userAgent?: string;
-    requestId?: string;
-  }): Promise<LoginResult & { roundId?: string; ticketId?: string }> {
-    const email = input.email.trim().toLowerCase();
-    const name = input.name.trim();
-    const ip = input.ip || '127.0.0.1';
-    const db = getDb();
-
-    // 1. Resolve target event
-    let targetEventId = input.eventId;
-    if (!targetEventId) {
-      const activeEvents = await db
-        .select()
-        .from(events)
-        .where(inArray(events.status, ['LIVE', 'READY', 'DRAFT']))
-        .orderBy(desc(events.createdAt))
-        .limit(1);
-
-      if (activeEvents.length > 0) {
-        targetEventId = activeEvents[0].id;
-      } else {
-        const anyEvent = await db.select().from(events).orderBy(desc(events.createdAt)).limit(1);
-        if (anyEvent.length > 0) {
-          targetEventId = anyEvent[0].id;
-        } else {
-          const [newEvent] = await db.insert(events).values({
-            title: 'Tech Tombola 2026',
-            description: 'Synchronized Digital Tombola',
-            status: 'LIVE',
-          }).returning({ id: events.id });
-          targetEventId = newEvent.id;
-        }
-      }
-    }
-
-    // 2. Find or create user
-    let user = await this.userRepo.findByEmail(email);
-    if (!user) {
-      const plainPassword = input.password?.trim() || 'PlayerPass123!';
-      const passwordHash = await hashPassword(plainPassword);
-      await db.insert(users).values({
-        email,
-        passwordHash,
-        name,
-        status: 'ACTIVE',
-      });
-      user = await this.userRepo.findByEmail(email);
-    }
-    if (!user) {
-      throw new Error('Failed to find or create participant user');
-    }
-
-    // 3. Find or create participant profile for this event
-    let participantProfile = user.participantProfile;
-    if (!participantProfile || participantProfile.eventId !== targetEventId) {
-      const existingProfiles = await db
-        .select()
-        .from(participantProfiles)
-        .where(and(eq(participantProfiles.userId, user.id), eq(participantProfiles.eventId, targetEventId)));
-
-      if (existingProfiles.length > 0) {
-        participantProfile = existingProfiles[0];
-      } else {
-        const [createdProfile] = await db.insert(participantProfiles).values({
-          userId: user.id,
-          eventId: targetEventId,
-          status: 'ACTIVE',
-        }).returning();
-        participantProfile = createdProfile;
-      }
-    }
-
-    // 4. Check for active/ready/draft round and auto-generate ticket if missing
-    let roundId: string | undefined;
-    let ticketId: string | undefined;
-
-    const currentRounds = await db
-      .select()
-      .from(rounds)
-      .where(and(eq(rounds.eventId, targetEventId), inArray(rounds.status, ['ACTIVE', 'READY', 'DRAFT'])))
-      .orderBy(desc(rounds.sequenceNumber))
-      .limit(1);
-
-    if (currentRounds.length > 0) {
-      const currentRound = currentRounds[0];
-      roundId = currentRound.id;
-
-      const existingTickets = await db
-        .select()
-        .from(tickets)
-        .where(and(eq(tickets.roundId, currentRound.id), eq(tickets.participantId, participantProfile.id)));
-
-      if (existingTickets.length > 0) {
-        ticketId = existingTickets[0].id;
-      } else {
-        const keys = await ticketRepository.getRoundKeys(currentRound.id);
-        if (keys.length >= 15) {
-          try {
-            const layout = generateTicketLayout({ keys });
-            const createdTicket = await ticketRepository.createTicketWithCells({
-              roundId: currentRound.id,
-              participantId: participantProfile.id,
-              eventId: targetEventId,
-              cells: layout.cells,
-            });
-            ticketId = createdTicket.id;
-          } catch (err) {
-            console.warn('Could not auto-generate ticket during quick join:', err);
-          }
-        }
-      }
-    }
-
-    // 5. Create Session
-    const expiresAt = new Date(Date.now() + SESSION_DURATION_HOURS * 60 * 60 * 1000);
-    const session = await this.sessionRepo.create({
-      userId: user.id,
-      expiresAt,
-      ip,
-      userAgent: input.userAgent,
-    });
-
-    const token = signAuthToken({
-      sub: user.id,
-      jti: session.id,
-      role: 'PARTICIPANT',
-      email: user.email,
-      name: user.name,
-      eventId: targetEventId,
-    });
-
-    await this.audit.record({
-      actorId: user.id,
-      action: 'PARTICIPANT_CREATED',
-      actorType: 'PARTICIPANT',
-      resourceType: 'auth',
-      resourceId: user.id,
-      metadata: { eventId: targetEventId, roundId, ticketId },
-      ip,
-      userAgent: input.userAgent,
-      requestId: input.requestId,
-    });
-
-    return {
-      token,
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: 'PARTICIPANT',
-        eventId: targetEventId,
-      },
-      session,
-      roundId,
-      ticketId,
-    };
-  }
 }
 
 export const authService = new AuthService();

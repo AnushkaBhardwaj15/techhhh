@@ -48,43 +48,8 @@ export function usePlayState(roundId: string, publicView = false) {
           setWsConnected(true);
           refresh();
         };
-        socket.onmessage = (event) => {
-          try {
-            if (typeof event.data === 'string') {
-              const data = JSON.parse(event.data);
-              if (data.type === 'DRAW_CREATED' && data.payload) {
-                client.setQueryData<any>(
-                  ["reference-play", publicView ? "public" : "private", roundId],
-                  (current: any) => {
-                    if (!current) return current;
-                    const exists = current.draws?.some((d: any) => d.sequence === data.payload.sequence);
-                    if (exists) return current;
-                    const newDraw = {
-                      id: crypto.randomUUID(),
-                      sequence: data.payload.sequence,
-                      questionId: crypto.randomUUID(),
-                      keyId: crypto.randomUUID(),
-                      number: data.payload.sequence,
-                      prompt: data.payload.question,
-                      answer: data.payload.key,
-                      category: 'General',
-                      codeSnippet: null,
-                      revealed: true,
-                      drawnAt: data.payload.drawnAt,
-                    };
-                    return {
-                      ...current,
-                      draws: [...(current.draws || []), newDraw],
-                    };
-                  }
-                );
-              }
-            }
-          } catch {
-            /* ignore JSON parse errors */
-          }
-          refresh();
-        };
+        // Events invalidate the snapshot; only persisted server data supplies draws.
+        socket.onmessage = () => refresh();
         socket.onclose = (e) => {
           setWsConnected(false);
           if (!stopped) {

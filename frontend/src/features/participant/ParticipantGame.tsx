@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import { gsap } from 'gsap';
 import { Link, Navigate, useOutletContext } from 'react-router-dom';
 import { ApiError } from '../../lib/api/client';
@@ -10,6 +10,7 @@ import { claimPlayPrize, markPlayCell } from '../../lib/api/play';
 import { mergeParticipantDraws, useParticipantRealtime, type ConnectionStatus, type DisplayDraw } from '../../lib/realtime';
 import { playNewClueSound } from '../../lib/audio';
 import type { AuthenticatedUser } from '../../types/auth';
+import type { ParticipantEvent } from '../../types/participant';
 import type { PlayState } from '../../types/play';
 import type { ParticipantTicket as Ticket } from '../../types/ticket';
 import { ActionButton } from '../../components/ActionButton';
@@ -45,7 +46,7 @@ export function ParticipantGame() {
 
   // If there is an active reference game session, render Reference Play
   if (joinedGameId) {
-    return <ReferenceParticipantGame id={joinedGameId} user={user} />;
+    return <ReferenceParticipantGame id={joinedGameId} />;
   }
 
   // If there's neither a joined reference game nor an event, redirect to lobby
@@ -56,7 +57,7 @@ export function ParticipantGame() {
   return <AuthoritativeParticipantGame user={user} event={event} />;
 }
 
-function ReferenceParticipantGame({ id, user: _user }: { id: string; user: AuthenticatedUser }) {
+function ReferenceParticipantGame({ id }: { id: string }) {
   const query = usePlayState(id);
   const game = query.data;
   const client = useQueryClient();
@@ -116,7 +117,7 @@ function ReferenceParticipantGame({ id, user: _user }: { id: string; user: Authe
       setAccepted(result.accepted);
       setFeedback(
         result.accepted
-          ? `${labels[pattern]} submitted! Awaiting host verification.`
+          ? result.points ? `You earned ${result.points} points for ${labels[pattern]}.` : `${labels[pattern]} submitted! Awaiting host verification.`
           : (result.warning ?? 'This claim is not ready yet. No penalty was applied.')
       );
       await client.invalidateQueries({ queryKey: ['reference-play'] });
@@ -130,6 +131,8 @@ function ReferenceParticipantGame({ id, user: _user }: { id: string; user: Authe
   }
 
 
+
+  if (game?.status === 'READY') return <Navigate to="/participant/waiting" replace />;
 
   const latest = game?.draws.at(-1);
 
@@ -390,7 +393,7 @@ function AuthoritativeParticipantGame({
   event,
 }: {
   user: AuthenticatedUser;
-  event: ReturnType<typeof useQuery<any, any>>;
+  event: UseQueryResult<ParticipantEvent, Error>;
 }) {
   const [sharedTicket, setSharedTicket] = useState<Ticket | null>(null);
   const queryClient = useQueryClient();
