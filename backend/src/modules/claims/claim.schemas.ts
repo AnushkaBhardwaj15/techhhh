@@ -10,6 +10,11 @@ export const listClaimsQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).optional().default(50),
 });
 
+export const listAdminClaimsQuerySchema = listClaimsQuerySchema.extend({
+  roundId: z.string().uuid().optional(),
+  status: z.enum(['PENDING_VERIFICATION', 'VERIFIED', 'REJECTED', 'REJECTED_PATTERN_ALREADY_CLOSED']).optional(),
+});
+
 export const claimIdParamsSchema = z.object({ id: z.string().uuid() });
 export const listWinnersQuerySchema = listClaimsQuerySchema;
 

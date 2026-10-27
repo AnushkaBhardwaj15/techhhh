@@ -90,6 +90,17 @@ export function ParticipantLobby({ waiting = false }: { waiting?: boolean }) {
     const unsubscribe = subscribeToGameSync((updated) => {
       receivedUpdate = true;
       if (!stopped) setActiveGame(updated);
+    }, {
+      onSnapshot: ({ game }) => {
+        receivedUpdate = true;
+        if (!stopped) {
+          setActiveGame(game);
+          setErrorMsg((message) => message === "Game status is temporarily unavailable. Please try again." ? "" : message);
+        }
+      },
+      onError: () => {
+        if (!stopped) setErrorMsg("Game status is temporarily unavailable. Please try again.");
+      },
     });
     void fetchActiveGame()
       .then(({ game }) => {

@@ -70,6 +70,27 @@
   background: var(--neo-bg, #F7F5EE);
 }
 
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  margin: 0 0 16px;
+  padding: 8px 12px;
+  border: 2px solid var(--neo-ink, #121212);
+  color: var(--neo-ink, #121212);
+  background: var(--neo-surface, #fffdf8);
+  box-shadow: 3px 3px 0 var(--neo-ink, #121212);
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  font-weight: 900;
+  text-decoration: none;
+  transition: transform 100ms ease, box-shadow 100ms ease, background 100ms ease;
+}
+.backLink:hover { background: #f9d7c3; transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--neo-ink, #121212); }
+.backLink:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--neo-ink, #121212); }
+.backLink:focus-visible { outline: 3px solid var(--neo-orange, #d85d24); outline-offset: 3px; }
+
 @media (max-width: 900px) {
   .layout {
     display: block;

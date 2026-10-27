@@ -40,41 +40,18 @@ export class PlayService {
     const summaries = await this.store.list(actor);
     if (!summaries[0]) return { game: null, games: [] };
 
-    if (actor?.role === "PARTICIPANT") {
-      const broadcastGame = summaries.find(
-        (s) =>
-          s.isBroadcast && ["READY", "ACTIVE", "PAUSED"].includes(s.status),
-      );
-      if (!broadcastGame) {
-        return { game: null, games: summaries };
-      }
-      try {
-        const state = await this.store.read(broadcastGame.id, {
-          ...actor,
-          eventId: broadcastGame.eventId,
-        });
-        return {
-          game: publicPlayState(state, false),
-          games: summaries,
-        };
-      } catch {
-        return { game: null, games: summaries };
-      }
-    }
-
-    try {
-      const state = await this.store.read(summaries[0].id, actor);
-      return {
-        game: publicPlayState(
-          state,
-          actor?.role === "ADMIN" || actor?.role === "SUPER_ADMIN",
-        ),
-        games: summaries,
-      };
-    } catch {
-      return { game: null, games: summaries };
-    }
+    const selected = actor?.role === "PARTICIPANT"
+      ? summaries.find(s => s.isBroadcast && ["READY", "ACTIVE", "PAUSED"].includes(s.status))
+      : summaries.find(s => s.status === "ACTIVE")
+        ?? summaries.find(s => s.status === "PAUSED") ?? summaries[0];
+    if (!selected) return { game: null, games: summaries };
+    const state = await this.store.read(selected.id, actor?.role === "PARTICIPANT" ? undefined : actor);
+    return {
+      game: publicPlayState(state, actor?.role === "ADMIN" || actor?.role === "SUPER_ADMIN"),
+      games: summaries,
+    };
   }
+
   async broadcast(id: string, actor: PlayActor, broadcast: boolean) {
     this.admin(actor);
     const state = await this.store.broadcast(id, actor, broadcast);
@@ -187,7 +164,7 @@ export class PlayService {
   }
   async mark(id: string, actor: PlayActor, cellId: string, marked: boolean) {
     this.participant(actor);
-    const state = await this.store.markCell(id, actor, cellId, marked);
+    const { state } = await this.store.change(id, actor, state => togglePlayMark(state, cellId, marked));
     return publicPlayState(state);
   }
   async claim(id: string, actor: PlayActor, pattern: PlayPattern) {
@@ -203,23 +180,7 @@ export class PlayService {
     );
     if (result.accepted) {
       await this.notify(state);
-      try {
-        const lastWin = state.wins[state.wins.length - 1];
-        await this.publish?.broadcastCommitted({
-          type: "WINNER_VERIFIED",
-          eventId: state.eventId,
-          roundId: state.id,
-          occurredAt: new Date().toISOString(),
-          payload: {
-            winnerId: lastWin?.id ?? crypto.randomUUID(),
-            participantName: "Player",
-            pattern,
-            eligibleCellIds: state.ticket?.cells.filter((c) => c.marked).slice(0, 5).map((c) => c.id) ?? [],
-          },
-        });
-      } catch {
-        /* transport fallback */
-      }
+
     }
     return { ...result, game: publicPlayState(state) };
   }
@@ -234,7 +195,7 @@ export class PlayService {
     // Real-time broadcast for all connected participants and public viewers
     try {
       const lastDraw = state.draws[state.draws.length - 1];
-      if (lastDraw) {
+      if (lastDraw?.revealed) {
         await this.publish?.broadcastCommitted({
           type: "DRAW_CREATED",
           eventId: state.eventId,

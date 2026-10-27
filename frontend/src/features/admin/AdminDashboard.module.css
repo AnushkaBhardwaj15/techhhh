@@ -939,6 +939,72 @@
   box-shadow: 3px 3px 0 var(--color-espresso, #18130F);
 }
 
+/* Retro operations surfaces, tuned for narrow touch screens. */
+.page {
+  background: #f4ecd6;
+  color: #1d2421;
+  border: 2px solid #1d2421;
+  box-shadow: 6px 6px 0 #1d2421;
+}
+.dashboardCard { color: #1d2421; }
+.eyebrow { color: #d85d24; }
+.heading h1 { color: #1d2421; }
+.updated { color: #5f5a52; }
+.event, .metric {
+  background: #fffdf8;
+  color: #1d2421;
+  border: 2px solid #1d2421;
+  border-radius: 3px;
+  box-shadow: 3px 3px 0 #1d2421;
+}
+.event h2, .metric dt { color: #5f5a52; }
+.eventName, .metric dd { color: #1d2421; }
+.status {
+  color: #1d2421;
+  background: #f9d7c3;
+  border-color: #1d2421;
+  border-radius: 2px;
+}
+.recovery {
+  color: #7c2d12;
+  background: #fbe0d7;
+  border: 2px solid #b64424;
+  border-radius: 2px;
+}
+.gameActionCol {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.manageGameBtn, .settingsBtn, .createGameBtn {
+  min-height: 44px;
+  border-radius: 2px;
+}
+.settingsBtn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.manageGameBtn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.createGameBtn { background: #d85d24; color: #fffdf8; }
+
+@media (max-width: 700px) {
+  .page {
+    width: calc(100% - 24px);
+    margin: 12px auto;
+    padding: 16px;
+    box-shadow: 4px 4px 0 #1d2421;
+  }
+  .summary { grid-template-columns: minmax(0, 1fr); }
+  .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .gameListItem { align-items: stretch; padding: 14px; }
+  .gameInfoCol { min-width: 0; }
+  .gameActionCol { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
+  .gameActionCol > button { min-width: 0; padding-inline: 8px; }
+}
+@media (max-width: 380px) {
+  .metrics { grid-template-columns: minmax(0, 1fr); }
+  .gameActionCol { grid-template-columns: minmax(0, 1fr); }
+}
+
 .modalOverlay {
   position: fixed;
   inset: 0;

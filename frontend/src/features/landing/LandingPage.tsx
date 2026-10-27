@@ -7,12 +7,42 @@ import { SampleTicketDemo } from './components/SampleTicketDemo';
 import styles from './LandingPage.module.css';
 
 export function LandingPage() {
+  const [joinName, setJoinName] = useState('');
+  const [joinEmail, setJoinEmail] = useState('');
+  const [joinPassword, setJoinPassword] = useState('');
+  const [joining, setJoining] = useState(false);
+  const [joinError, setJoinError] = useState('');
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const identityChanged = useAuthUiStore((state) => state.identityChanged);
+
   const sessionVersion = useAuthUiStore((state) => state.sessionVersion);
   const session = useQuery({
     queryKey: ['auth', 'me', sessionVersion],
     queryFn: ({ signal }) => getMe(signal),
     retry: false,
   });
+
+  async function handleQuickJoin(e: FormEvent) {
+    e.preventDefault();
+    if (!joinName.trim() || !joinEmail.trim() || joinPassword.length < 8) {
+      setJoinError('Enter your name, email, and a password of at least 8 characters.');
+      return;
+    }
+    setJoining(true);
+    setJoinError('');
+    try {
+      const user = await quickJoin(joinName.trim(), joinEmail.trim(), joinPassword);
+      setJoinPassword('');
+      identityChanged();
+      queryClient.clear();
+      navigate(roleHomePath(user.role), { replace: true });
+    } catch (err) {
+      setJoinError(err instanceof Error ? err.message : 'Could not join event. Try again.');
+    } finally {
+      setJoining(false);
+    }
+  }
 
   const user = session.data;
   const destination = user ? (user.role === 'PARTICIPANT' ? '/lobby' : roleHomePath(user.role)) : '/login';
@@ -24,9 +54,9 @@ export function LandingPage() {
       <header className={styles.navbar} role="banner">
         <div className={styles.navContainer}>
           <div className={styles.brandGroup}>
-            <Link to="/" className={styles.wordmark} aria-label="Tech Tombola Home">
+            <Link to="/" className={styles.wordmark} aria-label="Tech Tambola Home">
               <span className={styles.brandBadge}>TECH</span>
-              <strong>TOMBOLA</strong>
+              <strong>TAMBOLA</strong>
             </Link>
             <span className={styles.editionBadge}>MUACM 2026</span>
           </div>
@@ -41,10 +71,6 @@ export function LandingPage() {
             <a href="#patterns" className={styles.navItem}>
               Winning Patterns
             </a>
-            <Link to="/live" className={styles.navLiveItem} target="_blank" rel="noreferrer">
-              <span className={styles.livePulse} aria-hidden="true" />
-              <span>Live Board ↗</span>
-            </Link>
           </nav>
 
           <div className={styles.navActions}>
@@ -64,7 +90,7 @@ export function LandingPage() {
               <div className={styles.eyebrowContainer}>
                 <span className={styles.eyebrow}>MUACM ANNUAL TECH EVENT</span>
                 <span className={styles.badgeRule}>·</span>
-                <span className={styles.eyebrowAccent}>SYNCHRONIZED DIGITAL TOMBOLA</span>
+                <span className={styles.eyebrowAccent}>SYNCHRONIZED DIGITAL TAMBOLA</span>
               </div>
               <h1 id="hero-title" className={styles.heroHeadline}>
                 Listen for the clue.
@@ -74,7 +100,7 @@ export function LandingPage() {
                 <em>Claim the win.</em>
               </h1>
               <p className={styles.heroSubtitle}>
-                Tech Tombola is <strong>not a quiz</strong>. A question is a clue; its answer key is
+                Tech Tambola is <strong>not a quiz</strong>. A question is a clue; its answer key is
                 revealed by the game engine. Find that key on your 15-cell ticket, mark it manually,
                 and claim winning patterns in real time with server-authoritative verification.
               </p>
@@ -84,11 +110,58 @@ export function LandingPage() {
                   <span>{ctaText}</span>
                   <span className={styles.buttonArrow} aria-hidden="true">↗</span>
                 </Link>
-                <Link to="/live" target="_blank" rel="noreferrer" className={styles.secondaryButton}>
-                  <span className={styles.liveDot} aria-hidden="true" />
-                  <span>Watch Public Live Screen</span>
-                </Link>
               </div>
+
+              {!user && (
+                <div className={styles.quickJoinBox}>
+                  <div className={styles.quickJoinHeader}>
+                    <span className={styles.quickJoinBadge}>
+                      INSTANT GAME ENTRY
+                    </span>
+                    <span className={styles.quickJoinMeta}>
+                      SECURE PARTICIPANT ENTRY
+                    </span>
+                  </div>
+                  <p className={styles.quickJoinText}>
+                    Create your participant account or enter your existing password to join the event.
+                  </p>
+                  <form onSubmit={handleQuickJoin} className={styles.quickJoinForm}>
+                    <input
+                      type="text"
+                      placeholder="Your Full Name"
+                      aria-label="Full name"
+                      autoComplete="name"
+                      value={joinName}
+                      onChange={(e) => setJoinName(e.target.value)}
+                      required
+                      className={styles.quickJoinInput}
+                    />
+                    <input
+                      type="email"
+                      placeholder="Your Email"
+                      aria-label="Email address"
+                      autoComplete="email"
+                      value={joinEmail}
+                      onChange={(e) => setJoinEmail(e.target.value)}
+                      required
+                      className={styles.quickJoinInput}
+                    />
+                    <input type="password" aria-label="Password" placeholder="Password (at least 8 characters)" autoComplete="current-password" minLength={8} required value={joinPassword} onChange={(e) => setJoinPassword(e.target.value)} className={styles.quickJoinInput} />
+                    <button
+                      type="submit"
+                      disabled={joining}
+                      className={styles.quickJoinBtn}
+                    >
+                      {joining ? 'JOINING…' : 'GET TICKET & PLAY ↗'}
+                    </button>
+                  </form>
+                  {joinError && (
+                    <p className={styles.quickJoinError} role="alert">
+                      {joinError}
+                    </p>
+                  )}
+                </div>
+              )}
 
               {/* Statistics & Confidence Strip */}
               <div className={styles.statsStrip} aria-label="Game engine specifications">
@@ -335,7 +408,7 @@ export function LandingPage() {
               </div>
               <p>
                 All <strong>15 keys across all three rows</strong> marked. The ultimate achievement in
-                Tech Tombola!
+                Tech Tambola!
               </p>
               <div className={styles.miniGridPreview} aria-hidden="true">
                 <div className={styles.miniRow}>
@@ -364,24 +437,6 @@ export function LandingPage() {
           </div>
         </section>
 
-        {/* Public Projector Screen Section */}
-        <section className={styles.liveDisplayTeaser} aria-labelledby="live-section-title">
-          <div className={styles.teaserContent}>
-            <span className={styles.sectionKickerLight}>VENUE DISPLAY FEED</span>
-            <h2 id="live-section-title">Big Screen Auditorium Mode.</h2>
-            <p>
-              Are you an audience member, organizer, or projecting the game onto hall screens? The
-              Live Display feed requires <strong>no login</strong> and broadcasts live questions,
-              revealed answer keys, and instant winner celebrations.
-            </p>
-            <div className={styles.teaserActions}>
-              <Link to="/live" target="_blank" rel="noreferrer" className={styles.projectorButton}>
-                <span>Launch Live Projector Screen</span>
-                <span aria-hidden="true">↗</span>
-              </Link>
-            </div>
-          </div>
-        </section>
       </main>
 
       {/* Footer */}
@@ -389,7 +444,7 @@ export function LandingPage() {
         <div className={styles.footerContainer}>
           <div className={styles.footerBrand}>
             <span className={styles.footerWordmark}>
-              <strong>TECH TOMBOLA</strong> · MUACM 2026
+              <strong>TECH TAMBOLA</strong> · MUACM 2026
             </span>
             <p className={styles.footerTagline}>Play Together. Mark Your Moment.</p>
           </div>
@@ -397,7 +452,6 @@ export function LandingPage() {
           <div className={styles.footerLinks}>
             <a href="#main-content">Back to Top ↑</a>
             <Link to="/login">Sign In</Link>
-            <Link to="/live">Live Board</Link>
           </div>
         </div>
       </footer>

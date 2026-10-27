@@ -4,6 +4,14 @@ import { ApiError, apiRequest } from './client';
 afterEach(() => vi.unstubAllGlobals());
 
 describe('apiRequest', () => {
+  it('retains the backend request ID on errors and in safe diagnostics', async () => {
+    const errorLog = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({ error: { code: 'FAILED', message: 'Unavailable' } }), {
+      status: 500, headers: { 'content-type': 'application/json', 'x-request-id': 'req_backend-123' },
+    })));
+    await expect(apiRequest('/play/current')).rejects.toMatchObject({ requestId: 'req_backend-123' });
+    expect(errorLog).toHaveBeenCalledWith('Tech Tombola diagnostic', expect.objectContaining({ correlationId: 'req_backend-123' }));
+  });
   it('sends cookie credentials and parses JSON', async () => {
     const fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify({ ok: true }), { headers: { 'content-type': 'application/json' } }));
     vi.stubGlobal('fetch', fetch);

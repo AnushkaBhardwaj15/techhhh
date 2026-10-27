@@ -25,6 +25,8 @@ const user = {
   email: "p@test.invalid",
   status: "ACTIVE",
 };
+vi.mock("../../lib/api/participant", () => ({ getParticipantEvent: vi.fn().mockResolvedValue(null), getCurrentRound: vi.fn() }));
+vi.mock("../../lib/api/winners", () => ({ getParticipantWins: vi.fn().mockResolvedValue({ data: [], total: 0 }), getLiveWinners: vi.fn() }));
 class Socket {
   close() {}
 }
@@ -71,6 +73,7 @@ describe("reference participant game", () => {
     ).toBeVisible();
     expect(screen.getByText("docker run app")).toBeVisible();
     expect(screen.getByText(/Answer not revealed yet/)).toBeVisible();
+    expect(screen.queryByRole("button", { name: /Row 1, column 1/ })).not.toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Claim Four Corners" }),
     ).toBeEnabled();
@@ -78,7 +81,8 @@ describe("reference participant game", () => {
       screen.getByRole("button", { name: "Claim Second Full House" }),
     ).toBeEnabled();
   });
-  it("requests manual marking of uncalled cells and displays the persisted response", async () => {
+  it("requests marking of a revealed key and displays the persisted response", async () => {
+    game.draws[0] = { ...game.draws[0]!, revealed: true, answer: "TERM 1", number: 1 };
     vi.mocked(api.markPlayCell).mockImplementation(
       async (_id, cellId, marked) => {
         game.ticket!.cells.find((c) => c.id === cellId)!.marked = marked;
@@ -103,6 +107,13 @@ describe("reference participant game", () => {
         name: "Row 1, column 1: TERM 1, marked",
       }),
     ).toBeVisible();
+  });
+  it("keeps a revealed key markable while displaying ticket numbers", async () => {
+    game.draws[0] = { ...game.draws[0]!, revealed: true, answer: "TERM 1", number: 1 };
+    mount();
+    fireEvent.click(await screen.findByRole("button", { name: "Show numbers" }));
+    expect(screen.getByRole("button", { name: "Mark 1, row 1, column 1" })).toBeEnabled();
+    expect(screen.queryByRole("button", { name: "Mark 2, row 1, column 3" })).not.toBeInTheDocument();
   });
   it("wrong claims display only a warning and preserve ticket cells and score", async () => {
     vi.mocked(api.claimPlayPrize).mockResolvedValue({
@@ -133,7 +144,7 @@ describe("reference participant game", () => {
       await screen.findByRole("button", { name: "Claim Four Corners" }),
     );
     expect(await screen.findByRole("status")).toHaveTextContent(
-      "earned 20 points",
+      "Awaiting host verification",
     );
     expect(screen.getByRole("button", { name: "Already won" })).toBeDisabled();
   });

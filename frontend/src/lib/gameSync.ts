@@ -39,11 +39,11 @@ const summary = (game: PlaySummary): SyncGameRecord => ({
   isBroadcast: game.isBroadcast ?? false,
   roundSequence: game.sequenceNumber,
 });
-export async function fetchActiveGame(): Promise<{
+export async function fetchActiveGame(signal?: AbortSignal): Promise<{
   game: SyncGameRecord | null;
   games: SyncGameRecord[];
 }> {
-  const response = await readCurrentPlay();
+  const response = await readCurrentPlay(signal);
   return {
     game: response.game ? summary(response.game) : null,
     games: response.games.map(summary),
@@ -70,19 +70,34 @@ export async function validateGameCode(
 }
 export function subscribeToGameSync(
   callback: (game: SyncGameRecord) => void,
+  options: {
+    onSnapshot?: (snapshot: Awaited<ReturnType<typeof fetchActiveGame>>) => void;
+    onError?: (error: unknown) => void;
+  } = {},
 ): () => void {
   let stopped = false;
-  const timer = setInterval(() => {
-    void fetchActiveGame()
-      .then(({ game }) => {
-        if (!stopped && game) callback(game);
-      })
-      .catch(() => {
-        /* The current UI keeps its last snapshot and reports query errors. */
-      });
-  }, 500);
+  let delay = 15_000;
+  const controller = new AbortController();
+  let timer: ReturnType<typeof setTimeout>;
+  async function refresh() {
+    try {
+      const snapshot = await fetchActiveGame(controller.signal);
+      if (stopped) return;
+      delay = 15_000;
+      options.onSnapshot?.(snapshot);
+      if (snapshot.game) callback(snapshot.game);
+    } catch (error) {
+      if (stopped) return;
+      options.onError?.(error);
+      if (error instanceof ApiError && [401, 403].includes(error.status)) return;
+      delay = Math.min(delay * 2, 60_000);
+    }
+    if (!stopped) timer = setTimeout(() => void refresh(), delay);
+  }
+  timer = setTimeout(() => void refresh(), delay);
   return () => {
     stopped = true;
-    clearInterval(timer);
+    clearTimeout(timer);
+    controller.abort();
   };
 }

@@ -11,13 +11,16 @@ export interface ISessionRepository {
 }
 
 export class SessionRepository implements ISessionRepository {
-  constructor(private readonly database: typeof getDb = getDb) {}
+  constructor(private readonly connection = getDb) {}
+
   private getClient(tx?: any) {
-    return tx || this.database();
+    return tx || this.connection();
   }
 
   async create(data: InsertSession, tx?: any): Promise<SessionRecord> {
-    const [record] = await this.getClient(tx).insert(sessions).values(data).returning();
+    const client = this.getClient(tx);
+    const [record] = await client.insert(sessions).values(data).returning();
+    if (!record) throw new Error('Session could not be persisted');
     return record;
   }
 
@@ -48,23 +51,31 @@ export class SessionRepository implements ISessionRepository {
   }
 
   async findActiveWithUser(id: string, userId: string, eventId?: string | null): Promise<{ session: SessionRecord; user: UserWithProfile } | null> {
-    const client = this.database();
+    const client = this.connection();
     let query = this.activeQueries.get(client);
     if (!query) {
       query = this.prepareActive(client);
       this.activeQueries.set(client, query);
     }
     const [row] = await query.execute({ id, userId, eventId: eventId ?? null, now: new Date().toISOString() });
-    return row ? { session: row.session,
-      user: { ...row.user, adminProfile: row.adminProfile, participantProfile: row.participantProfile } } : null;
+
+    if (row) {
+      return {
+        session: row.session,
+        user: { ...row.user, adminProfile: row.adminProfile, participantProfile: row.participantProfile },
+      };
+    }
+    return null;
   }
 
   async revoke(id: string, tx?: any): Promise<void> {
-    await this.getClient(tx).update(sessions).set({ revokedAt: new Date() }).where(eq(sessions.id, id));
+    const client = this.getClient(tx);
+    await client.update(sessions).set({ revokedAt: new Date() }).where(eq(sessions.id, id));
   }
 
   async revokeAllForUser(userId: string, tx?: any): Promise<void> {
-    await this.getClient(tx).update(sessions).set({ revokedAt: new Date() })
+    const client = this.getClient(tx);
+    await client.update(sessions).set({ revokedAt: new Date() })
       .where(and(eq(sessions.userId, userId), isNull(sessions.revokedAt)));
   }
 }

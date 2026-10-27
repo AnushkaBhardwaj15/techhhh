@@ -10,6 +10,24 @@
   font-family: var(--font-mono, monospace);
 }
 
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  align-self: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 460px;
+  min-height: 44px;
+  margin-bottom: 12px;
+  color: var(--neo-ink, #121212);
+  font-size: 12px;
+  font-weight: 900;
+  text-decoration: underline;
+  text-decoration-color: var(--neo-orange, #d85d24);
+  text-underline-offset: 4px;
+}
+.backLink:focus-visible { outline: 3px solid var(--neo-ink, #121212); outline-offset: 3px; }
+
 .brandGroup {
   display: flex;
   flex-direction: column;
@@ -61,6 +79,8 @@
   background: var(--neo-surface, #FFFFFF);
   color: var(--neo-ink, #121212);
   box-shadow: var(--neo-shadow-lg, 8px 8px 0px #121212);
+  border-top-width: 8px;
+  border-top-color: var(--neo-orange, #d85d24);
 }
 
 .eyebrow {
@@ -292,10 +312,21 @@
 }
 
 .submitBtn:hover:not(:disabled) {
-  background: #E03E00;
+  background: #c94d19;
   transform: translate(-2px, -2px);
   box-shadow: 6px 6px 0px var(--neo-ink, #121212);
 }
+
+.brandBadge { box-shadow: 3px 3px 0 #121212; }
+.titleAccent { text-decoration-color: var(--neo-orange, #d85d24); }
+.input {
+  min-height: 56px;
+  border-radius: 2px;
+  box-shadow: 3px 3px 0 #121212;
+}
+.submitBtn { min-height: 58px; background: var(--neo-orange, #d85d24); }
+.submitBtn:hover:not(:disabled) { background: #c94d19; }
+.toggleVisibilityBtn { min-height: 44px; padding-inline: 10px; }
 
 .submitBtn:active:not(:disabled) {
   transform: translate(3px, 3px);
@@ -358,6 +389,13 @@
   .brandGroup {
     margin-bottom: 16px;
   }
+}
+
+@media (max-width: 380px) {
+  .page { padding: 22px 14px; }
+  .brandName { font-size: 34px; }
+  .card { padding: 24px 18px; box-shadow: 5px 5px 0 #121212; }
+  .title { font-size: 24px; }
 }
 
 .srOnly {

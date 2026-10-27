@@ -1,12 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import { LandingPage } from './LandingPage';
 import { ApiError } from '../../lib/api/client';
 import * as authApi from '../../lib/api/auth';
 
-vi.mock('../../lib/api/auth', () => ({ getMe: vi.fn() }));
+vi.mock('../../lib/api/auth', () => ({ getMe: vi.fn(), quickJoin: vi.fn() }));
 
 function renderLanding() {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -20,19 +20,36 @@ function renderLanding() {
 }
 
 describe('LandingPage', () => {
+  it('requires a password for participant entry and sends it only to the authentication API', async () => {
+    vi.mocked(authApi.getMe).mockRejectedValue(new ApiError(401, 'Authentication required'));
+    vi.mocked(authApi.quickJoin).mockRejectedValue(new ApiError(401, 'Invalid email or password'));
+    renderLanding();
+    fireEvent.change(screen.getByLabelText('Full name'), { target: { value: 'Ari' } });
+    fireEvent.change(screen.getByLabelText('Email address'), { target: { value: 'ari@example.test' } });
+    const password = screen.getByLabelText('Password');
+    expect(password).toHaveAttribute('type', 'password');
+    expect(password).toHaveAttribute('minLength', '8');
+    fireEvent.change(password, { target: { value: 'valid-password' } });
+    fireEvent.click(screen.getByRole('button', { name: /GET TICKET/ }));
+    await waitFor(() => expect(authApi.quickJoin).toHaveBeenCalledWith('Ari', 'ari@example.test', 'valid-password'));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Invalid email or password');
+    expect(localStorage.getItem('tt_participant_pwd')).toBeNull();
+  });
   afterEach(cleanup);
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('renders the hero section with the core Tech Tombola message', async () => {
+  it('renders the hero section with the core Tech Tambola message', async () => {
     vi.mocked(authApi.getMe).mockRejectedValue(new ApiError(401, 'Authentication required'));
     renderLanding();
 
     expect(
       screen.getByRole('heading', { name: /Listen for the clue\..*Spot the key\..*Claim the win\./i })
     ).toBeInTheDocument();
-    expect(screen.getByText(/Tech Tombola is/i)).toBeInTheDocument();
+    expect(screen.getByText(/Tech Tambola is/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Tech Tambola Home/i })).toBeInTheDocument();
+    expect(screen.queryByText(/TOMBOLA/i)).not.toBeInTheDocument();
     expect(screen.getByText(/not a quiz/i)).toBeInTheDocument();
   });
 
@@ -45,7 +62,8 @@ describe('LandingPage', () => {
     expect(screen.getByRole('link', { name: /How to Play/i })).toHaveAttribute('href', '#how-it-works');
     expect(screen.getByRole('link', { name: /Interactive Card/i })).toHaveAttribute('href', '#sample-ticket');
     expect(screen.getByRole('link', { name: /Winning Patterns/i })).toHaveAttribute('href', '#patterns');
-    expect(screen.getAllByRole('link', { name: /Live Board/i }).length).toBeGreaterThan(0);
+    expect(screen.queryByRole('link', { name: /Live Board/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /Launch Live Projector Screen/i })).not.toBeInTheDocument();
   });
 
   it('adapts CTAs for an authenticated participant', async () => {

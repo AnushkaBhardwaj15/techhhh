@@ -36,36 +36,29 @@ export interface IOperationsRepository {
   getSystemReadModel(): Promise<SystemReadModel>;
 }
 
-import { memAuditLogs } from '../audit/audit.repository.ts';
 
 export class OperationsRepository implements IOperationsRepository {
   constructor(private readonly databaseProvider: () => ReturnType<typeof getDb> = getDb) {}
 
   async getDashboard(): Promise<DashboardReadModel> {
-    try {
-      return await this.databaseProvider().transaction(async (tx) => {
+    return this.databaseProvider().transaction(async (tx) => {
+        const [selectedRound] = await tx
+          .select({ id: rounds.id, eventId: rounds.eventId, name: rounds.name, sequenceNumber: rounds.sequenceNumber, status: rounds.status })
+          .from(rounds)
+          .orderBy(
+            sql`CASE WHEN ${rounds.status}='ACTIVE' THEN 0 WHEN ${rounds.status}='PAUSED' THEN 1 WHEN rounds.is_broadcast=true THEN 2 WHEN ${rounds.status}='READY' THEN 3 ELSE 4 END`,
+            desc(rounds.createdAt), desc(rounds.id),
+          ).limit(1);
         const [event] = await tx
           .select({ id: events.id, title: events.title, status: events.status })
           .from(events)
-          .where(eq(events.status, 'LIVE'))
-          .orderBy(desc(events.updatedAt), desc(events.id))
-          .limit(1);
-        if (!event) {
-          return { event: null, round: null, participants: 0, drawCount: 0, pendingClaims: 0, verifiedWinners: 0, recoveryRequired: false, systemStatus: 'operational' };
-        }
-
-        const [round] = await tx
-          .select({ id: rounds.id, name: rounds.name, sequenceNumber: rounds.sequenceNumber, status: rounds.status })
-          .from(rounds)
-          .where(eq(rounds.eventId, event.id))
-          .orderBy(
-            sql`CASE ${rounds.status} WHEN 'RECOVERY_REQUIRED' THEN 0 WHEN 'ACTIVE' THEN 1 WHEN 'PAUSED' THEN 2 WHEN 'COMPLETED' THEN 3 WHEN 'READY' THEN 4 WHEN 'DRAFT' THEN 5 ELSE 6 END`,
-            desc(rounds.sequenceNumber),
-            desc(rounds.updatedAt),
-            desc(rounds.id)
-          )
-          .limit(1);
-
+          .where(selectedRound ? eq(events.id, selectedRound.eventId) : eq(events.status, 'LIVE'))
+          .orderBy(desc(events.updatedAt), desc(events.id)).limit(1);
+        if (!event) return { event: null, round: null, participants: 0, drawCount: 0, pendingClaims: 0, verifiedWinners: 0, recoveryRequired: false, systemStatus: 'operational' };
+        const round = selectedRound ? { id: selectedRound.id, name: selectedRound.name, sequenceNumber: selectedRound.sequenceNumber, status: selectedRound.status } : null;
+        const [recovery] = await tx.select({ count: sql<number>`count(*)::int` }).from(rounds)
+          .where(and(eq(rounds.eventId, event.id), eq(rounds.status, 'RECOVERY_REQUIRED')));
+        const recoveryRequired = (recovery?.count ?? 0) > 0;
         const [participantCount] = await tx
           .select({ count: sql<number>`count(*)::int` })
           .from(participantProfiles)
@@ -88,18 +81,14 @@ export class OperationsRepository implements IOperationsRepository {
           drawCount: drawCount?.count ?? 0,
           pendingClaims: pendingClaims?.count ?? 0,
           verifiedWinners: verifiedWinners?.count ?? 0,
-          recoveryRequired: round.status === 'RECOVERY_REQUIRED',
-          systemStatus: round.status === 'RECOVERY_REQUIRED' ? 'recovery_required' : 'operational',
+          recoveryRequired,
+          systemStatus: recoveryRequired ? 'recovery_required' : 'operational',
         };
       }, { isolationLevel: 'repeatable read', accessMode: 'read only' });
-    } catch {
-      return { event: null, round: null, participants: 0, drawCount: 0, pendingClaims: 0, verifiedWinners: 0, recoveryRequired: false, systemStatus: 'operational' };
-    }
   }
 
   async listAudit(filters: AuditFilters): Promise<Array<AuditLogRecord & { actorEmail?: string | null; actorName?: string | null; cursorCreatedAt?: string }>> {
-    try {
-      const conditions = [];
+    const conditions = [];
       if (filters.roundId) {
         conditions.push(
           or(
@@ -146,31 +135,10 @@ export class OperationsRepository implements IOperationsRepository {
         .where(conditions.length ? and(...conditions) : undefined)
         .orderBy(desc(auditLogs.createdAt), desc(auditLogs.id))
         .limit(filters.limit + 1);
-    } catch {
-      let filtered = [...memAuditLogs] as Array<AuditLogRecord & { actorEmail?: string | null; actorName?: string | null }>;
-      if (filters.roundId) filtered = filtered.filter(l => l.resourceId === filters.roundId || (l.metadata as any)?.roundId === filters.roundId);
-      if (filters.actorId) filtered = filtered.filter(l => l.actorId === filters.actorId);
-      if (filters.action) filtered = filtered.filter(l => l.action.toLowerCase().includes(filters.action!.toLowerCase()));
-      if (filters.actorEmail) {
-        const q = filters.actorEmail.toLowerCase();
-        filtered = filtered.filter(l => (l.metadata as any)?.actorEmail?.toLowerCase().includes(q));
-      }
-      if (filters.search) {
-        const q = filters.search.toLowerCase();
-        filtered = filtered.filter(l =>
-          l.action.toLowerCase().includes(q) ||
-          l.resourceType.toLowerCase().includes(q) ||
-          (l.metadata as any)?.actorEmail?.toLowerCase().includes(q) ||
-          (l.metadata as any)?.eventName?.toLowerCase().includes(q)
-        );
-      }
-      return filtered.slice(0, filters.limit + 1);
-    }
   }
 
   async getSystemReadModel(): Promise<SystemReadModel> {
-    try {
-      const db = this.databaseProvider();
+    const db = this.databaseProvider();
       const [recovery] = await db.select({ count: sql<number>`count(*)::int` }).from(rounds).where(eq(rounds.status, 'RECOVERY_REQUIRED'));
       const [latestMigration] = await db.select({ version: schemaMigrations.version, appliedAt: schemaMigrations.appliedAt })
         .from(schemaMigrations)
@@ -180,11 +148,5 @@ export class OperationsRepository implements IOperationsRepository {
         recoveryRequiredRounds: recovery?.count ?? 0,
         latestMigration: latestMigration ?? null,
       };
-    } catch {
-      return {
-        recoveryRequiredRounds: 0,
-        latestMigration: null,
-      };
-    }
   }
 }

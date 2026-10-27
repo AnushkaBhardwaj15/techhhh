@@ -33,10 +33,7 @@ export function verifyMutationOrigin(request: FastifyRequest): void {
         env.APP_URL.trim(),
       ];
 
-      const isVercel = origin.endsWith('.vercel.app');
-      const isLocalhost = origin.includes('localhost') || origin.includes('127.0.0.1');
-
-      if (!allowed.includes(origin) && !isVercel && !isLocalhost) {
+      if (!allowed.includes(origin)) {
         throw new ForbiddenError(`Invalid request origin: '${origin}'`);
       }
     }
@@ -71,6 +68,4 @@ export const requireAdmin = requireRole(['ADMIN', 'SUPER_ADMIN']);
 export const requireSuperAdmin = requireRole(['SUPER_ADMIN']);
 export const requireParticipant = requireRole(['PARTICIPANT']);
 
-export async function requireParticipantToken(request: FastifyRequest, reply: FastifyReply): Promise<void> {
-  await requireParticipant(request, reply);
-}
+export const requireParticipantToken = requireParticipant;

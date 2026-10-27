@@ -11,15 +11,8 @@ import { PLAY_PATTERNS, type PlayActor } from "./play.types.ts";
 import { parseAndValidateBankSpreadsheet } from "./excel-import.ts";
 import { ValidationError } from "../../shared/errors/index.ts";
 const roundParams = z.object({ id: z.string().uuid() });
-const LEGACY_PLAYER_MAP: Record<string, string> = {
-  "p1000000-0000-0000-0000-000000000001": "70d03f73-4e41-4e7f-946c-73ea1e34a05c",
-  "p1000000-0000-0000-0000-000000000002": "884d799e-0799-4f12-9d4b-7fd7820ba0f8",
-  "p1000000-0000-0000-0000-000000000003": "673c488d-b199-4c15-8876-77d1e10f64cb",
-  "p1000000-0000-0000-0000-000000000004": "b4000000-0000-0000-0000-000000000004",
-  "p1000000-0000-0000-0000-000000000005": "b5000000-0000-0000-0000-000000000005",
-};
 const actor = (request: FastifyRequest): PlayActor => ({
-  userId: LEGACY_PLAYER_MAP[request.user!.id] ?? request.user!.id,
+  userId: request.user!.id,
   role: request.user!.role ?? "PARTICIPANT",
   eventId: request.user!.eventId,
 });

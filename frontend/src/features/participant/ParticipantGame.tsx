@@ -136,6 +136,10 @@ function ReferenceParticipantGame({ id }: { id: string }) {
 
   const latest = game?.draws.at(-1);
 
+  if (game?.status === "READY") {
+    return <Navigate to="/participant/waiting" replace />;
+  }
+
   return (
     <main className={refStyles.page}>
       <Link className={refStyles.back} to="/participant/lobby">← Participation</Link>
@@ -208,6 +212,7 @@ function ReferenceParticipantGame({ id }: { id: string }) {
           )}
           <ReferenceTicket
             game={game}
+            canMark={!query.isError}
             pendingCellIds={pendingCellIds}
             onMark={mark}
           />
@@ -222,7 +227,7 @@ function ReferenceParticipantGame({ id }: { id: string }) {
                   </div>
                   <ActionButton
                     busy={claimingPattern === p.pattern}
-                    disabled={game.status !== 'ACTIVE' || p.closed || Boolean(claimingPattern)}
+                    disabled={game.status !== 'ACTIVE' || query.isError || p.closed || Boolean(claimingPattern)}
                     onClick={() => void claim(p.pattern)}
                   >
                     {p.closed ? 'Already won' : `Claim ${labels[p.pattern]}`}
@@ -332,7 +337,7 @@ function ReferenceQuestionCard({
           <strong>{draw.keyValue}</strong>
         </div>
       ) : (
-        <p className={refStyles.unrevealed}>Answer not revealed yet. Mark a matching term if you know it.</p>
+        <p className={refStyles.unrevealed}>Answer not revealed yet. Wait for the official reveal before marking.</p>
       )}
     </section>
   );
@@ -341,10 +346,12 @@ function ReferenceQuestionCard({
 function ReferenceTicket({
   game,
   pendingCellIds = new Set<string>(),
+  canMark = true,
   onMark,
 }: {
   game: PlayState;
   pendingCellIds?: ReadonlySet<string>;
+  canMark?: boolean;
   onMark: (id: string, marked: boolean) => void;
 }) {
   const [numbers, setNumbers] = useState(false);
@@ -377,7 +384,8 @@ function ReferenceTicket({
       </p>
       <TicketGrid
         ticket={ticket}
-        canMark={game.status === 'ACTIVE'}
+        canMark={canMark && game.status === 'ACTIVE'}
+        drawnKeys={new Set(game.draws.filter((draw) => draw.revealed && draw.answer).map((draw) => numbers ? String(draw.number) : draw.answer!))}
         pendingCellIds={pendingCellIds}
         onToggleCell={(cell) => onMark(cell.id, !cell.marked)}
       />
@@ -393,7 +401,7 @@ function AuthoritativeParticipantGame({
   event,
 }: {
   user: AuthenticatedUser;
-  event: UseQueryResult<ParticipantEvent, Error>;
+  event: UseQueryResult<Awaited<ReturnType<typeof getParticipantEvent>>, Error>;
 }) {
   const [sharedTicket, setSharedTicket] = useState<Ticket | null>(null);
   const queryClient = useQueryClient();

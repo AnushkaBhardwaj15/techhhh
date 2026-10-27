@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useOutletContext } from 'react-router-dom';
 import { ApiError } from '../../lib/api/client';
 import { type ClaimPattern } from '../../types/claims';
@@ -60,130 +59,8 @@ const CLAIM_CARDS: {
   },
 ];
 
-interface PatternCheckResult {
-  valid: boolean;
-  markedCount: number;
-  requiredCount: number;
-  label: string;
-  warning?: string;
-}
-
-function checkPatternBoxes(pattern: ClaimPattern, ticket?: Ticket | null): PatternCheckResult {
-  if (!ticket || !ticket.cells || ticket.cells.length === 0) {
-    return {
-      valid: true,
-      markedCount: 0,
-      requiredCount: 0,
-      label: '',
-    };
-  }
-
-  const cells = ticket.cells;
-
-  switch (pattern) {
-    case 'EARLY_5': {
-      const markedCount = cells.filter((c) => c.marked).length;
-      const requiredCount = 5;
-      const valid = markedCount >= requiredCount;
-      return {
-        valid,
-        markedCount,
-        requiredCount,
-        label: `${markedCount}/${requiredCount} checked`,
-        warning: valid
-          ? undefined
-          : `⚠️ Cannot Send Claim for Early Five: You have marked only ${markedCount}/5 boxes on your ticket. You must check at least 5 boxes before submitting!`,
-      };
-    }
-    case 'TOP_LINE': {
-      const row0 = cells.filter((c) => c.rowIndex === 0);
-      const markedCount = row0.filter((c) => c.marked).length;
-      const requiredCount = row0.length || 5;
-      const valid = row0.length > 0 && markedCount === requiredCount;
-      return {
-        valid,
-        markedCount,
-        requiredCount,
-        label: `${markedCount}/${requiredCount} checked`,
-        warning: valid
-          ? undefined
-          : `⚠️ Cannot Send Claim for Top Line: You have marked only ${markedCount}/${requiredCount} boxes in Row 1. All ${requiredCount} boxes in the top line must be checked before submitting!`,
-      };
-    }
-    case 'MIDDLE_LINE': {
-      const row1 = cells.filter((c) => c.rowIndex === 1);
-      const markedCount = row1.filter((c) => c.marked).length;
-      const requiredCount = row1.length || 5;
-      const valid = row1.length > 0 && markedCount === requiredCount;
-      return {
-        valid,
-        markedCount,
-        requiredCount,
-        label: `${markedCount}/${requiredCount} checked`,
-        warning: valid
-          ? undefined
-          : `⚠️ Cannot Send Claim for Middle Line: You have marked only ${markedCount}/${requiredCount} boxes in Row 2. All ${requiredCount} boxes in the middle line must be checked before submitting!`,
-      };
-    }
-    case 'BOTTOM_LINE': {
-      const row2 = cells.filter((c) => c.rowIndex === 2);
-      const markedCount = row2.filter((c) => c.marked).length;
-      const requiredCount = row2.length || 5;
-      const valid = row2.length > 0 && markedCount === requiredCount;
-      return {
-        valid,
-        markedCount,
-        requiredCount,
-        label: `${markedCount}/${requiredCount} checked`,
-        warning: valid
-          ? undefined
-          : `⚠️ Cannot Send Claim for Bottom Line: You have marked only ${markedCount}/${requiredCount} boxes in Row 3. All ${requiredCount} boxes in the bottom line must be checked before submitting!`,
-      };
-    }
-    case 'FOUR_CORNERS': {
-      const row0 = [...cells.filter((c) => c.rowIndex === 0)].sort((a, b) => a.colIndex - b.colIndex);
-      const row2 = [...cells.filter((c) => c.rowIndex === 2)].sort((a, b) => a.colIndex - b.colIndex);
-      const corners =
-        row0.length >= 2 && row2.length >= 2
-          ? [row0[0], row0[row0.length - 1], row2[0], row2[row2.length - 1]]
-          : cells.filter(
-              (c) => (c.rowIndex === 0 || c.rowIndex === 2) && (c.colIndex === 0 || c.colIndex === 8)
-            );
-      const markedCount = corners.filter((c) => c.marked).length;
-      const requiredCount = corners.length || 4;
-      const valid = corners.length > 0 && markedCount === requiredCount;
-      return {
-        valid,
-        markedCount,
-        requiredCount,
-        label: `${markedCount}/${requiredCount} checked`,
-        warning: valid
-          ? undefined
-          : `⚠️ Cannot Send Claim for Four Corners: You have marked only ${markedCount}/${requiredCount} corner boxes. All ${requiredCount} corner boxes must be checked before submitting!`,
-      };
-    }
-    case 'FULL_HOUSE': {
-      const markedCount = cells.filter((c) => c.marked).length;
-      const requiredCount = cells.length || 15;
-      const valid = cells.length > 0 && markedCount === requiredCount;
-      return {
-        valid,
-        markedCount,
-        requiredCount,
-        label: `${markedCount}/${requiredCount} checked`,
-        warning: valid
-          ? undefined
-          : `⚠️ Cannot Send Claim for Full House: You have marked only ${markedCount}/${requiredCount} boxes across your ticket. All ${requiredCount} boxes must be checked before submitting!`,
-      };
-    }
-    default:
-      return { valid: true, markedCount: 0, requiredCount: 0, label: '' };
-  }
-}
-
 export function ClaimPanel({
   round,
-  ticket,
   canSubmit = true,
 }: {
   round: ParticipantRound;
@@ -191,40 +68,15 @@ export function ClaimPanel({
   canSubmit?: boolean;
 }) {
   const user = useOutletContext<AuthenticatedUser>();
-  const queryClient = useQueryClient();
   const submission = useParticipantClaimSubmission(user.id, round);
   const { claims, currentRoundClaims, pendingPatterns, pending, uncertainPattern, feedback } = submission;
   const [selectedPattern, setSelectedPattern] = useState<ClaimPattern>();
-  const [validationWarning, setValidationWarning] = useState<string | null>(null);
-
-  const ticketQuery = useQuery<Ticket>({
-    queryKey: ['participant', user.id, 'ticket', round.eventId, round.id],
-    enabled: !ticket,
-    refetchOnWindowFocus: 'always',
-  });
-
-  const effectiveTicket =
-    ticket ??
-    ticketQuery.data ??
-    queryClient.getQueryData<Ticket>(['participant', user.id, 'ticket', round.eventId, round.id]);
-
   const roundPatternsMap = new Map(round.patterns.map((p) => [p.patternType, p]));
   const userClaimsMap = new Map(currentRoundClaims.map((c) => [c.patternType, c]));
 
   async function handleClaim(pattern: ClaimPattern) {
     if (pending || !canSubmit || round.status !== 'ACTIVE') return;
 
-    // First check whether the user actually has checked all of the boxes or not
-    const check = checkPatternBoxes(pattern, effectiveTicket);
-    if (!check.valid) {
-      setValidationWarning(
-        check.warning ?? 'You must mark all required boxes on your ticket before submitting this claim!'
-      );
-      return;
-    }
-
-    // All required boxes are checked: allow them to send the claim to the admin
-    setValidationWarning(null);
     await submission.submit(pattern);
   }
 
@@ -244,25 +96,8 @@ export function ClaimPanel({
       </div>
 
       <p className={styles.guidance}>
-        When your marked cells meet a pattern requirement, click the claim button below. The server validates your claim.
+        Submit a claim when the official draws complete a pattern on your ticket. The server checks eligibility.
       </p>
-
-      {validationWarning && (
-        <div className={styles.validationWarning} role="alert">
-          <div className={styles.validationWarningContent}>
-            <span className={styles.warningIcon}>⚠️</span>
-            <p className={styles.warningMessage}>{validationWarning}</p>
-          </div>
-          <button
-            type="button"
-            className={styles.closeWarningBtn}
-            onClick={() => setValidationWarning(null)}
-            aria-label="Dismiss warning"
-          >
-            ✕
-          </button>
-        </div>
-      )}
 
       {claims.isPending ? (
         <p role="status">Checking claim statuses…</p>
@@ -289,8 +124,6 @@ export function ClaimPanel({
           const isVerified = userClaim?.status === 'VERIFIED';
           const isRejected = userClaim?.status === 'REJECTED';
 
-          const boxCheck = checkPatternBoxes(card.pattern, effectiveTicket);
-
           const canClick =
             isEnabled &&
             isConfigOpen &&
@@ -314,16 +147,6 @@ export function ClaimPanel({
               </div>
 
               <p className={styles.cardDesc}>{card.description}</p>
-
-              {boxCheck.label && (
-                <div className={styles.cardRequirement}>
-                  <span
-                    className={`${styles.requirementBadge} ${boxCheck.valid ? styles.reqValid : styles.reqPending}`}
-                  >
-                    {boxCheck.valid ? `✓ Ready (${boxCheck.label})` : `Checked: ${boxCheck.label}`}
-                  </span>
-                </div>
-              )}
 
               <div className={styles.cardFooter}>
                 {isVerified ? (
