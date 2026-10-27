@@ -27,11 +27,23 @@ const iso = (value: string | Date) => new Date(value).toISOString();
 export class PlayRepository implements PlayStore {
   private readonly bankCache = new Map<string, PlayQuestion[]>();
   constructor(private readonly connection = getSqlClient) {}
+  async archive(id: string, actor: PlayActor): Promise<void> {
+    await this.connection().begin(async (tx) => {
+      const [game] = await tx.unsafe<{status: string}[]>("SELECT status FROM rounds WHERE id=$1 AND game_code IS NOT NULL FOR UPDATE", [id]);
+      if (!game) throw new NotFoundError('Game not found');
+      await tx.unsafe("UPDATE rounds SET archived_at=COALESCE(archived_at,now()),is_broadcast=false,status='COMPLETED' WHERE id=$1", [id]);
+      await this.audit(tx, actor, id, 'GAME_DELETED');
+
+    });
+  }
+  async participants(id: string): Promise<Array<{ id: string; name: string; participantId: string }>> {
+    return this.connection().unsafe<Array<{ id: string; name: string; participantId: string }>>(`SELECT DISTINCT u.id,u.name,p.id AS "participantId" FROM tickets t JOIN participant_profiles p ON p.id=t.participant_id JOIN users u ON u.id=p.user_id WHERE t.round_id=$1 ORDER BY u.name,u.id`, [id]);
+  }
   async list(_actor?: PlayActor): Promise<PlaySummary[]> {
     const rows = await this.connection().unsafe<
       (PlaySummary & { is_broadcast?: boolean })[]
     >(
-      `SELECT id,event_id AS "eventId",name,game_code AS code,status,sequence_number AS "sequenceNumber",created_at AS "createdAt",COALESCE(is_broadcast,false) AS "isBroadcast" FROM rounds WHERE game_code IS NOT NULL ORDER BY (COALESCE(is_broadcast,false)=true) DESC, (status='ACTIVE') DESC, (status='READY') DESC, created_at DESC`,
+      `SELECT id,event_id AS "eventId",name,game_code AS code,status,sequence_number AS "sequenceNumber",created_at AS "createdAt",COALESCE(is_broadcast,false) AS "isBroadcast" FROM rounds WHERE archived_at IS NULL AND game_code IS NOT NULL ORDER BY (COALESCE(is_broadcast,false)=true) DESC, (status='ACTIVE') DESC, (status='READY') DESC, created_at DESC`,
     );
     return rows.map((r) => ({
       ...r,
@@ -42,7 +54,7 @@ export class PlayRepository implements PlayStore {
   async findCode(code: string, actor: PlayActor) {
     return this.connection().begin(async (tx) => {
       const rounds = await tx.unsafe<{ id: string; event_id: string; status: string }[]>(
-        `SELECT id, event_id, status FROM rounds WHERE game_code=$1`,
+        `SELECT id, event_id, status FROM rounds WHERE archived_at IS NULL AND game_code=$1`,
         [code],
       );
       if (!rounds[0])
@@ -118,7 +130,7 @@ export class PlayRepository implements PlayStore {
       for (let attempt = 0; attempt < 10; attempt++) {
         code = randomBytes(3).toString("hex").toUpperCase();
         const found = await tx.unsafe(
-          "SELECT id FROM rounds WHERE game_code=$1",
+          "SELECT id FROM rounds WHERE archived_at IS NULL AND game_code=$1",
           [code],
         );
         if (!found.length) break;
@@ -285,6 +297,11 @@ export class PlayRepository implements PlayStore {
       }
 
       if (marked) {
+        const [drawn] = await tx.unsafe(
+          'SELECT 1 FROM draws d JOIN ticket_cells c ON c.key_id=d.key_id WHERE c.id=$1 AND d.round_id=$2',
+          [cellId, id],
+        );
+        if (!drawn) throw new ValidationError('This key has not been drawn.');
         await tx.unsafe(
           `INSERT INTO ticket_marks(ticket_id, cell_id) VALUES($1, $2) ON CONFLICT(ticket_id, cell_id) DO NOTHING`,
           [ticketCell.ticket_id, cellId],
@@ -567,7 +584,7 @@ export class PlayRepository implements PlayStore {
     const [round] = await sql.unsafe<
       (PlayState & { is_broadcast?: boolean })[]
     >(
-      `SELECT id,event_id AS "eventId",name,game_code AS code,status,sequence_number AS "sequenceNumber",created_at AS "createdAt",closing_sequence AS "closingSequence",COALESCE(is_broadcast,false) AS "isBroadcast" FROM rounds WHERE id=$1 AND game_code IS NOT NULL`,
+      `SELECT id,event_id AS "eventId",name,game_code AS code,status,sequence_number AS "sequenceNumber",created_at AS "createdAt",closing_sequence AS "closingSequence",COALESCE(is_broadcast,false) AS "isBroadcast" FROM rounds WHERE archived_at IS NULL AND id=$1 AND game_code IS NOT NULL`,
       [id],
     );
     if (!round) throw new NotFoundError("Round not found.");

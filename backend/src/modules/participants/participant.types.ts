@@ -13,9 +13,10 @@ export interface ParticipantSummary {
 }
 
 export interface CreateParticipantInput {
-  eventId: string;
+  password: string;
+  eventId?: string;
   email: string;
-  name: string;
+  name?: string;
   externalId?: string | null;
 }
 

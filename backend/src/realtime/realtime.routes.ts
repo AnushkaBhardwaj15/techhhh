@@ -45,6 +45,7 @@ export function createRealtimeRoutes({
           socket,
           ...subscription,
           sessionId: request.session!.id,
+          userId: request.user!.id,
           isSessionActive: async () => {
             try {
               await validateSession(token);

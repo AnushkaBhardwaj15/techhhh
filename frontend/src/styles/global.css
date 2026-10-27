@@ -258,3 +258,8 @@ svg {
     scroll-behavior: auto !important;
   }
 }
+
+.page-back-nav { width: min(1200px, calc(100% - 32px)); margin: 16px auto; }
+.page-back-link { display: inline-flex; align-items: center; min-height: 44px; padding: 8px 14px; border: 2px solid currentColor; color: inherit; background: var(--color-parchment, #faf7f0); text-decoration: none; font-weight: 700; }
+.page-back-link:hover { text-decoration: underline; }
+.page-back-link:focus-visible { outline: 3px solid #ee640f; outline-offset: 3px; }

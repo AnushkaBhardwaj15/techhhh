@@ -36,7 +36,7 @@ function encodeAuditCursor(record: { cursorCreatedAt?: string; createdAt: Date; 
   return Buffer.from(JSON.stringify({ createdAt, id: record.id })).toString('base64url');
 }
 
-export interface ConnectionCounter { connectionCount(): number; }
+export interface ConnectionCounter { connectionCount(roundId?: string): number; }
 
 export class OperationsService {
   constructor(
@@ -47,10 +47,8 @@ export class OperationsService {
   ) {}
 
   async getDashboard() {
-    const [readModel, connectedConnections] = await Promise.all([
-      this.repository.getDashboard(),
-      Promise.resolve(this.connections?.connectionCount() ?? 0),
-    ]);
+    const readModel = await this.repository.getDashboard();
+    const connectedConnections = readModel.round ? this.connections?.connectionCount(readModel.round.id) ?? 0 : 0;
     return { ...readModel, connectedConnections };
   }
 

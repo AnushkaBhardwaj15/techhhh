@@ -92,6 +92,8 @@ export interface ClaimOutcome {
   points?: number;
 }
 export interface PlayStore {
+  participants?(id: string): Promise<Array<{ id: string; name: string; participantId: string }>>;
+  archive?(id: string, actor: PlayActor): Promise<void>;
   list(actor?: PlayActor): Promise<PlaySummary[]>;
   create(
     actor: PlayActor,

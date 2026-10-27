@@ -42,59 +42,19 @@ export class OperationsRepository implements IOperationsRepository {
   constructor(private readonly databaseProvider: () => ReturnType<typeof getDb> = getDb) {}
 
   async getDashboard(): Promise<DashboardReadModel> {
-    try {
-      return await this.databaseProvider().transaction(async (tx) => {
-        const [event] = await tx
-          .select({ id: events.id, title: events.title, status: events.status })
-          .from(events)
-          .where(eq(events.status, 'LIVE'))
-          .orderBy(desc(events.updatedAt), desc(events.id))
-          .limit(1);
-        if (!event) {
-          return { event: null, round: null, participants: 0, drawCount: 0, pendingClaims: 0, verifiedWinners: 0, recoveryRequired: false, systemStatus: 'operational' };
-        }
-
-        const [round] = await tx
-          .select({ id: rounds.id, name: rounds.name, sequenceNumber: rounds.sequenceNumber, status: rounds.status })
-          .from(rounds)
-          .where(eq(rounds.eventId, event.id))
-          .orderBy(
-            sql`CASE ${rounds.status} WHEN 'RECOVERY_REQUIRED' THEN 0 WHEN 'ACTIVE' THEN 1 WHEN 'PAUSED' THEN 2 WHEN 'COMPLETED' THEN 3 WHEN 'READY' THEN 4 WHEN 'DRAFT' THEN 5 ELSE 6 END`,
-            desc(rounds.sequenceNumber),
-            desc(rounds.updatedAt),
-            desc(rounds.id)
-          )
-          .limit(1);
-
-        const [participantCount] = await tx
-          .select({ count: sql<number>`count(*)::int` })
-          .from(participantProfiles)
-          .where(eq(participantProfiles.eventId, event.id));
-
-        if (!round) {
-          return { event, round: null, participants: participantCount?.count ?? 0, drawCount: 0, pendingClaims: 0, verifiedWinners: 0, recoveryRequired: false, systemStatus: 'operational' };
-        }
-
-        const [[drawCount], [pendingClaims], [verifiedWinners]] = await Promise.all([
-          tx.select({ count: sql<number>`count(*)::int` }).from(draws).where(eq(draws.roundId, round.id)),
-          tx.select({ count: sql<number>`count(*)::int` }).from(claims).where(and(eq(claims.roundId, round.id), eq(claims.status, 'PENDING_VERIFICATION'))),
-          tx.select({ count: sql<number>`count(*)::int` }).from(winners).where(and(eq(winners.roundId, round.id), eq(winners.eventId, event.id))),
-        ]);
-
-        return {
-          event,
-          round,
-          participants: participantCount?.count ?? 0,
-          drawCount: drawCount?.count ?? 0,
-          pendingClaims: pendingClaims?.count ?? 0,
-          verifiedWinners: verifiedWinners?.count ?? 0,
-          recoveryRequired: round.status === 'RECOVERY_REQUIRED',
-          systemStatus: round.status === 'RECOVERY_REQUIRED' ? 'recovery_required' : 'operational',
-        };
-      }, { isolationLevel: 'repeatable read', accessMode: 'read only' });
-    } catch {
-      return { event: null, round: null, participants: 0, drawCount: 0, pendingClaims: 0, verifiedWinners: 0, recoveryRequired: false, systemStatus: 'operational' };
-    }
+    return this.databaseProvider().transaction(async tx => {
+      const [game] = await tx.select({ id: rounds.id, name: rounds.name, sequenceNumber: rounds.sequenceNumber, status: rounds.status }).from(rounds)
+        .where(sql`game_code IS NOT NULL AND archived_at IS NULL`)
+        .orderBy(sql`CASE status WHEN 'ACTIVE' THEN 0 WHEN 'PAUSED' THEN 1 WHEN 'RECOVERY_REQUIRED' THEN 2 WHEN 'READY' THEN 3 ELSE 4 END`, desc(rounds.updatedAt), desc(rounds.id)).limit(1);
+      if (!game) return { event: null, round: null, participants: 0, drawCount: 0, pendingClaims: 0, verifiedWinners: 0, recoveryRequired: false, systemStatus: 'operational' };
+      const result = await tx.execute(sql`SELECT
+        (SELECT count(DISTINCT participant_id)::int FROM tickets WHERE round_id=${game.id}) AS participants,
+        (SELECT count(*)::int FROM draws WHERE round_id=${game.id}) AS "drawCount",
+        (SELECT count(*)::int FROM claims WHERE round_id=${game.id} AND status='PENDING') AS "pendingClaims",
+        (SELECT count(*)::int FROM winners WHERE round_id=${game.id}) AS "verifiedWinners"`);
+      const metrics = result[0] as unknown as Pick<DashboardReadModel, 'participants' | 'drawCount' | 'pendingClaims' | 'verifiedWinners'>;
+      return { event: null, round: game, ...metrics, recoveryRequired: game.status === 'RECOVERY_REQUIRED', systemStatus: game.status === 'RECOVERY_REQUIRED' ? 'recovery_required' : 'operational' };
+    }, { isolationLevel: 'repeatable read', accessMode: 'read only' });
   }
 
   async listAudit(filters: AuditFilters): Promise<Array<AuditLogRecord & { actorEmail?: string | null; actorName?: string | null; cursorCreatedAt?: string }>> {

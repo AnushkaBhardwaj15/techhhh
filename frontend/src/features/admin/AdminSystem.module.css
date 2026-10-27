@@ -190,3 +190,15 @@
     margin: 8px 0 0;
   }
 }
+
+.page { width: 100%; margin: 0; padding: 0; background: transparent; border-radius: 0; }
+.heading { margin-bottom: 24px; gap: 16px; }
+.heading h1 { font-size: clamp(26px, 3vw, 34px); line-height: 1.2; margin-bottom: 10px; }
+.heading p { margin: 0; color: #71685b; font-size: 14px; }
+.panel, .section, .createPanel { background: #fffdf8; border: 1px solid #d2c8b9; border-radius: 5px; padding: 24px; margin-bottom: 20px; box-shadow: none; }
+.form { max-width: 760px; gap: 16px; }
+.filters { gap: 12px; align-items: end; }
+
+/* Staff panel treatment; layout and readable type remain compact. */
+.panel, .section, .createPanel { border: 2px solid #181818; border-radius: 4px; background: #fffdf6; box-shadow: 4px 4px 0 #181818; }
+.heading h1 { font-weight: 900; }

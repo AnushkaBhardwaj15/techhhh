@@ -30,6 +30,7 @@ function errorText(error: unknown) {
 export function AdminClaims() {
   const user = useOutletContext<AuthenticatedUser>();
   const [params, setParams] = useSearchParams();
+  const roundId = params.get('gameId') ?? '';
   const page = Math.max(1, Number(params.get('claimPage')) || 1);
   const selectedId = params.get('claimId') ?? '';
   const latestParams = useRef(params);
@@ -37,8 +38,9 @@ export function AdminClaims() {
   const queryClient = useQueryClient();
   const [message, setMessage] = useState('');
   const claims = useQuery({
-    queryKey: claimsKey(user.id, page),
-    queryFn: ({ signal }) => listAdminClaims({ page, limit: PAGE_SIZE, signal }),
+    queryKey: [...claimsKey(user.id, page), roundId],
+    queryFn: ({ signal }) => listAdminClaims({ page, limit: PAGE_SIZE, roundId, signal }),
+    enabled: !!roundId,
     refetchInterval: 1000,
     refetchIntervalInBackground: true,
     refetchOnReconnect: 'always',

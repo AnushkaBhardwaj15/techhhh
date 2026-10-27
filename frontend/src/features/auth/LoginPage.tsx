@@ -1,3 +1,4 @@
+import { BackLink } from '../../components/BackLink';
 import { useState, type FormEvent } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -27,9 +28,6 @@ export function LoginPage() {
   const signinMutation = useMutation({
     mutationFn: () => login(email.trim(), password),
     onSuccess: (user) => {
-      if (password) {
-        localStorage.setItem('tt_participant_pwd', password);
-      }
       identityChanged();
       queryClient.clear();
       const returnTo = (location.state as { returnTo?: unknown } | null)?.returnTo;
@@ -51,11 +49,6 @@ export function LoginPage() {
     signinMutation.mutate();
   }
 
-  function handleSelectPreset(presetEmail: string, presetPassword: string) {
-    setEmail(presetEmail);
-    setPassword(presetPassword);
-    setValidationError('');
-  }
 
   const failure =
     signinMutation.error instanceof ApiError
@@ -70,6 +63,7 @@ export function LoginPage() {
 
   return (
     <main className={styles.page}>
+      <BackLink label="Back to home" />
       <header className={styles.brandGroup} aria-label="Tech Tambola">
         <span className={styles.brandBadge}>TECH</span>
         <strong className={styles.brandName}>
@@ -84,69 +78,7 @@ export function LoginPage() {
           <span className={styles.titleAccent}>Tech Tambola</span>
         </h1>
 
-        <p className={styles.presetHint}>Choose a demo account to fill your details.</p>
-        <div className={styles.presetSection}>
-          <div className={styles.presetGroup}>
-            <span className={styles.presetHeading}>PARTICIPANTS</span>
-            <div className={styles.presetRow}>
-              <button
-                type="button"
-                className={`${styles.presetBtn} ${email === 'player1@techtombola.internal' ? styles.presetActive : ''}`}
-                onClick={() => handleSelectPreset('player1@techtombola.internal', 'PlayerPass123!')}
-              >
-                Player 1
-              </button>
-              <button
-                type="button"
-                className={`${styles.presetBtn} ${email === 'player2@techtombola.internal' ? styles.presetActive : ''}`}
-                onClick={() => handleSelectPreset('player2@techtombola.internal', 'PlayerPass123!')}
-              >
-                Player 2
-              </button>
-              <button
-                type="button"
-                className={`${styles.presetBtn} ${email === 'player3@techtombola.internal' ? styles.presetActive : ''}`}
-                onClick={() => handleSelectPreset('player3@techtombola.internal', 'PlayerPass123!')}
-              >
-                Player 3
-              </button>
-            </div>
-          </div>
-
-          <div className={styles.presetGroup}>
-            <span className={styles.presetHeading}>ADMINS</span>
-            <div className={styles.presetRow}>
-              <button
-                type="button"
-                className={`${styles.presetBtn} ${styles.presetAdmin} ${email === 'admin1@techtombola.internal' ? styles.presetActive : ''}`}
-                onClick={() => handleSelectPreset('admin1@techtombola.internal', 'AdminPass123!')}
-              >
-                Admin 1
-              </button>
-              <button
-                type="button"
-                className={`${styles.presetBtn} ${styles.presetAdmin} ${email === 'admin2@techtombola.internal' ? styles.presetActive : ''}`}
-                onClick={() => handleSelectPreset('admin2@techtombola.internal', 'AdminPass123!')}
-              >
-                Admin 2
-              </button>
-              <button
-                type="button"
-                className={`${styles.presetBtn} ${styles.presetAdmin} ${email === 'admin3@techtombola.internal' ? styles.presetActive : ''}`}
-                onClick={() => handleSelectPreset('admin3@techtombola.internal', 'AdminPass123!')}
-              >
-                Admin 3
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {(validationError || failure) && (
-          <div className={styles.errorBox} role="alert">
-            {validationError || failure}
-          </div>
-        )}
-
+        {(validationError || failure) && <p role="alert">{validationError || failure}</p>}
         <form onSubmit={submit} noValidate>
           <div className={styles.field}>
             <label htmlFor="email" className={styles.label}>

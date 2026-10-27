@@ -32,7 +32,7 @@ export function usePlayState(roundId: string, publicView = false) {
   const accessDenied = query.error instanceof ApiError && [401, 403].includes(query.error.status);
   useEffect(() => {
     if (accessDenied || !id || !eventId || status === "COMPLETED" ||
-      (!publicView && !["ACTIVE", "PAUSED"].includes(status ?? ""))) return;
+      (!publicView && !["READY", "ACTIVE", "PAUSED"].includes(status ?? ""))) return;
     let stopped = false;
     let socket: WebSocket | undefined;
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -80,7 +80,11 @@ export function usePlayState(roundId: string, publicView = false) {
         reconnect();
       }
     }
-    connect();
+    // Let React finish its development setup/cleanup cycle before opening.
+    timer = setTimeout(() => {
+      timer = undefined;
+      connect();
+    }, 0);
     return () => {
       stopped = true;
       setWsConnected(false);
@@ -90,7 +94,17 @@ export function usePlayState(roundId: string, publicView = false) {
         socket.onmessage = null;
         socket.onclose = null;
         socket.onerror = null;
-        socket.close();
+        if (socket.readyState === WebSocket.CONNECTING) {
+          // Closing during the handshake produces a browser error. Finish it
+          // without delivering events, then immediately release the socket.
+          const abandoned = socket;
+          abandoned.onopen = () => {
+            abandoned.onopen = null;
+            abandoned.close();
+          };
+        } else if (socket.readyState === WebSocket.OPEN) {
+          socket.close();
+        }
       }
     };
   }, [id, eventId, status, publicView, client, roundId, accessDenied]);

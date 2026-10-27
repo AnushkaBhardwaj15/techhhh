@@ -25,3 +25,7 @@ export async function getMe(signal?: AbortSignal): Promise<AuthenticatedUser> {
 export async function logout(signal?: AbortSignal): Promise<void> {
   await apiRequest('/auth/logout', { method: 'POST', signal });
 }
+
+export async function changeAdminPassword(currentPassword: string, newPassword: string) {
+  await apiRequest('/auth/password', { method: 'POST', body: JSON.stringify({ currentPassword, newPassword }) });
+}

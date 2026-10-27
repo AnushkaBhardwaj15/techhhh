@@ -1,3 +1,4 @@
+import { changeAdminPassword } from './password.service.ts';
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import { loginSchema } from './auth.schemas.ts';
@@ -25,25 +26,11 @@ export function createAuthRoutes({ onSessionRevoked }: AuthRouteDependencies = {
       return { user };
     });
 
-    fastify.post('/auth/quick-join', async (request, reply) => {
-      const quickJoinSchema = z.object({
-        name: z.string().min(1, 'Name is required'),
-        email: z.string().email('Valid email is required'),
-        password: z.string().min(6).optional(),
-        eventId: z.string().uuid().optional(),
-      });
-      const body = quickJoinSchema.parse(request.body);
-      const result = await authService.quickJoin({
-        name: body.name,
-        email: body.email,
-        password: body.password,
-        eventId: body.eventId,
-        ip: request.ip,
-        userAgent: request.headers['user-agent'],
-        requestId: request.id,
-      });
-      reply.setCookie(SESSION_COOKIE_NAME, result.token, getSessionCookieOptions());
-      return { user: result.user, roundId: result.roundId, ticketId: result.ticketId };
+    fastify.post('/auth/password', { preHandler: requireAuth }, async (request, reply) => {
+      const body = z.object({ currentPassword: z.string().min(1).max(128), newPassword: z.string().min(8).max(128) }).parse(request.body);
+      await changeAdminPassword(request.user!.id, body.currentPassword, body.newPassword);
+      reply.clearCookie(SESSION_COOKIE_NAME, getSessionCookieOptions());
+      return reply.status(204).send();
     });
 
     fastify.post(

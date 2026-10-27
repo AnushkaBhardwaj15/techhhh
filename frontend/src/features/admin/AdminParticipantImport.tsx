@@ -34,7 +34,7 @@ export function AdminParticipantImport({ eventId, userId, onPendingChange }: { e
     },
     onSuccess: async (result) => {
       setReport(result); setAmbiguous(false); setRetryAllowed(false); setMessage('The server returned this import report.');
-      await queryClient.invalidateQueries({ queryKey: ['admin-participants', userId, eventId] });
+      await queryClient.invalidateQueries({ queryKey: ['admin-participants', userId] });
     },
     onError: async (error) => {
       const uncertain = !(error instanceof ApiError) || error.status === 0 || error.status >= 500;
@@ -46,7 +46,7 @@ export function AdminParticipantImport({ eventId, userId, onPendingChange }: { e
           : error instanceof ApiError
             ? `The server did not accept the import: ${error.message}`
             : 'The import could not be completed. Review the current Participant results before trying again.');
-      await queryClient.invalidateQueries({ queryKey: ['admin-participants', userId, eventId] });
+      await queryClient.invalidateQueries({ queryKey: ['admin-participants', userId] });
     },
     onSettled: () => { requestLock.current = false; onPendingChange(false); },
   });
@@ -84,20 +84,20 @@ export function AdminParticipantImport({ eventId, userId, onPendingChange }: { e
     {ambiguous && retryAllowed && <p role="note">A retry will use the same idempotency key for this selected file.</p>}
     <div className={styles.form}>
       <label>CSV file<input type="file" accept=".csv,text/csv" disabled={mutation.isPending || reading || ambiguous} onChange={chooseFile} /></label>
-      <p>UTF-8 CSV, up to 10 MiB and 500 data rows. Required headers: <code>name,email</code>; optional: <code>external_id</code>.</p>
+      <p>UTF-8 CSV, up to 10 MiB and 500 data rows. Required headers: <code>email,password</code>; optional: <code>external_id</code>.</p>
     </div>
     {reading && <p role="status">Reading CSV…</p>}
     {fileError && <p role="alert">{fileError}</p>}
     {preview && <div className={styles.preview}>
-      <p>Local structure preview: {preview.totalRows} data rows. Showing up to {PARTICIPANT_CSV_PREVIEW_ROWS}. Duplicate account, Event and credential checks happen on the server after confirmation.</p>
+      <p>Local structure preview: {preview.totalRows} data rows. Showing up to {PARTICIPANT_CSV_PREVIEW_ROWS}. Duplicate account and credential checks happen on the server after confirmation.</p>
       {preview.issues.length > 0 && <ul className={styles.issues} aria-label="CSV structure issues">{preview.issues.map((issue) => <li key={issue}>{issue}</li>)}</ul>}
-      {preview.headers.length > 0 && <div className={styles.tableWrap}><table><caption>CSV preview</caption><thead><tr>{preview.headers.map((header, index) => <th key={`${header}-${index}`} scope="col">{header || `Column ${index + 1}`}</th>)}</tr></thead><tbody>{preview.rows.map((row, rowIndex) => <tr key={rowIndex}>{preview.headers.map((_, columnIndex) => <td key={columnIndex}>{row[columnIndex] ?? ''}</td>)}</tr>)}</tbody></table></div>}
+      {preview.headers.length > 0 && <div className={styles.tableWrap}><table><caption>CSV preview</caption><thead><tr>{preview.headers.map((header, index) => <th key={`${header}-${index}`} scope="col">{header || `Column ${index + 1}`}</th>)}</tr></thead><tbody>{preview.rows.map((row, rowIndex) => <tr key={rowIndex}>{preview.headers.map((_, columnIndex) => <td key={columnIndex}>{preview.headers[columnIndex]?.toLowerCase() === 'password' ? '••••••••' : row[columnIndex] ?? ''}</td>)}</tr>)}</tbody></table></div>}
       <div className={styles.actions}>
         <button type="button" disabled={!preview.totalRows || preview.issues.length > 0 || mutation.isPending || reading || (ambiguous && !retryAllowed)} onClick={confirmImport}>{mutation.isPending ? 'Importing…' : ambiguous ? 'Retry import deliberately' : `Confirm import of ${preview.totalRows} rows`}</button>
         <button type="button" disabled={mutation.isPending || reading} onClick={() => { setFile(null); setPreview(null); setReport(null); setFileError(''); setMessage(''); setAmbiguous(false); setRetryAllowed(false); attemptKey.current = ''; }}>Clear file</button>
       </div>
     </div>}
     {mutation.isPending && <p role="status">Import is processing. The server does not provide row-by-row progress.</p>}
-    {report && <section className={styles.report} aria-labelledby="import-report-title"><h3 id="import-report-title">Import results</h3><dl className={styles.details}><div><dt>Rows received</dt><dd>{report.totalReceived}</dd></div><div><dt>Created</dt><dd>{report.createdCount}</dd></div><div><dt>Skipped</dt><dd>{report.skippedCount}</dd></div><div><dt>Failed</dt><dd>{report.failedCount}</dd></div></dl><p role="note">The server report does not include per-Participant credential-delivery status. Refresh the Participant list to view the delivery status returned for individual records.</p>{issueList.length > 0 && <div><h4>Row results</h4><ul className={styles.issues}>{issueList.map((item, index) => <li key={`${item.rowIndex}-${index}`}>Row {item.rowIndex}{item.email ? ` · ${item.email}` : ''}: {item.reason}</li>)}</ul></div>}</section>}
+    {report && <section className={styles.report} aria-labelledby="import-report-title"><h3 id="import-report-title">Import results</h3><dl className={styles.details}><div><dt>Rows received</dt><dd>{report.totalReceived}</dd></div><div><dt>Created</dt><dd>{report.createdCount}</dd></div><div><dt>Skipped</dt><dd>{report.skippedCount}</dd></div><div><dt>Failed</dt><dd>{report.failedCount}</dd></div></dl><p role="note">Participants sign in with the email and password supplied in your CSV.</p>{issueList.length > 0 && <div><h4>Row results</h4><ul className={styles.issues}>{issueList.map((item, index) => <li key={`${item.rowIndex}-${index}`}>Row {item.rowIndex}{item.email ? ` · ${item.email}` : ''}: {item.reason}</li>)}</ul></div>}</section>}
   </section>;
 }

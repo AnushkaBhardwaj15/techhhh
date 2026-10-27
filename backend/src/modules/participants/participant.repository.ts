@@ -1,4 +1,4 @@
-import { and, count, desc, eq, ilike, or } from 'drizzle-orm';
+import { and, count, desc, eq, ilike, or, sql } from 'drizzle-orm';
 import { getDb } from '../../db/client.ts';
 import {
   users,
@@ -18,7 +18,7 @@ export interface IParticipantRepository {
   findByUserIdAndEvent(userId: string, eventId: string, tx?: any): Promise<ParticipantSummary | null>;
   findByExternalIdAndEvent(eventId: string, externalId: string, tx?: any): Promise<ParticipantSummary | null>;
   list(options: {
-    eventId: string;
+    eventId?: string;
     page: number;
     limit: number;
     search?: string;
@@ -173,7 +173,7 @@ export class ParticipantRepository implements IParticipantRepository {
 
   async list(
     options: {
-      eventId: string;
+      eventId?: string;
       page: number;
       limit: number;
       search?: string;
@@ -184,7 +184,7 @@ export class ParticipantRepository implements IParticipantRepository {
     const client = this.getClient(tx);
     const offset = (options.page - 1) * options.limit;
 
-    const conditions = [eq(participantProfiles.eventId, options.eventId)];
+    const conditions = [options.eventId ? eq(participantProfiles.eventId, options.eventId) : undefined];
     if (options.status) {
       conditions.push(eq(participantProfiles.status, options.status));
     }
@@ -196,7 +196,7 @@ export class ParticipantRepository implements IParticipantRepository {
     const whereClause = and(...conditions);
 
     const [totalRow] = await client
-      .select({ count: count() })
+      .select({ count: sql<number>`count(distinct ${users.id})` })
       .from(participantProfiles)
       .innerJoin(users, eq(participantProfiles.userId, users.id))
       .where(whereClause);
@@ -204,14 +204,11 @@ export class ParticipantRepository implements IParticipantRepository {
     const total = Number(totalRow?.count || 0);
 
     const rows = await client
-      .select({
-        user: users,
-        profile: participantProfiles,
-      })
+      .selectDistinctOn([users.id], { user: users, profile: participantProfiles })
       .from(participantProfiles)
       .innerJoin(users, eq(participantProfiles.userId, users.id))
       .where(whereClause)
-      .orderBy(desc(participantProfiles.createdAt))
+      .orderBy(users.id, desc(participantProfiles.createdAt))
       .limit(options.limit)
       .offset(offset);
 

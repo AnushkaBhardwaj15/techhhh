@@ -15,11 +15,13 @@ function patternLabel(pattern: string) {
 export function AdminWinners() {
   const user = useOutletContext<AuthenticatedUser>();
   const [params, setParams] = useSearchParams();
+  const roundId = params.get('gameId') ?? '';
   const requestedPage = Number(params.get('winnerPage'));
   const page = Number.isSafeInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1;
   const winners = useQuery({
-    queryKey: winnersKey(user.id, page),
-    queryFn: ({ signal }) => listAdminWinners({ page, limit: PAGE_SIZE, signal }),
+    enabled: !!roundId,
+    queryKey: [...winnersKey(user.id, page), roundId],
+    queryFn: ({ signal }) => listAdminWinners({ page, limit: PAGE_SIZE, roundId, signal }),
   });
   const totalPages = winners.data ? Math.max(1, Math.ceil(winners.data.total / winners.data.limit)) : 1;
 

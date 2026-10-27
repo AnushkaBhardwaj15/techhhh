@@ -2,6 +2,7 @@ import { ValidationError } from '../../../shared/errors/app-error.ts';
 
 export interface ParsedCsvRow {
   rowIndex: number;
+  password: string;
   name: string;
   email: string;
   externalId: string | null;
@@ -26,13 +27,14 @@ export function parseParticipantCsv(rawContent: string): ParsedCsvRow[] {
 
   // 3. Header inspection
   const header = records[0].map((col) => col.trim().toLowerCase());
+  const passwordIdx = header.indexOf('password');
   const nameIdx = header.indexOf('name');
   const emailIdx = header.indexOf('email');
   const externalIdIdx = header.indexOf('external_id');
 
-  if (nameIdx === -1 || emailIdx === -1) {
+  if (passwordIdx === -1 || emailIdx === -1) {
     throw new ValidationError(
-      "CSV header must contain at least 'name' and 'email' columns"
+      "CSV header must contain 'email' and 'password' columns"
     );
   }
 
@@ -56,12 +58,13 @@ export function parseParticipantCsv(rawContent: string): ParsedCsvRow[] {
       continue;
     }
 
-    const name = row[nameIdx] !== undefined ? row[nameIdx].trim() : '';
+    const name = (nameIdx >= 0 ? row[nameIdx]?.trim() : '') || row[emailIdx]?.trim().split('@')[0] || 'Participant';
     const email = row[emailIdx] !== undefined ? row[emailIdx].trim().toLowerCase() : '';
     const rawExternalId = externalIdIdx !== -1 && row[externalIdIdx] !== undefined ? row[externalIdIdx].trim() : '';
     const externalId = rawExternalId ? rawExternalId : null;
 
     result.push({
+      password: row[passwordIdx] ?? '',
       rowIndex,
       name,
       email,

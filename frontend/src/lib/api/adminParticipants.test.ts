@@ -26,7 +26,7 @@ describe('admin Participants API', () => {
 
   it('creates a Participant through the documented route', async () => {
     const fetchMock = vi.fn().mockImplementation(() => response({ participant })); vi.stubGlobal('fetch', fetchMock);
-    await createAdminParticipant({ eventId: participant.eventId, email: participant.email, name: participant.name });
+    await createAdminParticipant({ eventId: participant.eventId, email: participant.email, name: participant.name, password: 'FixturePass123!' });
     expect(fetchMock.mock.calls[0]?.[0]).toBe('/api/v1/admin/participants');
   });
 

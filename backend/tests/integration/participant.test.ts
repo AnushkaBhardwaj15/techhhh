@@ -130,7 +130,7 @@ describe('Participant Management Integration', () => {
       repository.create = async () => { throw new Error('Failed query', { cause: { code: '23505', constraint_name: constraint } }); };
       const service = new ParticipantService(repository);
       await expect(service.createParticipant(adminUser.id, {
-        eventId: eventA.id, email: `race-${crypto.randomUUID()}@test.internal`, name: 'Race fixture', externalId: crypto.randomUUID(),
+        eventId: eventA.id, email: `race-${crypto.randomUUID()}@test.internal`, name: 'Race fixture', password: 'FixturePass123!', externalId: crypto.randomUUID(),
       })).rejects.toMatchObject({ code, statusCode: 409 });
     }
   });

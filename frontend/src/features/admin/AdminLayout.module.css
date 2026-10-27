@@ -96,3 +96,37 @@
     padding: 16px 12px;
   }
 }
+
+/* Consistent admin workspace rhythm. */
+.content { padding: clamp(20px, 3vw, 40px); }
+.content > main { width: 100%; max-width: 1180px; margin: 0 auto; padding: 0; border-radius: 0; background: transparent; }
+.content h1 { font-size: clamp(26px, 3vw, 34px); line-height: 1.2; letter-spacing: -.025em; margin: 0 0 12px; }
+.content h2 { font-size: 20px; line-height: 1.35; margin: 0 0 16px; }
+.content p { line-height: 1.65; }
+.content label { display: grid; gap: 8px; font-size: 13px; font-weight: 600; }
+.content input, .content select { box-sizing: border-box; width: 100%; min-width: 0; min-height: 44px; border: 1px solid #bfb5a6; border-radius: 4px; box-shadow: none; padding: 10px 12px; background: #fffdf8; }
+.content button { min-height: 44px; border-radius: 4px; box-shadow: none; cursor: pointer; }
+.content input:focus-visible, .content select:focus-visible, .content button:focus-visible { outline: 3px solid #ee640f; outline-offset: 3px; }
+.content table { font-size: 13px; }
+.brand { border-bottom: 1px solid #333; }
+.active { box-shadow: none; }
+@media (max-width: 900px) { .content { padding: 22px 16px; } }
+
+/* Neobrutalism is scoped to the staff workspace. */
+.layout { --staff-ink: #181818; --staff-paper: #fffdf6; --staff-orange: #f36b16; }
+.content { color: var(--staff-ink); }
+.content h1, .content h2 { font-weight: 900; }
+.content input, .content select, .content textarea { border: 2px solid var(--staff-ink); border-radius: 3px; background: white; box-shadow: 3px 3px 0 var(--staff-ink); }
+.content button { border: 2px solid var(--staff-ink); border-radius: 3px; box-shadow: 3px 3px 0 var(--staff-ink); font-weight: 700; transition: transform 120ms ease, box-shadow 120ms ease; }
+.content button:not(:disabled):active { transform: translate(3px,3px); box-shadow: none; }
+.content button:disabled { opacity: .55; cursor: not-allowed; }
+.active { border: 2px solid var(--staff-ink); box-shadow: 3px 3px 0 #000; }
+.content table { border: 2px solid var(--staff-ink); }
+.content th { background: #ffdc78; color: var(--staff-ink); border-bottom: 2px solid var(--staff-ink); }
+.content td { border-bottom: 1px solid #181818; }
+
+.backRow { max-width: 1180px; margin: 0 auto 24px; }
+.backRow :global(.page-back-nav) { width: auto; margin: 0; }
+.backRow :global(.page-back-link) { min-height: 40px; box-sizing: border-box; padding: 8px 14px; border: 2px solid #181818; border-radius: 3px; background: #fffdf6; color: #181818; box-shadow: 3px 3px 0 #181818; font: 700 12px var(--mono, monospace); gap: 6px; }
+.backRow :global(.page-back-link:hover) { background: #ffe2c8; text-decoration: none; }
+.backRow :global(.page-back-link:active) { transform: translate(3px,3px); box-shadow: none; }

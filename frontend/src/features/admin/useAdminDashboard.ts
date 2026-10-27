@@ -17,7 +17,7 @@ export function useAdminDashboard(userId: string) {
     queryKey: adminDashboardKey(userId),
     queryFn: ({ signal }) => getAdminDashboard(signal),
     enabled: !sessionExpired,
-    refetchInterval: 15_000,
+    refetchInterval: 5_000,
     refetchIntervalInBackground: false,
     refetchOnReconnect: 'always',
   });

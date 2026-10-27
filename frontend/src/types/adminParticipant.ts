@@ -8,7 +8,7 @@ export const adminParticipantSchema = z.object({
   name: z.string(),
   externalId: z.string().nullable(),
   status: z.enum(['ACTIVE', 'INACTIVE']),
-  emailDeliveryStatus: z.enum(['PENDING', 'SENT', 'FAILED']),
+  emailDeliveryStatus: z.enum(['PENDING', 'SENT', 'FAILED', 'NOT_REQUIRED']),
   createdAt: z.string().datetime({ offset: true }),
   updatedAt: z.string().datetime({ offset: true }),
 });
@@ -24,7 +24,8 @@ export const adminParticipantListSchema = z.object({
 });
 
 export const createAdminParticipantSchema = z.object({
-  eventId: z.string().uuid(),
+  eventId: z.string().uuid().optional(),
+  password: z.string().min(8).max(128),
   email: z.string().trim().email().max(255),
   name: z.string().trim().min(1).max(255),
   externalId: z.string().trim().min(1).max(255).optional().nullable(),
