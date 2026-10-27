@@ -91,6 +91,17 @@ describe('participant claims', () => {
     expect(screen.getByRole('alert')).not.toHaveTextContent(/incomplete|need .* marked/i);
   });
 
+  it('lets the server evaluate a claim even when the local ticket has no marks', async () => {
+    renderAt(<ClaimPanel round={round} ticket={{
+      id: 'ticket', roundId: round.id, eventId: round.eventId, participantId: user.id,
+      createdAt: round.createdAt, cells: [{ id: 'cell', keyId: 'key', keyValue: 'DOCKER',
+        rowIndex: 0, colIndex: 0, row: 0, column: 0, marked: false }],
+    }} />);
+    await waitForClaimsLoaded();
+    fireEvent.click(screen.getByRole('button', { name: 'Claim Early Five' }));
+    await waitFor(() => expect(submitParticipantClaim).toHaveBeenCalledWith(round.id, 'EARLY_5'));
+  });
+
   it('suppresses duplicate confirmation while a request is pending', async () => {
     let resolve!: (value: ParticipantClaim) => void;
     vi.mocked(submitParticipantClaim).mockReturnValue(new Promise((done) => { resolve = done; }));

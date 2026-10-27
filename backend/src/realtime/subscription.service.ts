@@ -44,6 +44,7 @@ export class RealtimeSubscriptionService {
     }
     const eventId = isParticipant ? principal.eventId : input.eventId;
 
+
     if (!eventId) {
       throw new ValidationError('eventId is required for WebSocket subscriptions');
     }

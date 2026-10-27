@@ -112,7 +112,7 @@ export function TicketGrid({
                     const winning = !!cell && winningCellIds.has(cell.id);
                     const showButton = onMark
                       ? (!cell?.marked && drawnKeys.has(cell?.keyValue ?? ''))
-                      : (Boolean(canMark) && Boolean(cell));
+                      : (Boolean(canMark) && Boolean(cell) && (!!cell?.marked || drawnKeys.has(cell?.keyValue ?? '')));
                     const handleCellClick = () => {
                       if (!cell || !showButton || !canMark || pending || uncertain) return;
                       if (cell.marked) {
@@ -193,7 +193,7 @@ export function TicketGrid({
                     const winning = !!cell && winningCellIds.has(cell.id);
                     const showButton = onMark
                       ? (!cell?.marked && drawnKeys.has(cell?.keyValue ?? ''))
-                      : (Boolean(canMark) && Boolean(cell));
+                      : (Boolean(canMark) && Boolean(cell) && (!!cell?.marked || drawnKeys.has(cell?.keyValue ?? '')));
                     const handleDesktopCellClick = () => {
                       if (!cell || !showButton || !canMark || pending || uncertain) return;
                       if (cell.marked) {

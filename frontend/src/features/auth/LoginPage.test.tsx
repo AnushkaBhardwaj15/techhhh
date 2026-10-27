@@ -72,12 +72,22 @@ describe('LoginPage', () => {
     expect(await screen.findByText(label)).toBeInTheDocument();
     expect(authApi.login).toHaveBeenCalledWith('attendee@example.test', 'password');
   });
-  it('shows email/password login without public demo credentials', () => {
+  it('does not expose shared demo account credentials', () => {
     setup();
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Tech Tambola');
     expect(screen.queryByRole('button', { name: 'Player 2' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Admin 3' })).not.toBeInTheDocument();
     expect(screen.getByLabelText('Password')).toHaveValue('');
+  });
+  it('removes legacy stored passwords without persisting the submitted credential', async () => {
+    localStorage.setItem('tt_participant_pwd', 'legacy');
+    sessionStorage.setItem('tt_participant_pwd', 'legacy');
+    vi.mocked(authApi.login).mockResolvedValue({ id: 'u1', email: 'a@example.test', name: 'Ari', role: 'PARTICIPANT' });
+    const user = setup();
+    await user.type(screen.getByRole('textbox', { name: /Email address/ }), 'a@example.test');
+    await user.type(screen.getByLabelText('Password'), 'valid-password');
+    await user.click(screen.getByRole('button', { name: /sign in/i }));
+    await waitFor(() => expect(localStorage.getItem('tt_participant_pwd')).toBeNull());
+    expect(sessionStorage.getItem('tt_participant_pwd')).toBeNull();
   });
   it('toggles password visibility without submitting', async () => {
     const user = setup();

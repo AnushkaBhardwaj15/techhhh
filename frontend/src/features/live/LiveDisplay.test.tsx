@@ -9,6 +9,11 @@ vi.mock("../../lib/api/play", () => ({
   readPublicPlay: vi.fn(),
   readPlayRound: vi.fn(),
 }));
+vi.mock("../../lib/api/liveDisplay", () => ({
+  getLiveEvent: vi.fn().mockResolvedValue(null),
+  getLiveRound: vi.fn().mockResolvedValue(null),
+  getLiveDraws: vi.fn().mockResolvedValue({ data: [], roundId: null }),
+}));
 class Socket {
   static instances: Socket[] = [];
   onopen?: () => void;

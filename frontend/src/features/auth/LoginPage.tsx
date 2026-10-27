@@ -29,6 +29,7 @@ export function LoginPage() {
     onSuccess: (user) => {
       localStorage.removeItem('tt_participant_pwd');
       sessionStorage.removeItem('tt_participant_pwd');
+      setPassword('');
       identityChanged();
       queryClient.clear();
       const returnTo = (location.state as { returnTo?: unknown } | null)?.returnTo;

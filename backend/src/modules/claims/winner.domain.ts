@@ -108,7 +108,7 @@ export function isEarly5(
   cells: TicketCellEvaluationInput[],
   drawnKeyIds: Set<string>
 ): boolean {
-  const drawnCount = cells.filter((c) => drawnKeyIds.has(c.keyId)).length;
+  const drawnCount = new Set(cells.filter((c) => drawnKeyIds.has(c.keyId)).map(c => c.keyId)).size;
   return drawnCount >= 5;
 }
 
@@ -122,7 +122,7 @@ export function isLineCompleted(
   drawnKeyIds: Set<string>
 ): boolean {
   const rowCells = cells.filter((c) => c.rowIndex === rowIndex);
-  if (rowCells.length === 0) return false;
+  if (rowCells.length !== 5 || new Set(rowCells.map(c => c.keyId)).size !== 5) return false;
   return rowCells.every((c) => drawnKeyIds.has(c.keyId));
 }
 
@@ -134,7 +134,7 @@ export function isFullHouse(
   cells: TicketCellEvaluationInput[],
   drawnKeyIds: Set<string>
 ): boolean {
-  if (cells.length === 0) return false;
+  if (cells.length !== 15 || new Set(cells.map(c => c.keyId)).size !== 15) return false;
   return cells.every((c) => drawnKeyIds.has(c.keyId));
 }
 
@@ -253,4 +253,26 @@ export function validateRoundActiveForClaim(status: string): void {
       'ROUND_NOT_ACTIVE'
     );
   }
+}
+
+export interface ReferenceWinContext {
+  status: string;
+  drawCount: number;
+  closingSequence: number | null;
+  firstHouseParticipantId: string | null;
+}
+export interface ReferenceWinTransition {
+  closingSequence?: number;
+  status?: 'COMPLETED';
+}
+export function evaluateReferenceWinTransition(pattern: string, participantId: string, round: ReferenceWinContext): ReferenceWinTransition {
+  if (!['ACTIVE', 'PAUSED'].includes(round.status)) return {};
+  if (pattern === 'FULL_HOUSE' && round.closingSequence === null) return { closingSequence: round.drawCount };
+  if (pattern === 'SECOND_FULL_HOUSE') {
+    if (!round.firstHouseParticipantId || round.firstHouseParticipantId === participantId) {
+      throw new ConflictError('Second Full House requires a different verified First Full House participant', 'SECOND_HOUSE_UNAVAILABLE');
+    }
+    return { status: 'COMPLETED' };
+  }
+  return {};
 }

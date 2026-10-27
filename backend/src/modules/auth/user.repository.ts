@@ -32,21 +32,33 @@ export class UserRepository implements IUserRepository {
   }
 
   async findByEmail(email: string, tx?: any): Promise<UserWithProfile | null> {
+    const clean = email.trim().toLowerCase();
     const client = this.getClient(tx);
-    const [row] = await client.select({ user: users, adminProfile: adminProfiles, participantProfile: participantProfiles })
-      .from(users).leftJoin(adminProfiles, eq(adminProfiles.userId, users.id))
+    const rows = await client
+      .select({ user: users, adminProfile: adminProfiles, participantProfile: participantProfiles })
+      .from(users)
+      .leftJoin(adminProfiles, eq(adminProfiles.userId, users.id))
       .leftJoin(participantProfiles, eq(participantProfiles.userId, users.id))
-      .where(eq(users.email, email.trim().toLowerCase())).orderBy(desc(participantProfiles.createdAt)).limit(1);
-    return row ? { ...row.user, adminProfile: row.adminProfile, participantProfile: row.participantProfile } : null;
+      .where(eq(users.email, clean))
+      .orderBy(desc(participantProfiles.createdAt))
+      .limit(1);
+    if (!rows[0]) return null;
+    const { user, adminProfile, participantProfile } = rows[0];
+    return { ...user, adminProfile, participantProfile };
   }
 
   async findById(id: string, tx?: any): Promise<UserWithProfile | null> {
     const client = this.getClient(tx);
-    const [row] = await client.select({ user: users, adminProfile: adminProfiles, participantProfile: participantProfiles })
-      .from(users).leftJoin(adminProfiles, eq(adminProfiles.userId, users.id))
+    const rows = await client
+      .select({ user: users, adminProfile: adminProfiles, participantProfile: participantProfiles })
+      .from(users)
+      .leftJoin(adminProfiles, eq(adminProfiles.userId, users.id))
       .leftJoin(participantProfiles, eq(participantProfiles.userId, users.id))
-      .where(eq(users.id, id)).orderBy(desc(participantProfiles.createdAt)).limit(1);
-    return row ? { ...row.user, adminProfile: row.adminProfile, participantProfile: row.participantProfile } : null;
+      .where(eq(users.id, id))
+      .limit(1);
+    if (!rows[0]) return null;
+    const { user, adminProfile, participantProfile } = rows[0];
+    return { ...user, adminProfile, participantProfile };
   }
 
   async create(

@@ -12,6 +12,8 @@ import * as api from "../../lib/api/play";
 import { ApiError } from "../../lib/api/client";
 import { playFixture } from "../participant/playFixture";
 import { AdminGamePage } from "./AdminGamePage";
+import * as claimsApi from '../../lib/api/adminClaims';
+vi.mock('../../lib/api/adminClaims', () => ({ listAdminClaims: vi.fn(), verifyAdminClaim: vi.fn(), rejectAdminClaim: vi.fn() }));
 vi.mock("../../lib/api/play", () => ({
   readPlayRound: vi.fn(),
   readPublicPlay: vi.fn(),
@@ -35,6 +37,7 @@ function mount() {
 }
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.mocked(claimsApi.listAdminClaims).mockResolvedValue({ data: [], total: 0, page: 1, limit: 50 });
   vi.stubGlobal("WebSocket", Socket);
   game = playFixture();
   game.ticket = null;
@@ -46,6 +49,26 @@ beforeEach(() => {
   vi.mocked(api.commandPlayRound).mockImplementation(async () =>
     structuredClone(game),
   );
+});
+it('requests pending claims scoped to the round before pagination', async () => {
+  mount();
+  await waitFor(() => expect(claimsApi.listAdminClaims).toHaveBeenCalledWith(expect.objectContaining({ roundId: game.id, status: 'PENDING_VERIFICATION', page: 1 })));
+});
+
+it('displays claim loading failures instead of an empty queue', async () => {
+  vi.mocked(claimsApi.listAdminClaims).mockRejectedValue(new Error('Offline'));
+  mount();
+  expect(await screen.findByText('Could not load pending claims. Please retry.')).toHaveAttribute('role', 'alert');
+  expect(screen.queryByText(/No pending claims right now/)).not.toBeInTheDocument();
+});
+
+it('allows reviewing pending claims beyond the first page', async () => {
+  vi.mocked(claimsApi.listAdminClaims).mockResolvedValue({ data: [], total: 51, page: 1, limit: 50 });
+  mount();
+  const next = await screen.findByRole('button', { name: 'Next claims' });
+  await waitFor(() => expect(next).toBeEnabled());
+  fireEvent.click(next);
+  await waitFor(() => expect(claimsApi.listAdminClaims).toHaveBeenCalledWith(expect.objectContaining({ roundId: game.id, page: 2 })));
 });
 afterEach(() => {
   cleanup();

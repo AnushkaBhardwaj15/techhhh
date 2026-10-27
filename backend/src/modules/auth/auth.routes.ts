@@ -24,6 +24,27 @@ export function createAuthRoutes({ onSessionRevoked }: AuthRouteDependencies = {
       return { user };
     });
 
+    fastify.post('/auth/quick-join', async (request, reply) => {
+      const quickJoinSchema = z.object({
+        name: z.string().min(1, 'Name is required'),
+        email: z.string().email('Valid email is required'),
+        password: z.string().min(8).max(256),
+        eventId: z.string().uuid().optional(),
+      });
+      const body = quickJoinSchema.parse(request.body);
+      const result = await authService.quickJoin({
+        name: body.name,
+        email: body.email,
+        password: body.password,
+        eventId: body.eventId,
+        ip: request.ip,
+        userAgent: request.headers['user-agent'],
+        requestId: request.id,
+      });
+      reply.setCookie(SESSION_COOKIE_NAME, result.token, getSessionCookieOptions());
+      return { user: result.user, roundId: result.roundId, ticketId: result.ticketId };
+    });
+
     fastify.post(
       '/auth/login',
       {
@@ -50,16 +71,19 @@ export function createAuthRoutes({ onSessionRevoked }: AuthRouteDependencies = {
 
     fastify.post('/auth/logout', async (request, reply) => {
       const token = request.cookies[SESSION_COOKIE_NAME];
+      reply.clearCookie(SESSION_COOKIE_NAME, { path: '/' });
       if (token) {
+        let sessionId: string | undefined;
         try {
-          const payload = verifyAuthToken(token);
-          await authService.logout(payload.jti);
-          onSessionRevoked?.(payload.jti);
+          sessionId = verifyAuthToken(token).jti;
         } catch {
-          // Logout is idempotent and its cookie is always cleared.
+          // Invalid or expired cookies can be cleared without a database write.
+        }
+        if (sessionId) {
+          await authService.logout(sessionId);
+          onSessionRevoked?.(sessionId);
         }
       }
-      reply.clearCookie(SESSION_COOKIE_NAME, { path: '/' });
       return { message: 'Successfully logged out' };
     });
 

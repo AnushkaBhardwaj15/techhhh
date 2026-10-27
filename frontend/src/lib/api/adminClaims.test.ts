@@ -14,6 +14,13 @@ function response(body: unknown, status = 200) { return new Response(JSON.string
 afterEach(() => vi.unstubAllGlobals());
 
 describe('admin Claims API', () => {
+  it('filters pending claims by round on the server before pagination', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(response({ data: [claim], total: 61, page: 2, limit: 50 }));
+    vi.stubGlobal('fetch', fetchMock);
+    await listAdminClaims({ roundId: claim.roundId, status: 'PENDING_VERIFICATION', page: 2 });
+    const url = new URL(String(fetchMock.mock.calls[0]?.[0]), 'https://example.test');
+    expect(Object.fromEntries(url.searchParams)).toEqual({ page: '2', limit: '50', roundId: claim.roundId, status: 'PENDING_VERIFICATION' });
+  });
   it('loads the actual paginated Claim DTO and sends the documented page contract', async () => {
     const fetchMock = vi.fn().mockResolvedValue(response({ data: [claim], total: 61, page: 2, limit: 20 }));
     vi.stubGlobal('fetch', fetchMock);
