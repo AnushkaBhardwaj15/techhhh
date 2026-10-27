@@ -7,6 +7,7 @@ import type { AuthenticatedUser } from '../../types/auth';
 import type { ParticipantRound } from '../../types/participant';
 import type { ParticipantTicket as Ticket } from '../../types/ticket';
 import { claimStatusText, patternNames, useParticipantClaimSubmission } from './useParticipantClaims';
+import { AlertTriangleIcon, XIcon, TrophyIcon, XCircleIcon } from '../../components/icons/Icons';
 import styles from './ClaimPanel.module.css';
 
 const CLAIM_CARDS: {
@@ -92,7 +93,7 @@ function checkPatternBoxes(pattern: ClaimPattern, ticket?: Ticket | null): Patte
         label: `${markedCount}/${requiredCount} checked`,
         warning: valid
           ? undefined
-          : `⚠️ Cannot Send Claim for Early Five: You have marked only ${markedCount}/5 boxes on your ticket. You must check at least 5 boxes before submitting!`,
+          : `Cannot Send Claim for Early Five: You have marked only ${markedCount}/5 boxes on your ticket. You must check at least 5 boxes before submitting!`,
       };
     }
     case 'TOP_LINE': {
@@ -107,7 +108,7 @@ function checkPatternBoxes(pattern: ClaimPattern, ticket?: Ticket | null): Patte
         label: `${markedCount}/${requiredCount} checked`,
         warning: valid
           ? undefined
-          : `⚠️ Cannot Send Claim for Top Line: You have marked only ${markedCount}/${requiredCount} boxes in Row 1. All ${requiredCount} boxes in the top line must be checked before submitting!`,
+          : `Cannot Send Claim for Top Line: You have marked only ${markedCount}/${requiredCount} boxes in Row 1. All ${requiredCount} boxes in the top line must be checked before submitting!`,
       };
     }
     case 'MIDDLE_LINE': {
@@ -122,7 +123,7 @@ function checkPatternBoxes(pattern: ClaimPattern, ticket?: Ticket | null): Patte
         label: `${markedCount}/${requiredCount} checked`,
         warning: valid
           ? undefined
-          : `⚠️ Cannot Send Claim for Middle Line: You have marked only ${markedCount}/${requiredCount} boxes in Row 2. All ${requiredCount} boxes in the middle line must be checked before submitting!`,
+          : `Cannot Send Claim for Middle Line: You have marked only ${markedCount}/${requiredCount} boxes in Row 2. All ${requiredCount} boxes in the middle line must be checked before submitting!`,
       };
     }
     case 'BOTTOM_LINE': {
@@ -137,7 +138,7 @@ function checkPatternBoxes(pattern: ClaimPattern, ticket?: Ticket | null): Patte
         label: `${markedCount}/${requiredCount} checked`,
         warning: valid
           ? undefined
-          : `⚠️ Cannot Send Claim for Bottom Line: You have marked only ${markedCount}/${requiredCount} boxes in Row 3. All ${requiredCount} boxes in the bottom line must be checked before submitting!`,
+          : `Cannot Send Claim for Bottom Line: You have marked only ${markedCount}/${requiredCount} boxes in Row 3. All ${requiredCount} boxes in the bottom line must be checked before submitting!`,
       };
     }
     case 'FOUR_CORNERS': {
@@ -159,7 +160,7 @@ function checkPatternBoxes(pattern: ClaimPattern, ticket?: Ticket | null): Patte
         label: `${markedCount}/${requiredCount} checked`,
         warning: valid
           ? undefined
-          : `⚠️ Cannot Send Claim for Four Corners: You have marked only ${markedCount}/${requiredCount} corner boxes. All ${requiredCount} corner boxes must be checked before submitting!`,
+          : `Cannot Send Claim for Four Corners: You have marked only ${markedCount}/${requiredCount} corner boxes. All ${requiredCount} corner boxes must be checked before submitting!`,
       };
     }
     case 'FULL_HOUSE': {
@@ -173,7 +174,7 @@ function checkPatternBoxes(pattern: ClaimPattern, ticket?: Ticket | null): Patte
         label: `${markedCount}/${requiredCount} checked`,
         warning: valid
           ? undefined
-          : `⚠️ Cannot Send Claim for Full House: You have marked only ${markedCount}/${requiredCount} boxes across your ticket. All ${requiredCount} boxes must be checked before submitting!`,
+          : `Cannot Send Claim for Full House: You have marked only ${markedCount}/${requiredCount} boxes across your ticket. All ${requiredCount} boxes must be checked before submitting!`,
       };
     }
     default:
@@ -250,7 +251,9 @@ export function ClaimPanel({
       {validationWarning && (
         <div className={styles.validationWarning} role="alert">
           <div className={styles.validationWarningContent}>
-            <span className={styles.warningIcon}>⚠️</span>
+            <span className={styles.warningIcon}>
+              <AlertTriangleIcon width="16" height="16" aria-hidden="true" />
+            </span>
             <p className={styles.warningMessage}>{validationWarning}</p>
           </div>
           <button
@@ -259,7 +262,7 @@ export function ClaimPanel({
             onClick={() => setValidationWarning(null)}
             aria-label="Dismiss warning"
           >
-            ✕
+            <XIcon width="14" height="14" aria-hidden="true" />
           </button>
         </div>
       )}
@@ -327,12 +330,18 @@ export function ClaimPanel({
 
               <div className={styles.cardFooter}>
                 {isVerified ? (
-                  <span className={styles.statusVerified}>🏆 VERIFIED WINNER</span>
+                  <span className={styles.statusVerified}>
+                    <TrophyIcon width="14" height="14" aria-hidden="true" style={{ verticalAlign: '-1px', marginRight: '5px' }} />
+                    VERIFIED WINNER
+                  </span>
                 ) : isPendingVerification ? (
-                  <span className={styles.statusPending}>⏳ PENDING REVIEW</span>
+                  <span className={styles.statusPending}>PENDING REVIEW</span>
                 ) : isRejected ? (
                   <div className={styles.rejectedBox}>
-                    <span className={styles.statusRejected}>❌ REJECTED</span>
+                    <span className={styles.statusRejected}>
+                      <XCircleIcon width="14" height="14" aria-hidden="true" style={{ verticalAlign: '-1px', marginRight: '5px' }} />
+                      REJECTED
+                    </span>
                     {canClick && (
                       <button
                         type="button"

@@ -14,7 +14,6 @@ export function LandingPage() {
     retry: false,
   });
 
-
   const user = session.data;
   const destination = user ? (user.role === 'PARTICIPANT' ? '/lobby' : roleHomePath(user.role)) : '/login';
   const ctaText = user ? `ENTER ${user.role === 'PARTICIPANT' ? 'LOBBY' : 'DASHBOARD'}` : 'SIGN IN TO PLAY';
@@ -42,10 +41,6 @@ export function LandingPage() {
             <a href="#patterns" className={styles.navItem}>
               Winning Patterns
             </a>
-            <Link to="/live" className={styles.navLiveItem} target="_blank" rel="noreferrer">
-              <span className={styles.livePulse} aria-hidden="true" />
-              <span>Live Board ↗</span>
-            </Link>
           </nav>
 
           <div className={styles.navActions}>
@@ -90,24 +85,6 @@ export function LandingPage() {
                   <span>Watch Public Live Screen</span>
                 </Link>
               </div>
-
-              {!user && (
-                <div className={styles.quickJoinBox}>
-                  <div className={styles.quickJoinHeader}>
-                    <span className={styles.quickJoinBadge}>
-                      INSTANT GAME ENTRY
-                    </span>
-                    <span className={styles.quickJoinMeta}>
-                      NO PASSWORD NEEDED
-                    </span>
-                  </div>
-                  <p className={styles.quickJoinText}>
-                    Sign in using the email and password provided by your administrator:
-                  </p>
-                  <Link to="/login" className={styles.quickJoinBtn}>Sign in to play</Link>
-
-                </div>
-              )}
 
               {/* Statistics & Confidence Strip */}
               <div className={styles.statsStrip} aria-label="Game engine specifications">
@@ -416,7 +393,6 @@ export function LandingPage() {
           <div className={styles.footerLinks}>
             <a href="#main-content">Back to Top ↑</a>
             <Link to="/login">Sign In</Link>
-            <Link to="/live">Live Board</Link>
           </div>
         </div>
       </footer>

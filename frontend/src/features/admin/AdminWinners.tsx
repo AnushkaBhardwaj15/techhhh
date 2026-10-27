@@ -3,6 +3,7 @@ import { Link, useOutletContext, useSearchParams } from 'react-router-dom';
 import { ApiError } from '../../lib/api/client';
 import { listAdminWinners } from '../../lib/api/adminWinners';
 import type { AuthenticatedUser } from '../../types/auth';
+import { DownloadIcon, PrinterIcon } from '../../components/icons/Icons';
 import styles from './AdminWinners.module.css';
 
 const PAGE_SIZE = 20;
@@ -80,7 +81,8 @@ export function AdminWinners() {
             onClick={exportCsv}
             title="Download CSV for offline verification and prize distribution"
           >
-            📥 Export CSV
+            <DownloadIcon width="13" height="13" aria-hidden="true" style={{ verticalAlign: '-1px', marginRight: '5px' }} />
+            Export CSV
           </button>
           <button
             type="button"
@@ -88,7 +90,8 @@ export function AdminWinners() {
             onClick={() => window.print()}
             title="Print prize distribution list"
           >
-            🖨️ Print Sheet
+            <PrinterIcon width="13" height="13" aria-hidden="true" style={{ verticalAlign: '-1px', marginRight: '5px' }} />
+            Print Sheet
           </button>
           <button type="button" disabled={winners.isFetching} onClick={() => void winners.refetch()}>{winners.isFetching ? 'Refreshing…' : 'Refresh history'}</button>
         </div>

@@ -8,12 +8,25 @@ export async function seed() {
     const existing = await userRepository.findByEmail('bigboss@muacm.tech', tx);
     if (existing) {
       if (existing.adminProfile?.role !== 'SUPER_ADMIN') throw new Error('Account already exists with a different role');
-      return;
+    } else {
+      await userRepository.create({ email: 'bigboss@muacm.tech', name: 'Super Admin',
+        passwordHash: await hashPassword('password'), status: 'ACTIVE' }, { role: 'SUPER_ADMIN' }, tx);
     }
-    await userRepository.create({ email: 'bigboss@muacm.tech', name: 'Super Admin',
-      passwordHash: await hashPassword('password'), status: 'ACTIVE' }, { role: 'SUPER_ADMIN' }, tx);
+
+    const anushka = await userRepository.findByEmail('anushka.admin@techtombola.internal', tx);
+    if (!anushka) {
+      await userRepository.create({ email: 'anushka.admin@techtombola.internal', name: 'Anushka Admin',
+        passwordHash: await hashPassword('AnushkaAdmin123!'), status: 'ACTIVE' }, { role: 'SUPER_ADMIN' }, tx);
+    }
+
+    const anushkaPlayer = await userRepository.findByEmail('anushka@techtombola.internal', tx);
+    if (!anushkaPlayer) {
+      await userRepository.create({ email: 'anushka@techtombola.internal', name: 'Anushka',
+        passwordHash: await hashPassword('AnushkaPass123!'), status: 'ACTIVE' }, undefined, tx);
+    }
   });
 }
+
 if (import.meta.main) {
   try { await seed(); console.log('Super Admin setup complete. Existing credentials preserved.'); }
   catch { console.error('Super Admin setup failed.'); process.exitCode = 1; }

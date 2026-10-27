@@ -2,6 +2,13 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ActionButton } from '../ActionButton';
 import { GameRulesModal } from '../GameRulesModal';
+import {
+  BookOpenIcon,
+  Volume2Icon,
+  VolumeXIcon,
+  UserIcon,
+  LogOutIcon,
+} from '../icons/Icons';
 import { isAudioEnabled, setAudioEnabled } from '../../lib/audio';
 import type { AuthenticatedUser } from '../../types/auth';
 import styles from './Navigation.module.css';
@@ -40,33 +47,37 @@ export function ParticipantNav({ user, onLogout, isLoggingOut = false }: Partici
           <div className={styles.userActions}>
             <button
               type="button"
-              className={styles.profileButton}
+              className={styles.navButton}
               onClick={() => setShowRules(true)}
               aria-label="View game rules and winning patterns"
               title="How to Play Tech Tombola"
               tabIndex={-1}
             >
-              <span aria-hidden="true">📖</span>
+              <BookOpenIcon width="14" height="14" aria-hidden="true" />
               <span className={styles.btnLabel}>Rules</span>
             </button>
             <button
               type="button"
-              className={styles.profileButton}
+              className={styles.navButton}
               onClick={toggleSound}
               aria-label={soundOn ? 'Mute sound effects' : 'Enable sound effects'}
               title={soundOn ? 'Sound is ON (click to mute)' : 'Sound is MUTED (click to unmute)'}
               tabIndex={-1}
             >
-              <span aria-hidden="true">{soundOn ? '🔊' : '🔇'}</span>
+              {soundOn ? (
+                <Volume2Icon width="14" height="14" aria-hidden="true" />
+              ) : (
+                <VolumeXIcon width="14" height="14" aria-hidden="true" />
+              )}
               <span className={styles.btnLabel}>{soundOn ? 'Sound' : 'Muted'}</span>
             </button>
             <Link
               to="/participant/profile"
-              className={styles.profileButton}
+              className={styles.navButton}
               title={`View profile for ${user.email}`}
               tabIndex={-1}
             >
-              <span aria-hidden="true">👤</span>
+              <UserIcon width="14" height="14" aria-hidden="true" />
               <span className={styles.btnLabel}>Profile</span>
             </Link>
             <ActionButton
@@ -75,7 +86,8 @@ export function ParticipantNav({ user, onLogout, isLoggingOut = false }: Partici
               onClick={onLogout}
               busy={isLoggingOut}
             >
-              {isLoggingOut ? 'Signing out…' : 'Sign out'}
+              <LogOutIcon width="13" height="13" aria-hidden="true" />
+              <span className={styles.btnLabel}>{isLoggingOut ? 'Signing out…' : 'Sign out'}</span>
             </ActionButton>
           </div>
         </div>

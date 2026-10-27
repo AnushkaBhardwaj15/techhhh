@@ -75,53 +75,67 @@
   align-items: center;
   flex-wrap: nowrap;
   flex-shrink: 0;
-  gap: clamp(4px, 1vw, 10px);
+  gap: clamp(6px, 1vw, 10px);
 }
 
 .profileButton,
+.navButton,
 .logoutButton,
 .liveLink {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  min-height: 36px;
-  padding: 6px clamp(8px, 1.2vw, 14px);
-  border: 1.5px solid #000;
-  border-radius: var(--radius-xs, 2px);
-  background: #252830;
-  color: #FFFFFF;
-  font: 800 11px var(--mono);
+  gap: 7px;
+  height: 38px !important;
+  min-height: 38px !important;
+  min-width: 86px;
+  padding: 0 14px !important;
+  box-sizing: border-box !important;
+  border: 1.5px solid #000 !important;
+  border-radius: var(--radius-xs, 2px) !important;
+  background: #252830 !important;
+  color: #FFFFFF !important;
+  font-family: var(--mono) !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  line-height: 1 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.06em !important;
   text-decoration: none;
   cursor: pointer;
-  box-shadow: 2px 2px 0px #000;
+  box-shadow: 2px 2px 0px #000 !important;
   transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease;
   white-space: nowrap;
   flex-shrink: 0;
+  user-select: none;
 }
 
 .liveLink {
-  background: var(--neo-orange);
-  color: #FFFFFF;
+  background: var(--neo-orange) !important;
+  color: #FFFFFF !important;
+  min-width: 130px;
 }
 
 .profileButton:hover,
+.navButton:hover,
 .logoutButton:hover:not(:disabled) {
+  background: #313642 !important;
   transform: translate(-1px, -1px);
-  box-shadow: 3px 3px 0px #000;
+  box-shadow: 3px 3px 0px #000 !important;
 }
 
 .liveLink:hover {
-  background: var(--neo-orange-hover);
+  background: var(--neo-orange-hover) !important;
   transform: translate(-1px, -1px);
-  box-shadow: 3px 3px 0px #000;
+  box-shadow: 3px 3px 0px #000 !important;
 }
 
 .profileButton:active,
+.navButton:active,
 .logoutButton:active:not(:disabled),
 .liveLink:active {
   transform: translate(2px, 2px);
-  box-shadow: 0px 0px 0px #000;
+  box-shadow: 0px 0px 0px #000 !important;
 }
 
 .logoutButton:disabled {
@@ -130,7 +144,8 @@
 }
 
 .arrow {
-  font-size: 14px;
+  font-size: 13px;
+  line-height: 1;
 }
 
 @media (max-width: 640px) {
@@ -144,12 +159,15 @@
     display: none;
   }
   .profileButton,
+  .navButton,
   .logoutButton,
   .liveLink {
-    min-height: 32px;
-    padding: 5px 8px;
-    font-size: 10px;
-    gap: 4px;
+    height: 34px !important;
+    min-height: 34px !important;
+    min-width: 72px;
+    padding: 0 10px !important;
+    font-size: 10px !important;
+    gap: 5px;
   }
 }
 
@@ -157,12 +175,14 @@
   .btnLabel {
     display: none;
   }
-  .profileButton {
-    padding: 6px 8px;
-    min-width: 32px;
-  }
+  .profileButton,
+  .navButton,
   .logoutButton {
-    padding: 5px 8px;
-    font-size: 10px;
+    min-width: 36px;
+    padding: 0 8px !important;
+  }
+  .liveLink {
+    min-width: 36px;
+    padding: 0 8px !important;
   }
 }
