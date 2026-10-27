@@ -1,5 +1,5 @@
 import { alias } from 'drizzle-orm/pg-core';
-import { count, eq, or } from 'drizzle-orm';
+import { count, eq, or, sql } from 'drizzle-orm';
 import { getDb } from '../../db/client.ts';
 import { claims, winners } from '../../db/schema/claims.ts';
 import { draws } from '../../db/schema/draws.ts';
@@ -12,6 +12,7 @@ export interface IRecoveryRepository {
   listActiveRoundIds(tx: unknown): Promise<string[]>;
   findRound(roundId: string, tx: unknown): Promise<{ id: string; eventId: string; status: string } | null>;
   updateRoundStatus(roundId: string, status: 'RECOVERY_REQUIRED' | 'ACTIVE', tx: unknown): Promise<void>;
+  clearUndrawnMarks?(roundId: string, tx: unknown): Promise<number>;
   getSnapshot(roundId: string, eventId: string, tx: unknown): Promise<RecoverySnapshot>;
 }
 
@@ -30,6 +31,16 @@ export class RecoveryRepository implements IRecoveryRepository {
 
   async updateRoundStatus(roundId: string, status: 'RECOVERY_REQUIRED' | 'ACTIVE', tx: unknown): Promise<void> {
     await this.client(tx).update(rounds).set({ status, updatedAt: new Date() }).where(eq(rounds.id, roundId));
+  }
+
+  async clearUndrawnMarks(roundId: string, tx: unknown): Promise<number> {
+    const removed = await this.client(tx).execute(sql`
+      DELETE FROM ticket_marks m USING tickets t, ticket_cells c
+      WHERE m.ticket_id=t.id AND m.cell_id=c.id AND c.ticket_id=t.id
+        AND t.round_id=${roundId}
+        AND NOT EXISTS (SELECT 1 FROM draws d WHERE d.round_id=t.round_id AND d.key_id=c.key_id)
+      RETURNING m.id`);
+    return removed.length;
   }
 
   async getSnapshot(roundId: string, eventId: string, tx: unknown) {

@@ -1,9 +1,9 @@
+import { registrationEventId } from './registration.repository.ts';
 import { getDb } from '../../db/client.ts';
 import { auditService, type AuditService } from '../audit/audit.service.ts';
 import { eventRepository, type IEventRepository } from '../events/event.repository.ts';
 import { sessionRepository, type ISessionRepository } from '../auth/session.repository.ts';
 import { emailService, type IEmailService } from '../../shared/email/email.service.ts';
-import { generateSecureTemporaryPassword } from '../admins/admin.domain.ts';
 import { hashPassword } from '../auth/auth.domain.ts';
 import { userRepository, type IUserRepository } from '../auth/user.repository.ts';
 import { participantRepository, type IParticipantRepository } from './participant.repository.ts';
@@ -13,7 +13,7 @@ import type {
   ParticipantSummary,
   UpdateParticipantInput,
 } from './participant.types.ts';
-import { ConflictError, NotFoundError } from '../../shared/errors/app-error.ts';
+import { ConflictError, NotFoundError, ValidationError } from '../../shared/errors/app-error.ts';
 
 export class ParticipantService {
   constructor(
@@ -30,7 +30,8 @@ export class ParticipantService {
     input: CreateParticipantInput,
     context?: { ip?: string; userAgent?: string; requestId?: string }
   ): Promise<ParticipantSummary> {
-    const event = await this.eventRepo.findById(input.eventId);
+    input = { ...input, eventId: input.eventId ?? await registrationEventId() };
+    const event = await this.eventRepo.findById(input.eventId!);
     if (!event) {
       throw new NotFoundError(`Event with id '${input.eventId}' not found`);
     }
@@ -46,7 +47,7 @@ export class ParticipantService {
     const externalId = input.externalId?.trim() || null;
 
     if (externalId) {
-      const existingExt = await this.repo.findByExternalIdAndEvent(input.eventId, externalId);
+      const existingExt = await this.repo.findByExternalIdAndEvent(input.eventId!, externalId);
       if (existingExt) {
         throw new ConflictError(
           `External ID '${externalId}' already exists in this event`,
@@ -57,10 +58,12 @@ export class ParticipantService {
 
     // Upfront check for existing user enrolled in this event
     const existingUser = await this.userRepo.findByEmail(email);
+    if (existingUser && !input.externalId) throw new ConflictError('An account with this email already exists');
+    if (existingUser?.adminProfile) throw new ConflictError('Administrator accounts cannot be imported as participants');
     if (existingUser) {
       const existingEnrollment = await this.repo.findByUserIdAndEvent(
         existingUser.id,
-        input.eventId
+        input.eventId!
       );
       if (existingEnrollment) {
         throw new ConflictError(
@@ -70,8 +73,10 @@ export class ParticipantService {
       }
     }
 
-    // Generate secure temporary password
-    const temporaryPassword = generateSecureTemporaryPassword();
+    if (!input.password || input.password.length < 8 || input.password.length > 128) throw new ValidationError('Password must contain 8 to 128 characters');
+
+    // Hash supplied credentials
+    const temporaryPassword = input.password;
     const passwordHash = await hashPassword(temporaryPassword);
 
     const db = getDb();
@@ -82,11 +87,11 @@ export class ParticipantService {
         created = await this.repo.create(
           {
             email,
-            name: input.name.trim(),
+            name: input.name?.trim() || email.split('@')[0],
             passwordHash,
           },
           {
-            eventId: input.eventId,
+            eventId: input.eventId!,
             externalId,
           },
           tx
@@ -131,24 +136,8 @@ export class ParticipantService {
       );
     });
 
-    // Send one-time credential through email boundary
-    const emailResult = await this.email.sendParticipantCredentials(
-      email,
-      input.name.trim(),
-      temporaryPassword,
-      event.title
-    );
-
-    if (emailResult.success) {
-      await this.repo.updateEmailDelivery(created!.id, 'SENT');
-      created!.emailDeliveryStatus = 'SENT';
-    } else {
-      await this.repo.updateEmailDelivery(created!.id, 'FAILED', emailResult.error);
-      created!.emailDeliveryStatus = 'FAILED';
-      created!.emailDeliveryError = emailResult.error || 'Failed to deliver email';
-    }
-
     return created!;
+
   }
 
   async getParticipantById(id: string): Promise<ParticipantSummary> {
@@ -160,7 +149,7 @@ export class ParticipantService {
   }
 
   async listParticipants(options: {
-    eventId: string;
+    eventId?: string;
     page?: number;
     limit?: number;
     search?: string;

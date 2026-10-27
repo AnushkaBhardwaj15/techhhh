@@ -87,7 +87,7 @@ export function parseParticipantCsv(content: string): ParticipantCsvPreview {
   const normalizedHeaders = headers.map((header) => header.toLowerCase());
   const duplicateHeaders = normalizedHeaders.filter((header, index) => header && normalizedHeaders.indexOf(header) !== index);
   if (duplicateHeaders.length) issues.add(`Duplicate header: ${[...new Set(duplicateHeaders)].join(', ')}.`);
-  for (const required of ['name', 'email']) if (!normalizedHeaders.includes(required)) issues.add(`The header row must include a ${required} column.`);
+  for (const required of ['email', 'password']) if (!normalizedHeaders.includes(required)) issues.add(`The header row must include a ${required} column.`);
 
   const data = records.slice(1);
   if (data.length > PARTICIPANT_CSV_MAX_ROWS) issues.add(`This file has ${data.length} data rows; the server accepts up to ${PARTICIPANT_CSV_MAX_ROWS}.`);

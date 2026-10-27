@@ -23,6 +23,7 @@ export interface RealtimeConnectionInput {
   eventId: string;
   roundId: string;
   sessionId?: string;
+  userId?: string;
   isSessionActive?: () => Promise<boolean>;
 }
 
@@ -84,8 +85,12 @@ export class RealtimeConnectionManager {
     }
   }
 
-  connectionCount(): number {
-    return this.connections.size;
+  connectedParticipantIds(roundId: string): string[] {
+    return [...new Set([...this.connections.values()].filter(c => c.roundId === roundId && c.audience === 'AUTHENTICATED' && c.socket.readyState === 1 && c.userId).map(c => c.userId!))];
+  }
+  connectionCount(roundId?: string): number {
+    if (!roundId) return this.connections.size;
+    return new Set([...this.connections.values()].filter(c => c.roundId === roundId && c.audience === 'AUTHENTICATED' && c.socket.readyState === 1).map(c => c.userId ?? c.sessionId ?? c.id)).size;
   }
 
   async broadcastCommitted(event: RealtimeEvent): Promise<void> {

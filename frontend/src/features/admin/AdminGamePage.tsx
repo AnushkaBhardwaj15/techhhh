@@ -9,8 +9,11 @@ import { QRCodeSvg } from "../../components/QRCodeSvg";
 import { ActionButton } from "../../components/ActionButton";
 import { recoverRound } from "../../lib/api/adminOperations";
 import styles from "./AdminGamePage.module.css";
-import playStyles from "../participant/ReferencePlay.module.css";
+import { apiRequest } from "../../lib/api/client";
 export function AdminGamePage() {
+  const [showQr, setShowQr] = useState(false);
+  const [showBank, setShowBank] = useState(false);
+  const [copyMessage, setCopyMessage] = useState('');
   const [params] = useSearchParams();
   const client = useQueryClient();
   const rounds = useQuery({
@@ -18,6 +21,7 @@ export function AdminGamePage() {
     queryFn: ({ signal }) => listPlayRounds(signal),
   });
   const id = params.get("gameId") ?? rounds.data?.games[0]?.id ?? "";
+  const roster = useQuery({ queryKey: ['game-roster', id], enabled: !!id, queryFn: ({ signal }) => apiRequest<{ participants: Array<{ id: string; name: string; points: number; live: boolean }>; totalEnrolled: number; livePlayers: number }>(`/admin/play/rounds/${id}/participants`, { signal }), refetchInterval: 5000 });
   const state = usePlayState(id);
   const game = state.data;
   const [pending, setPending] = useState(false);
@@ -31,7 +35,7 @@ export function AdminGamePage() {
 
   const claimsQuery = useQuery({
     queryKey: ["admin-claims-game", id],
-    queryFn: () => listAdminClaims({ limit: 50 }),
+    queryFn: () => listAdminClaims({ limit: 50, roundId: id }),
     refetchInterval: 1000,
   });
   const pendingClaims = (claimsQuery.data?.data ?? []).filter(
@@ -206,397 +210,66 @@ export function AdminGamePage() {
     }
   }
 
-  return (
-    <main className={styles.page}>
-      <div className={styles.gameContainer}>
-        <div className={styles.navRow}>
-          <Link className={styles.dashboardBackBtn} to="/admin">
-            ← Dashboard
-          </Link>
-          <h1 className={styles.gameTitleHeading}>
-            {game?.name ?? "Game control"}
-          </h1>
-        </div>
-        {state.isPending && <p role="status">Loading the saved game…</p>}
-        {!state.isPending && !game && !error && (
-          <div className={styles.mainCard} style={{ textAlign: 'center', padding: '48px 24px' }}>
-            <h2 style={{ fontSize: '22px', marginBottom: '12px' }}>No Active Game Loaded</h2>
-            <p style={{ color: 'var(--color-text-secondary, #62584C)', maxWidth: '460px', margin: '0 auto 24px', lineHeight: 1.5 }}>
-              There is currently no active game round selected. You can start a round from the Host Dashboard or choose from existing game rounds.
-            </p>
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-              <Link className={styles.dashboardBackBtn} to="/admin" style={{ textDecoration: 'none' }}>
-                Return to Dashboard
-              </Link>
-              <Link className={styles.dashboardBackBtn} to="/admin/rounds" style={{ textDecoration: 'none' }}>
-                Manage Rounds
-              </Link>
-            </div>
-          </div>
-        )}
-        {(error || state.isError || rounds.isError) && (
-          <p className={playStyles.warning} role="alert">
-            {error || "Could not load the game. Check your connection."}{" "}
-            {retry.current && (
-              <button onClick={() => void run(retry.current!.command, true)}>
-                Retry the same action
-              </button>
-            )}
-          </p>
-        )}
-        {game && (
-          <div className={styles.mainCard}>
-            <div className={styles.qrSection}>
-              <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center', marginBottom: '8px' }}>
-                <div className={styles.gameCodePill}>
-                  <span className={styles.gameCodeLabel}>GAME CODE</span>
-                  <strong className={styles.gameCodeValue}>{game.code}</strong>
-                </div>
-                <ActionButton
-                  type="button"
-                  busy={broadcasting}
-                  onClick={() => void handleToggleBroadcast()}
-                  style={{
-                    background: game.isBroadcast ? 'var(--retro-orange, #EE640F)' : '#FFFFFF',
-                    color: game.isBroadcast ? '#FFFFFF' : 'var(--retro-ink, #18130F)',
-                    border: '2px solid var(--retro-ink, #18130F)',
-                    boxShadow: '3px 3px 0 var(--retro-ink, #18130F)',
-                    fontSize: '13px',
-                    fontWeight: 900,
-                    padding: '8px 16px',
-                    cursor: 'pointer'
-                  }}
-                  title="Toggle whether participants see this game and 1-click join button in their lobby"
-                >
-                  {broadcasting ? 'UPDATING…' : game.isBroadcast ? '📢 BROADCASTING TO USERS (ON)' : '🔒 HIDDEN FROM USERS (OFF)'}
-                </ActionButton>
-              </div>
-              <div className={styles.qrFrame}>
-                <QRCodeSvg
-                  value={`${location.origin}/lobby?code=${game.code}`}
-                  size={180}
-                  title={`Join game ${game.code}`}
-                />
-              </div>
-              <p className={styles.qrInstruction}>
-                {game.isBroadcast
-                  ? "✅ This game is currently BROADCAST to participants' lobby with a 1-click Quick Join button."
-                  : "🔒 This game is HIDDEN from participants' lobby. Users must manually enter the 6-character code, or you can turn ON broadcast."}
-              </p>
-              <div className={styles.controlsBar}>
-                <span className={styles.statusBadge}>
-                  {game.status}
-                  {game.closingSequence !== null ? " · CLOSING" : ""}
-                </span>
-                {game.status === "RECOVERY_REQUIRED" && (
-                  <ActionButton
-                    busy={recovering}
-                    onClick={() => void handleRecover()}
-                  >
-                    Recover Round
-                  </ActionButton>
-                )}
-                {game.status === "READY" && (
-                  <ActionButton
-                    busy={pending}
-                    onClick={() => void run({ action: "start" })}
-                  >
-                    Start game
-                  </ActionButton>
-                )}
-                {game.status === "ACTIVE" && (
-                  <ActionButton
-                    busy={pending}
-                    onClick={() => void run({ action: "pause" })}
-                  >
-                    Pause
-                  </ActionButton>
-                )}
-                {game.status === "PAUSED" && (
-                  <ActionButton
-                    busy={pending}
-                    onClick={() => void run({ action: "resume" })}
-                  >
-                    Resume
-                  </ActionButton>
-                )}
-                {["ACTIVE", "PAUSED"].includes(game.status) && (
-                  <ActionButton
-                    busy={pending}
-                    onClick={() => {
-                      if (
-                        window.confirm(
-                          "End this game? Its draws and winners will remain saved.",
-                        )
-                      )
-                        void run({ action: "end" });
-                    }}
-                  >
-                    End game
-                  </ActionButton>
-                )}
-              </div>
-            </div>
-            <section className={playStyles.clue}>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  marginBottom: "0.5rem",
-                  flexWrap: "wrap",
-                  gap: "0.5rem",
-                }}
-              >
-                <p className={playStyles.kicker}>
-                  CALL {currentDraw?.sequence ?? 0} / 90
-                </p>
-                {isViewingHistory && (
-                  <span
-                    className={styles.statusBadge}
-                    style={{
-                      background: "rgba(140, 69, 69, 0.12)",
-                      color: "var(--color-oxblood, #8C4545)",
-                      fontSize: "0.8rem",
-                      padding: "0.2rem 0.6rem",
-                    }}
-                  >
-                    Viewing history (#{currentDraw?.sequence} of {totalCalls})
-                  </span>
-                )}
-              </div>
-              <h2>{currentDraw?.prompt ?? "Ready for the first clue"}</h2>
+  const lobby = game?.status === 'READY';
+  const joinLink = game ? `${window.location.origin}/lobby?code=${game.code}` : '';
+  async function copyLink() {
+    try { await navigator.clipboard.writeText(joinLink); setCopyMessage('Join link copied'); }
+    catch { setCopyMessage('Could not copy. Share the game code instead.'); }
+  }
+  return <main className={styles.console}>
+    <header className={styles.consoleHeader}>
+      <Link className={styles.consoleButton} to="/admin">← Back</Link>
+      <div className={styles.consoleTitle}><span>HOST CONSOLE</span><h1>{game?.name ?? 'Game control'}</h1></div>
+      {game && <><span className={styles.consoleCode}>CODE: <strong>{game.code}</strong></span><button className={styles.consoleButton} onClick={() => setShowQr(value => !value)} aria-expanded={showQr}>QR</button></>}
+    </header>
+    {(state.isPending || rounds.isPending) && <p role="status">Loading game…</p>}
+    {(error || state.isError || rounds.isError) && <p className={styles.consoleError} role="alert">{error || 'Could not load game.'}{retry.current && <button onClick={() => void run(retry.current!.command, true)}>Retry action</button>}</p>}
+    {game && <>
+      <nav className={styles.consoleToolbar} aria-label="Game tools">
+        <span className={styles.consoleStatus}>{lobby ? 'WAITING IN LOBBY' : game.status === 'ACTIVE' ? 'GAME ON · PLAYING' : game.status.replaceAll('_', ' ')}</span>
+        <Link className={styles.consoleButton} to={`/admin/audit?roundId=${id}`}>Game audit</Link>
+        <button className={styles.consoleButton} onClick={() => setShowBank(value => !value)} aria-expanded={showBank}>Question bank</button>
+        <Link className={styles.consoleButton} to="/live" target="_blank" rel="noreferrer">Projector view ↗</Link>
+        <button className={styles.consoleButton} disabled={broadcasting} onClick={() => void handleToggleBroadcast()}>{game.isBroadcast ? 'Visible in lobby' : 'Hidden in lobby'}</button>
+      </nav>
+      {showBank && <section className={styles.consolePanel}><h2>Question bank</h2>{game.bank?.length ? <ol>{game.bank.map(question => <li key={question.id}>{question.clue} — {question.term}</li>)}</ol> : <p>No question bank available.</p>}</section>}
+      <div className={styles.consoleGrid}>
+        <div className={styles.consoleMain}>
+          {(lobby || showQr) && <section className={styles.lobbyPanel} aria-label="Game lobby">
+            <p className={styles.shareLabel}>SHARE THIS CODE</p><strong className={styles.lobbyCode}>{game.code}</strong>
+            <div className={styles.largeQr}><QRCodeSvg value={joinLink} size={280} title={`Join game ${game.code}`} /></div>
+            <button className={styles.consoleButton} onClick={() => void copyLink()}>Copy join link</button>
+            {copyMessage && <p role="status">{copyMessage}</p>}
+            <p>{roster.data?.totalEnrolled ?? 0} enrolled · {roster.data?.livePlayers ?? 0} live</p>
+            {lobby && <ActionButton busy={pending} className={styles.startButton} onClick={() => void run({ action: 'start' })}>Start Game</ActionButton>}
+          </section>}
+          {!lobby && <>
+            <section className={styles.questionStage}>
+              <span className={styles.consoleStatus}>{currentDraw ? `QUESTION ${currentDraw.sequence} / 90${isViewingHistory ? ' · HISTORY' : ''}` : 'READY TO START'}</span>
+              <h2>{currentDraw?.prompt ?? (game.status === 'RECOVERY_REQUIRED' ? 'Recover this game to continue' : 'Technical Tambola Challenge')}</h2>
+              {!currentDraw && <p>Press Call Next Question or Spacebar to reveal the first clue.</p>}
               {currentDraw?.codeSnippet && <pre>{currentDraw.codeSnippet}</pre>}
-              {currentDraw && (
-                <p className={playStyles.answer}>
-                  Admin answer: {currentDraw.answer} ·{" "}
-                  {currentDraw.revealed ? (
-                    <span style={{ color: "var(--color-accent-lime, #a3ff4b)" }}>
-                      Revealed to participants
-                    </span>
-                  ) : (
-                    <span style={{ color: "#ffb74d" }}>
-                      Not revealed to participants
-                    </span>
-                  )}
-                </p>
-              )}
-              <div className={playStyles.actions}>
-                <ActionButton
-                  busy={pending}
-                  disabled={effectiveIndex === null || effectiveIndex <= 0}
-                  onClick={handlePrevious}
-                >
-                  <span aria-hidden="true">←</span> Previous question
-                </ActionButton>
-                <ActionButton
-                  busy={pending}
-                  disabled={
-                    isViewingHistory
-                      ? false
-                      : game.status !== "ACTIVE" || totalCalls >= 90
-                  }
-                  onClick={handleNext}
-                >
-                  {isViewingHistory ? "Next question →" : "Call next question →"}
-                </ActionButton>
-                {currentDraw && !currentDraw.revealed && (
-                  <ActionButton
-                    busy={pending}
-                    disabled={
-                      !["ACTIVE", "PAUSED", "COMPLETED"].includes(game.status)
-                    }
-                    onClick={() =>
-                      void run({
-                        action: "reveal",
-                        sequences: [currentDraw.sequence],
-                      })
-                    }
-                  >
-                    Reveal this answer
-                  </ActionButton>
-                )}
-                {game.draws.some((d) => !d.revealed) && (
-                  <ActionButton
-                    busy={pending}
-                    disabled={
-                      !["ACTIVE", "PAUSED", "COMPLETED"].includes(game.status)
-                    }
-                    onClick={() => void run({ action: "reveal" })}
-                  >
-                    Reveal all pending answers
-                  </ActionButton>
-                )}
-              </div>
+              {currentDraw && <p className={styles.hostAnswer}>Host answer: {currentDraw.answer} · {currentDraw.revealed ? 'Revealed' : 'Not revealed'}</p>}
             </section>
-
-            {/* Pending Claims Section for Admin Approval */}
-            <section className={styles.claimsAlertSection} aria-label="Participant claims review">
-              <div className={styles.claimsAlertHeader}>
-                <h3 className={styles.claimsAlertTitle}>
-                  🔔 Participant Claims {pendingClaims.length > 0 ? `(${pendingClaims.length} pending)` : "(0 pending)"}
-                </h3>
-                <Link to="/admin/claims" style={{ color: "var(--color-primary-cyan, #00e5ff)", fontSize: "0.85rem", textDecoration: "underline" }}>
-                  View All Claims →
-                </Link>
-              </div>
-              {claimFeedback && <p style={{ color: "var(--color-primary-cyan, #00e5ff)", marginBottom: "0.5rem", fontSize: "0.9rem" }}>{claimFeedback}</p>}
-              {pendingClaims.length === 0 ? (
-                <p style={{ color: "var(--muted, #888)", margin: 0, fontSize: "0.9rem" }}>
-                  No pending claims right now. When participants press Claim, it will appear here for your approval.
-                </p>
-              ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                  {pendingClaims.map((claim) => (
-                    <div key={claim.id} className={styles.claimCard}>
-                      <div>
-                        <strong>{claim.participantName}</strong> claimed{" "}
-                        <span style={{ color: "#ffab00", fontWeight: 700 }}>{claim.patternType.replaceAll("_", " ")}</span>
-                        <div style={{ fontSize: "0.75rem", color: "#aaa" }}>
-                          Submitted {new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit" }).format(new Date(claim.createdAt))}
-                        </div>
-                      </div>
-                      <div style={{ display: "flex", gap: "0.5rem" }}>
-                        <button
-                          type="button"
-                          className={styles.claimBtnVerify}
-                          disabled={claimActionId === claim.id}
-                          onClick={() => handleApproveClaim(claim.id)}
-                        >
-                          {claimActionId === claim.id ? "Processing…" : "✓ Approve"}
-                        </button>
-                        <button
-                          type="button"
-                          className={styles.claimBtnReject}
-                          disabled={claimActionId === claim.id}
-                          onClick={() => handleRejectClaim(claim.id)}
-                        >
-                          ✕ Reject
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </section>
-
-            <section className={playStyles.panel}>
-              <h2>Called questions ({totalCalls})</h2>
-              {!totalCalls && <p>No questions called yet.</p>}
-              {[...game.draws].reverse().map((draw, i) => {
-                const drawIndex = totalCalls - 1 - i;
-                const isSelected = effectiveIndex === drawIndex;
-                return (
-                  <div
-                    className={playStyles.historyRow}
-                    key={draw.id}
-                    style={{
-                      borderLeft: isSelected
-                        ? "4px solid var(--color-oxblood, #8C4545)"
-                        : "4px solid transparent",
-                      cursor: "pointer",
-                      background: isSelected
-                        ? "var(--color-sandstone, #DCD0BD)"
-                        : undefined,
-                    }}
-                    onClick={() => setViewingIndex(drawIndex)}
-                    role="button"
-                    tabIndex={0}
-                    aria-label={`View call #${draw.sequence}: ${draw.prompt}`}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        setViewingIndex(drawIndex);
-                      }
-                    }}
-                  >
-                    <div>
-                      <strong>
-                        #{draw.sequence} {draw.prompt}
-                        {isSelected ? " (viewing)" : ""}
-                      </strong>
-                      <p>
-                        {draw.answer} ·{" "}
-                        {draw.revealed
-                          ? "Revealed"
-                          : "Not revealed to participants"}
-                      </p>
-                    </div>
-                    {!draw.revealed && (
-                      <ActionButton
-                        busy={pending}
-                        disabled={
-                          !["ACTIVE", "PAUSED", "COMPLETED"].includes(
-                            game.status,
-                          )
-                        }
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          void run({
-                            action: "reveal",
-                            sequences: [draw.sequence],
-                          });
-                        }}
-                      >
-                        Reveal
-                      </ActionButton>
-                    )}
-                  </div>
-                );
-              })}
-            </section>
-            <section className={playStyles.panel}>
-              <h2>Prize Tiers & Winners</h2>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px', marginBottom: '16px' }}>
-                {game.patterns.map((p) => {
-                  const patternLabels: Record<string, string> = {
-                    EARLY_5: 'Early 5 (Any 5)',
-                    FOUR_CORNERS: 'Four Corners',
-                    TOP_LINE: 'Top Line (Row 1)',
-                    MIDDLE_LINE: 'Middle Line (Row 2)',
-                    BOTTOM_LINE: 'Bottom Line (Row 3)',
-                    FULL_HOUSE: 'First Full House',
-                    SECOND_HOUSE: 'Second Full House',
-                    SECOND_FULL_HOUSE: 'Second Full House',
-                  };
-                  const label = patternLabels[p.pattern] ?? p.pattern.replace(/_/g, ' ');
-                  return (
-                    <div
-                      key={p.pattern}
-                      style={{
-                        padding: '10px 14px',
-                        borderRadius: '6px',
-                        background: p.closed ? 'var(--lime-soft, #e5f6d6)' : 'var(--color-paper, #FAF7F0)',
-                        border: `1.5px solid ${p.closed ? 'var(--color-success, #3D6B4F)' : 'var(--color-border-muted, #BFB29F)'}`,
-                        boxShadow: 'var(--shadow-brutal-sm, 2px 2px 0px var(--color-espresso))',
-                      }}
-                    >
-                      <strong style={{ display: 'block', fontSize: '13px', color: p.closed ? 'var(--color-success, #3D6B4F)' : 'var(--color-espresso, #302820)', fontWeight: 700 }}>
-                        {label}
-                      </strong>
-                      <span style={{ fontSize: '11px', color: p.closed ? 'var(--color-success, #3D6B4F)' : 'var(--color-text-secondary, #62584C)', fontWeight: 600, marginTop: '2px', display: 'inline-block' }}>
-                        {p.closed ? '✓ Awarded' : '○ Still available'}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-              {game.standings.length ? (
-                <div>
-                  <h3 style={{ fontSize: '14px', color: 'var(--color-oxblood, #8C4545)', margin: '0 0 8px 0' }}>Verified Winners:</h3>
-                  {game.standings.map((row, index) => (
-                    <p key={index} style={{ margin: '4px 0', fontSize: '13px' }}>
-                      🏆 <strong>{row.name}</strong>
-                    </p>
-                  ))}
-                </div>
-              ) : (
-                <p>No prizes awarded yet.</p>
-              )}
-            </section>
-          </div>
-        )}
+            <div className={styles.questionControls}>
+              <ActionButton busy={pending} disabled={effectiveIndex === null || effectiveIndex <= 0} onClick={handlePrevious}>Previous</ActionButton>
+              <ActionButton className={styles.callButton} busy={pending} disabled={!isViewingHistory && (game.status !== 'ACTIVE' || totalCalls >= 90)} onClick={handleNext}>{isViewingHistory ? 'Next Question' : `Call Next Question ${totalCalls}/90`} <kbd>Space</kbd></ActionButton>
+              {game.status === 'ACTIVE' && <ActionButton busy={pending} onClick={() => void run({ action: 'pause' })}>Pause</ActionButton>}
+              {game.status === 'PAUSED' && <ActionButton busy={pending} onClick={() => void run({ action: 'resume' })}>Resume</ActionButton>}
+              {game.status === 'RECOVERY_REQUIRED' && <ActionButton busy={recovering} onClick={() => void handleRecover()}>Recover Game</ActionButton>}
+              {['ACTIVE', 'PAUSED'].includes(game.status) && <ActionButton busy={pending} onClick={() => { if (window.confirm('End this game?')) void run({ action: 'end' }); }}>End</ActionButton>}
+              {currentDraw && !currentDraw.revealed && <ActionButton busy={pending} onClick={() => void run({ action: 'reveal', sequences: [currentDraw.sequence] })}>Reveal answer</ActionButton>}
+              {game.draws.some(draw => !draw.revealed) && <ActionButton busy={pending} onClick={() => void run({ action: 'reveal' })}>Reveal pending answers</ActionButton>}
+            </div>
+          </>}
+        </div>
+        <aside className={styles.consoleSidebar}>
+          {lobby ? <section className={styles.consolePanel}><h2>IN THE LOBBY</h2>{roster.isPending ? <p>Loading participants…</p> : roster.error ? <p role="alert">Could not load participants.</p> : roster.data?.participants.length ? <ol className={styles.roster}>{roster.data.participants.map(person => <li key={person.id}>{person.name}<small> · {person.live ? 'Live' : 'Offline'}</small></li>)}</ol> : <p>Waiting for participants to join.</p>}</section> : <>
+            <section className={styles.consolePanel}><h2>CLAIMS</h2><Link to={`/admin/claims?gameId=${id}`}>View all claims</Link>{claimFeedback && <p role="status">{claimFeedback}</p>}{pendingClaims.length ? pendingClaims.map(claim => <div className={styles.claimRow} key={claim.id}><strong>{claim.participantName}</strong><p>{claim.patternType.replaceAll('_', ' ')}</p><button disabled={!!claimActionId} onClick={() => void handleApproveClaim(claim.id)}>Approve</button><button disabled={!!claimActionId} onClick={() => void handleRejectClaim(claim.id)}>Reject</button></div>) : <p>No pending claims.</p>}</section>
+            <section className={styles.consolePanel}><h2>PLAYERS & STANDINGS</h2><p>{roster.data?.totalEnrolled ?? 0} enrolled · {roster.data?.livePlayers ?? 0} live</p>{roster.isPending ? <p>Loading players…</p> : roster.error ? <p role="alert">Could not load players.</p> : roster.data?.participants.length ? <ol className={styles.roster}>{roster.data.participants.map(row => <li key={row.id}>{row.name}<small> · {row.live ? 'Live' : 'Offline'}</small><strong>{row.points}</strong></li>)}</ol> : <p>No enrolled players yet.</p>}<Link to={`/admin/winners?gameId=${id}`}>View winners</Link></section>
+          </>}
+        </aside>
       </div>
-    </main>
-  );
+    </>}
+  </main>;
 }

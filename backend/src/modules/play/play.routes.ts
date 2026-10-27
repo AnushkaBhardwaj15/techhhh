@@ -40,6 +40,11 @@ const commands = z.discriminatedUnion("action", [
 ]);
 export function createPlayRoutes(service: PlayService): FastifyPluginAsync {
   return async (app) => {
+    app.get('/admin/play/rounds/:id/participants', { preHandler: [requireAdmin] }, request => service.participants(roundParams.parse(request.params).id, actor(request)));
+    app.delete('/admin/play/rounds/:id', { preHandler: [requireAdmin] }, async (request, reply) => {
+      await service.remove(roundParams.parse(request.params).id, actor(request));
+      return reply.status(204).send();
+    });
     app.get("/play/rounds", { preHandler: [requireAuth] }, (request) =>
       service.list(actor(request)),
     );

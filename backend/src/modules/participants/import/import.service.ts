@@ -1,3 +1,4 @@
+import { registrationEventId } from '../registration.repository.ts';
 import { parseParticipantCsv } from './csv-parser.ts';
 import { eventRepository, type IEventRepository } from '../../events/event.repository.ts';
 import { participantService, type ParticipantService } from '../participant.service.ts';
@@ -50,6 +51,7 @@ export class ImportService {
       return cached as ImportReport;
     }
 
+    eventId = eventId || await registrationEventId();
     // 2. Validate Event
     const event = await this.eventRepo.findById(eventId);
     if (!event) {
@@ -77,6 +79,11 @@ export class ImportService {
 
     // 4. Process each row independently
     for (const row of rows) {
+      if (row.password.length < 8 || row.password.length > 128) {
+        failedCount++;
+        errors.push({ rowIndex: row.rowIndex, email: row.email, reason: 'Password must contain 8 to 128 characters' });
+        continue;
+      }
       // Validate Name
       if (!row.name || row.name.length > 255) {
         failedCount++;
@@ -133,6 +140,7 @@ export class ImportService {
           {
             eventId,
             name: row.name,
+            password: row.password,
             email: row.email,
             externalId: row.externalId,
           },

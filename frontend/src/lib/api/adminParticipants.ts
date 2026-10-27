@@ -2,8 +2,8 @@ import { apiRequest } from './client';
 import { adminParticipantListSchema, adminParticipantSchema, createAdminParticipantSchema, participantImportReportSchema, updateAdminParticipantSchema } from '../../types/adminParticipant';
 import type { CreateAdminParticipant, UpdateAdminParticipant } from '../../types/adminParticipant';
 
-export async function listAdminParticipants({ eventId, page = 1, limit = 20, search, status, signal }: { eventId: string; page?: number; limit?: number; search?: string; status?: 'ACTIVE' | 'INACTIVE'; signal?: AbortSignal }) {
-  const query = new URLSearchParams({ eventId, page: String(page), limit: String(limit) });
+export async function listAdminParticipants({ eventId, page = 1, limit = 20, search, status, signal }: { eventId?: string; page?: number; limit?: number; search?: string; status?: 'ACTIVE' | 'INACTIVE'; signal?: AbortSignal }) {
+  const query = new URLSearchParams({ ...(eventId ? { eventId } : {}), page: String(page), limit: String(limit) });
   if (search) query.set('search', search);
   if (status) query.set('status', status);
   return adminParticipantListSchema.parse(await apiRequest(`/admin/participants?${query}`, { signal }));

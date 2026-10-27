@@ -1,21 +1,12 @@
-import { useState, type FormEvent } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Link, useNavigate } from 'react-router-dom';
-import { getMe, quickJoin } from '../../lib/api/auth';
+import { useQuery } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
+import { getMe } from '../../lib/api/auth';
 import { useAuthUiStore } from '../auth/authStore';
 import { roleHomePath } from '../auth/routing';
 import { SampleTicketDemo } from './components/SampleTicketDemo';
 import styles from './LandingPage.module.css';
 
 export function LandingPage() {
-  const [joinName, setJoinName] = useState('');
-  const [joinEmail, setJoinEmail] = useState('');
-  const [joining, setJoining] = useState(false);
-  const [joinError, setJoinError] = useState('');
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const identityChanged = useAuthUiStore((state) => state.identityChanged);
-
   const sessionVersion = useAuthUiStore((state) => state.sessionVersion);
   const session = useQuery({
     queryKey: ['auth', 'me', sessionVersion],
@@ -23,25 +14,6 @@ export function LandingPage() {
     retry: false,
   });
 
-  async function handleQuickJoin(e: FormEvent) {
-    e.preventDefault();
-    if (!joinName.trim() || !joinEmail.trim()) {
-      setJoinError('Please enter your name and email address.');
-      return;
-    }
-    setJoining(true);
-    setJoinError('');
-    try {
-      const user = await quickJoin(joinName.trim(), joinEmail.trim());
-      identityChanged();
-      queryClient.clear();
-      navigate(roleHomePath(user.role), { replace: true });
-    } catch (err) {
-      setJoinError(err instanceof Error ? err.message : 'Could not join event. Try again.');
-    } finally {
-      setJoining(false);
-    }
-  }
 
   const user = session.data;
   const destination = user ? (user.role === 'PARTICIPANT' ? '/lobby' : roleHomePath(user.role)) : '/login';
@@ -130,38 +102,10 @@ export function LandingPage() {
                     </span>
                   </div>
                   <p className={styles.quickJoinText}>
-                    Join the tournament room immediately with an automatically allocated 15-cell ticket:
+                    Sign in using the email and password provided by your administrator:
                   </p>
-                  <form onSubmit={handleQuickJoin} className={styles.quickJoinForm}>
-                    <input
-                      type="text"
-                      placeholder="Your Full Name"
-                      value={joinName}
-                      onChange={(e) => setJoinName(e.target.value)}
-                      required
-                      className={styles.quickJoinInput}
-                    />
-                    <input
-                      type="email"
-                      placeholder="Your Email"
-                      value={joinEmail}
-                      onChange={(e) => setJoinEmail(e.target.value)}
-                      required
-                      className={styles.quickJoinInput}
-                    />
-                    <button
-                      type="submit"
-                      disabled={joining}
-                      className={styles.quickJoinBtn}
-                    >
-                      {joining ? 'JOINING…' : 'GET TICKET & PLAY ↗'}
-                    </button>
-                  </form>
-                  {joinError && (
-                    <p className={styles.quickJoinError}>
-                      {joinError}
-                    </p>
-                  )}
+                  <Link to="/login" className={styles.quickJoinBtn}>Sign in to play</Link>
+
                 </div>
               )}
 

@@ -11,12 +11,14 @@ Bob Jones,bob@example.com,EXT-2`;
     const rows = parseParticipantCsv(csv);
     expect(rows.length).toBe(2);
     expect(rows[0]).toEqual({
+      password: '',
       rowIndex: 2,
       name: 'Alice Smith',
       email: 'alice@example.com',
       externalId: 'EXT-1',
     });
     expect(rows[1]).toEqual({
+      password: '',
       rowIndex: 3,
       name: 'Bob Jones',
       email: 'bob@example.com',

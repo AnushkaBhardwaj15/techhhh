@@ -72,9 +72,7 @@ export const participantRoutes: FastifyPluginAsync = async (fastify) => {
       }
     }
 
-    if (!eventId) {
-      throw new ValidationError('eventId is required');
-    }
+
 
     const report = await importService.importParticipantsFromCsv(
       request.user!.id,

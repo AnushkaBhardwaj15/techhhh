@@ -1,3 +1,4 @@
+import { BackLink } from './components/BackLink';
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { QueryClientProvider, useQuery, useQueryClient } from '@tanstack/react-query';
 import { BrowserRouter, Navigate, Outlet, Route, Routes, useLocation, useNavigate, useOutletContext } from 'react-router-dom';
@@ -87,6 +88,7 @@ function ProtectedLayout({ allowed }: { allowed: AuthenticatedUser['role'][] }) 
           {logoutError}
         </div>
       )}
+      {(['/participant/claims', '/participant/ticket-entry'].includes(location.pathname)) && <BackLink fallback={user.role === 'PARTICIPANT' ? '/lobby' : '/admin'} label={location.pathname === '/admin/claims' || location.pathname === '/admin/winners' ? 'Back to game' : user.role === 'PARTICIPANT' ? 'Back to lobby' : 'Back to dashboard'} />}
       <Outlet context={user} />
     </div>
   );
@@ -109,8 +111,7 @@ function AdminAdministratorsRoute() {
 }
 
 function SuperAdminSystemRoute() {
-  const user = useOutletContext<AuthenticatedUser>();
-  return user.role === 'SUPER_ADMIN' ? <AdminSystem /> : <Navigate to="/admin" replace />;
+  return <AdminSystem />;
 }
 
 function AppRoutes() {
@@ -150,6 +151,7 @@ function AppRoutes() {
             <Route path="events" element={<AdminEventManagement />} />
             <Route path="rounds" element={<AdminRounds />} />
             <Route path="questions" element={<AdminQuestions />} />
+            <Route path="password" element={<Navigate to="/admin/system" replace />} />
             <Route path="participants" element={<AdminParticipants />} />
             <Route path="draw-control" element={<AdminDrawControl />} />
             <Route path="claims" element={<AdminClaims />} />

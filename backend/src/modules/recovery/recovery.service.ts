@@ -44,6 +44,7 @@ export class RecoveryService {
       if (round.status !== 'RECOVERY_REQUIRED') {
         throw new ConflictError(`Round in '${round.status}' cannot be recovered`, 'ROUND_NOT_RECOVERABLE');
       }
+      const clearedUndrawnMarks = await this.repository.clearUndrawnMarks?.(roundId, tx) ?? 0;
       const snapshot = await this.repository.getSnapshot(roundId, round.eventId, tx);
       validateRecoverySnapshot(snapshot);
       await this.repository.updateRoundStatus(roundId, 'ACTIVE', tx);
@@ -55,7 +56,7 @@ export class RecoveryService {
         action: 'RECOVERY_COMPLETED',
         resourceType: 'round',
         resourceId: roundId,
-        metadata: { eventId: round.eventId, status: 'ACTIVE' },
+        metadata: { eventId: round.eventId, status: 'ACTIVE', clearedUndrawnMarks },
         ip: context?.ip,
         userAgent: context?.userAgent,
         requestId: context?.requestId,

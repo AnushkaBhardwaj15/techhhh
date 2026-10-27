@@ -28,8 +28,22 @@ export class PlayService {
     private readonly store: PlayStore = new PlayRepository(),
     private readonly publish?: {
       broadcastCommitted(event: RealtimeEvent): Promise<void>;
+      connectedParticipantIds?(roundId: string): string[];
     },
   ) {}
+  async remove(id: string, actor: PlayActor) {
+    this.admin(actor);
+    if (!this.store.archive) throw new ConflictError('Game deletion unavailable');
+    await this.store.archive(id, actor);
+  }
+  async participants(id: string, actor: PlayActor) {
+    this.admin(actor);
+    const state = await this.store.read(id, actor);
+    const enrolled = await this.store.participants?.(id) ?? [];
+    const connected = new Set(this.publish?.connectedParticipantIds?.(id) ?? []);
+    const participants = enrolled.map(person => ({ id: person.id, name: person.name, live: connected.has(person.id), points: state.wins.filter(win => win.participantId === person.participantId).reduce((total, win) => total + win.points, 0) })).sort((a, b) => b.points - a.points || a.name.localeCompare(b.name));
+    return { participants, totalEnrolled: participants.length, livePlayers: participants.filter(person => person.live).length };
+  }
   async list(actor: PlayActor) {
     return { games: await this.store.list(actor) };
   }
