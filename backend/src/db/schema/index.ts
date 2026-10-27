@@ -9,3 +9,5 @@ export * from './tickets.ts';
 export * from './draws.ts';
 export * from './marks.ts';
 export * from './claims.ts';
+
+export * from './round-participants.ts';

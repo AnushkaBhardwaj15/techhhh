@@ -41,6 +41,7 @@ export const routeInventory = [
   'POST /api/v1/admin/questions',
   'PATCH /api/v1/admin/questions/:id',
   'DELETE /api/v1/admin/questions/:id',
+  'GET /api/v1/admin/play/rounds/:id/participants',
   'GET /api/v1/admin/participants',
   'GET /api/v1/admin/participant-batches',
   'DELETE /api/v1/admin/participant-batches',

@@ -12,6 +12,7 @@ import * as api from "../../lib/api/play";
 import { ApiError } from "../../lib/api/client";
 import { playFixture } from "../participant/playFixture";
 import { AdminGamePage } from "./AdminGamePage";
+vi.mock("./AdminRoundParticipants", () => ({ AdminRoundParticipants: () => null }));
 vi.mock("../../lib/api/play", () => ({
   readPlayRound: vi.fn(),
   readPublicPlay: vi.fn(),
