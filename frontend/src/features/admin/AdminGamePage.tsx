@@ -6,6 +6,7 @@ import { ApiError } from "../../lib/api/client";
 import { listPlayRounds, commandPlayRound, broadcastPlayRound } from "../../lib/api/play";
 import { listAdminClaims, verifyAdminClaim, rejectAdminClaim } from "../../lib/api/adminClaims";
 import { usePlayState } from "../participant/usePlayState";
+import { AdminRoundParticipants } from "./AdminRoundParticipants";
 import { QRCodeSvg } from "../../components/QRCodeSvg";
 import { ActionButton } from "../../components/ActionButton";
 import { recoverRound } from "../../lib/api/adminOperations";
@@ -341,6 +342,7 @@ export function AdminGamePage() {
                 )}
               </div>
             </div>
+            <AdminRoundParticipants key={id} roundId={id} />
             <section className={playStyles.clue}>
               <div
                 style={{

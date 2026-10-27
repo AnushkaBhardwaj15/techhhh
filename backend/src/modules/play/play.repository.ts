@@ -55,6 +55,9 @@ export class PlayRepository implements PlayStore {
           "This code is not available for your participant account.",
         );
       const round = rounds[0];
+      if (actor.role === 'PARTICIPANT' && actor.eventId && actor.eventId !== round.event_id) {
+        throw new ForbiddenError('Participants may only join their assigned Event');
+      }
       if (actor.role === "PARTICIPANT") {
         let [profile] = await tx.unsafe<{ id: string }[]>(
           `SELECT id FROM participant_profiles WHERE user_id=$1 AND event_id=$2 AND status='ACTIVE'`,

@@ -21,6 +21,8 @@ import type {
   PlayStatus,
   PlayStore,
 } from "./play.types.ts";
+import { roundRosterService, type RoundRosterService } from './round-roster.service.ts';
+import { assertRoundAcceptsJoin } from './round-roster.domain.ts';
 import type { RealtimeEvent } from "../../realtime/events.ts";
 
 export class PlayService {
@@ -29,6 +31,7 @@ export class PlayService {
     private readonly publish?: {
       broadcastCommitted(event: RealtimeEvent): Promise<void>;
     },
+    private readonly roster: Pick<RoundRosterService, 'recordJoin'> = roundRosterService,
   ) {}
   async list(actor: PlayActor) {
     return { games: await this.store.list(actor) };
@@ -90,15 +93,14 @@ export class PlayService {
     const found = await this.store.findCode(code, actor);
     const roundId = typeof found === "string" ? found : found.id;
     const eventId = typeof found === "string" ? actor.eventId : found.eventId;
+    if (actor.eventId && eventId !== actor.eventId) throw new ForbiddenError('Participants may only join their assigned Event');
     const state = await this.store.read(roundId, { ...actor, eventId });
-    if (!["READY", "ACTIVE", "PAUSED"].includes(state.status))
-      throw new ConflictError(
-        "This game is no longer accepting participants.",
-      );
+    assertRoundAcceptsJoin(state.status);
     if (!state.ticket)
       throw new NotFoundError(
         "Your ticket has not been assigned. Ask the admin to assign it before starting.",
       );
+    await this.roster.recordJoin(roundId, { ...actor, eventId });
     return publicPlayState(state);
   }
   async command(

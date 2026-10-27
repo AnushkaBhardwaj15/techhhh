@@ -94,3 +94,9 @@ An operator-named group of participant enrollments within one Event, such as
 `testing1`, `testing2`, or `prod`. The name is entered when importing a file,
 not stored as a column in that file. It supports removing test groups together.
 _Avoid_: Academic batch, graduation year, login ID.
+
+
+**Round Join**:
+A successful server-confirmed participant entry into a Round via its game code.
+Persisted once per participant and Round, independently of connection status.
+A preassigned Ticket is not proof that the participant joined.

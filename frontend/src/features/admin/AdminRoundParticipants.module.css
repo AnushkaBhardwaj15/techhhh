@@ -1,0 +1,20 @@
+.section {
+  margin: 0 0 36px;
+  padding-bottom: 28px;
+  border-bottom: 2px dashed var(--retro-ink, #18130f);
+  min-width: 0;
+}
+.heading { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.heading h2 { margin: 0; font: 800 1.3rem/1.3 var(--display, sans-serif); }
+.total { margin: 0; font-family: var(--mono, monospace); }
+.description { line-height: 1.5; margin: 12px 0 20px; }
+.tableWrap { max-height: 28rem; max-width: 100%; overflow: auto; border: 1px solid var(--retro-ink, #18130f); }
+.tableWrap table { width: 100%; min-width: 36rem; border-collapse: collapse; text-align: left; }
+.tableWrap caption { text-align: left; padding: 12px; font-weight: 700; }
+.tableWrap th, .tableWrap td { padding: 12px; border-top: 1px solid #d9d6cd; vertical-align: top; overflow-wrap: anywhere; }
+.tableWrap th { white-space: nowrap; }
+.tableWrap td:last-child { min-width: 10rem; }
+.scrollHint { margin: 0 0 8px; font-size: .85rem; }
+@media (min-width: 700px) { .scrollHint { display: none; } }
+.section button { min-height: 44px; padding: 8px 14px; font: inherit; cursor: pointer; }
+.section button:focus-visible, .tableWrap:focus-visible { outline: 3px solid var(--retro-orange, #ee640f); outline-offset: 3px; }

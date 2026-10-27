@@ -11,6 +11,8 @@ import { TicketRepository } from "../tickets/ticket.repository.ts";
 import { DrawRepository } from "../draws/draw.repository.ts";
 import { IdempotencyRepository } from "../../shared/idempotency/idempotency.repository.ts";
 import { PlayRepository } from "./play.repository.ts";
+import { RoundRosterService } from './round-roster.service.ts';
+import { RoundRosterRepository } from './round-roster.repository.ts';
 import { PlayService } from "./play.service.ts";
 import type { PlayActor } from "./play.types.ts";
 
@@ -44,7 +46,7 @@ describe("reference PostgreSQL gameplay", () => {
       );
     },
   } as unknown as postgres.Sql;
-  const service = new PlayService(new PlayRepository(() => connection));
+  const service = new PlayService(new PlayRepository(() => connection), undefined, new RoundRosterService(new RoundRosterRepository(() => connection)));
   const command = (input: Parameters<PlayService["command"]>[2]) =>
     service.command(roundId, admin, input, `command-${key++}`);
   beforeAll(async () => {
@@ -84,6 +86,12 @@ describe("reference PostgreSQL gameplay", () => {
     expect(created.bank).toHaveLength(90);
     expect(created.patterns).toHaveLength(7);
     const first = await service.join(created.code, players[0]!);
+    await service.join(created.code, players[0]!);
+    const roster = await new RoundRosterService(new RoundRosterRepository(() => connection)).list(roundId, admin);
+    expect(roster.total).toBe(1);
+    expect(roster.participants[0]?.id).toBeTruthy();
+    await expect(service.join(created.code, { ...players[0]!, eventId: crypto.randomUUID() })).rejects.toThrow('assigned Event');
+    expect((await new RoundRosterService(new RoundRosterRepository(() => connection)).list(roundId, admin)).total).toBe(1);
     const again = await service.read(roundId, players[0]!);
     expect(first.ticket?.cells).toHaveLength(15);
     expect(again.ticket).toEqual(first.ticket);

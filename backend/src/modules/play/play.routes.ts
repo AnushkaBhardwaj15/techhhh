@@ -5,6 +5,7 @@ import {
   requireAuth,
   requireParticipantToken,
 } from "../../middleware/auth.ts";
+import { roundRosterService, type RoundRosterService } from './round-roster.service.ts';
 import { PlayService } from "./play.service.ts";
 import { PLAY_PATTERNS, type PlayActor } from "./play.types.ts";
 import { parseAndValidateBankSpreadsheet } from "./excel-import.ts";
@@ -13,8 +14,7 @@ const roundParams = z.object({ id: z.string().uuid() });
 const actor = (request: FastifyRequest): PlayActor => ({
   userId: request.user!.id,
   role: request.user!.role ?? "PARTICIPANT",
-  eventId:
-    request.user!.role === "PARTICIPANT" ? undefined : request.user!.eventId,
+  eventId: request.user!.eventId,
 });
 const commands = z.discriminatedUnion("action", [
   z.object({ action: z.enum(["start", "pause", "resume", "end"]) }).strict(),
@@ -31,7 +31,7 @@ const commands = z.discriminatedUnion("action", [
     })
     .strict(),
 ]);
-export function createPlayRoutes(service: PlayService): FastifyPluginAsync {
+export function createPlayRoutes(service: PlayService, roster: Pick<RoundRosterService, 'list'> = roundRosterService): FastifyPluginAsync {
   return async (app) => {
     app.get("/play/rounds", { preHandler: [requireAuth] }, (request) =>
       service.list(actor(request)),
@@ -42,6 +42,8 @@ export function createPlayRoutes(service: PlayService): FastifyPluginAsync {
     app.get("/play/rounds/:id", { preHandler: [requireAuth] }, (request) =>
       service.read(roundParams.parse(request.params).id, actor(request)),
     );
+    app.get('/admin/play/rounds/:id/participants', { preHandler: [requireAdmin] }, (request) =>
+      roster.list(roundParams.parse(request.params).id, actor(request)));
     app.post(
       "/admin/play/validate-bank",
       { preHandler: [requireAdmin] },
