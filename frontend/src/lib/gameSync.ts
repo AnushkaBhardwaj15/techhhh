@@ -69,18 +69,21 @@ export async function validateGameCode(
   }
 }
 export function subscribeToGameSync(
-  callback: (game: SyncGameRecord) => void,
+  callback: (game: SyncGameRecord | null) => void,
 ): () => void {
   let stopped = false;
+  let inFlight = false;
   const timer = setInterval(() => {
+    if (inFlight) return;
+    inFlight = true;
     void fetchActiveGame()
       .then(({ game }) => {
-        if (!stopped && game) callback(game);
+        if (!stopped) callback(game);
       })
       .catch(() => {
         /* The current UI keeps its last snapshot and reports query errors. */
-      });
-  }, 500);
+      }).finally(() => { inFlight = false; });
+  }, 5000);
   return () => {
     stopped = true;
     clearInterval(timer);

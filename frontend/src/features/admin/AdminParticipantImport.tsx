@@ -7,7 +7,7 @@ import { parseParticipantCsv, PARTICIPANT_CSV_PREVIEW_ROWS, readParticipantCsvFi
 import type { ParticipantCsvPreview } from './participantCsv';
 import styles from './AdminParticipants.module.css';
 
-export function AdminParticipantImport({ eventId, userId, onPendingChange }: { eventId: string; userId: string; onPendingChange: (pending: boolean) => void }) {
+export function AdminParticipantImport({ eventId, batchName, onPendingChange }: { eventId: string; userId: string; batchName?: string; onPendingChange: (pending: boolean) => void }) {
   const queryClient = useQueryClient();
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<ParticipantCsvPreview | null>(null);
@@ -25,16 +25,17 @@ export function AdminParticipantImport({ eventId, userId, onPendingChange }: { e
     readVersion.current++;
     setFile(null); setPreview(null); setReport(null); setFileError(''); setMessage(''); setAmbiguous(false); setRetryAllowed(false); attemptKey.current = '';
     setReading(false); onPendingChange(false);
-  }, [eventId, onPendingChange]);
+  }, [eventId, batchName, onPendingChange]);
 
   const mutation = useMutation({
     mutationFn: () => {
       if (!file || !attemptKey.current) throw new Error('Choose a valid CSV file before importing.');
-      return importAdminParticipants({ eventId, file, idempotencyKey: attemptKey.current });
+      return importAdminParticipants({ eventId, file, batchName, idempotencyKey: attemptKey.current });
     },
     onSuccess: async (result) => {
+      await queryClient.invalidateQueries({ queryKey: ['participant-batches'] });
       setReport(result); setAmbiguous(false); setRetryAllowed(false); setMessage('The server returned this import report.');
-      await queryClient.invalidateQueries({ queryKey: ['admin-participants', userId] });
+      await queryClient.invalidateQueries({ queryKey: ['admin-participants'] });
     },
     onError: async (error) => {
       const uncertain = !(error instanceof ApiError) || error.status === 0 || error.status >= 500;
@@ -46,7 +47,7 @@ export function AdminParticipantImport({ eventId, userId, onPendingChange }: { e
           : error instanceof ApiError
             ? `The server did not accept the import: ${error.message}`
             : 'The import could not be completed. Review the current Participant results before trying again.');
-      await queryClient.invalidateQueries({ queryKey: ['admin-participants', userId] });
+      await queryClient.invalidateQueries({ queryKey: ['admin-participants'] });
     },
     onSettled: () => { requestLock.current = false; onPendingChange(false); },
   });

@@ -39,7 +39,7 @@ export class ImportService {
     eventId: string,
     csvContent: string,
     idempotencyKey?: string,
-    context?: { ip?: string; userAgent?: string; requestId?: string }
+    context?: { ip?: string; userAgent?: string; requestId?: string; batchName?: string }
   ): Promise<ImportReport> {
     if (!idempotencyKey || !idempotencyKey.trim()) {
       throw new ValidationError('Idempotency-Key header is required for batch import');
@@ -141,6 +141,7 @@ export class ImportService {
             eventId,
             name: row.name,
             password: row.password,
+            batchName: context?.batchName,
             email: row.email,
             externalId: row.externalId,
           },

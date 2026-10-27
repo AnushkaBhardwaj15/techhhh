@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError } from '../../lib/api/client';
-import { createSuperAdminAccount, deactivateSuperAdminAccount, listSuperAdminAccounts, updateSuperAdminAccount } from '../../lib/api/adminAccounts';
+import { deleteSuperAdminAccount, createSuperAdminAccount, deactivateSuperAdminAccount, listSuperAdminAccounts, updateSuperAdminAccount } from '../../lib/api/adminAccounts';
 import { createAdminAccountSchema, updateAdminAccountSchema } from '../../types/adminAccount';
 import type { AdminAccount, CreateAdminAccount } from '../../types/adminAccount';
 import type { AuthenticatedUser } from '../../types/auth';
@@ -83,7 +83,7 @@ export function AdminAdministrators({ user }: { user: AuthenticatedUser }) {
   async function saveAccount(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!editing || accountLock.current || pendingAccountId) return;
-    const parsed = updateAdminAccountSchema.safeParse(editForm);
+    const parsed = updateAdminAccountSchema.safeParse(editing.role === 'SUPER_ADMIN' ? { name: editForm.name } : editForm);
     if (!parsed.success) {
       setMessage('Enter a name between 1 and 100 characters.');
       return;
@@ -105,6 +105,13 @@ export function AdminAdministrators({ user }: { user: AuthenticatedUser }) {
     }
   }
 
+  async function deleteAccount(account: AdminAccount) {
+    if (accountLock.current || account.role === 'SUPER_ADMIN' || !window.confirm(`Delete administrator ${account.email}? Their access will be removed and sessions revoked.`)) return;
+    accountLock.current = true; setPendingAccountId(account.id); setMessage('');
+    try { await deleteSuperAdminAccount(account.id); setEditing(null); setMessage('Administrator deleted.'); }
+    catch (error) { setMessage(errorMessage(error, 'account deletion')); }
+    finally { await refreshAccounts(); accountLock.current = false; setPendingAccountId(''); }
+  }
   async function deactivate(account: AdminAccount) {
     if (accountLock.current || pendingAccountId || !window.confirm(`Deactivate ${account.name}? Their active sessions will be revoked.`)) return;
     accountLock.current = true;
@@ -160,7 +167,7 @@ export function AdminAdministrators({ user }: { user: AuthenticatedUser }) {
       <form className={styles.form} onSubmit={handleCreate}>
         <label>Email<input type="email" autoComplete="off" required maxLength={255} value={form.email} disabled={creating || ambiguousCreate} onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))} /></label>
         <label>Name<input autoComplete="off" required maxLength={100} value={form.name} disabled={creating || ambiguousCreate} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} /></label>
-        <label>Role<select value={form.role} disabled={creating || ambiguousCreate} onChange={(event) => setForm((current) => ({ ...current, role: event.target.value as CreateAdminAccount['role'] }))}><option value="ADMIN">Admin</option><option value="SUPER_ADMIN">Super Admin</option></select></label>
+        <label>Role<select value={form.role} disabled={creating || ambiguousCreate} onChange={(event) => setForm((current) => ({ ...current, role: event.target.value as CreateAdminAccount['role'] }))}><option value="ADMIN">Admin</option></select></label>
         <button type="submit" disabled={creating || (ambiguousCreate && !retryAllowed)}>{creating ? 'Creating…' : ambiguousCreate ? 'Retry account creation deliberately' : 'Create account'}</button>
       </form>
     </section>
@@ -170,8 +177,8 @@ export function AdminAdministrators({ user }: { user: AuthenticatedUser }) {
       {accounts.data && accounts.error && <p className={styles.stale} role="status">Showing the last list received from the server.</p>}
       {accounts.data?.data.length === 0 && <p>No Administrator accounts are on this page.</p>}
       {accounts.data && accounts.data.data.length > 0 && <div className={styles.tableWrap} role="region" aria-label="Administrator account table; scroll horizontally" tabIndex={0}><p className={styles.scrollHint}>Scroll horizontally to reach all account fields and actions.</p><table><caption>Administrator access and status</caption><thead><tr><th scope="col">Name</th><th scope="col">Email</th><th scope="col">Role</th><th scope="col">Status</th><th scope="col">Created</th><th scope="col">Actions</th></tr></thead><tbody>{accounts.data.data.map((account) => <tr key={account.id}>
-        {editing?.id === account.id ? <td colSpan={6}><form className={styles.editForm} onSubmit={saveAccount} aria-label={`Edit ${account.name}`}><label>Name<input required maxLength={100} value={editForm.name} disabled={Boolean(pendingAccountId)} onChange={(event) => setEditForm((current) => ({ ...current, name: event.target.value }))} /></label><label>Role<select value={editForm.role} disabled={Boolean(pendingAccountId)} onChange={(event) => setEditForm((current) => ({ ...current, role: event.target.value as AdminAccount['role'] }))}><option value="ADMIN">Admin</option><option value="SUPER_ADMIN">Super Admin</option></select></label><div className={styles.actions}><button type="submit" disabled={Boolean(pendingAccountId)}>{pendingAccountId === account.id ? 'Saving…' : 'Save changes'}</button><button type="button" disabled={Boolean(pendingAccountId)} onClick={() => setEditing(null)}>Cancel</button></div></form></td> : <>
-          <td>{account.name}{account.id === user.id && <span className={styles.self}>You</span>}</td><td>{account.email}</td><td>{account.role === 'SUPER_ADMIN' ? 'Super Admin' : 'Admin'}</td><td>{account.status}</td><td>{new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(new Date(account.createdAt))}</td><td><div className={styles.actions}><button type="button" disabled={Boolean(pendingAccountId)} onClick={() => { setEditing(account); setEditForm({ name: account.name, role: account.role }); }}>Edit</button>{account.status === 'ACTIVE' ? <button type="button" disabled={Boolean(pendingAccountId)} onClick={() => void deactivate(account)}>{pendingAccountId === account.id ? 'Deactivating…' : 'Deactivate'}</button> : <button type="button" disabled={Boolean(pendingAccountId)} onClick={() => void reactivate(account)}>{pendingAccountId === account.id ? 'Reactivating…' : 'Reactivate'}</button>}</div></td>
+        {editing?.id === account.id ? <td colSpan={6}><form className={styles.editForm} onSubmit={saveAccount} aria-label={`Edit ${account.name}`}><label>Name<input required maxLength={100} value={editForm.name} disabled={Boolean(pendingAccountId)} onChange={(event) => setEditForm((current) => ({ ...current, name: event.target.value }))} /></label><label>Role<select value={editForm.role} disabled={Boolean(pendingAccountId) || account.role === 'SUPER_ADMIN'} onChange={(event) => setEditForm((current) => ({ ...current, role: event.target.value as AdminAccount['role'] }))}><option value="ADMIN">Admin</option>{account.role === 'SUPER_ADMIN' && <option value="SUPER_ADMIN">Super Admin</option>}</select></label><div className={styles.actions}><button type="submit" disabled={Boolean(pendingAccountId)}>{pendingAccountId === account.id ? 'Saving…' : 'Save changes'}</button><button type="button" disabled={Boolean(pendingAccountId)} onClick={() => setEditing(null)}>Cancel</button></div></form></td> : <>
+          <td>{account.name}{account.id === user.id && <span className={styles.self}>You</span>}</td><td>{account.email}</td><td>{account.role === 'SUPER_ADMIN' ? 'Super Admin' : 'Admin'}</td><td>{account.status}</td><td>{new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(new Date(account.createdAt))}</td><td><div className={styles.actions}><button type="button" disabled={Boolean(pendingAccountId)} onClick={() => { setEditing(account); setEditForm({ name: account.name, role: account.role }); }}>Edit</button>{account.role !== 'SUPER_ADMIN' && (account.status === 'ACTIVE' ? <button type="button" disabled={Boolean(pendingAccountId)} onClick={() => void deactivate(account)}>{pendingAccountId === account.id ? 'Deactivating…' : 'Deactivate'}</button> : <button type="button" disabled={Boolean(pendingAccountId)} onClick={() => void reactivate(account)}>{pendingAccountId === account.id ? 'Reactivating…' : 'Reactivate'}</button>)}{account.role !== 'SUPER_ADMIN' && <button type="button" disabled={Boolean(pendingAccountId)} onClick={() => void deleteAccount(account)}>Delete</button>}</div></td>
         </>}
       </tr>)}</tbody></table></div>}
       {accounts.data && <nav className={styles.pagination} aria-label="Administrator pages"><button type="button" disabled={page <= 1 || Boolean(pendingAccountId)} onClick={() => setPage((current) => current - 1)}>Previous</button><span>Page {accounts.data.pagination.page} of {accounts.data.pagination.totalPages}</span><button type="button" disabled={page >= accounts.data.pagination.totalPages || Boolean(pendingAccountId)} onClick={() => setPage((current) => current + 1)}>Next</button></nav>}

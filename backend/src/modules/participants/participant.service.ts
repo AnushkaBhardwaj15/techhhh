@@ -1,3 +1,4 @@
+import { lockParticipantAccounts, assignAccountBatch } from './account-batch.repository.ts';
 import { registrationEventId } from './registration.repository.ts';
 import { getDb } from '../../db/client.ts';
 import { auditService, type AuditService } from '../audit/audit.service.ts';
@@ -83,6 +84,7 @@ export class ParticipantService {
     let created: ParticipantSummary;
 
     await db.transaction(async (tx) => {
+      await lockParticipantAccounts(tx);
       try {
         created = await this.repo.create(
           {
@@ -116,6 +118,7 @@ export class ParticipantService {
         throw err;
       }
 
+      await assignAccountBatch(tx, created!.userId, input.batchName);
       await this.audit.record(
         {
           actorId,

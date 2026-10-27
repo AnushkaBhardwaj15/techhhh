@@ -639,3 +639,6 @@
 .consoleCode { border: 2px solid #181818; box-shadow: 3px 3px 0 #181818; }
 .largeQr { border: 2px solid #181818; box-shadow: 4px 4px 0 #181818; }
 .roster li { border-bottom: 1px solid #181818; }
+
+.playerLive { color: #16713b; font-weight: 700; }
+.playerOffline { color: #b42318; font-weight: 700; }

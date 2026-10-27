@@ -89,6 +89,8 @@ export async function requireParticipantToken(request: FastifyRequest): Promise<
   const token = request.cookies[SESSION_COOKIE_NAME];
   if (!token) throw new UnauthorizedError('Authentication required');
 
+  const principal = await authService.validateToken(token);
+  request.session = principal.session;
   const payload = verifyAuthToken(token);
   if (payload.role !== 'PARTICIPANT') throw new ForbiddenError('Insufficient permissions for this operation');
   if (!payload.eventId) throw new UnauthorizedError('Participant token must be scoped to an event');

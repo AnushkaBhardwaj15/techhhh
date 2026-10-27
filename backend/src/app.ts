@@ -122,13 +122,14 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
       const user = (req as unknown as { user?: { id?: string } }).user;
       return user?.id || req.ip;
     },
-    errorResponseBuilder: (req, context) => ({
-      error: {
+    errorResponseBuilder: (_req, context) => {
+      const retrySeconds = Math.max(1, Math.ceil((Number(context.ttl) || 1000) / 1000));
+      return {
+        statusCode: 429,
         code: ERROR_CODES.RATE_LIMIT_EXCEEDED,
-        message: `Too many requests. Rate limit exceeded. Try again in ${Math.ceil(Number(context.after || 1000) / 1000)}s.`,
-      },
-      requestId: req.id,
-    }),
+        message: `Too many requests. Try again in ${retrySeconds}s.`,
+      };
+    },
   });
 
   // Enable Cookies
@@ -276,9 +277,8 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
     }
 
     // 4. Unexpected / database / 500 errors - strictly hide stack traces and DB details
-    console.error(`[Server Error] ${request.method} ${request.url}:`, error);
     if (isLoggingEnabled) {
-      request.log.error({ err: error }, 'Request or database operation failed');
+      request.log.error({ event: 'request_failed', requestId, method: request.method, route: request.routeOptions.url, err: error }, 'Request or database operation failed');
     }
 
     reply.status(500).send({

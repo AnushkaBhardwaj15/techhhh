@@ -184,7 +184,7 @@ export class ParticipantRepository implements IParticipantRepository {
     const client = this.getClient(tx);
     const offset = (options.page - 1) * options.limit;
 
-    const conditions = [options.eventId ? eq(participantProfiles.eventId, options.eventId) : undefined];
+    const conditions = [sql`users.participant_removed_at IS NULL`, options.eventId ? eq(participantProfiles.eventId, options.eventId) : undefined];
     if (options.status) {
       conditions.push(eq(participantProfiles.status, options.status));
     }

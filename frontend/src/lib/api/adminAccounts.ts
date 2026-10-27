@@ -20,5 +20,9 @@ export async function updateSuperAdminAccount(id: string, input: UpdateAdminAcco
 }
 
 export async function deactivateSuperAdminAccount(id: string, signal?: AbortSignal) {
-  await apiRequest(`/super-admin/admins/${encodeURIComponent(id)}`, { method: 'DELETE', signal });
+  await updateSuperAdminAccount(id, { status: 'INACTIVE' }, signal);
+}
+
+export async function deleteSuperAdminAccount(id: string) {
+  await apiRequest(`/super-admin/admins/${encodeURIComponent(id)}`, { method: 'DELETE' });
 }

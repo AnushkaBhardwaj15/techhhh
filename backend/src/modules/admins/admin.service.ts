@@ -30,6 +30,7 @@ export class AdminService {
     input: CreateAdminInput,
     context?: { ip?: string; userAgent?: string; requestId?: string }
   ): Promise<{ admin: AdminSummary; temporaryPassword: string }> {
+    if (input.role !== 'ADMIN') throw new ConflictError('Only one Super Admin is allowed. Create an Admin instead.');
     const email = input.email.trim().toLowerCase();
     const existing = await this.userRepo.findByEmail(email);
     if (existing) {
