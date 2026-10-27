@@ -537,7 +537,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  min-height: 42px;
+  min-height: 44px;
   margin-bottom: 20px;
   padding: 8px 16px;
   border: 2px solid var(--retro-ink, #18130F);

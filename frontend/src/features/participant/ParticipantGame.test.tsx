@@ -144,9 +144,17 @@ describe("reference participant game", () => {
       await screen.findByRole("button", { name: "Claim Four Corners" }),
     );
     expect(await screen.findByRole("status")).toHaveTextContent(
-      "Awaiting host verification",
+      "You earned 20 points for Four Corners.",
     );
     expect(screen.getByRole("button", { name: "Already won" })).toBeDisabled();
+  });
+  it('keeps an accepted claim pending when the server has not awarded points', async () => {
+    vi.mocked(api.claimPlayPrize).mockResolvedValue({ accepted: true, game });
+    mount();
+    fireEvent.click(await screen.findByRole('button', { name: 'Claim Four Corners' }));
+    expect(await screen.findByRole('status')).toHaveTextContent('Awaiting host verification');
+    expect(screen.getByRole('button', { name: 'Claim Four Corners' })).toBeEnabled();
+    expect(screen.getByText('YOUR POINTS').parentElement).toHaveTextContent('0');
   });
   it.each(["PAUSED", "RECOVERY_REQUIRED", "COMPLETED"] as const)(
     "disables mark and prize actions while %s",

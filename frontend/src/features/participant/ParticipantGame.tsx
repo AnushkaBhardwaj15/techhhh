@@ -10,7 +10,6 @@ import { claimPlayPrize, markPlayCell } from '../../lib/api/play';
 import { mergeParticipantDraws, useParticipantRealtime, type ConnectionStatus, type DisplayDraw } from '../../lib/realtime';
 import { playNewClueSound } from '../../lib/audio';
 import type { AuthenticatedUser } from '../../types/auth';
-import type { ParticipantEvent } from '../../types/participant';
 import type { PlayState } from '../../types/play';
 import type { ParticipantTicket as Ticket } from '../../types/ticket';
 import { ActionButton } from '../../components/ActionButton';
@@ -135,10 +134,6 @@ function ReferenceParticipantGame({ id }: { id: string }) {
   if (game?.status === 'READY') return <Navigate to="/participant/waiting" replace />;
 
   const latest = game?.draws.at(-1);
-
-  if (game?.status === "READY") {
-    return <Navigate to="/participant/waiting" replace />;
-  }
 
   return (
     <main className={refStyles.page}>

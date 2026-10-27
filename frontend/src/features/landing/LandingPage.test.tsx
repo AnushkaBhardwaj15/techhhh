@@ -53,6 +53,14 @@ describe('LandingPage', () => {
     expect(screen.getByText(/not a quiz/i)).toBeInTheDocument();
   });
 
+  it('rejects incomplete entry without calling the authentication API', () => {
+    vi.mocked(authApi.getMe).mockRejectedValue(new ApiError(401, 'Authentication required'));
+    renderLanding();
+    fireEvent.submit(screen.getByRole('button', { name: /GET TICKET/ }).closest('form')!);
+    expect(screen.getByRole('alert')).toHaveTextContent('Enter your name, email, and a password');
+    expect(authApi.quickJoin).not.toHaveBeenCalled();
+  });
+
   it('provides navigation links and CTA for an unauthenticated visitor', async () => {
     vi.mocked(authApi.getMe).mockRejectedValue(new ApiError(401, 'Authentication required'));
     renderLanding();

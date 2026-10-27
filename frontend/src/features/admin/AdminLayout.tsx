@@ -12,6 +12,7 @@ const links = [
 ] as const;
 const navIcons = {
   Dashboard: Gauge,
+  Participants: UsersThree,
   Claims: Bell,
   Winners: Trophy,
   Audit: ClipboardText,

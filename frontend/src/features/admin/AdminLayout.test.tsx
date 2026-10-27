@@ -33,6 +33,9 @@ describe('AdminLayout contextual back navigation', () => {
     );
 
     expect(screen.getByRole('heading', { name: 'Questions & Keys' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Participants' })).toHaveAttribute(
+      'href', '/admin/participants?eventId=event-42',
+    );
     expect(screen.getByRole('link', { name: 'Back to event management' })).toHaveAttribute(
       'href',
       '/admin/event?eventId=event-42',

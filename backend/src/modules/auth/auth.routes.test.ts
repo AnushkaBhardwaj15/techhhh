@@ -1,6 +1,7 @@
-import { beforeAll, describe, expect, spyOn, test } from 'bun:test';
+import { afterEach, beforeAll, describe, expect, it, spyOn, test } from 'bun:test';
 import Fastify from 'fastify';
 import cookie from '@fastify/cookie';
+import { ZodError } from 'zod';
 import { createAuthRoutes } from './auth.routes.ts';
 import { authService } from './auth.service.ts';
 import { SESSION_COOKIE_NAME, signAuthToken } from './auth.domain.ts';
@@ -38,4 +39,69 @@ describe('logout persists revocation before reporting success', () => {
       }
     });
   }
+});
+
+// Scenarios: valid entry sets a session cookie; malformed input never reaches
+// the service; authentication failure is returned without creating a session.
+describe('quick-join HTTP contract', () => {
+  let restore: (() => void) | undefined;
+  afterEach(() => restore?.());
+
+  async function appFor() {
+    const app = Fastify();
+    await app.register(cookie);
+    app.setErrorHandler((error, _request, reply) => {
+      reply.status(error instanceof ZodError ? 400 : 401).send({ error: error instanceof Error ? error.message : 'Authentication failed' });
+    });
+    await app.register(createAuthRoutes(), { prefix: '/api/v1' });
+    return app;
+  }
+
+  it('passes validated entry to the service and sets its session cookie', async () => {
+    const user = { id: crypto.randomUUID(), name: 'Ari', email: 'ari@example.test', role: 'PARTICIPANT' };
+    const service = spyOn(authService, 'quickJoin').mockResolvedValue({
+      token: 'private-session-token', user,
+      session: { id: crypto.randomUUID(), userId: user.id, tokenHash: null, expiresAt: new Date(Date.now() + 86_400_000), revokedAt: null, ip: null, userAgent: null, createdAt: new Date() },
+    });
+    restore = () => service.mockRestore();
+    const app = await appFor();
+    try {
+      const response = await app.inject({ method: 'POST', url: '/api/v1/auth/quick-join', payload: { name: 'Ari', email: user.email, password: 'valid-password' } });
+      expect(response.statusCode).toBe(200);
+      expect(service).toHaveBeenCalledWith(expect.objectContaining({ name: 'Ari', email: user.email, password: 'valid-password' }));
+      expect(response.json()).toEqual({ user });
+      expect(String(response.headers['set-cookie'])).toContain(`${SESSION_COOKIE_NAME}=private-session-token`);
+      expect(String(response.headers['set-cookie'])).toContain('HttpOnly');
+      expect(response.body).not.toContain('valid-password');
+    } finally { await app.close(); }
+  });
+
+  it.each([
+    { name: '', email: 'ari@example.test', password: 'valid-password' },
+    { name: 'Ari', email: 'invalid', password: 'valid-password' },
+    { name: 'Ari', email: 'ari@example.test', password: 'short' },
+    { name: 'Ari', email: 'ari@example.test' },
+    { name: 'Ari', email: 'ari@example.test', password: 'valid-password', eventId: 'invalid' },
+  ])('rejects malformed entry before calling the service: %j', async (payload) => {
+    const service = spyOn(authService, 'quickJoin');
+    restore = () => service.mockRestore();
+    const app = await appFor();
+    try {
+      const response = await app.inject({ method: 'POST', url: '/api/v1/auth/quick-join', payload });
+      expect(response.statusCode).toBe(400);
+      expect(service).not.toHaveBeenCalled();
+      expect(response.headers['set-cookie']).toBeUndefined();
+    } finally { await app.close(); }
+  });
+
+  it('does not set a session cookie when authentication fails', async () => {
+    const service = spyOn(authService, 'quickJoin').mockRejectedValue(new Error('Invalid email or password'));
+    restore = () => service.mockRestore();
+    const app = await appFor();
+    try {
+      const response = await app.inject({ method: 'POST', url: '/api/v1/auth/quick-join', payload: { name: 'Ari', email: 'ari@example.test', password: 'valid-password' } });
+      expect(response.statusCode).toBe(401);
+      expect(response.headers['set-cookie']).toBeUndefined();
+    } finally { await app.close(); }
+  });
 });

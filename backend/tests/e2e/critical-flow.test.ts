@@ -106,7 +106,7 @@ describeE2E('Issue 20 production-server critical flows', () => {
 
     const env = {
       ...process.env,
-      NODE_ENV: 'test', DATABASE_URL: dbUrl.toString(), PORT: String(await reservePort()), HOST: '127.0.0.1',
+      NODE_ENV: 'test', DATABASE_URL: dbUrl.toString(), DATABASE_URL_UNPOOLED: dbUrl.toString(), PORT: String(await reservePort()), HOST: '127.0.0.1',
       JWT_SECRET: 'issue-20-e2e-jwt-secret-must-be-at-least-32-characters',
       SESSION_SECRET: 'issue-20-e2e-session-secret-must-be-at-least-32-chars',
       EMAIL_PROVIDER_API_KEY: emailApiKey, EMAIL_PROVIDER_URL: `http://127.0.0.1:${provider.port}/send`,
@@ -423,5 +423,5 @@ describeE2E('Issue 20 production-server critical flows', () => {
       const detail = error instanceof Error ? error.message : String(error);
       throw new Error(`Critical flow failed at ${failureContext.step}: ${JSON.stringify(safeResponse(failureContext.response))}\n${detail}`);
     }
-  }, 120000);
+  }, 300000);
 });

@@ -146,7 +146,7 @@ export function createRoundRoutes(deps: RoundRoutesDependencies = {}): FastifyPl
     // Participant: Get current round authoritative DTO
     fastify.get('/participant/round/current', { preHandler: [requireParticipantToken] }, async (request) => {
       const eventId = request.user!.eventId || 'e7bf4217-f212-4970-b3f1-e924e1782f25';
-      const round = await service.getCurrentRoundForParticipant(request.user!.id, eventId, request.user!.sessionId);
+      const round = await service.getCurrentRoundForParticipant(request.user!.id, eventId, request.session!.id);
       return { round };
     });
   };

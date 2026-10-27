@@ -53,7 +53,7 @@ export const ticketRoutes: FastifyPluginAsync = async (fastify) => {
         request.user!.id,
         query.roundId,
         undefined,
-        request.user!.sessionId,
+        request.session!.id,
         request.user!.eventId ?? undefined
       );
       if (!ticket) {

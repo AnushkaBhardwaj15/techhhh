@@ -65,7 +65,7 @@ export const drawRoutes: FastifyPluginAsync = async (fastify) => {
       request.user!.id,
       query.roundId,
       query,
-      request.user!.sessionId,
+      request.session!.id,
       request.user!.eventId ?? undefined
     );
   });

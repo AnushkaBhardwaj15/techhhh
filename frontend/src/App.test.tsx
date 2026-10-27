@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import { waitFor } from '@testing-library/react';
 import { App } from './App';
@@ -30,6 +30,14 @@ const emptyDashboard = {
 };
 
 describe('application role routes', () => {
+  // Load the real lazy route modules during setup so cold module compilation
+  // does not consume the authentication behavior test's assertion deadline.
+  beforeAll(async () => {
+    await Promise.all([
+      import('./features/admin/AdminDashboard'),
+      import('./features/admin/AdminLayout'),
+    ]);
+  }, 30_000);
   afterEach(cleanup);
   beforeEach(() => {
     queryClient.clear();

@@ -1,4 +1,5 @@
 import {
+  hashPassword,
   verifyPassword,
   timingSafeDummyVerify,
   signAuthToken,

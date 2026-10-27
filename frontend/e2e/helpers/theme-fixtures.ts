@@ -181,7 +181,7 @@ export async function mockThemeApi(
     const currentRound = { ...round, status: options.roundStatus ?? "ACTIVE" };
     const currentGame = { ...game, status: options.roundStatus ?? "ACTIVE" };
     const playGame = {
-      ...currentGame,eventId,sequenceNumber:1,closingSequence:null,score:0,
+      ...currentGame,eventId,isBroadcast:true,sequenceNumber:1,closingSequence:null,score:0,
       ticket:role==='PARTICIPANT'?{...ticket,cells:ticket.cells.map((c,index)=>({...c,term:c.keyValue,number:index+1}))}:null,
       draws:[{id:draw.id,sequence:1,prompt:draw.questionText,answer:draw.keyValue,number:1,category:'DevOps',codeSnippet:null,revealed:true,drawnAt:now}],
       wins:[],standings:[],patterns:patternTypes.map(pattern=>({pattern,points:pattern==='FULL_HOUSE'?50:pattern==='EARLY_5'?10:pattern==='FOUR_CORNERS'?20:30,closed:false})),

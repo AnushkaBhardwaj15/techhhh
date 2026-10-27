@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Bell, Broadcast, LockKey, Trophy } from "@phosphor-icons/react";
+import { Broadcast, LockKey, Trophy } from "@phosphor-icons/react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ApiError } from "../../lib/api/client";

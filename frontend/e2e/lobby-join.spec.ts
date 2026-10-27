@@ -54,7 +54,7 @@ test("the advertised quick join opens the waiting lobby", async ({ page }) => {
   await mockThemeApi(page, "PARTICIPANT", { roundStatus: "READY" });
   await page.goto("/lobby");
   await page
-    .getByRole("button", { name: "JOIN GAME WITH CODE #8679DE", exact: true })
+    .getByRole("button", { name: "QUICK JOIN GAME (#8679DE) →", exact: true })
     .click();
   await expect(page).toHaveURL(/\/participant\/waiting$/);
   await expect(
@@ -105,7 +105,7 @@ test("joining an already-active round proceeds to the game", async ({
   await mockThemeApi(page, "PARTICIPANT");
   await page.goto("/participant/lobby");
   await page
-    .getByRole("button", { name: "JOIN GAME WITH CODE #8679DE", exact: true })
+    .getByRole("button", { name: "QUICK JOIN GAME (#8679DE) →", exact: true })
     .click();
   await expect(page).toHaveURL(/\/participant\/game$/);
   expect(

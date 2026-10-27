@@ -13,6 +13,8 @@ import { ApiError } from "../../lib/api/client";
 import { playFixture } from "../participant/playFixture";
 import { AdminGamePage } from "./AdminGamePage";
 import * as claimsApi from '../../lib/api/adminClaims';
+import * as rosterApi from '../../lib/api/roundRoster';
+vi.mock('../../lib/api/roundRoster', () => ({ getRoundRoster: vi.fn() }));
 vi.mock('../../lib/api/adminClaims', () => ({ listAdminClaims: vi.fn(), verifyAdminClaim: vi.fn(), rejectAdminClaim: vi.fn() }));
 vi.mock("../../lib/api/play", () => ({
   readPlayRound: vi.fn(),
@@ -40,6 +42,7 @@ beforeEach(() => {
   vi.mocked(claimsApi.listAdminClaims).mockResolvedValue({ data: [], total: 0, page: 1, limit: 50 });
   vi.stubGlobal("WebSocket", Socket);
   game = playFixture();
+  vi.mocked(rosterApi.getRoundRoster).mockResolvedValue({ roundId: game.id, total: 0, participants: [] });
   game.ticket = null;
   game.draws[0] = { ...game.draws[0]!, answer: "Docker", number: 1 };
   vi.mocked(api.readPlayRound).mockImplementation(async () =>
