@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { BookOpenIcon, XIcon, LightbulbIcon } from './icons/Icons';
 import styles from './GameRulesModal.module.css';
 
 interface GameRulesModalProps {
@@ -33,20 +34,21 @@ export function GameRulesModal({ isOpen, onClose }: GameRulesModalProps) {
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <header className={styles.header}>
           <div className={styles.titleGroup}>
-            <h2 id="rules-modal-title">
-              <span>📖</span> How to Play Tech Tombola
+            <h2 id="rules-modal-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <BookOpenIcon width="18" height="18" aria-hidden="true" />
+              <span>How to Play Tech Tombola</span>
             </h2>
             <p>Official Event Guide & Winning Pattern Rules</p>
           </div>
           <button type="button" className={styles.closeButton} onClick={onClose} aria-label="Close rules dialog">
-            ✕
+            <XIcon width="16" height="16" aria-hidden="true" />
           </button>
         </header>
 
         <div className={styles.body}>
           {/* Critical Rule Highlight */}
           <div className={styles.ruleAlert}>
-            <span aria-hidden="true">💡</span>
+            <LightbulbIcon width="20" height="20" aria-hidden="true" style={{ flexShrink: 0 }} />
             <div>
               <strong>Critical Product Rule: Not a Quiz!</strong>
               <p>

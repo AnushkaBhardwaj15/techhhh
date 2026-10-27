@@ -12,6 +12,7 @@ import {
   type SyncGameRecord,
 } from '../../lib/gameSync';
 import { formatAuditAction, formatAuditActor, formatAuditResource } from './auditFormatters';
+import { XIcon, FileSpreadsheetIcon, MegaphoneIcon, SettingsIcon } from '../../components/icons/Icons';
 import styles from './AdminDashboard.module.css';
 
 interface ImportedQuestion {
@@ -285,7 +286,17 @@ export function AdminDashboard() {
                 setValidationResult(null);
               }}
             >
-              {showImport ? '✕ Close Import' : 'Import question bank'}
+              {showImport ? (
+                <>
+                  <XIcon width="13" height="13" aria-hidden="true" style={{ verticalAlign: '-1px', marginRight: '4px' }} />
+                  Close Import
+                </>
+              ) : (
+                <>
+                  <FileSpreadsheetIcon width="13" height="13" aria-hidden="true" style={{ verticalAlign: '-1px', marginRight: '4px' }} />
+                  Import question bank
+                </>
+              )}
             </button>
             <button
               type="button"
@@ -432,7 +443,27 @@ export function AdminDashboard() {
                     >
                       {game.status}
                     </span>
-
+                    {game.isBroadcast && (
+                      <span
+                        style={{
+                          background: 'var(--retro-orange, #EE640F)',
+                          color: '#FFFFFF',
+                          fontFamily: 'var(--mono)',
+                          fontSize: '11px',
+                          fontWeight: 900,
+                          padding: '3px 8px',
+                          border: '1.5px solid var(--retro-ink, #18130F)',
+                          boxShadow: '1.5px 1.5px 0 var(--retro-ink, #18130F)',
+                          borderRadius: '2px',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '5px',
+                        }}
+                      >
+                        <MegaphoneIcon width="12" height="12" aria-hidden="true" />
+                        SHOWN IN LOBBY
+                      </span>
+                    )}
                     <span className={styles.dateText}>
                       {new Date(game.createdAt).toLocaleDateString()}
                     </span>
@@ -492,6 +523,7 @@ export function AdminDashboard() {
                     className={styles.settingsBtn}
                     onClick={() => setSelectedRoundForAudit(game)}
                   >
+                    <SettingsIcon width="13" height="13" aria-hidden="true" style={{ verticalAlign: '-1px', marginRight: '4px' }} />
                     Settings
                   </button>
                   <button
@@ -544,7 +576,8 @@ export function AdminDashboard() {
                   className={styles.modalCloseBtn}
                   onClick={() => setSelectedRoundForAudit(null)}
                 >
-                  ✕ Close
+                  <XIcon width="13" height="13" aria-hidden="true" style={{ verticalAlign: '-1px', marginRight: '4px' }} />
+                  Close
                 </button>
               </div>
 

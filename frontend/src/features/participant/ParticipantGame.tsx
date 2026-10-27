@@ -13,6 +13,7 @@ import type { AuthenticatedUser } from '../../types/auth';
 import type { PlayState } from '../../types/play';
 import type { ParticipantTicket as Ticket } from '../../types/ticket';
 import { ActionButton } from '../../components/ActionButton';
+import { MegaphoneIcon } from '../../components/icons/Icons';
 import { ParticipantTicket, TicketGrid } from './ParticipantTicket';
 import { ClaimPanel } from './ClaimPanel';
 import { WinnerBanner } from './WinnerBanner';
@@ -344,7 +345,6 @@ function ReferenceTicket({
   pendingCellIds?: ReadonlySet<string>;
   onMark: (id: string, marked: boolean) => void;
 }) {
-  const [numbers, setNumbers] = useState(false);
   if (!game.ticket) return <p role="alert">Your ticket has not been assigned. Contact the admin.</p>;
   const ticket = {
     ...game.ticket,
@@ -355,7 +355,7 @@ function ReferenceTicket({
       ...cell,
       rowIndex: cell.row,
       colIndex: cell.column,
-      keyValue: numbers ? String(cell.number) : cell.term,
+      keyValue: cell.term,
     })),
   };
   return (
@@ -365,9 +365,6 @@ function ReferenceTicket({
           <p className={refStyles.kicker}>YOUR SAVED TICKET</p>
           <h2>#{game.ticket.id.slice(0, 6).toUpperCase()}</h2>
         </div>
-        <ActionButton onClick={() => setNumbers((value) => !value)}>
-          {numbers ? 'Show answer terms' : 'Show numbers'}
-        </ActionButton>
       </div>
       <p className={refStyles.hint}>
         Tap cells to mark or unmark them yourself. Only saved marks matching official calls count for prizes.
@@ -453,7 +450,10 @@ function AuthoritativeParticipantGame({
       {realtime.announcement && (
         <aside className={styles.announcement} aria-live="polite">
           <p>
-            <strong>📢 ANNOUNCEMENT:</strong> {realtime.announcement}
+            <strong>
+              <MegaphoneIcon width="16" height="16" aria-hidden="true" style={{ verticalAlign: 'text-bottom', marginRight: '6px' }} />
+              ANNOUNCEMENT:
+            </strong> {realtime.announcement}
           </p>
           <button type="button" onClick={realtime.dismissAnnouncement} aria-label="Dismiss announcement">
             Dismiss

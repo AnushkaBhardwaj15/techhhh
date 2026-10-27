@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ActionButton } from '../ActionButton';
+import { LogOutIcon } from '../icons/Icons';
 import type { AuthenticatedUser } from '../../types/auth';
 import styles from './Navigation.module.css';
 
@@ -45,7 +46,8 @@ export function AdminTopBar({ onLogout, isLoggingOut = false }: AdminTopBarProps
             onClick={onLogout}
             busy={isLoggingOut}
           >
-            {isLoggingOut ? 'Signing out…' : 'Sign out'}
+            <LogOutIcon width="13" height="13" aria-hidden="true" />
+            <span className={styles.btnLabel}>{isLoggingOut ? 'Signing out…' : 'Sign out'}</span>
           </ActionButton>
         </div>
       </div>

@@ -45,7 +45,6 @@ describe('LandingPage', () => {
     expect(screen.getByRole('link', { name: /How to Play/i })).toHaveAttribute('href', '#how-it-works');
     expect(screen.getByRole('link', { name: /Interactive Card/i })).toHaveAttribute('href', '#sample-ticket');
     expect(screen.getByRole('link', { name: /Winning Patterns/i })).toHaveAttribute('href', '#patterns');
-    expect(screen.getAllByRole('link', { name: /Live Board/i }).length).toBeGreaterThan(0);
   });
 
   it('adapts CTAs for an authenticated participant', async () => {

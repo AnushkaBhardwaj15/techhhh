@@ -13,6 +13,7 @@ import { useParticipantWins } from './useParticipantWins';
 import type { AuthenticatedUser } from '../../types/auth';
 import { formatTicketCode, type ParticipantTicket as Ticket } from '../../types/ticket';
 import { createDefaultTicket } from './fallbackTicket';
+import { LightbulbIcon } from '../../components/icons/Icons';
 import styles from './ParticipantTicket.module.css';
 
 const refreshableRound = new Set(['DRAFT', 'READY', 'RECOVERY_REQUIRED']);
@@ -272,7 +273,10 @@ export function TicketGrid({
           <span>Green: Selected / Marked</span>
         </div>
       </div>
-      <p className={styles.hintText}>💡 Tap any cell to select or unselect it on your ticket!</p>
+      <p className={styles.hintText}>
+        <LightbulbIcon width="14" height="14" aria-hidden="true" style={{ verticalAlign: '-2px', marginRight: '6px' }} />
+        Tap any cell to select or unselect it on your ticket!
+      </p>
     </>
   );
 }

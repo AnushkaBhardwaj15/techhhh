@@ -7,6 +7,7 @@ import { getParticipantTicket } from '../../lib/api/ticket';
 import { formatTicketCode } from '../../types/ticket';
 import type { AuthenticatedUser } from '../../types/auth';
 import type { ParticipantClaim } from '../../types/claims';
+import { CheckCircleIcon, XCircleIcon } from '../../components/icons/Icons';
 import styles from './ParticipantProfile.module.css';
 
 const patternNames: Record<string, string> = {
@@ -280,12 +281,21 @@ export function ParticipantProfile() {
                         <span
                           className={styles.claimBadge}
                           data-status={claim.status}
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}
                         >
-                          {isAccepted
-                            ? '✓ ACCEPTED (WINNER)'
-                            : isRejected
-                            ? '✕ REJECTED'
-                            : '⏳ PENDING VERIFICATION'}
+                          {isAccepted ? (
+                            <>
+                              <CheckCircleIcon width="13" height="13" aria-hidden="true" />
+                              ACCEPTED (WINNER)
+                            </>
+                          ) : isRejected ? (
+                            <>
+                              <XCircleIcon width="13" height="13" aria-hidden="true" />
+                              REJECTED
+                            </>
+                          ) : (
+                            'PENDING VERIFICATION'
+                          )}
                         </span>
                       </div>
 

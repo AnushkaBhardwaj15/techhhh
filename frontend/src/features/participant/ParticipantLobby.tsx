@@ -23,6 +23,7 @@ import {
   type SyncGameRecord,
 } from "../../lib/gameSync";
 import type { AuthenticatedUser } from "../../types/auth";
+import { CopyIcon, AlertTriangleIcon } from "../../components/icons/Icons";
 import styles from "./ParticipantLobby.module.css";
 
 export function ParticipantLobby({ waiting = false }: { waiting?: boolean }) {
@@ -247,7 +248,6 @@ export function ParticipantLobby({ waiting = false }: { waiting?: boolean }) {
     <main className={styles.page}>
       <section className={styles.welcome} style={{ marginBottom: "20px" }}>
         <p className={styles.kicker}>PARTICIPANT LOBBY</p>
-        <h1>Welcome, <em>{user?.name ? user.name.split(' ')[0] : 'Ari'}.</em></h1>
         {event.data && (
           <div className={styles.eventCard} aria-label="Your event" style={{ marginTop: "10px" }}>
             <span className={styles.label} style={{ fontSize: "11px", fontWeight: "bold", color: "var(--color-oxblood, #8C4545)" }}>YOUR EVENT</span>
@@ -289,7 +289,8 @@ export function ParticipantLobby({ waiting = false }: { waiting?: boolean }) {
                   onClick={() => navigator.clipboard.writeText(activeGame.code)}
                   title="Copy code"
                 >
-                  📋 Copy
+                  <CopyIcon width="13" height="13" aria-hidden="true" style={{ verticalAlign: "-1px", marginRight: "4px" }} />
+                  Copy
                 </button>
               </div>
 
@@ -346,7 +347,9 @@ export function ParticipantLobby({ waiting = false }: { waiting?: boolean }) {
 
           {errorMsg && (
             <div className={styles.errorBox} role="alert">
-              <span className={styles.errorIcon}>⚠️</span>
+              <span className={styles.errorIcon}>
+                <AlertTriangleIcon width="15" height="15" aria-hidden="true" />
+              </span>
               <span>{errorMsg}</span>
             </div>
           )}
