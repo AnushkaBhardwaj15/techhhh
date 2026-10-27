@@ -4,15 +4,16 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '';
 const TIMEOUT_MS = 25_000;
 
 export class ApiError extends Error {
-  constructor(public readonly status: number, message: string, public readonly code?: string) {
+  constructor(public readonly status: number, message: string, public readonly code?: string, public readonly requestId?: string) {
     super(message);
     this.name = 'ApiError';
   }
 }
 
-export async function apiRequest<T>(path: string, options: RequestInit = {}): Promise<T | undefined> {
+export async function apiRequest<T>(path: string, options: RequestInit & { timeoutMs?: number } = {}): Promise<T | undefined> {
+  const { timeoutMs = TIMEOUT_MS, ...requestOptions } = options;
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(new DOMException('Request timed out', 'TimeoutError')), TIMEOUT_MS);
+  const timeout = setTimeout(() => controller.abort(new DOMException('Request timed out', 'TimeoutError')), timeoutMs);
   const signal = options.signal
     ? AbortSignal.any([options.signal, controller.signal])
     : controller.signal;
@@ -23,7 +24,7 @@ export async function apiRequest<T>(path: string, options: RequestInit = {}): Pr
 
   try {
     const response = await fetch(`${API_BASE}/api/v1${path}`, {
-      ...options,
+      ...requestOptions,
       signal,
       credentials: 'include',
       headers,
@@ -40,12 +41,13 @@ export async function apiRequest<T>(path: string, options: RequestInit = {}): Pr
       const code = typeof envelope === 'object' && envelope !== null && 'code' in envelope && typeof envelope.code === 'string'
         ? envelope.code
         : undefined;
-      throw new ApiError(response.status, message, code);
+      const bodyRequestId = typeof body === 'object' && body !== null && 'requestId' in body && typeof body.requestId === 'string' ? body.requestId : undefined;
+      throw new ApiError(response.status, message, code, response.headers.get('x-request-id') ?? bodyRequestId);
     }
     return body as T;
   } catch (error) {
     if (error instanceof ApiError) {
-      if (error.status >= 500) reportDiagnostic('api', { ...(method ? { method } : {}), status: error.status });
+      if (error.status >= 500) reportDiagnostic('api', { ...(method ? { method } : {}), status: error.status, requestId: error.requestId });
       throw error;
     }
     if (error instanceof DOMException && error.name === 'AbortError') throw error;

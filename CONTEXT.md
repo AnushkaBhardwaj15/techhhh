@@ -87,3 +87,10 @@ _Avoid_: Root, system owner, superuser
 **Live Display**:
 The public, read-only projector display showing active questions, drawn keys, historical draws, and verified winners in real time.
 _Avoid_: Projector view, scoreboard, public screen, dashboard
+
+
+**Participant Batch**:
+An operator-named group of participant enrollments within one Event, such as
+`testing1`, `testing2`, or `prod`. The name is entered when importing a file,
+not stored as a column in that file. It supports removing test groups together.
+_Avoid_: Academic batch, graduation year, login ID.

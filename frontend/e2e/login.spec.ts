@@ -41,6 +41,7 @@ async function mockAuthentication(page: Page, role?: 'PARTICIPANT' | 'ADMIN' | '
       verifiedWinners: 4, recoveryRequired: false, systemStatus: 'operational',
     }),
   }));
+  await page.route('**/api/v1/play/current', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ game: null, games: [] }) }));
   const event = {
     id: '0d3aa3e6-4c58-4c36-b363-d5f11640ba52', title: 'Tech Tombola 2026', description: 'Annual event', status: 'READY',
     scheduledAt: null, startedAt: null, completedAt: null,
@@ -112,6 +113,42 @@ test('login screen exposes labelled credentials and accessible validation', asyn
   await expect(page.getByRole('heading', { name: /find your winning line/i })).toBeVisible();
   await page.getByRole('button', { name: /sign in/i }).click();
   await expect(page.getByRole('alert')).toContainText('valid email');
+});
+
+test('audit regression: login removes demo credentials and never stores passwords', async ({ page }) => {
+  await mockAuthentication(page, 'ADMIN');
+  await page.goto('/login');
+  await expect(page.getByRole('button', { name: 'Admin 1', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Player 1', exact: true })).toHaveCount(0);
+  await page.getByLabel('Email address').fill('attendee@example.test');
+  await page.getByLabel('Password', { exact: true }).fill('private-password');
+  await page.getByRole('button', { name: /sign in/i }).click();
+  await expect(page).toHaveURL(/\/admin$/);
+  expect(await page.evaluate(() => localStorage.getItem('tt_participant_pwd'))).toBeNull();
+  expect(await page.evaluate(() => sessionStorage.getItem('tt_participant_pwd'))).toBeNull();
+});
+
+test('audit regression: admin displays recurring server failures and backs off polling', async ({ page }) => {
+  await mockAuthentication(page, 'ADMIN', true);
+  let requests = 0;
+  await page.route('**/api/v1/play/current', (route) => {
+    requests++;
+    return route.fulfill({ status: 500, contentType: 'application/json', headers: { 'x-request-id': 'req_e2e' }, body: JSON.stringify({ error: { code: 'INTERNAL_ERROR', message: 'Unavailable' } }) });
+  });
+  await page.clock.install();
+  await page.goto('/admin');
+  await expect(page.getByText(/Could not refresh games/)).toBeVisible();
+  await expect(page.getByText('Participants', { exact: true })).toBeVisible();
+  await expect(page.getByText('Click to create and start a game')).toHaveCount(0);
+  // Vite development mode runs effects twice under React StrictMode.
+  const initialRequests = requests;
+  expect(initialRequests).toBeLessThanOrEqual(2);
+  await page.clock.fastForward(10_000);
+  expect(requests).toBe(initialRequests);
+  await page.clock.fastForward(5_000);
+  await expect.poll(() => requests).toBe(initialRequests + 1);
+  await page.clock.fastForward(20_000);
+  expect(requests).toBe(initialRequests + 1);
 });
 
 test('login screen fits a narrow mobile viewport without horizontal overflow', async ({ page }) => {

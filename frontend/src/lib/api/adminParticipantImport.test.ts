@@ -9,7 +9,7 @@ describe('admin Participant import API', () => {
     const fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify(report), { headers: { 'content-type': 'application/json' } }));
     vi.stubGlobal('fetch', fetch);
     const file = new File(['name,email\nSam,sam@example.test'], 'players.csv', { type: 'text/csv' });
-    await expect(importAdminParticipants({ eventId: '0d3aa3e6-4c58-4c36-b363-d5f11640ba52', file, idempotencyKey: 'attempt-1' })).resolves.toEqual(report);
+    await expect(importAdminParticipants({ eventId: '0d3aa3e6-4c58-4c36-b363-d5f11640ba52', file, batchName: 'testing1', idempotencyKey: 'attempt-1' })).resolves.toEqual(report);
     const [url, options] = fetch.mock.calls[0] as [string, RequestInit];
     const headers = new Headers(options.headers);
     expect(url).toBe('/api/v1/admin/participants/import');
@@ -17,6 +17,7 @@ describe('admin Participant import API', () => {
     expect(headers.has('content-type')).toBe(false);
     expect(options.body).toBeInstanceOf(FormData);
     expect((options.body as FormData).get('eventId')).toBe('0d3aa3e6-4c58-4c36-b363-d5f11640ba52');
+    expect((options.body as FormData).get('batchName')).toBe('testing1');
     expect((options.body as FormData).get('file')).toMatchObject({ name: 'players.csv' });
   });
 

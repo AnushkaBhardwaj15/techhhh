@@ -72,16 +72,22 @@ describe('LoginPage', () => {
     expect(await screen.findByText(label)).toBeInTheDocument();
     expect(authApi.login).toHaveBeenCalledWith('attendee@example.test', 'password');
   });
-  it('renders the new title and fills participant and admin presets', async () => {
+  it('does not expose shared demo account credentials', () => {
+    setup();
+    expect(screen.queryByRole('button', { name: 'Player 2' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Admin 3' })).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Password')).toHaveValue('');
+  });
+  it('removes legacy stored passwords without persisting the submitted credential', async () => {
+    localStorage.setItem('tt_participant_pwd', 'legacy');
+    sessionStorage.setItem('tt_participant_pwd', 'legacy');
+    vi.mocked(authApi.login).mockResolvedValue({ id: 'u1', email: 'a@example.test', name: 'Ari', role: 'PARTICIPANT' });
     const user = setup();
-    expect(screen.getByRole('link', { name: /Back to home/i })).toHaveAttribute('href', '/');
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Tech Tambola');
-    await user.click(screen.getByRole('button', { name: 'Player 2' }));
-    expect(screen.getByRole('textbox', { name: /Email address/ })).toHaveValue('player2@techtombola.internal');
-    expect(screen.getByLabelText('Password')).toHaveValue('PlayerPass123!');
-    await user.click(screen.getByRole('button', { name: 'Admin 3' }));
-    expect(screen.getByRole('textbox', { name: /Email address/ })).toHaveValue('admin3@techtombola.internal');
-    expect(authApi.login).not.toHaveBeenCalled();
+    await user.type(screen.getByRole('textbox', { name: /Email address/ }), 'a@example.test');
+    await user.type(screen.getByLabelText('Password'), 'valid-password');
+    await user.click(screen.getByRole('button', { name: /sign in/i }));
+    await waitFor(() => expect(localStorage.getItem('tt_participant_pwd')).toBeNull());
+    expect(sessionStorage.getItem('tt_participant_pwd')).toBeNull();
   });
   it('toggles password visibility without submitting', async () => {
     const user = setup();

@@ -1,3 +1,5 @@
+import type { EventSummary } from '../events/event.types.ts';
+import type { BatchTransaction } from './participant-batch.repository.ts';
 import { getDb } from '../../db/client.ts';
 import { auditService, type AuditService } from '../audit/audit.service.ts';
 import { eventRepository, type IEventRepository } from '../events/event.repository.ts';
@@ -22,15 +24,17 @@ export class ParticipantService {
     private readonly userRepo: IUserRepository = userRepository,
     private readonly sessionRepo: ISessionRepository = sessionRepository,
     private readonly audit: AuditService = auditService,
-    private readonly email: IEmailService = emailService
+    private readonly email: IEmailService = emailService,
+    private readonly database: typeof getDb = getDb
   ) {}
 
   async createParticipant(
     actorId: string,
     input: CreateParticipantInput,
-    context?: { ip?: string; userAgent?: string; requestId?: string }
+    context?: { ip?: string; userAgent?: string; requestId?: string },
+    importContext?: { transaction: BatchTransaction; afterCommit: Array<() => Promise<void>>; event?: EventSummary }
   ): Promise<ParticipantSummary> {
-    const event = await this.eventRepo.findById(input.eventId);
+    const event = importContext?.event ?? await this.eventRepo.findById(input.eventId, importContext?.transaction);
     if (!event) {
       throw new NotFoundError(`Event with id '${input.eventId}' not found`);
     }
@@ -46,7 +50,7 @@ export class ParticipantService {
     const externalId = input.externalId?.trim() || null;
 
     if (externalId) {
-      const existingExt = await this.repo.findByExternalIdAndEvent(input.eventId, externalId);
+      const existingExt = await this.repo.findByExternalIdAndEvent(input.eventId, externalId, importContext?.transaction);
       if (existingExt) {
         throw new ConflictError(
           `External ID '${externalId}' already exists in this event`,
@@ -56,11 +60,18 @@ export class ParticipantService {
     }
 
     // Upfront check for existing user enrolled in this event
-    const existingUser = await this.userRepo.findByEmail(email);
+    const existingUser = await this.userRepo.findByEmail(email, importContext?.transaction);
+    if (existingUser?.adminProfile) {
+      throw new ConflictError('An administrator cannot be enrolled as a participant');
+    }
+    if (existingUser && input.password) {
+      throw new ConflictError('An account with this email already exists; its password was preserved');
+    }
     if (existingUser) {
       const existingEnrollment = await this.repo.findByUserIdAndEvent(
         existingUser.id,
-        input.eventId
+        input.eventId,
+        importContext?.transaction
       );
       if (existingEnrollment) {
         throw new ConflictError(
@@ -71,13 +82,17 @@ export class ParticipantService {
     }
 
     // Generate secure temporary password
-    const temporaryPassword = generateSecureTemporaryPassword();
+    const temporaryPassword = input.password ?? generateSecureTemporaryPassword();
     const passwordHash = await hashPassword(temporaryPassword);
 
-    const db = getDb();
+    const db = importContext?.transaction ?? this.database();
     let created: ParticipantSummary;
 
     await db.transaction(async (tx) => {
+      await this.repo.lockEvent(input.eventId, tx);
+      if (!importContext && input.password !== undefined && await this.userRepo.findByEmail(email, tx)) {
+        throw new ConflictError('An account with this email already exists; its password was preserved');
+      }
       try {
         created = await this.repo.create(
           {
@@ -88,6 +103,8 @@ export class ParticipantService {
           {
             eventId: input.eventId,
             externalId,
+            batchName: input.batchName,
+            emailDeliveryStatus: input.password !== undefined ? 'NOT_REQUIRED' : 'PENDING',
           },
           tx
         );
@@ -131,22 +148,23 @@ export class ParticipantService {
       );
     });
 
-    // Send one-time credential through email boundary
-    const emailResult = await this.email.sendParticipantCredentials(
-      email,
-      input.name.trim(),
-      temporaryPassword,
-      event.title
-    );
+    // Supplied credentials are distributed by the importing administrator.
+    if (input.password !== undefined) return created!;
 
-    if (emailResult.success) {
-      await this.repo.updateEmailDelivery(created!.id, 'SENT');
-      created!.emailDeliveryStatus = 'SENT';
-    } else {
-      await this.repo.updateEmailDelivery(created!.id, 'FAILED', emailResult.error);
-      created!.emailDeliveryStatus = 'FAILED';
-      created!.emailDeliveryError = emailResult.error || 'Failed to deliver email';
-    }
+    // Legacy generated credentials are emailed only after the outer import commits.
+    const deliver = async () => {
+      const emailResult = await this.email.sendParticipantCredentials(email, input.name.trim(), temporaryPassword, event.title);
+      if (emailResult.success) {
+        await this.repo.updateEmailDelivery(created!.id, 'SENT');
+        created!.emailDeliveryStatus = 'SENT';
+      } else {
+        await this.repo.updateEmailDelivery(created!.id, 'FAILED', emailResult.error);
+        created!.emailDeliveryStatus = 'FAILED';
+        created!.emailDeliveryError = emailResult.error || 'Failed to deliver email';
+      }
+    };
+    if (importContext) importContext.afterCommit.push(deliver);
+    else await deliver();
 
     return created!;
   }
@@ -214,7 +232,7 @@ export class ParticipantService {
       await this.sessionRepo.revokeAllForUser(existing.userId);
     }
 
-    const db = getDb();
+    const db = this.database();
     let updated: ParticipantSummary;
 
     await db.transaction(async (tx) => {

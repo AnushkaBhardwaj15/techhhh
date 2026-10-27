@@ -28,12 +28,15 @@ export function AdminGamePage() {
   const [viewingIndex, setViewingIndex] = useState<number | null>(null);
   const [claimActionId, setClaimActionId] = useState<string | null>(null);
   const [claimFeedback, setClaimFeedback] = useState<string>("");
+  const [claimPage, setClaimPage] = useState(1);
+  useEffect(() => setClaimPage(1), [id]);
   const busy = useRef(false);
 
   const claimsQuery = useQuery({
-    queryKey: ["admin-claims-game", id],
-    queryFn: () => listAdminClaims({ limit: 50 }),
-    refetchInterval: 1000,
+    queryKey: ["admin-claims-game", id, claimPage],
+    queryFn: ({ signal }) => listAdminClaims({ roundId: id, status: 'PENDING_VERIFICATION', page: claimPage, limit: 50, signal }),
+    enabled: Boolean(id),
+    refetchInterval: 15_000,
   });
   const pendingClaims = (claimsQuery.data?.data ?? []).filter(
     (c) => (c.roundId === id || !id) && c.status === "PENDING_VERIFICATION"
@@ -435,14 +438,16 @@ export function AdminGamePage() {
             <section className={styles.claimsAlertSection} aria-label="Participant claims review">
               <div className={styles.claimsAlertHeader}>
                 <h3 className={styles.claimsAlertTitle}>
-                  <Bell size={18} weight="bold" aria-hidden="true" /> Participant Claims {pendingClaims.length > 0 ? `(${pendingClaims.length} pending)` : "(0 pending)"}
+                  🔔 Participant Claims ({claimsQuery.data?.total ?? 0} pending)
                 </h3>
                 <Link to="/admin/claims" style={{ color: "var(--color-primary-cyan, #00e5ff)", fontSize: "0.85rem", textDecoration: "underline" }}>
                   View All Claims →
                 </Link>
               </div>
               {claimFeedback && <p style={{ color: "var(--color-primary-cyan, #00e5ff)", marginBottom: "0.5rem", fontSize: "0.9rem" }}>{claimFeedback}</p>}
-              {pendingClaims.length === 0 ? (
+              {claimsQuery.error && <p role="alert">Could not load pending claims. Please retry.</p>}
+              {claimsQuery.isPending && <p role="status">Loading pending claims…</p>}
+              {pendingClaims.length === 0 && !claimsQuery.error && !claimsQuery.isPending ? (
                 <p style={{ color: "var(--muted, #888)", margin: 0, fontSize: "0.9rem" }}>
                   No pending claims right now. When participants press Claim, it will appear here for your approval.
                 </p>
@@ -479,6 +484,11 @@ export function AdminGamePage() {
                   ))}
                 </div>
               )}
+              <nav aria-label="Pending claims pages">
+                <button type="button" disabled={claimPage <= 1 || claimsQuery.isFetching} onClick={() => setClaimPage((page) => page - 1)}>Previous claims</button>
+                <span>Page {claimPage}</span>
+                <button type="button" disabled={!claimsQuery.data || claimPage * 50 >= claimsQuery.data.total || claimsQuery.isFetching} onClick={() => setClaimPage((page) => page + 1)}>Next claims</button>
+              </nav>
             </section>
 
             <section className={playStyles.panel}>

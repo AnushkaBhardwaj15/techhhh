@@ -1,9 +1,9 @@
+import { evaluatePattern } from "../claims/winner.domain.ts";
 import { ConflictError, ValidationError } from "../../shared/errors/index.ts";
 import {
   PLAY_PATTERNS,
   type PlayActor,
   type PlayCell,
-  type PlayDraw,
   type PlayPattern,
   type PlayState,
   type PlayStatus,
@@ -155,55 +155,10 @@ export function togglePlayMark(
     throw new ValidationError(
       "This cell does not belong to your assigned ticket.",
     );
-  cell.marked = marked;
-}
-export function eligiblePlayCells(
-  pattern: PlayPattern,
-  cells: PlayCell[],
-  called: Set<string> | PlayDraw[],
-): PlayCell[] {
-  const isCalled = (c: PlayCell): boolean => {
-    if (Array.isArray(called)) {
-      return called.some(
-        (d) =>
-          d.keyId === c.keyId ||
-          (d.number !== undefined && c.number !== undefined && d.number === c.number) ||
-          (Boolean(d.answer) && Boolean(c.term) && d.answer.trim().toLowerCase() === c.term.trim().toLowerCase())
-      );
-    }
-    return (
-      called.has(c.keyId) ||
-      (c.number !== undefined && called.has(String(c.number))) ||
-      (Boolean(c.term) && called.has(c.term.trim().toLowerCase()))
-    );
-  };
-
-  const usable = cells.filter((c) => c.marked && isCalled(c));
-  if (pattern === "EARLY_5")
-    return usable.length >= 5 ? usable.slice(0, 5) : [];
-  if (pattern === "FULL_HOUSE" || pattern === "SECOND_FULL_HOUSE")
-    return cells.length === 15 && usable.length === 15 ? usable : [];
-  if (pattern === "FOUR_CORNERS") {
-    // 1. Check outer populated corners of Row 0 and Row 2
-    const row0 = [...cells.filter((c) => c.row === 0)].sort((a, b) => a.column - b.column);
-    const row2 = [...cells.filter((c) => c.row === 2)].sort((a, b) => a.column - b.column);
-    if (row0.length >= 2 && row2.length >= 2) {
-      const corners = [row0[0], row0[row0.length - 1], row2[0], row2[row2.length - 1]].filter(
-        (c): c is PlayCell => Boolean(c)
-      );
-      if (corners.length === 4 && corners.every((c) => usable.some((u) => u.id === c.id))) {
-        return corners;
-      }
-    }
-    // 2. Fallback: check exact grid corners (column 0 and 8)
-    const gridCorners = usable.filter(
-      (c) => (c.row === 0 || c.row === 2) && (c.column === 0 || c.column === 8),
-    );
-    return gridCorners.length === 4 ? gridCorners : [];
+  if (marked && !state.draws.some((draw) => draw.keyId === cell.keyId && draw.revealed)) {
+    throw new ValidationError("Only an officially revealed key can be marked.");
   }
-  const row = { TOP_LINE: 0, MIDDLE_LINE: 1, BOTTOM_LINE: 2 }[pattern];
-  const line = usable.filter((c) => c.row === row);
-  return line.length === 5 ? line : [];
+  cell.marked = marked;
 }
 export function claimPrize(
   state: PlayState,
@@ -233,39 +188,15 @@ export function claimPrize(
       warning:
         "Second Full House is for another participant after the first Full House. No penalty was applied.",
     };
-  const calledSet = new Set<string>();
-  for (const d of state.draws) {
-    if (d.keyId) calledSet.add(d.keyId);
-    if (d.number !== undefined) calledSet.add(String(d.number));
-    if (d.answer) calledSet.add(d.answer.trim().toLowerCase());
-  }
-  const proof = eligiblePlayCells(
-    pattern,
-    state.ticket.cells,
-    calledSet,
-  );
-  if (!proof.length)
-    return {
-      accepted: false,
-      warning:
-        "Your saved marks and the official calls do not complete this pattern yet. Keep playing—no points or cells were removed.",
-    };
-  for (const c of proof) {
-    c.marked = true;
-  }
-  state.wins.push({
-    id: id(),
-    claimId: id(),
-    participantId: state.ticket.participantId,
-    userId: actor.userId,
-    name: "",
-    pattern,
-    points: PLAY_POINTS[pattern],
-    createdAt: at,
-  });
-  if (pattern === "FULL_HOUSE") state.closingSequence = state.draws.length;
-  if (pattern === "SECOND_FULL_HOUSE") state.status = "COMPLETED";
-  return { accepted: true, points: PLAY_POINTS[pattern] };
+  const eligible = evaluatePattern(pattern, state.ticket.cells.map(cell => ({
+    keyId: cell.keyId, rowIndex: cell.row, colIndex: cell.column,
+  })), new Set(state.draws.map(draw => draw.keyId)));
+  if (!eligible) return {
+    accepted: false,
+    warning: "The official draws do not complete this pattern on your ticket yet. No points or cells were removed.",
+  };
+  return { accepted: true, claimId: id(), pattern };
+
 }
 export function publicPlayState(state: PlayState, admin = false) {
   return {

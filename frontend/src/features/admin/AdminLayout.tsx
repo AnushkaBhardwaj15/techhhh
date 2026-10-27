@@ -5,6 +5,7 @@ import styles from './AdminLayout.module.css';
 
 const links = [
   ['Dashboard', '/admin'],
+  ['Participants', '/admin/participants'],
   ['Claims', '/admin/claims'],
   ['Winners', '/admin/winners'],
   ['Audit', '/admin/audit'],

@@ -135,9 +135,14 @@ describe("reference game domain", () => {
       callQuestion(s, undefined, Math.random, "extra", s.createdAt),
     ).toThrow();
   });
-  test("permits manual own-cell marking before calls and unmarking; rejects foreign cells", () => {
+  test("rejects undrawn and unrevealed marks, permits revealed own-cell marks and unmarking", () => {
     const s = fixture();
     const cell = s.ticket!.cells[0]!;
+    expect(() => togglePlayMark(s, cell.id, true)).toThrow();
+    expect(cell.marked).toBe(false);
+    callQuestion(s, cell.number, Math.random, "draw", s.createdAt);
+    expect(() => togglePlayMark(s, cell.id, true)).toThrow();
+    revealAnswers(s, [1]);
     togglePlayMark(s, cell.id, true);
     expect(cell.marked).toBe(true);
     togglePlayMark(s, cell.id, false);
@@ -160,68 +165,30 @@ describe("reference game domain", () => {
     expect(JSON.stringify(s)).toBe(before);
   });
   test.each(PLAY_PATTERNS.filter((p) => p !== "SECOND_FULL_HOUSE"))(
-    "valid %s uses saved marks intersecting calls and awards reference points",
+    "eligible %s submits a pending claim from official draws without requiring marks or awarding a winner",
     (pattern) => {
       const s = fixture();
       callTicket(s);
-      expect(
-        claimPrize(s, pattern, actor, () => crypto.randomUUID(), s.createdAt)
-          .accepted,
-      ).toBe(false);
-      s.ticket!.cells.forEach((c) => (c.marked = true));
-      expect(
-        claimPrize(s, pattern, actor, () => crypto.randomUUID(), s.createdAt),
-      ).toEqual({ accepted: true, points: PLAY_POINTS[pattern] });
       const before = JSON.stringify(s);
-      expect(
-        claimPrize(s, pattern, actor, () => crypto.randomUUID(), s.createdAt)
-          .accepted,
-      ).toBe(false);
+      expect(claimPrize(s, pattern, actor, () => "claim-id", s.createdAt))
+        .toEqual({ accepted: true, claimId: "claim-id", pattern });
       expect(JSON.stringify(s)).toBe(before);
     },
   );
-  test("second house requires another participant after first, then completes round", () => {
+  test("second house requires an already verified first house belonging to another participant", () => {
     const s = fixture();
     callTicket(s);
-    s.ticket!.cells.forEach((c) => (c.marked = true));
-    expect(
-      claimPrize(
-        s,
-        "SECOND_FULL_HOUSE",
-        actor,
-        () => crypto.randomUUID(),
-        s.createdAt,
-      ).accepted,
-    ).toBe(false);
-    claimPrize(s, "FULL_HOUSE", actor, () => crypto.randomUUID(), s.createdAt);
-    expect(
-      claimPrize(
-        s,
-        "SECOND_FULL_HOUSE",
-        actor,
-        () => crypto.randomUUID(),
-        s.createdAt,
-      ).accepted,
-    ).toBe(false);
-    s.ticket!.participantId = "other";
-    expect(
-      claimPrize(
-        s,
-        "SECOND_FULL_HOUSE",
-        { ...actor, userId: "other" },
-        () => crypto.randomUUID(),
-        s.createdAt,
-      ),
-    ).toEqual({ accepted: true, points: 30 });
-    expect(s.status).toBe("COMPLETED");
+    expect(claimPrize(s, "SECOND_FULL_HOUSE", actor, () => "claim", s.createdAt).accepted).toBe(false);
+    s.wins.push({ id: "winner", claimId: "claim", participantId: "other", userId: "other", name: "Other", pattern: "FULL_HOUSE", points: 50, createdAt: s.createdAt });
+    expect(claimPrize(s, "SECOND_FULL_HOUSE", actor, () => "claim-id", s.createdAt))
+      .toEqual({ accepted: true, claimId: "claim-id", pattern: "SECOND_FULL_HOUSE" });
+    expect(s.status).toBe("ACTIVE");
   });
-  test("closing ends after ten additional calls", () => {
+  test("closing ends after ten additional calls following a host-verified full house", () => {
     const s = fixture();
     callTicket(s);
-    s.ticket!.cells.forEach((c) => (c.marked = true));
-    claimPrize(s, "FULL_HOUSE", actor, () => crypto.randomUUID(), s.createdAt);
-    for (let i = 0; i < 9; i++)
-      callQuestion(s, undefined, Math.random, crypto.randomUUID(), s.createdAt);
+    s.closingSequence = s.draws.length;
+    for (let i = 0; i < 9; i++) callQuestion(s, undefined, Math.random, crypto.randomUUID(), s.createdAt);
     expect(s.status).toBe("ACTIVE");
     callQuestion(s, undefined, Math.random, crypto.randomUUID(), s.createdAt);
     expect(s.status).toBe("COMPLETED");

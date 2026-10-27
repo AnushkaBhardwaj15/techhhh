@@ -5,8 +5,9 @@ export interface ParticipantSummary {
   email: string;
   name: string;
   externalId: string | null;
+  batchName?: string | null;
   status: 'ACTIVE' | 'INACTIVE';
-  emailDeliveryStatus: 'PENDING' | 'SENT' | 'FAILED';
+  emailDeliveryStatus: 'PENDING' | 'SENT' | 'FAILED' | 'NOT_REQUIRED';
   emailDeliveryError: string | null;
   createdAt: Date;
   updatedAt: Date;
@@ -17,6 +18,8 @@ export interface CreateParticipantInput {
   email: string;
   name: string;
   externalId?: string | null;
+  password?: string;
+  batchName?: string;
 }
 
 export interface UpdateParticipantInput {

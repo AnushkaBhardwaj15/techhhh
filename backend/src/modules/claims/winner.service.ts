@@ -4,7 +4,7 @@ import type { IIdempotencyRepository } from '../../shared/idempotency/idempotenc
 import type { AuditService } from '../audit/audit.service.ts';
 import type { IDrawRepository } from '../draws/draw.repository.ts';
 import type { ITicketRepository } from '../tickets/ticket.types.ts';
-import { evaluatePattern, evaluateWinnerVerification, selectWinningCellIds } from './winner.domain.ts';
+import { evaluatePattern, evaluateReferenceWinTransition, evaluateWinnerVerification, selectWinningCellIds } from './winner.domain.ts';
 import type { IClaimRepository } from './claim.repository.ts';
 import type { IWinnerRepository, WinnerListOptions } from './winner.repository.ts';
 
@@ -79,6 +79,10 @@ export class WinnerService {
     const storageKey = this.scopedKey(params.actorId, `verify:${params.claimId}`, params.idempotencyKey);
 
     const committed = await this.transactionRunner.transaction(async (tx) => {
+      const identity = await this.claimRepo.findById(params.claimId, tx);
+      if (!identity) throw new NotFoundError('Claim not found', 'CLAIM_NOT_FOUND');
+      // Reference mutations consistently lock round -> claim -> pattern.
+      const reference = await this.winnerRepo.lockReferenceRound(identity.roundId, tx);
       const claim = await this.claimRepo.lockById(params.claimId, tx);
       if (!claim) throw new NotFoundError('Claim not found', 'CLAIM_NOT_FOUND');
 
@@ -105,26 +109,20 @@ export class WinnerService {
       })) : [];
       const drawnKeys = await this.drawRepo.listDrawnKeysBySequence(claim.roundId, tx);
       const drawnKeyIds = new Set(drawnKeys.map((draw) => draw.keyId));
-      let eligible = evaluatePattern(
+      const eligible = evaluatePattern(
         claim.patternType as Parameters<typeof evaluatePattern>[0],
         ticketCells,
         drawnKeyIds
       );
-      if (!eligible && params.adminOverride) {
-        eligible = true;
-      }
 
       const verifiedCount = await this.winnerRepo.countByRoundPattern(claim.roundId, claim.patternType, tx);
-      let decision = evaluateWinnerVerification({
+      const decision = evaluateWinnerVerification({
         eligible,
         patternEnabled: pattern.enabled,
         patternStatus: pattern.status,
         verifiedWinnerCount: verifiedCount,
         maxWinners: pattern.maxWinners,
       });
-      if (params.adminOverride && decision.outcome === 'REJECT') {
-        decision = { outcome: 'VERIFY', closesPattern: true };
-      }
       if (decision.outcome === 'REJECT') {
         if (decision.status === 'REJECTED_PATTERN_ALREADY_CLOSED' && pattern.status === 'OPEN') {
           await this.claimRepo.closePattern(claim.roundId, claim.patternType, tx);
@@ -141,6 +139,7 @@ export class WinnerService {
         });
       }
 
+      const transition = reference ? evaluateReferenceWinTransition(claim.patternType, claim.participantId, reference) : {};
       const now = new Date();
       const winner = await this.winnerRepo.create(
         {
@@ -154,6 +153,7 @@ export class WinnerService {
         },
         tx
       );
+      await this.winnerRepo.updateReferenceRound(claim.roundId, transition, tx);
       await this.claimRepo.updateStatus(
         claim.id,
         { status: 'VERIFIED', rejectionReason: null, verifiedBy: params.actorId, verifiedAt: now },
@@ -202,6 +202,7 @@ export class WinnerService {
       return {
         outcome,
         replayed: false as const,
+        completedRound: transition.status === 'COMPLETED',
         event: {
           type: 'WINNER_VERIFIED',
           eventId: context.eventId,
@@ -223,6 +224,10 @@ export class WinnerService {
     if (!committed.replayed && 'event' in committed && committed.event && this.realtimePublisher) {
       try {
         await this.realtimePublisher.broadcastCommitted(committed.event);
+        if (committed.completedRound) await this.realtimePublisher.broadcastCommitted({
+          type: 'ROUND_COMPLETED', eventId: committed.event.eventId, roundId: committed.event.roundId,
+          occurredAt: committed.event.occurredAt, payload: { status: 'COMPLETED' },
+        });
       } catch (error) {
         console.error('Failed to broadcast WINNER_VERIFIED event:', error);
       }
@@ -282,9 +287,9 @@ export class WinnerService {
     return committed.outcome.body;
   }
 
-  async listAdminClaims(options: { page?: number; limit?: number } = {}) {
+  async listAdminClaims(options: { page?: number; limit?: number; roundId?: string; status?: string } = {}) {
     const pagination = this.normalizePagination(options);
-    const { data, total } = await this.claimRepo.listAll(pagination);
+    const { data, total } = await this.claimRepo.listAll({ ...pagination, roundId: options.roundId, status: options.status });
     return {
       data: data.map((claim) => ({
         id: claim.id,
@@ -312,7 +317,7 @@ export class WinnerService {
 
   async listParticipantWins(userId: string, eventId: string, options: { page?: number; limit?: number } = {}) {
     let participantId = await this.winnerRepo.findParticipantIdByUserId(userId, eventId);
-    if (!participantId) participantId = userId;
+    if (!participantId) return { data: [], total: 0, ...this.normalizePagination(options) };
     const pagination = this.normalizePagination(options);
     const { data, total } = await this.winnerRepo.listByParticipant(participantId, pagination);
     const winners = await Promise.all(data.map(async (winner) => {

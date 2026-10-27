@@ -9,6 +9,11 @@ vi.mock("../../lib/api/play", () => ({
   readPublicPlay: vi.fn(),
   readPlayRound: vi.fn(),
 }));
+vi.mock("../../lib/api/liveDisplay", () => ({
+  getLiveEvent: vi.fn().mockResolvedValue(null),
+  getLiveRound: vi.fn().mockResolvedValue(null),
+  getLiveDraws: vi.fn().mockResolvedValue({ data: [], roundId: null }),
+}));
 class Socket {
   static instances: Socket[] = [];
   onopen?: () => void;
@@ -71,7 +76,7 @@ describe("reference live display", () => {
     };
     mount();
     expect(await screen.findByText("OFFICIAL ANSWER")).toBeVisible();
-    expect(screen.getAllByText("Docker")).toHaveLength(2);
+    expect(screen.getByText("Docker")).toBeVisible();
   });
   it("shows standings supplied by the server", async () => {
     game.standings = [{ name: "Ari", points: 50 }];

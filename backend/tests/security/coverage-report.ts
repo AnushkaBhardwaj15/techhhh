@@ -13,6 +13,7 @@ function scopeEvidence(entry: string): string {
   if (entry.includes('/participant/draws')) return 'session-derived Event Draw history, cross-Event Round 404, and paginated future-Key exclusion — draw-engine integration tests';
   if (entry.includes('/participant/event') || entry.includes('/participant/round/current')) return 'session-derived Event/Round — participant + round-operation integration tests';
   if (entry.includes('/api/v1/ws')) return 'session and Event/Round subscription — realtime route integration tests';
+  if (entry.includes('/admin/participant-batches')) return 'Event-scoped named batches � participant batch route, persistence and concurrency tests';
   if (entry.includes('/admin/participants')) return 'Event-scoped participant Profiles — participant + admin integration tests';
   if (entry.includes('/admin/questions') || entry.includes('/admin/keys')) return 'cross-Event Key/Question association — question integration tests';
   if (entry.includes('/admin/rounds')) return 'Round/Event relation and Draw scope — round-operation + draw-engine integration tests';

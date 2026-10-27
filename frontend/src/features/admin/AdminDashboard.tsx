@@ -41,6 +41,8 @@ export function AdminDashboard() {
   const dashboard = useAdminDashboard(user?.id ?? 'admin');
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState('');
+  const [syncError, setSyncError] = useState('');
+  const [gamesLoading, setGamesLoading] = useState(true);
   const [games, setGames] = useState<SyncGameRecord[]>([]);
   const [commandingId, setCommandingId] = useState<string | null>(null);
   const [broadcastingId, setBroadcastingId] = useState<string | null>(null);
@@ -91,13 +93,24 @@ export function AdminDashboard() {
 
   // Load and subscribe to game sync
   useEffect(() => {
-    fetchActiveGame().then(({ games: all }) => setGames(all)).catch(() => setError('Could not load games. Check your connection.'));
-
-    const unsubscribe = subscribeToGameSync(() => {
-      fetchActiveGame().then(({ games: all }) => setGames(all)).catch(() => setError('Could not refresh games.'));
+    const controller = new AbortController();
+    const update = ({ games: all }: Awaited<ReturnType<typeof fetchActiveGame>>) => {
+      if (controller.signal.aborted) return;
+      setGames(all);
+      setSyncError('');
+      setGamesLoading(false);
+    };
+    const failed = () => {
+      if (controller.signal.aborted) return;
+      setSyncError('Could not refresh games. Showing the last available snapshot; retrying automatically.');
+      setGamesLoading(false);
+    };
+    void fetchActiveGame(controller.signal).then(update).catch(failed);
+    const unsubscribe = subscribeToGameSync(() => {}, {
+      onSnapshot: update,
+      onError: failed,
     });
-
-    return unsubscribe;
+    return () => { controller.abort(); unsubscribe(); };
   }, []);
 
   // Requirement: "+Create Game" generates fresh code, updates server, and redirects to /game (Point 3)
@@ -155,7 +168,7 @@ export function AdminDashboard() {
           <section aria-label="Operational metrics">
             {dashboard.data.recoveryRequired && (
               <p className={styles.recovery} role="alert">
-                Recovery is required for the active Round. Review the Round before resuming operations.
+                An interrupted Round in this Event requires recovery. Review it before resuming that Round.
               </p>
             )}
             <div className={styles.summary} aria-label="Event and active Round">
@@ -416,7 +429,10 @@ export function AdminDashboard() {
           </section>
         )}
 
-        {!dashboard.data && error && <p role="alert">{error}</p>}
+        {error && <p role="alert">{error}</p>}
+        {syncError && <p role="alert">{syncError}</p>}
+        {dashboard.error && <p role="alert">Could not refresh operational metrics. Retry when your connection is restored.</p>}
+        {gamesLoading && <p role="status">Loading games…</p>}
         {/* Saved rounds */}
         {games.length > 0 ? (
           <div className={styles.gamesList}>
@@ -525,7 +541,7 @@ export function AdminDashboard() {
               </div>
             ))}
           </div>
-        ) : (
+        ) : !gamesLoading && !syncError ? (
           /* Empty state matching Image 1 */
           <div className={styles.emptyState}>
             <p className={styles.emptyText}>Click to create and start a game</p>
@@ -538,7 +554,7 @@ export function AdminDashboard() {
               {creating ? 'Creating…' : '+ Create Game'}
             </button>
           </div>
-        )}
+        ) : null}
 
         {/* Round Settings & Audits Modal */}
         {selectedRoundForAudit && (

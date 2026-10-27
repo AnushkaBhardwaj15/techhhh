@@ -8,7 +8,7 @@ import {
   ValidationError,
 } from "../../shared/errors/index.ts";
 import { DEFAULT_TECHNICAL_BANK } from "./technical-bank.ts";
-import { generateReferenceCells, PLAY_POINTS } from "./play.domain.ts";
+import { generateReferenceCells, PLAY_POINTS, togglePlayMark } from "./play.domain.ts";
 import {
   PLAY_PATTERNS,
   type PlayActor,
@@ -27,11 +27,16 @@ const iso = (value: string | Date) => new Date(value).toISOString();
 export class PlayRepository implements PlayStore {
   private readonly bankCache = new Map<string, PlayQuestion[]>();
   constructor(private readonly connection = getSqlClient) {}
-  async list(_actor?: PlayActor): Promise<PlaySummary[]> {
+  async list(actor?: PlayActor): Promise<PlaySummary[]> {
+    const admin = actor?.role === "ADMIN" || actor?.role === "SUPER_ADMIN";
+    const filter = admin ? "" : actor?.role === "PARTICIPANT"
+      ? ` AND ((COALESCE(is_broadcast,false)=true AND status IN ('READY','ACTIVE','PAUSED')) OR EXISTS (SELECT 1 FROM tickets t JOIN participant_profiles p ON p.id=t.participant_id WHERE t.round_id=rounds.id AND p.user_id=$1 AND p.status='ACTIVE'))`
+      : ` AND (COALESCE(is_broadcast,false)=true OR status IN ('ACTIVE','PAUSED'))`;
     const rows = await this.connection().unsafe<
       (PlaySummary & { is_broadcast?: boolean })[]
     >(
-      `SELECT id,event_id AS "eventId",name,game_code AS code,status,sequence_number AS "sequenceNumber",created_at AS "createdAt",COALESCE(is_broadcast,false) AS "isBroadcast" FROM rounds WHERE game_code IS NOT NULL ORDER BY (COALESCE(is_broadcast,false)=true) DESC, (status='ACTIVE') DESC, (status='READY') DESC, created_at DESC`,
+      `SELECT id,event_id AS "eventId",name,game_code AS code,status,sequence_number AS "sequenceNumber",created_at AS "createdAt",COALESCE(is_broadcast,false) AS "isBroadcast" FROM rounds WHERE game_code IS NOT NULL${filter} ORDER BY (status='ACTIVE') DESC, (status='PAUSED') DESC, (COALESCE(is_broadcast,false)=true) DESC, (status='READY') DESC, created_at DESC`,
+      actor?.role === "PARTICIPANT" ? [actor.userId] : [],
     );
     return rows.map((r) => ({
       ...r,
@@ -42,7 +47,7 @@ export class PlayRepository implements PlayStore {
   async findCode(code: string, actor: PlayActor) {
     return this.connection().begin(async (tx) => {
       const rounds = await tx.unsafe<{ id: string; event_id: string; status: string }[]>(
-        `SELECT id, event_id, status FROM rounds WHERE game_code=$1`,
+        `SELECT id, event_id, status FROM rounds WHERE game_code=$1 FOR UPDATE`,
         [code],
       );
       if (!rounds[0])
@@ -65,6 +70,11 @@ export class PlayRepository implements PlayStore {
             [actor.userId, round.event_id],
           );
         }
+        if (!profile) throw new ForbiddenError("Participant account is not active in this Event.");
+        const [activeProfile] = await tx.unsafe<{ id: string }[]>(
+          `SELECT id FROM participant_profiles WHERE id=$1 AND status='ACTIVE'`, [profile.id],
+        );
+        if (!activeProfile) throw new ForbiddenError("Participant account is not active in this Event.");
         if (
           profile &&
           (round.status === "READY" ||
@@ -261,44 +271,10 @@ export class PlayRepository implements PlayStore {
     cellId: string,
     marked: boolean,
   ): Promise<PlayState> {
-    return this.connection().begin(async (tx) => {
-      const [round] = await tx.unsafe<{ status: string; event_id: string }[]>(
-        "SELECT status, event_id FROM rounds WHERE id=$1",
-        [id],
-      );
-      if (!round || !["ACTIVE", "PAUSED"].includes(round.status)) {
-        throw new ConflictError("Action unavailable in current game state.");
-      }
-
-      // Verify cell belongs to the participant's ticket in this round
-      const [ticketCell] = await tx.unsafe<{ ticket_id: string }[]>(
-        `SELECT tc.ticket_id 
-         FROM ticket_cells tc
-         JOIN tickets t ON t.id = tc.ticket_id
-         JOIN participant_profiles p ON p.id = t.participant_id
-         WHERE tc.id = $1 AND t.round_id = $2 AND p.user_id = $3`,
-        [cellId, id, actor.userId],
-      );
-
-      if (!ticketCell) {
-        throw new ValidationError("This cell does not belong to your assigned ticket.");
-      }
-
-      if (marked) {
-        await tx.unsafe(
-          `INSERT INTO ticket_marks(ticket_id, cell_id) VALUES($1, $2) ON CONFLICT(ticket_id, cell_id) DO NOTHING`,
-          [ticketCell.ticket_id, cellId],
-        );
-      } else {
-        await tx.unsafe(
-          `DELETE FROM ticket_marks WHERE ticket_id=$1 AND cell_id=$2`,
-          [ticketCell.ticket_id, cellId],
-        );
-      }
-
-      return this.load(tx, id, actor);
-    });
+    const { state } = await this.change(id, actor, state => togglePlayMark(state, cellId, marked));
+    return state;
   }
+
   async change<T>(
     id: string,
     actor: PlayActor,
@@ -402,80 +378,6 @@ export class PlayRepository implements PlayStore {
               [state.ticket.id, cell.id],
             );
         }
-      const patternActionMap: Record<string, string> = {
-        EARLY_FIVE: "CLAIM_EARLY_FIVE",
-        FOUR_CORNERS: "CLAIM_FOUR_CORNERS",
-        TOP_LINE: "CLAIM_TOP_LINE",
-        MIDDLE_LINE: "CLAIM_MIDDLE_LINE",
-        BOTTOM_LINE: "CLAIM_BOTTOM_LINE",
-        FULL_HOUSE: "CLAIM_FULL_HOUSE",
-        SECOND_FULL_HOUSE: "CLAIM_SECOND_FULL_HOUSE",
-      };
-      const patternNameMap: Record<string, string> = {
-        EARLY_FIVE: "Early 5",
-        FOUR_CORNERS: "Four Corners",
-        TOP_LINE: "Top Row",
-        MIDDLE_LINE: "Middle Row",
-        BOTTOM_LINE: "Bottom Row",
-        FULL_HOUSE: "Full House",
-        SECOND_FULL_HOUSE: "Second Full House",
-      };
-      for (const win of state.wins.slice(before.wins.length)) {
-        await tx.unsafe(
-          `INSERT INTO claims(id,round_id,participant_id,ticket_id,pattern_type,status,verified_by,verified_at)
-           VALUES($1,$2,$3,$4,$5,'VERIFIED',$6,$7)
-           ON CONFLICT (round_id,participant_id,pattern_type)
-           DO UPDATE SET status='VERIFIED', verified_by=$6, verified_at=$7, updated_at=now()`,
-          [
-            win.claimId,
-            id,
-            win.participantId,
-            state.ticket!.id,
-            win.pattern,
-            actor.userId,
-            win.createdAt,
-          ],
-        );
-        await tx.unsafe(
-          `INSERT INTO winners(id,claim_id,participant_id,round_id,event_id,pattern_type,verified_by,verified_at)
-           VALUES($1,$2,$3,$4,$5,$6,$7,$8)
-           ON CONFLICT DO NOTHING`,
-          [
-            win.id,
-            win.claimId,
-            win.participantId,
-            id,
-            state.eventId,
-            win.pattern,
-            actor.userId,
-            win.createdAt,
-          ],
-        );
-        await tx.unsafe(
-          `UPDATE round_patterns SET status='CLOSED' WHERE round_id=$1 AND pattern_type=$2`,
-          [id, win.pattern],
-        );
-        const [person] = await tx.unsafe<{ name: string }[]>(
-          "SELECT name FROM users WHERE id=$1",
-          [actor.userId],
-        );
-        win.name = person!.name;
-
-        await this.audit(
-          tx,
-          actor,
-          id,
-          patternActionMap[win.pattern] ?? `CLAIM_${win.pattern}`,
-          {
-            pattern: win.pattern,
-            patternName: patternNameMap[win.pattern] ?? win.pattern,
-            participantId: win.participantId,
-            roundId: id,
-            roundName: state.name,
-            gameCode: state.code,
-          },
-        );
-      }
       if (before.status !== state.status) {
         const statusAction =
           state.status === "ACTIVE" && before.status === "READY"
@@ -530,19 +432,27 @@ export class PlayRepository implements PlayStore {
         state.ticket
       ) {
         const claimObj = result as { claimId: string; pattern: string };
-        await tx.unsafe(
-          `INSERT INTO claims(id,round_id,participant_id,ticket_id,pattern_type,status,created_at,updated_at)
-           VALUES($1,$2,$3,$4,$5,'PENDING_VERIFICATION',now(),now())
-           ON CONFLICT (round_id,participant_id,pattern_type)
-           DO UPDATE SET status = CASE WHEN claims.status = 'VERIFIED' THEN claims.status ELSE 'PENDING_VERIFICATION' END, updated_at = now()`,
-          [
-            claimObj.claimId,
-            id,
-            state.ticket.participantId,
-            state.ticket.id,
-            claimObj.pattern,
-          ],
+        const [pattern] = await tx.unsafe<{ enabled: boolean; status: string }[]>(
+          `SELECT enabled,status FROM round_patterns WHERE round_id=$1 AND pattern_type=$2 FOR UPDATE`,
+          [id, claimObj.pattern],
         );
+        if (!pattern?.enabled || pattern.status !== "OPEN") throw new ConflictError("This winning pattern is closed or disabled.");
+        const [existing] = await tx.unsafe<{ id: string; status: string }[]>(
+          `SELECT id,status FROM claims WHERE round_id=$1 AND participant_id=$2 AND pattern_type=$3 FOR UPDATE`,
+          [id, state.ticket.participantId, claimObj.pattern],
+        );
+        if (existing && !existing.status.startsWith("REJECTED")) throw new ConflictError("This claim has already been submitted or verified.");
+        if (existing) {
+          await tx.unsafe(`UPDATE claims SET status='PENDING_VERIFICATION',rejection_reason=NULL,updated_at=now() WHERE id=$1`, [existing.id]);
+          claimObj.claimId = existing.id;
+        } else {
+          await tx.unsafe(
+            `INSERT INTO claims(id,round_id,participant_id,ticket_id,pattern_type,status) VALUES($1,$2,$3,$4,$5,'PENDING_VERIFICATION')`,
+            [claimObj.claimId,id,state.ticket.participantId,state.ticket.id,claimObj.pattern],
+          );
+        }
+        await this.audit(tx, actor, id, "WIN_CLAIM_CREATED", { claimId: claimObj.claimId, roundId: id, patternType: claimObj.pattern });
+
       }
       await this.audit(tx, actor, id, "REFERENCE_ROUND_ACTION");
       if (replay)
@@ -608,16 +518,6 @@ export class PlayRepository implements PlayStore {
         `SELECT p.id FROM participant_profiles p JOIN users u ON u.id=p.user_id WHERE p.user_id=$1 AND p.event_id=$2 AND p.status='ACTIVE' AND u.status='ACTIVE'`,
         [actor.userId, round.eventId],
       );
-      if (!profile) {
-        const [inserted] = await sql.unsafe<{ id: string }[]>(
-          `INSERT INTO participant_profiles(id, user_id, event_id, status) VALUES(gen_random_uuid(), $1, $2, 'ACTIVE') ON CONFLICT DO NOTHING RETURNING id`,
-          [actor.userId, round.eventId],
-        );
-        profile = inserted ?? (await sql.unsafe<{ id: string }[]>(
-          `SELECT id FROM participant_profiles WHERE user_id=$1 AND event_id=$2`,
-          [actor.userId, round.eventId],
-        ))[0];
-      }
       if (!profile)
         throw new ForbiddenError(
           "Participant account is not active in this Event.",
@@ -626,42 +526,7 @@ export class PlayRepository implements PlayStore {
         "SELECT id FROM tickets WHERE participant_id=$1 AND round_id=$2",
         [profile.id, id],
       );
-      if (!row && ["READY", "ACTIVE", "PAUSED"].includes(round.status)) {
-        const ticketId = crypto.randomUUID();
-        await sql.unsafe(
-          `INSERT INTO tickets(id, participant_id, round_id, event_id) VALUES($1, $2, $3, $4) ON CONFLICT DO NOTHING`,
-          [ticketId, profile.id, id, round.eventId],
-        );
-        const [assigned] = await sql.unsafe<{ id: string }[]>(
-          "SELECT id FROM tickets WHERE participant_id=$1 AND round_id=$2",
-          [profile.id, id],
-        );
-        if (assigned) {
-          row = assigned;
-          const existingCells = await sql.unsafe<{ id: string }[]>(
-            "SELECT id FROM ticket_cells WHERE ticket_id=$1 LIMIT 1",
-            [row.id],
-          );
-          if (!existingCells.length) {
-            const cells = generateReferenceCells(
-              bank.map((q) => ({ keyId: q.keyId, number: q.number, term: q.term })),
-              () => randomInt(2 ** 32) / 2 ** 32,
-              () => crypto.randomUUID(),
-            );
-            const cellRows = cells.map((cell) => ({
-              id: cell.id,
-              ticket_id: row!.id,
-              key_id: cell.keyId,
-              row_index: cell.row,
-              col_index: cell.column,
-            }));
-            await sql.unsafe(
-              `INSERT INTO ticket_cells(id,ticket_id,key_id,row_index,col_index) SELECT id,ticket_id,key_id,row_index,col_index FROM jsonb_to_recordset($1::text::jsonb) AS x(id uuid,ticket_id uuid,key_id uuid,row_index integer,col_index integer)`,
-              [JSON.stringify(cellRows)],
-            );
-          }
-        }
-      }
+      if (!row) throw new NotFoundError("Your ticket has not been assigned. Join the round with its code first.");
       if (row) {
         const cells = await sql.unsafe<PlayCell[]>(
           `SELECT c.id,c.key_id AS "keyId",k.item_number AS number,k.value AS term,c.row_index AS row,c.col_index AS column,(m.id IS NOT NULL) AS marked FROM ticket_cells c JOIN event_keys k ON k.id=c.key_id LEFT JOIN ticket_marks m ON m.ticket_id=c.ticket_id AND m.cell_id=c.id WHERE c.ticket_id=$1 ORDER BY c.row_index,c.col_index`,

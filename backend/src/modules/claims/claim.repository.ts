@@ -4,7 +4,6 @@ import { claims, type ClaimRecord, type InsertClaim } from '../../db/schema/clai
 import { roundPatterns, rounds, type RoundPatternRecord } from '../../db/schema/rounds.ts';
 import { events } from '../../db/schema/events.ts';
 import { participantProfiles, users } from '../../db/schema/users.ts';
-import { getSharedActiveGame } from '../rounds/activeGameStore.ts';
 
 export interface AdminClaimListRow extends ClaimRecord {
   participantName: string;
@@ -13,6 +12,7 @@ export interface AdminClaimListRow extends ClaimRecord {
 }
 
 export interface IClaimRepository {
+  findById(claimId: string, tx: any): Promise<ClaimRecord | null>;
   create(data: InsertClaim, tx?: any): Promise<ClaimRecord>;
   findExistingClaim(
     roundId: string,
@@ -35,7 +35,7 @@ export interface IClaimRepository {
   updateStatus(claimId: string, data: { status: string; rejectionReason?: string | null; verifiedBy?: string; verifiedAt?: Date }, tx: any): Promise<ClaimRecord>;
   closePattern(roundId: string, patternType: string, tx: any): Promise<void>;
   getEventAndParticipantName(claimId: string, tx: any): Promise<{ eventId: string; participantName: string } | null>;
-  listAll(options: { page: number; limit: number }): Promise<{ data: AdminClaimListRow[]; total: number }>;
+  listAll(options: { page: number; limit: number; roundId?: string; status?: string }): Promise<{ data: AdminClaimListRow[]; total: number }>;
 }
 
 export class ClaimRepository implements IClaimRepository {
@@ -118,6 +118,11 @@ export class ClaimRepository implements IClaimRepository {
     return pattern || null;
   }
 
+  async findById(claimId: string, tx: any): Promise<ClaimRecord | null> {
+    const rows = await tx.select().from(claims).where(eq(claims.id, claimId)).limit(1);
+    return rows[0] || null;
+  }
+
   async lockById(claimId: string, tx: any): Promise<ClaimRecord | null> {
     const rows = await tx.select().from(claims).where(eq(claims.id, claimId)).for('update');
     return rows[0] || null;
@@ -129,30 +134,7 @@ export class ClaimRepository implements IClaimRepository {
       .from(roundPatterns)
       .where(and(eq(roundPatterns.roundId, roundId), eq(roundPatterns.patternType, patternType)))
       .for('update');
-    if (rows[0]) return rows[0];
-
-    try {
-      const [inserted] = await tx
-        .insert(roundPatterns)
-        .values({
-          roundId,
-          patternType,
-          enabled: true,
-          maxWinners: 1,
-          status: 'OPEN',
-        })
-        .onConflictDoNothing()
-        .returning();
-      if (inserted) return inserted;
-      const retry = await tx
-        .select()
-        .from(roundPatterns)
-        .where(and(eq(roundPatterns.roundId, roundId), eq(roundPatterns.patternType, patternType)))
-        .for('update');
-      return retry[0] || null;
-    } catch {
-      return null;
-    }
+    return rows[0] || null;
   }
 
   async updateStatus(
@@ -183,7 +165,8 @@ export class ClaimRepository implements IClaimRepository {
     if (!claim) return null;
 
     const [round] = await tx.select({ eventId: rounds.eventId }).from(rounds).where(eq(rounds.id, claim.roundId)).limit(1);
-    const eventId = round?.eventId || 'e7bf4217-f212-4970-b3f1-e924e1782f25';
+    if (!round) return null;
+    const eventId = round.eventId;
 
     // 1. Try finding by participant_profiles.id
     const [profile] = await tx
@@ -197,27 +180,20 @@ export class ClaimRepository implements IClaimRepository {
       return { eventId, participantName: profile.name };
     }
 
-    // 2. Try finding if participantId was direct user_id
-    const [user] = await tx
-      .select({ name: users.name })
-      .from(users)
-      .where(eq(users.id, claim.participantId))
-      .limit(1);
-
-    return {
-      eventId,
-      participantName: user?.name || profile?.name || 'Player',
-    };
+    return null;
   }
 
   async listAll(
-    options: { page: number; limit: number }
+    options: { page: number; limit: number; roundId?: string; status?: string }
   ): Promise<{ data: AdminClaimListRow[]; total: number }> {
-    try {
-      const db = getDb();
+    const db = getDb();
       const { page, limit } = options;
       const offset = (page - 1) * limit;
-      const [totalRow] = await db.select({ count: count() }).from(claims);
+      const where = and(
+        options.roundId ? eq(claims.roundId, options.roundId) : undefined,
+        options.status ? eq(claims.status, options.status) : undefined,
+      );
+      const [totalRow] = await db.select({ count: count() }).from(claims).where(where);
       const data = await db
         .select({
           id: claims.id,
@@ -232,7 +208,7 @@ export class ClaimRepository implements IClaimRepository {
           createdAt: claims.createdAt,
           updatedAt: claims.updatedAt,
           participantName: sql<string>`COALESCE(${users.name}, 'Player')`,
-          eventId: sql<string>`COALESCE(${events.id}, ${rounds.eventId}, 'e7bf4217-f212-4970-b3f1-e924e1782f25')`,
+          eventId: rounds.eventId,
           eventTitle: sql<string>`COALESCE(${events.title}, 'Tech Tambola')`,
         })
         .from(claims)
@@ -240,38 +216,11 @@ export class ClaimRepository implements IClaimRepository {
         .leftJoin(events, eq(rounds.eventId, events.id))
         .leftJoin(participantProfiles, eq(claims.participantId, participantProfiles.id))
         .leftJoin(users, eq(participantProfiles.userId, users.id))
+        .where(where)
         .orderBy(desc(claims.createdAt), desc(claims.id))
         .limit(limit)
         .offset(offset);
-      if (data && data.length > 0) {
-        return { data: data as AdminClaimListRow[], total: Number(totalRow?.count ?? 0) };
-      }
-    } catch {
-      // In-memory fallback
-    }
-
-    const active = getSharedActiveGame();
-    const rows: AdminClaimListRow[] = (active.claims || []).map((c) => ({
-      id: c.id,
-      roundId: active.id,
-      participantId: c.userId,
-      ticketId: c.ticketId || 'ticket_1',
-      patternType: c.patternType,
-      status: c.status,
-      rejectionReason: null,
-      verifiedBy: null,
-      verifiedAt: c.status === 'VERIFIED' ? new Date(c.claimedAt) : null,
-      createdAt: new Date(c.claimedAt),
-      updatedAt: new Date(c.claimedAt),
-      participantName: c.userName || 'Player',
-      eventId: 'e7bf4217-f212-4970-b3f1-e924e1782f25',
-      eventTitle: 'Tech Tombola Championship 2026',
-    }));
-
-    return {
-      data: rows,
-      total: rows.length,
-    };
+    return { data: data as AdminClaimListRow[], total: Number(totalRow?.count ?? 0) };
   }
 }
 

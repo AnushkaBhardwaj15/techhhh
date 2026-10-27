@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import { gsap } from 'gsap';
 import { Link, Navigate, useOutletContext } from 'react-router-dom';
 import { ApiError } from '../../lib/api/client';
@@ -10,6 +10,7 @@ import { claimPlayPrize, markPlayCell } from '../../lib/api/play';
 import { mergeParticipantDraws, useParticipantRealtime, type ConnectionStatus, type DisplayDraw } from '../../lib/realtime';
 import { playNewClueSound } from '../../lib/audio';
 import type { AuthenticatedUser } from '../../types/auth';
+import type { ParticipantEvent } from '../../types/participant';
 import type { PlayState } from '../../types/play';
 import type { ParticipantTicket as Ticket } from '../../types/ticket';
 import { ActionButton } from '../../components/ActionButton';
@@ -45,7 +46,7 @@ export function ParticipantGame() {
 
   // If there is an active reference game session, render Reference Play
   if (joinedGameId) {
-    return <ReferenceParticipantGame id={joinedGameId} user={user} />;
+    return <ReferenceParticipantGame id={joinedGameId} />;
   }
 
   // If there's neither a joined reference game nor an event, redirect to lobby
@@ -56,7 +57,7 @@ export function ParticipantGame() {
   return <AuthoritativeParticipantGame user={user} event={event} />;
 }
 
-function ReferenceParticipantGame({ id, user: _user }: { id: string; user: AuthenticatedUser }) {
+function ReferenceParticipantGame({ id }: { id: string }) {
   const query = usePlayState(id);
   const game = query.data;
   const client = useQueryClient();
@@ -116,7 +117,7 @@ function ReferenceParticipantGame({ id, user: _user }: { id: string; user: Authe
       setAccepted(result.accepted);
       setFeedback(
         result.accepted
-          ? `${labels[pattern]} submitted! Awaiting host verification.`
+          ? result.points ? `You earned ${result.points} points for ${labels[pattern]}.` : `${labels[pattern]} submitted! Awaiting host verification.`
           : (result.warning ?? 'This claim is not ready yet. No penalty was applied.')
       );
       await client.invalidateQueries({ queryKey: ['reference-play'] });
@@ -131,7 +132,13 @@ function ReferenceParticipantGame({ id, user: _user }: { id: string; user: Authe
 
 
 
+  if (game?.status === 'READY') return <Navigate to="/participant/waiting" replace />;
+
   const latest = game?.draws.at(-1);
+
+  if (game?.status === "READY") {
+    return <Navigate to="/participant/waiting" replace />;
+  }
 
   return (
     <main className={refStyles.page}>
@@ -205,6 +212,7 @@ function ReferenceParticipantGame({ id, user: _user }: { id: string; user: Authe
           )}
           <ReferenceTicket
             game={game}
+            canMark={!query.isError}
             pendingCellIds={pendingCellIds}
             onMark={mark}
           />
@@ -219,7 +227,7 @@ function ReferenceParticipantGame({ id, user: _user }: { id: string; user: Authe
                   </div>
                   <ActionButton
                     busy={claimingPattern === p.pattern}
-                    disabled={game.status !== 'ACTIVE' || p.closed || Boolean(claimingPattern)}
+                    disabled={game.status !== 'ACTIVE' || query.isError || p.closed || Boolean(claimingPattern)}
                     onClick={() => void claim(p.pattern)}
                   >
                     {p.closed ? 'Already won' : `Claim ${labels[p.pattern]}`}
@@ -329,7 +337,7 @@ function ReferenceQuestionCard({
           <strong>{draw.keyValue}</strong>
         </div>
       ) : (
-        <p className={refStyles.unrevealed}>Answer not revealed yet. Mark a matching term if you know it.</p>
+        <p className={refStyles.unrevealed}>Answer not revealed yet. Wait for the official reveal before marking.</p>
       )}
     </section>
   );
@@ -338,10 +346,12 @@ function ReferenceQuestionCard({
 function ReferenceTicket({
   game,
   pendingCellIds = new Set<string>(),
+  canMark = true,
   onMark,
 }: {
   game: PlayState;
   pendingCellIds?: ReadonlySet<string>;
+  canMark?: boolean;
   onMark: (id: string, marked: boolean) => void;
 }) {
   const [numbers, setNumbers] = useState(false);
@@ -374,7 +384,8 @@ function ReferenceTicket({
       </p>
       <TicketGrid
         ticket={ticket}
-        canMark={game.status === 'ACTIVE'}
+        canMark={canMark && game.status === 'ACTIVE'}
+        drawnKeys={new Set(game.draws.filter((draw) => draw.revealed && draw.answer).map((draw) => numbers ? String(draw.number) : draw.answer!))}
         pendingCellIds={pendingCellIds}
         onToggleCell={(cell) => onMark(cell.id, !cell.marked)}
       />
@@ -390,7 +401,7 @@ function AuthoritativeParticipantGame({
   event,
 }: {
   user: AuthenticatedUser;
-  event: ReturnType<typeof useQuery<any, any>>;
+  event: UseQueryResult<Awaited<ReturnType<typeof getParticipantEvent>>, Error>;
 }) {
   const [sharedTicket, setSharedTicket] = useState<Ticket | null>(null);
   const queryClient = useQueryClient();

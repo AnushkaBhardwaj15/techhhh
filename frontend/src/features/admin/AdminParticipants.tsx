@@ -2,8 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useOutletContext, useSearchParams } from 'react-router-dom';
 import { ApiError } from '../../lib/api/client';
-import { createAdminParticipant, getAdminParticipant, listAdminParticipants, updateAdminParticipant } from '../../lib/api/adminParticipants';
+import { createAdminParticipant, getAdminParticipant, listAdminParticipants, updateAdminParticipant, removeAdminParticipant } from '../../lib/api/adminParticipants';
 import { listAdminEvents } from '../../lib/api/adminEvents';
+import { AdminParticipantBatches } from './AdminParticipantBatches';
 import { AdminParticipantImport } from './AdminParticipantImport';
 import type { AdminParticipant, CreateAdminParticipant, UpdateAdminParticipant } from '../../types/adminParticipant';
 import type { AuthenticatedUser } from '../../types/auth';
@@ -38,7 +39,7 @@ export function AdminParticipants() {
   const latestParams = useRef(params);
   latestParams.current = params;
   const [searchDraft, setSearchDraft] = useState(search);
-  const [form, setForm] = useState({ email: '', name: '', externalId: '' });
+  const [form, setForm] = useState({ email: '', name: '', externalId: '', password: '', batchName: '' });
   const [editForm, setEditForm] = useState({ name: '', externalId: '' });
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -57,7 +58,7 @@ export function AdminParticipants() {
   });
 
   useEffect(() => { setSearchDraft(search); }, [search]);
-  useEffect(() => { setCreating(false); setEditing(false); setForm({ email: '', name: '', externalId: '' }); setMessage(''); }, [eventId]);
+  useEffect(() => { setCreating(false); setEditing(false); setForm({ email: '', name: '', externalId: '', password: '', batchName: '' }); setMessage(''); }, [eventId]);
   useEffect(() => {
     const identity = `${eventId}:${participantId}`;
     if (!detail.data || detail.data.id !== participantId || detail.data.eventId !== eventId || formIdentity.current === identity) return;
@@ -71,9 +72,10 @@ export function AdminParticipants() {
     onSuccess: async (saved, variables) => {
       queryClient.setQueryData(detailKey(user.id, saved.eventId, saved.id), saved);
       await queryClient.invalidateQueries({ queryKey: ['admin-participants', user.id, saved.eventId] });
+      await queryClient.invalidateQueries({ queryKey: ['participant-batches', user.id, saved.eventId] });
       if (latestParams.current.get('eventId') !== variables.eventId) return;
       setParams((current) => { const next = new URLSearchParams(current); next.set('participantId', saved.id); next.set('page', '1'); next.delete('search'); next.delete('status'); return next; });
-      setCreating(false); setForm({ email: '', name: '', externalId: '' }); setMessage('Participant created and saved.');
+      setCreating(false); setForm({ email: '', name: '', externalId: '', password: '', batchName: '' }); setMessage('Participant created and saved.');
     },
     onError: async (error, variables) => { if (latestParams.current.get('eventId') === variables.eventId) setMessage(requestError(error, 'We could not confirm whether the Participant was created. Refresh the list before retrying.')); await queryClient.invalidateQueries({ queryKey: ['admin-participants', user.id, variables.eventId] }); },
   });
@@ -82,12 +84,22 @@ export function AdminParticipants() {
     onSuccess: async (saved, variables) => {
       queryClient.setQueryData(detailKey(user.id, saved.eventId, saved.id), saved);
       await queryClient.invalidateQueries({ queryKey: ['admin-participants', user.id, saved.eventId] });
+      await queryClient.invalidateQueries({ queryKey: ['participant-batches', user.id, saved.eventId] });
       if (latestParams.current.get('eventId') !== variables.eventId || latestParams.current.get('participantId') !== variables.id) return;
       setEditForm({ name: saved.name, externalId: saved.externalId ?? '' }); setEditing(false); setMessage('Participant changes saved.');
     },
     onError: async (error, variables) => { if (latestParams.current.get('eventId') === variables.eventId && latestParams.current.get('participantId') === variables.id) setMessage(requestError(error, 'We could not confirm the saved Participant state. The latest record has been requested; review it before retrying.')); await Promise.all([queryClient.invalidateQueries({ queryKey: detailKey(user.id, variables.eventId, variables.id) }), queryClient.invalidateQueries({ queryKey: ['admin-participants', user.id, variables.eventId] })]); },
   });
-  const pending = create.isPending || update.isPending || importPending;
+  const remove = useMutation({
+    mutationFn: (id: string) => removeAdminParticipant(id),
+    onSuccess: async (result) => {
+      setMessage(`Participant ${result.mode}.`);
+      changeParam('participantId', '');
+      await Promise.all([queryClient.invalidateQueries({ queryKey: ['admin-participants', user.id, eventId] }), queryClient.invalidateQueries({ queryKey: ['participant-batches', user.id, eventId] })]);
+    },
+    onError: (error) => setMessage(requestError(error, 'Could not confirm removal. Refresh before retrying.')),
+  });
+  const pending = remove.isPending || create.isPending || update.isPending || importPending;
   const selected = detail.data?.eventId === eventId && detail.data.id === participantId && participants.data?.data.some((person) => person.id === participantId && person.eventId === eventId) ? detail.data : undefined;
 
   function changeParam(key: string, value: string, resetPage = false) {
@@ -98,7 +110,7 @@ export function AdminParticipants() {
     }
   }
   function submitSearch(event: React.FormEvent<HTMLFormElement>) { event.preventDefault(); changeParam('search', searchDraft.trim(), true); }
-  function submitCreate(event: React.FormEvent<HTMLFormElement>) { event.preventDefault(); if (!eventId) return; setMessage(''); create.mutate({ eventId, email: form.email, name: form.name, externalId: form.externalId || null }); }
+  function submitCreate(event: React.FormEvent<HTMLFormElement>) { event.preventDefault(); if (!eventId) return; setMessage(''); create.mutate({ eventId, email: form.email, name: form.name, externalId: form.externalId || null, password: form.password || undefined, batchName: form.batchName.trim() || undefined }); }
   function submitUpdate(event: React.FormEvent<HTMLFormElement>) { event.preventDefault(); if (!selected) return; setMessage(''); update.mutate({ eventId, id: selected.id, input: { name: editForm.name, externalId: editForm.externalId || null } }); }
   function changeStatus(nextStatus: AdminParticipant['status']) {
     if (!selected) return;
@@ -120,7 +132,7 @@ export function AdminParticipants() {
   const listError = requestError(participants.error, 'We could not load Participants. Check your connection and try again.');
   return <main className={styles.page}>
     <p className={styles.eyebrow}>OPERATIONS / PEOPLE</p>
-    <header className={styles.heading}><div><h1>Participant management</h1><p>Registered player identities for this Event. Each participant plays using their registered email account.</p></div><button type="button" disabled={!eventId || pending} onClick={() => { setCreating((current) => !current); setEditing(false); setForm({ email: '', name: '', externalId: '' }); setMessage(''); }}>Add Participant</button></header>
+    <header className={styles.heading}><div><h1>Participant management</h1><p>Registered player identities for this Event. Each participant plays using their registered email account.</p></div><button type="button" disabled={!eventId || pending} onClick={() => { setCreating((current) => !current); setEditing(false); setForm({ email: '', name: '', externalId: '', password: '', batchName: '' }); setMessage(''); }}>Add Participant</button></header>
     {message && <p className={styles.notice} role="status">{message}</p>}
     <aside className={styles.notice} aria-label="Ticket assignment status">
       <p><strong>Ticket assignment details are not available yet.</strong> G03 is unresolved; the backend does not expose ticket allocation endpoints, which does not mean a Participant is unassigned.</p>
@@ -149,13 +161,14 @@ export function AdminParticipants() {
         {participantId && participants.data && !participants.data.data.some((person) => person.id === participantId && person.eventId === eventId) && <p role="status">Select a Participant from the current Event results to view details.</p>}
         {participantId && detail.error && <div><p role="alert">{requestError(detail.error, 'We could not load this Participant.')}</p><button type="button" onClick={() => void detail.refetch()}>Retry Participant</button></div>}
         {selected && <>
-          {!editing && <><h3 className={styles.personName}>{selected.name || selected.email}</h3><dl className={styles.details}><div><dt>Registered player email</dt><dd><strong>{selected.email}</strong></dd></div>{selected.name && <div><dt>Display name</dt><dd>{selected.name}</dd></div>}{selected.externalId && <div><dt>External ID</dt><dd>{selected.externalId}</dd></div>}<div><dt>Account status</dt><dd>{selected.status}</dd></div><div><dt>Credential delivery</dt><dd>{selected.emailDeliveryStatus}</dd></div><div><dt>Event</dt><dd>{events.data?.data.find((event) => event.id === eventId)?.title ?? 'Selected Event'}</dd></div></dl><div className={styles.actions}><button type="button" disabled={pending} onClick={() => setEditing(true)}>Edit Participant</button>{selected.status === 'ACTIVE' ? <button type="button" disabled={pending} onClick={() => changeStatus('INACTIVE')}>Deactivate</button> : <button type="button" disabled={pending} onClick={() => changeStatus('ACTIVE')}>Reactivate</button>}</div></>}
+          {!editing && <><h3 className={styles.personName}>{selected.name || selected.email}</h3><dl className={styles.details}><div><dt>Registered player email</dt><dd><strong>{selected.email}</strong></dd></div>{selected.name && <div><dt>Display name</dt><dd>{selected.name}</dd></div>}{selected.batchName && <div><dt>Batch</dt><dd>{selected.batchName}</dd></div>}{selected.externalId && <div><dt>External ID</dt><dd>{selected.externalId}</dd></div>}<div><dt>Account status</dt><dd>{selected.status}</dd></div><div><dt>Credential delivery</dt><dd>{selected.emailDeliveryStatus}</dd></div><div><dt>Event</dt><dd>{events.data?.data.find((event) => event.id === eventId)?.title ?? 'Selected Event'}</dd></div></dl><div className={styles.actions}><button type="button" disabled={pending} onClick={() => setEditing(true)}>Edit Participant</button><button type="button" disabled={pending} onClick={() => { if (window.confirm(`Remove ${selected.email}? Accounts with tickets will be disabled and history preserved.`)) remove.mutate(selected.id); }}>Remove Participant</button>{selected.status === 'ACTIVE' ? <button type="button" disabled={pending} onClick={() => changeStatus('INACTIVE')}>Deactivate</button> : <button type="button" disabled={pending} onClick={() => changeStatus('ACTIVE')}>Reactivate</button>}</div></>}
           {editing && <form className={styles.form} onSubmit={submitUpdate}><label>Name<input value={editForm.name} maxLength={255} required disabled={pending} onChange={(event) => setEditForm((current) => ({ ...current, name: event.target.value }))} /></label><label>External ID (optional)<input value={editForm.externalId} maxLength={255} disabled={pending} onChange={(event) => setEditForm((current) => ({ ...current, externalId: event.target.value }))} /></label><p>Email and Event assignment cannot be changed here.</p><div className={styles.actions}><button type="submit" disabled={pending}>{update.isPending ? 'Saving…' : 'Save changes'}</button><button type="button" disabled={pending} onClick={() => { setEditing(false); setEditForm({ name: selected.name, externalId: selected.externalId ?? '' }); }}>Cancel</button></div></form>}
         </>}
       </section>
     </div>
-    {eventId && <AdminParticipantImport eventId={eventId} userId={user.id} onPendingChange={setImportPending} />}
-    {creating && eventId && <section className={styles.createPanel} aria-labelledby="add-participant-title"><h2 id="add-participant-title">Register Player</h2><form className={styles.form} onSubmit={submitCreate}><label>Email<input type="email" value={form.email} maxLength={255} required disabled={pending} autoComplete="email" placeholder="player@example.com" onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))} /></label><label>Name<input value={form.name} maxLength={255} required disabled={pending} autoComplete="name" placeholder="Full name or alias" onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} /></label><label>External ID (optional)<input value={form.externalId} maxLength={255} disabled={pending} onChange={(event) => setForm((current) => ({ ...current, externalId: event.target.value }))} /></label><p>Login credentials are created and delivered automatically by the server. Passwords are never stored in plaintext.</p><div className={styles.actions}><button type="submit" disabled={pending}>{create.isPending ? 'Creating…' : 'Create Participant'}</button><button type="button" disabled={pending} onClick={() => setCreating(false)}>Cancel</button></div></form></section>}
+    {eventId && <AdminParticipantBatches key={eventId} eventId={eventId} userId={user.id} disabled={pending} onPendingChange={setImportPending} />}
+    {eventId && <AdminParticipantImport eventId={eventId} userId={user.id} disabled={pending} onPendingChange={setImportPending} />}
+    {creating && eventId && <section className={styles.createPanel} aria-labelledby="add-participant-title"><h2 id="add-participant-title">Register Player</h2><form className={styles.form} onSubmit={submitCreate}><label>Email<input type="email" value={form.email} maxLength={255} required disabled={pending} autoComplete="email" placeholder="player@example.com" onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))} /></label><label>Name<input value={form.name} maxLength={255} required disabled={pending} autoComplete="name" placeholder="Full name or alias" onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} /></label><label>External ID (optional)<input value={form.externalId} maxLength={255} disabled={pending} onChange={(event) => setForm((current) => ({ ...current, externalId: event.target.value }))} /></label><label>Password<input type="password" autoComplete="new-password" minLength={8} maxLength={128} value={form.password} disabled={pending} onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))} /></label><label>Batch name (optional)<input maxLength={100} value={form.batchName} disabled={pending} onChange={(event) => setForm((current) => ({ ...current, batchName: event.target.value }))} /></label><p>Supply a password to distribute yourself, or leave it empty to generate and email credentials. Passwords are stored as hashes.</p><div className={styles.actions}><button type="submit" disabled={pending}>{create.isPending ? 'Creating…' : 'Create Participant'}</button><button type="button" disabled={pending} onClick={() => setCreating(false)}>Cancel</button></div></form></section>}
     <p className={styles.back}><Link to={{ pathname: '/admin', search: params.toString() ? `?${params}` : '' }}>Return to dashboard</Link></p>
   </main>;
 }
