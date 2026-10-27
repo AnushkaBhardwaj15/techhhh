@@ -25,6 +25,7 @@ export const adminParticipantListSchema = z.object({
 
 export const createAdminParticipantSchema = z.object({
   eventId: z.string().uuid().optional(),
+  batchName: z.string().trim().min(1).max(100).optional(),
   password: z.string().min(8).max(128),
   email: z.string().trim().email().max(255),
   name: z.string().trim().min(1).max(255),

@@ -28,10 +28,15 @@ export async function updateAdminParticipant(id: string, input: UpdateAdminParti
   return adminParticipantSchema.parse(response?.participant);
 }
 
-export async function importAdminParticipants({ eventId, file, idempotencyKey, signal }: { eventId: string; file: File; idempotencyKey: string; signal?: AbortSignal }) {
+export async function importAdminParticipants({ eventId, file, idempotencyKey, batchName, signal }: { eventId: string; file: File; idempotencyKey: string; batchName?: string; signal?: AbortSignal }) {
   const body = new FormData();
   body.append('eventId', eventId);
+  if (batchName?.trim()) body.append('batchName', batchName.trim());
   body.append('file', file, file.name);
   const response = await apiRequest<unknown>('/admin/participants/import', { method: 'POST', headers: { 'Idempotency-Key': idempotencyKey }, body, signal });
   return participantImportReportSchema.parse(response);
 }
+
+export async function listParticipantBatches() { return apiRequest<{ batches: Array<{ name: string; total: number }> }>('/admin/participant-batches'); }
+export async function removeParticipantAccount(userId: string) { return apiRequest(`/admin/participant-accounts/${encodeURIComponent(userId)}`, { method: 'DELETE' }); }
+export async function removeParticipantBatch(name: string) { return apiRequest(`/admin/participant-batches/${encodeURIComponent(name)}`, { method: 'DELETE' }); }

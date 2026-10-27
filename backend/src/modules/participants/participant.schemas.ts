@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 export const createParticipantSchema = z.object({
   eventId: z.string().uuid('Invalid event ID format').optional(),
+  batchName: z.string().trim().min(1).max(100).optional(),
   password: z.string().min(8).max(128),
   email: z.string().trim().email('Invalid email address format').max(255),
   name: z.string().trim().min(1).max(255).optional(),

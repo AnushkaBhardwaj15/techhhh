@@ -63,6 +63,6 @@ export const adminRoutes: FastifyPluginAsync = async (fastify) => {
       requestId: request.id,
     });
 
-    return { message: 'Administrator deactivated successfully' };
+    return { message: 'Administrator deleted successfully' };
   });
 };

@@ -1,3 +1,5 @@
+import { z } from 'zod';
+import { participantAccountService } from './account-batch.service.ts';
 import type { FastifyPluginAsync } from 'fastify';
 import { requireAdmin } from '../../middleware/auth.ts';
 import {
@@ -13,6 +15,14 @@ import { ValidationError } from '../../shared/errors/app-error.ts';
 export const participantRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.addHook('preHandler', requireAdmin);
 
+  fastify.get('/admin/participant-batches', async () => ({ batches: await participantAccountService.listBatches() }));
+  fastify.delete('/admin/participant-batches/:name', async request => {
+    const { name } = z.object({ name: z.string().trim().min(1).max(100) }).parse(request.params);
+    return participantAccountService.remove(request.user!.id, { batchName: name });
+  });
+  fastify.delete('/admin/participant-accounts/:id', async request => {
+    return participantAccountService.remove(request.user!.id, { userId: participantIdParamSchema.parse(request.params).id });
+  });
   fastify.get('/admin/participants', async (request) => {
     const query = participantPaginationSchema.parse(request.query);
     return participantService.listParticipants({
@@ -49,6 +59,7 @@ export const participantRoutes: FastifyPluginAsync = async (fastify) => {
       throw new ValidationError('Idempotency-Key header is required for batch import');
     }
 
+    let batchName: string | undefined;
     let eventId = (request.query as any)?.eventId || '';
     let csvContent = '';
 
@@ -58,6 +69,8 @@ export const participantRoutes: FastifyPluginAsync = async (fastify) => {
         if (part.type === 'file') {
           const buffer = await part.toBuffer();
           csvContent = buffer.toString('utf-8');
+        } else if (part.type === 'field' && part.fieldname === 'batchName') {
+          batchName = z.string().trim().min(1).max(100).parse(part.value);
         } else if (part.type === 'field' && part.fieldname === 'eventId') {
           eventId = part.value as string;
         }
@@ -65,6 +78,7 @@ export const participantRoutes: FastifyPluginAsync = async (fastify) => {
     } else {
       const body = request.body as any;
       if (body && typeof body === 'object') {
+        batchName = body.batchName ? z.string().trim().min(1).max(100).parse(body.batchName) : undefined;
         eventId = body.eventId || eventId;
         csvContent = body.csvContent || '';
       } else if (typeof body === 'string') {
@@ -80,6 +94,7 @@ export const participantRoutes: FastifyPluginAsync = async (fastify) => {
       csvContent,
       idempotencyKey,
       {
+        batchName,
         ip: request.ip,
         userAgent: request.headers['user-agent'],
         requestId: request.id,

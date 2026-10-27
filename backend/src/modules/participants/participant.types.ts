@@ -13,6 +13,7 @@ export interface ParticipantSummary {
 }
 
 export interface CreateParticipantInput {
+  batchName?: string;
   password: string;
   eventId?: string;
   email: string;

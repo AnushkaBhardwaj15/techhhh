@@ -32,11 +32,12 @@ export function AdminGamePage() {
   const [claimActionId, setClaimActionId] = useState<string | null>(null);
   const [claimFeedback, setClaimFeedback] = useState<string>("");
   const busy = useRef(false);
+  const lastCallAt = useRef(0);
 
   const claimsQuery = useQuery({
     queryKey: ["admin-claims-game", id],
     queryFn: () => listAdminClaims({ limit: 50, roundId: id }),
-    refetchInterval: 1000,
+    refetchInterval: 5000,
   });
   const pendingClaims = (claimsQuery.data?.data ?? []).filter(
     (c) => (c.roundId === id || !id) && c.status === "PENDING_VERIFICATION"
@@ -108,6 +109,11 @@ export function AdminGamePage() {
     retrySame = false,
   ) {
     if (busy.current) return;
+    if (command.action === 'call' && !retrySame) {
+      const now = Date.now();
+      if (now - lastCallAt.current < 600) return;
+      lastCallAt.current = now;
+    }
     busy.current = true;
     setPending(true);
     setError("");
@@ -171,6 +177,7 @@ export function AdminGamePage() {
 
   useEffect(() => {
     function key(event: KeyboardEvent) {
+      if (event.repeat || busy.current) return;
       const target = event.target;
       if (
         event.code === "Space" &&
@@ -264,9 +271,9 @@ export function AdminGamePage() {
           </>}
         </div>
         <aside className={styles.consoleSidebar}>
-          {lobby ? <section className={styles.consolePanel}><h2>IN THE LOBBY</h2>{roster.isPending ? <p>Loading participants…</p> : roster.error ? <p role="alert">Could not load participants.</p> : roster.data?.participants.length ? <ol className={styles.roster}>{roster.data.participants.map(person => <li key={person.id}>{person.name}<small> · {person.live ? 'Live' : 'Offline'}</small></li>)}</ol> : <p>Waiting for participants to join.</p>}</section> : <>
+          {lobby ? <section className={styles.consolePanel}><h2>IN THE LOBBY</h2>{roster.isPending ? <p>Loading participants…</p> : roster.error ? <p role="alert">Could not load participants.</p> : roster.data?.participants.length ? <ol className={styles.roster}>{roster.data.participants.map(person => <li key={person.id}>{person.name}<small className={person.live ? styles.playerLive : styles.playerOffline}> · {person.live ? 'Live' : 'Offline'}</small></li>)}</ol> : <p>Waiting for participants to join.</p>}</section> : <>
             <section className={styles.consolePanel}><h2>CLAIMS</h2><Link to={`/admin/claims?gameId=${id}`}>View all claims</Link>{claimFeedback && <p role="status">{claimFeedback}</p>}{pendingClaims.length ? pendingClaims.map(claim => <div className={styles.claimRow} key={claim.id}><strong>{claim.participantName}</strong><p>{claim.patternType.replaceAll('_', ' ')}</p><button disabled={!!claimActionId} onClick={() => void handleApproveClaim(claim.id)}>Approve</button><button disabled={!!claimActionId} onClick={() => void handleRejectClaim(claim.id)}>Reject</button></div>) : <p>No pending claims.</p>}</section>
-            <section className={styles.consolePanel}><h2>PLAYERS & STANDINGS</h2><p>{roster.data?.totalEnrolled ?? 0} enrolled · {roster.data?.livePlayers ?? 0} live</p>{roster.isPending ? <p>Loading players…</p> : roster.error ? <p role="alert">Could not load players.</p> : roster.data?.participants.length ? <ol className={styles.roster}>{roster.data.participants.map(row => <li key={row.id}>{row.name}<small> · {row.live ? 'Live' : 'Offline'}</small><strong>{row.points}</strong></li>)}</ol> : <p>No enrolled players yet.</p>}<Link to={`/admin/winners?gameId=${id}`}>View winners</Link></section>
+            <section className={styles.consolePanel}><h2>PLAYERS & STANDINGS</h2><p>{roster.data?.totalEnrolled ?? 0} enrolled · {roster.data?.livePlayers ?? 0} live</p>{roster.isPending ? <p>Loading players…</p> : roster.error ? <p role="alert">Could not load players.</p> : roster.data?.participants.length ? <ol className={styles.roster}>{roster.data.participants.map(row => <li key={row.id}>{row.name}<small className={row.live ? styles.playerLive : styles.playerOffline}> · {row.live ? 'Live' : 'Offline'}</small><strong>{row.points}</strong></li>)}</ol> : <p>No enrolled players yet.</p>}<Link to={`/admin/winners?gameId=${id}`}>View winners</Link></section>
           </>}
         </aside>
       </div>

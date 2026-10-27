@@ -150,6 +150,7 @@ export class AdminRepository implements IAdminRepository {
         updatedAt: new Date(),
       })
       .where(eq(users.id, userId));
+    await client.delete(adminProfiles).where(eq(adminProfiles.userId, userId));
   }
 }
 

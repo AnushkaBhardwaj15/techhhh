@@ -37,13 +37,28 @@ export function usePlayState(roundId: string, publicView = false) {
     let socket: WebSocket | undefined;
     let timer: ReturnType<typeof setTimeout> | undefined;
     let attempts = 0;
+    let refreshTimer: ReturnType<typeof setTimeout> | undefined;
+    let refreshInFlight = false;
+    let refreshQueued = false;
     const refresh = () => {
-      // Events invalidate the snapshot. Only the REST response may reveal keys,
-      // assign identifiers, or change ticket and winner state.
-      void client.refetchQueries({
-        queryKey: ["reference-play", publicView ? "public" : "private", roundId],
-        exact: true,
-      });
+      if (stopped) return;
+      refreshQueued = true;
+      if (refreshTimer !== undefined || refreshInFlight) return;
+      refreshTimer = setTimeout(async () => {
+        refreshTimer = undefined;
+        if (stopped) return;
+        refreshQueued = false;
+        refreshInFlight = true;
+        try {
+          await client.refetchQueries({
+            queryKey: ['reference-play', publicView ? 'public' : 'private', roundId],
+            exact: true,
+          }, { cancelRefetch: false });
+        } finally {
+          refreshInFlight = false;
+          if (refreshQueued && !stopped) refresh();
+        }
+      }, 150);
     };
     const reconnect = () => {
       if (stopped || timer !== undefined) return;
@@ -89,6 +104,7 @@ export function usePlayState(roundId: string, publicView = false) {
       stopped = true;
       setWsConnected(false);
       clearTimeout(timer);
+      clearTimeout(refreshTimer);
       if (socket) {
         socket.onopen = null;
         socket.onmessage = null;
