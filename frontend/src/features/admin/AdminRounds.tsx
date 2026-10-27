@@ -95,11 +95,11 @@ export function AdminRounds() {
         next.set('page', '1');
         setParams(next);
         setCreating(false);
-        setMessage('Round created and saved.');
+        setMessage('Game created and saved.');
       }
     },
     onError: async (error, variables) => {
-      if (latestParams.current.get('eventId') === variables.eventId) setMessage(errorMessage(error, 'We could not confirm whether the Round was created. Refresh the list before retrying.'));
+      if (latestParams.current.get('eventId') === variables.eventId) setMessage(errorMessage(error, 'We could not confirm whether the Game was created. Refresh the list before retrying.'));
       await queryClient.invalidateQueries({ queryKey: ['admin-rounds', user.id, variables.eventId, 'list'] });
     },
   });
@@ -113,11 +113,11 @@ export function AdminRounds() {
         setForm(roundForm(saved));
         setChangedPatterns(new Set());
         setEditing(false);
-        setMessage('Round configuration saved.');
+        setMessage('Game configuration saved.');
       }
     },
     onError: async (error, variables) => {
-      if (latestParams.current.get('eventId') === variables.eventId) setMessage(errorMessage(error, 'The latest Round configuration has been requested. Review it before retrying.'));
+      if (latestParams.current.get('eventId') === variables.eventId) setMessage(errorMessage(error, 'The latest Game configuration has been requested. Review it before retrying.'));
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: detailKey(user.id, variables.eventId, variables.id) }),
         queryClient.invalidateQueries({ queryKey: ['admin-rounds', user.id, variables.eventId, 'list'] }),
@@ -184,42 +184,42 @@ export function AdminRounds() {
     setMessage('');
   }
 
-  if (!eventId) return <main className={styles.page}><p className={styles.eyebrow}>OPERATIONS / CONFIGURATION</p><h1>Round configuration</h1><p>Choose an Event before managing its Rounds.</p><Link className={styles.action} to={{ pathname: '/admin/event', search: params.toString() ? `?${params}` : '' }}>Select an Event</Link></main>;
+  if (!eventId) return <main className={styles.page}><p className={styles.eyebrow}>OPERATIONS / CONFIGURATION</p><h1>Game configuration</h1><p>Choose an Game before managing its Games.</p><Link className={styles.action} to={{ pathname: '/admin/event', search: params.toString() ? `?${params}` : '' }}>Select an Game</Link></main>;
 
   const permissionError = (error: unknown) => error instanceof ApiError && error.status === 403;
   return <main className={styles.page}>
     <p className={styles.eyebrow}>OPERATIONS / CONFIGURATION</p>
-    <header className={styles.heading}><div><h1>Round configuration</h1><p>{event.data ? `Event: ${event.data.title}` : 'Loading selected Event…'}</p></div><button type="button" disabled={pending || !event.data || eventReadOnly} onClick={beginCreate}>Create Round</button></header>
-    {event.error && <div className={styles.notice} role="alert">{permissionError(event.error) ? 'Your account cannot view this Event.' : errorMessage(event.error, 'Could not load the selected Event.')} <button type="button" onClick={() => void event.refetch()}>Retry Event</button></div>}
-    {event.data && event.error && <p className={styles.notice} role="status">Showing the last Event details received from the server.</p>}
+    <header className={styles.heading}><div><h1>Game configuration</h1><p>{event.data ? `Event: ${event.data.title}` : 'Loading selected Game…'}</p></div><button type="button" disabled={pending || !event.data || eventReadOnly} onClick={beginCreate}>Create Game</button></header>
+    {event.error && <div className={styles.notice} role="alert">{permissionError(event.error) ? 'Your account cannot view this Game.' : errorMessage(event.error, 'Could not load the selected Game.')} <button type="button" onClick={() => void event.refetch()}>Retry Game</button></div>}
+    {event.data && event.error && <p className={styles.notice} role="status">Showing the last Game details received from the server.</p>}
     {message && <p className={styles.notice} role="status">{message}</p>}
-    {eventReadOnly && event.data && <p className={styles.notice}>This Event is {event.data.status.toLowerCase()}; its Round configuration is read only.</p>}
+    {eventReadOnly && event.data && <p className={styles.notice}>This Game is {event.data.status.toLowerCase()}; its Game configuration is read only.</p>}
     <div className={styles.columns}>
-      <section className={styles.panel} aria-labelledby="round-list-title"><h2 id="round-list-title">Rounds</h2>
-        {rounds.isPending && <p role="status">Loading Rounds…</p>}
-        {rounds.error && <div><p role="alert">{permissionError(rounds.error) ? 'Your account cannot manage Rounds.' : errorMessage(rounds.error, 'Could not load Rounds.')}</p><button type="button" onClick={() => void rounds.refetch()}>Retry Rounds</button></div>}
-        {rounds.data && rounds.error && <p className={styles.notice} role="status">Showing the last Round list received from the server.</p>}
-        {rounds.data?.data.length === 0 && <p>No Rounds have been configured for this Event.</p>}
+      <section className={styles.panel} aria-labelledby="round-list-title"><h2 id="round-list-title">Games</h2>
+        {rounds.isPending && <p role="status">Loading Games…</p>}
+        {rounds.error && <div><p role="alert">{permissionError(rounds.error) ? 'Your account cannot manage Games.' : errorMessage(rounds.error, 'Could not load Games.')}</p><button type="button" onClick={() => void rounds.refetch()}>Retry Games</button></div>}
+        {rounds.data && rounds.error && <p className={styles.notice} role="status">Showing the last Game list received from the server.</p>}
+        {rounds.data?.data.length === 0 && <p>No Games have been configured for this Game.</p>}
         {rounds.data && rounds.data.data.length > 0 && <ol className={styles.list}>{rounds.data.data.map((item) => <li key={item.id}><button type="button" disabled={pending} aria-current={roundId === item.id ? 'true' : undefined} onClick={() => chooseRound(item.id)}><strong>{item.sequenceNumber}. {item.name}</strong><span>{item.status.replaceAll('_', ' ')}</span></button></li>)}</ol>}
-        {rounds.data && <nav className={styles.pagination} aria-label="Round pages"><button type="button" disabled={page <= 1 || pending} onClick={() => changePage(page - 1)}>Previous</button><span>Page {rounds.data.pagination.page} of {rounds.data.pagination.totalPages}</span><button type="button" disabled={page >= rounds.data.pagination.totalPages || pending} onClick={() => changePage(page + 1)}>Next</button></nav>}
+        {rounds.data && <nav className={styles.pagination} aria-label="Game pages"><button type="button" disabled={page <= 1 || pending} onClick={() => changePage(page - 1)}>Previous</button><span>Page {rounds.data.pagination.page} of {rounds.data.pagination.totalPages}</span><button type="button" disabled={page >= rounds.data.pagination.totalPages || pending} onClick={() => changePage(page + 1)}>Next</button></nav>}
       </section>
-      <section className={styles.panel} aria-labelledby="round-detail-title"><h2 id="round-detail-title">Selected Round</h2>
-        {!roundId && !creating && <p>Select a Round or create one.</p>}
-        {roundId && selected.isPending && <p role="status">Loading Round details…</p>}
-        {selected.data && selected.data.eventId !== eventId && <p role="status">The selected Round belongs to another Event. Choose a Round from this Event.</p>}
-        {selected.error && <div><p role="alert">{permissionError(selected.error) ? 'Your account cannot view this Round.' : errorMessage(selected.error, 'Could not load this Round.')}</p><button type="button" onClick={() => void selected.refetch()}>Retry Round</button></div>}
-        {round && selected.error && <p className={styles.notice} role="status">Showing the last saved Round details received from the server.</p>}
-        {round && <><h3>{round.sequenceNumber}. {round.name}</h3><p className={styles.status}>Status: {round.status.replaceAll('_', ' ')}</p><h4>Winning Patterns</h4><ul className={styles.patternSummary}>{round.patterns.map((pattern) => <li key={pattern.id}><strong>{pattern.patternType.replaceAll('_', ' ')}</strong><span>{pattern.enabled ? 'Enabled' : 'Disabled'} · up to {pattern.maxWinners} {pattern.maxWinners === 1 ? 'winner' : 'winners'} · {pattern.status}</span></li>)}</ul>{readOnly && <p className={styles.notice}>Configuration is locked after a Round leaves DRAFT. Pattern status and capacity are shown as saved by the server.</p>}{!editing && !readOnly && <button type="button" disabled={pending} onClick={beginEdit}>Edit configuration</button>}</>}
+      <section className={styles.panel} aria-labelledby="round-detail-title"><h2 id="round-detail-title">Selected Game</h2>
+        {!roundId && !creating && <p>Select a Game or create one.</p>}
+        {roundId && selected.isPending && <p role="status">Loading Game details…</p>}
+        {selected.data && selected.data.eventId !== eventId && <p role="status">The selected Game belongs to another Game. Choose a Game from this Game.</p>}
+        {selected.error && <div><p role="alert">{permissionError(selected.error) ? 'Your account cannot view this Game.' : errorMessage(selected.error, 'Could not load this Game.')}</p><button type="button" onClick={() => void selected.refetch()}>Retry Game</button></div>}
+        {round && selected.error && <p className={styles.notice} role="status">Showing the last saved Game details received from the server.</p>}
+        {round && <><h3>{round.sequenceNumber}. {round.name}</h3><p className={styles.status}>Status: {round.status.replaceAll('_', ' ')}</p><h4>Winning Patterns</h4><ul className={styles.patternSummary}>{round.patterns.map((pattern) => <li key={pattern.id}><strong>{pattern.patternType.replaceAll('_', ' ')}</strong><span>{pattern.enabled ? 'Enabled' : 'Disabled'} · up to {pattern.maxWinners} {pattern.maxWinners === 1 ? 'winner' : 'winners'} · {pattern.status}</span></li>)}</ul>{readOnly && <p className={styles.notice}>Configuration is locked after a Game leaves DRAFT. Pattern status and capacity are shown as saved by the server.</p>}{!editing && !readOnly && <button type="button" disabled={pending} onClick={beginEdit}>Edit configuration</button>}</>}
         {round && !creating && <AdminRoundOperations round={round} userId={user.id} />}
         {(creating || editing) && <form className={styles.form} onSubmit={submit}>
-          <h3>{creating ? 'Create a Round' : 'Edit Round configuration'}</h3>
+          <h3>{creating ? 'Create a Game' : 'Edit Game configuration'}</h3>
           <label>Sequence number<input type="number" min="1" step="1" required value={form.sequenceNumber} disabled={pending} onChange={(e) => setForm({ ...form, sequenceNumber: e.target.value })} /></label>
-          <label>Round name<input maxLength={255} required value={form.name} disabled={pending} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label>
+          <label>Game name<input maxLength={255} required value={form.name} disabled={pending} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label>
           <fieldset disabled={pending}><legend>Pattern configuration</legend>{form.patterns.map((pattern, index) => <div className={styles.pattern} key={pattern.patternType}><label><input type="checkbox" checked={pattern.enabled} onChange={(e) => changePattern(index, { enabled: e.target.checked })} />{pattern.patternType.replaceAll('_', ' ')}</label><label>Winner capacity<input aria-label={`${pattern.patternType.replaceAll('_', ' ')} capacity`} type="number" min="1" step="1" required={pattern.enabled} value={pattern.maxWinners} disabled={!pattern.enabled || pending} onChange={(e) => changePattern(index, { maxWinners: Number(e.target.value) })} /></label></div>)}</fieldset>
-          <div className={styles.actions}><button type="submit" disabled={pending}>{pending ? 'Saving…' : creating ? 'Save Round' : 'Save configuration'}</button><button type="button" disabled={pending} onClick={() => { setCreating(false); setEditing(false); setMessage(''); }}>Cancel</button></div>
+          <div className={styles.actions}><button type="submit" disabled={pending}>{pending ? 'Saving…' : creating ? 'Save Game' : 'Save configuration'}</button><button type="button" disabled={pending} onClick={() => { setCreating(false); setEditing(false); setMessage(''); }}>Cancel</button></div>
         </form>}
       </section>
     </div>
-    <p className={styles.back}><Link to={{ pathname: '/admin/event', search: `?eventId=${encodeURIComponent(eventId)}` }}>Return to Event management</Link></p>
+    <p className={styles.back}><Link to={{ pathname: '/admin/event', search: `?eventId=${encodeURIComponent(eventId)}` }}>Return to Game management</Link></p>
   </main>;
 }

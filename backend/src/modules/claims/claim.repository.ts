@@ -22,7 +22,7 @@ export interface IClaimRepository {
   ): Promise<ClaimRecord | null>;
   listByParticipant(
     participantId: string,
-    options: { page: number; limit: number },
+    options: { page: number; limit: number; gameId?: string },
     tx?: any
   ): Promise<{ data: ClaimRecord[]; total: number }>;
   getRoundPattern(
@@ -35,7 +35,7 @@ export interface IClaimRepository {
   updateStatus(claimId: string, data: { status: string; rejectionReason?: string | null; verifiedBy?: string; verifiedAt?: Date }, tx: any): Promise<ClaimRecord>;
   closePattern(roundId: string, patternType: string, tx: any): Promise<void>;
   getEventAndParticipantName(claimId: string, tx: any): Promise<{ eventId: string; participantName: string } | null>;
-  listAll(options: { page: number; limit: number }): Promise<{ data: AdminClaimListRow[]; total: number }>;
+  listAll(options: { page: number; limit: number; gameId?: string }): Promise<{ data: AdminClaimListRow[]; total: number }>;
 }
 
 export class ClaimRepository implements IClaimRepository {
@@ -73,7 +73,7 @@ export class ClaimRepository implements IClaimRepository {
 
   async listByParticipant(
     participantId: string,
-    options: { page: number; limit: number },
+    options: { page: number; limit: number; gameId?: string },
     tx?: any
   ): Promise<{ data: ClaimRecord[]; total: number }> {
     const db = this.getDbInstance(tx);
@@ -211,13 +211,13 @@ export class ClaimRepository implements IClaimRepository {
   }
 
   async listAll(
-    options: { page: number; limit: number }
+    options: { page: number; limit: number; gameId?: string }
   ): Promise<{ data: AdminClaimListRow[]; total: number }> {
     try {
       const db = getDb();
       const { page, limit } = options;
       const offset = (page - 1) * limit;
-      const [totalRow] = await db.select({ count: count() }).from(claims);
+      const [totalRow] = await db.select({ count: count() }).from(claims).where(options.gameId ? eq(claims.roundId, options.gameId) : undefined);
       const data = await db
         .select({
           id: claims.id,
@@ -233,21 +233,22 @@ export class ClaimRepository implements IClaimRepository {
           updatedAt: claims.updatedAt,
           participantName: sql<string>`COALESCE(${users.name}, 'Player')`,
           eventId: sql<string>`COALESCE(${events.id}, ${rounds.eventId}, 'e7bf4217-f212-4970-b3f1-e924e1782f25')`,
-          eventTitle: sql<string>`COALESCE(${events.title}, 'Tech Tambola')`,
+          eventTitle: sql<string>`COALESCE(${rounds.name}, 'Game')`,
         })
         .from(claims)
         .leftJoin(rounds, eq(claims.roundId, rounds.id))
         .leftJoin(events, eq(rounds.eventId, events.id))
         .leftJoin(participantProfiles, eq(claims.participantId, participantProfiles.id))
         .leftJoin(users, eq(participantProfiles.userId, users.id))
+        .where(options.gameId ? eq(claims.roundId, options.gameId) : undefined)
         .orderBy(desc(claims.createdAt), desc(claims.id))
         .limit(limit)
         .offset(offset);
-      if (data && data.length > 0) {
+      if (data) {
         return { data: data as AdminClaimListRow[], total: Number(totalRow?.count ?? 0) };
       }
-    } catch {
-      // In-memory fallback
+    } catch (error) {
+      if (options.gameId) throw error;
     }
 
     const active = getSharedActiveGame();

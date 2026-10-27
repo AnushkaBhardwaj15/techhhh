@@ -282,9 +282,9 @@ export class WinnerService {
     return committed.outcome.body;
   }
 
-  async listAdminClaims(options: { page?: number; limit?: number } = {}) {
+  async listAdminClaims(options: { page?: number; limit?: number; gameId?: string } = {}) {
     const pagination = this.normalizePagination(options);
-    const { data, total } = await this.claimRepo.listAll(pagination);
+    const { data, total } = await this.claimRepo.listAll({ ...pagination, gameId: options.gameId });
     return {
       data: data.map((claim) => ({
         id: claim.id,
@@ -305,9 +305,9 @@ export class WinnerService {
     };
   }
 
-  async listAdminWinners(options: { page?: number; limit?: number } = {}) {
+  async listAdminWinners(options: { page?: number; limit?: number; gameId?: string } = {}) {
     const pagination = this.normalizePagination(options);
-    return this.listWinners(this.winnerRepo.listAll(pagination), pagination);
+    return this.listWinners(this.winnerRepo.listAll({ ...pagination, gameId: options.gameId }), pagination);
   }
 
   async listParticipantWins(userId: string, eventId: string, options: { page?: number; limit?: number } = {}) {

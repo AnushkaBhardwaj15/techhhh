@@ -92,6 +92,7 @@ export interface ClaimOutcome {
   points?: number;
 }
 export interface PlayStore {
+  remove(id: string, actor: PlayActor): Promise<{ mode: 'deleted' | 'archived' }>;
   list(actor?: PlayActor): Promise<PlaySummary[]>;
   create(
     actor: PlayActor,

@@ -1,8 +1,9 @@
 import { apiRequest } from './client';
 import { adminClaimListSchema, rejectAdminClaimResponseSchema, verifyAdminClaimResponseSchema } from '../../types/adminClaim';
 
-export async function listAdminClaims({ page = 1, limit = 50, signal }: { page?: number; limit?: number; signal?: AbortSignal } = {}) {
+export async function listAdminClaims({ page = 1, limit = 50, gameId, signal }: { page?: number; limit?: number; gameId?: string; signal?: AbortSignal } = {}) {
   const query = new URLSearchParams({ page: String(page), limit: String(limit) });
+  if (gameId) query.set('gameId', gameId);
   return adminClaimListSchema.parse(await apiRequest(`/admin/claims?${query}`, { signal }));
 }
 

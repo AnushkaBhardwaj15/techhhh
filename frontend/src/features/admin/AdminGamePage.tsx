@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ApiError } from "../../lib/api/client";
-import { listPlayRounds, commandPlayRound, broadcastPlayRound } from "../../lib/api/play";
+import { listPlayRounds, commandPlayRound, broadcastPlayRound, deletePlayGame } from "../../lib/api/play";
 import { listAdminClaims, verifyAdminClaim, rejectAdminClaim } from "../../lib/api/adminClaims";
 import { usePlayState } from "../participant/usePlayState";
 import { AdminRoundParticipants } from "./AdminRoundParticipants";
@@ -13,6 +13,7 @@ import styles from "./AdminGamePage.module.css";
 import playStyles from "../participant/ReferencePlay.module.css";
 export function AdminGamePage() {
   const [params] = useSearchParams();
+  const navigate = useNavigate();
   const client = useQueryClient();
   const rounds = useQuery({
     queryKey: ["play-rounds"],
@@ -32,8 +33,9 @@ export function AdminGamePage() {
 
   const claimsQuery = useQuery({
     queryKey: ["admin-claims-game", id],
-    queryFn: () => listAdminClaims({ limit: 50 }),
-    refetchInterval: 1000,
+    queryFn: () => listAdminClaims({ limit: 50, gameId: id }),
+    enabled: Boolean(id),
+    refetchInterval: 3000,
   });
   const pendingClaims = (claimsQuery.data?.data ?? []).filter(
     (c) => (c.roundId === id || !id) && c.status === "PENDING_VERIFICATION"
@@ -210,6 +212,15 @@ export function AdminGamePage() {
   return (
     <main className={styles.page}>
       <div className={styles.gameContainer}>
+        <nav aria-label="Game sections" style={{ display: 'flex', gap: 16, marginBottom: 20 }}>
+          <Link to={`/admin/claims?gameId=${id}`}>Claims for this game</Link>
+          <Link to={`/admin/winners?gameId=${id}`}>Winners for this game</Link>
+          <button type="button" onClick={async () => {
+            if (!window.confirm('Delete this game? Played games are archived to preserve their results. End a running game first.')) return;
+            try { await deletePlayGame(id); await client.invalidateQueries({ queryKey: ['play-rounds'] }); navigate('/admin'); }
+            catch (err) { setError(err instanceof Error ? err.message : 'Could not delete game.'); }
+          }}>Delete game</button>
+        </nav>
         <div className={styles.navRow}>
           <Link className={styles.dashboardBackBtn} to="/admin">
             ← Dashboard
@@ -223,14 +234,14 @@ export function AdminGamePage() {
           <div className={styles.mainCard} style={{ textAlign: 'center', padding: '48px 24px' }}>
             <h2 style={{ fontSize: '22px', marginBottom: '12px' }}>No Active Game Loaded</h2>
             <p style={{ color: 'var(--color-text-secondary, #62584C)', maxWidth: '460px', margin: '0 auto 24px', lineHeight: 1.5 }}>
-              There is currently no active game round selected. You can start a round from the Host Dashboard or choose from existing game rounds.
+              There is currently no game selected. Create or open a game from the dashboard.
             </p>
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
               <Link className={styles.dashboardBackBtn} to="/admin" style={{ textDecoration: 'none' }}>
                 Return to Dashboard
               </Link>
-              <Link className={styles.dashboardBackBtn} to="/admin/rounds" style={{ textDecoration: 'none' }}>
-                Manage Rounds
+              <Link className={styles.dashboardBackBtn} to="/admin" style={{ textDecoration: 'none' }}>
+                Manage Games
               </Link>
             </div>
           </div>
@@ -294,7 +305,7 @@ export function AdminGamePage() {
                     busy={recovering}
                     onClick={() => void handleRecover()}
                   >
-                    Recover Round
+                    Recover Game
                   </ActionButton>
                 )}
                 {game.status === "READY" && (

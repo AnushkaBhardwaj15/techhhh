@@ -1,3 +1,4 @@
+import { AdminGameSelector } from './AdminGameSelector';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useOutletContext, useSearchParams } from 'react-router-dom';
 import { ApiError } from '../../lib/api/client';
@@ -15,11 +16,13 @@ function patternLabel(pattern: string) {
 export function AdminWinners() {
   const user = useOutletContext<AuthenticatedUser>();
   const [params, setParams] = useSearchParams();
+  const gameId = params.get('gameId') ?? '';
   const requestedPage = Number(params.get('winnerPage'));
   const page = Number.isSafeInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1;
   const winners = useQuery({
-    queryKey: winnersKey(user.id, page),
-    queryFn: ({ signal }) => listAdminWinners({ page, limit: PAGE_SIZE, signal }),
+    queryKey: [...winnersKey(user.id, page), gameId],
+    enabled: Boolean(gameId),
+    queryFn: ({ signal }) => listAdminWinners({ page, limit: PAGE_SIZE, gameId, signal }),
   });
   const totalPages = winners.data ? Math.max(1, Math.ceil(winners.data.total / winners.data.limit)) : 1;
 
@@ -39,7 +42,7 @@ export function AdminWinners() {
 
   function exportCsv() {
     if (!winners.data?.data.length) return;
-    const headers = ['Participant Name', 'Event Title', 'Round ID', 'Winning Pattern', 'Verified At'];
+    const headers = ['Participant Name', 'Game', 'Game ID', 'Winning Pattern', 'Verified At'];
     const rows = winners.data.data.map((w) => [
       `"${w.participantName.replace(/"/g, '""')}"`,
       `"${w.eventTitle.replace(/"/g, '""')}"`,
@@ -59,12 +62,12 @@ export function AdminWinners() {
     URL.revokeObjectURL(url);
   }
 
-  return <main className={styles.page}>
-    <p className={styles.eyebrow}>EVENT OPERATIONS / RESULTS</p>
+  return <main className={styles.page}><AdminGameSelector />
+    <p className={styles.eyebrow}>GAME OPERATIONS / RESULTS</p>
     <header className={styles.heading}>
       <div>
         <h1>Winner history</h1>
-        <p>Verified Winners recorded by the server, across Events. This history is read only.</p>
+        <p>Verified Winners recorded by the server, for the selected game.</p>
       </div>
       <Link to={{ pathname: '/admin', search: params.toString() ? `?${params}` : '' }}>Dashboard</Link>
     </header>
@@ -98,7 +101,7 @@ export function AdminWinners() {
         <p className={styles.scrollHint}>Scroll horizontally for all columns.</p>
         <table>
           <caption className={styles.visuallyHidden}>Verified Winner history, newest first</caption>
-          <thead><tr><th scope="col">Participant</th><th scope="col">Event</th><th scope="col">Round ID</th><th scope="col">Pattern</th><th scope="col">Verified</th></tr></thead>
+          <thead><tr><th scope="col">Participant</th><th scope="col">Game</th><th scope="col">Game ID</th><th scope="col">Pattern</th><th scope="col">Verified</th></tr></thead>
           <tbody>{winners.data.data.map((winner) => <tr key={winner.id}>
             <td>{winner.participantName}</td>
             <td>{winner.eventTitle}</td>

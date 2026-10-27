@@ -174,7 +174,7 @@ function ReferenceParticipantGame({ id }: { id: string }) {
               <span style={{ fontSize: '28px' }} aria-hidden="true">⏸️</span>
               <div>
                 <strong style={{ color: '#ffb74d', fontSize: '16px', display: 'block' }}>
-                  Event Paused by Host
+                  Game Paused by Host
                 </strong>
                 <p style={{ margin: '4px 0 0 0', color: '#e2e8f0', fontSize: '14px', lineHeight: 1.4 }}>
                   The host has temporarily paused the event. Calls and prize claims are on hold. Your ticket and marks are safely saved — live play will resume automatically as soon as the host resumes!
@@ -467,7 +467,7 @@ function AuthoritativeParticipantGame({
         <div className={styles.liveHeader}>
           <div>
             <p className={styles.kicker}>LIVE ROUND</p>
-            <h1>{round.data?.name ?? 'Round updates'}</h1>
+            <h1>{round.data?.name ?? 'Game updates'}</h1>
           </div>
           {round.data && <RoundStatus status={round.data.status} />}
         </div>

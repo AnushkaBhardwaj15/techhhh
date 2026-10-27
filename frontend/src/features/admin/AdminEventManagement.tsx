@@ -53,10 +53,10 @@ export function AdminEventManagement() {
       next.set('page', '1');
       setSearchParams(next);
       setCreating(false);
-      setMessage('Event created and saved.');
+      setMessage('Game created and saved.');
     },
     onError: async (error) => {
-      setMessage(eventError(error, 'We could not confirm whether the Event was created. Refresh the Event list before retrying.'));
+      setMessage(eventError(error, 'We could not confirm whether the Game was created. Refresh the Game list before retrying.'));
       await queryClient.invalidateQueries({ queryKey: ['admin-events', user.id, 'list'] });
     },
   });
@@ -70,10 +70,10 @@ export function AdminEventManagement() {
         setForm({ title: saved.title, description: saved.description ?? '' });
         setEditing(false);
       }
-      setMessage(variables.input.status ? `Event status changed to ${saved.status}.` : 'Event changes saved.');
+      setMessage(variables.input.status ? `Event status changed to ${saved.status}.` : 'Game changes saved.');
     },
     onError: async (error, variables) => {
-      setMessage(eventError(error, 'We could not confirm the saved Event state. The latest record has been requested; review it before retrying.'));
+      setMessage(eventError(error, 'We could not confirm the saved Game state. The latest record has been requested; review it before retrying.'));
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: eventKey(user.id, variables.id) }),
         queryClient.invalidateQueries({ queryKey: ['admin-events', user.id, 'list'] }),
@@ -124,67 +124,67 @@ export function AdminEventManagement() {
   }
 
   const listError = events.error instanceof ApiError && events.error.status === 403
-    ? 'Your account cannot manage Events.' : eventError(events.error, 'We could not load Events. Check your connection and try again.');
+    ? 'Your account cannot manage Games.' : eventError(events.error, 'We could not load Games. Check your connection and try again.');
 
   return <main className={styles.page}>
     <p className={styles.eyebrow}>OPERATIONS / CONFIGURATION</p>
     <header className={styles.heading}>
       <div>
-        <h1>Event management</h1>
-        <p>Select an Event to inspect its saved details and lifecycle.</p>
+        <h1>Game management</h1>
+        <p>Select an Game to inspect its saved details and lifecycle.</p>
       </div>
       <button
         type="button"
         disabled={pending}
         onClick={() => { setCreating((value) => !value); setEditing(false); setForm({ title: '', description: '' }); setMessage(''); }}
       >
-        Create Event
+        Create Game
       </button>
     </header>
     {message && <p className={styles.notice} role="status">{message}</p>}
     <div className={styles.columns}>
       <section className={styles.panel} aria-labelledby="event-list-heading">
-        <h2 id="event-list-heading">Events</h2>
-        {events.isPending ? <p role="status">Loading Events…</p> : events.error ? <div><p role="alert">{listError}</p><button type="button" disabled={pending} onClick={() => void events.refetch()}>Retry Events</button></div> : events.data.data.length === 0 ? <p>No Events have been created.</p> : <ul className={styles.list}>{events.data.data.map((item) => <li key={item.id}><button type="button" disabled={pending} aria-current={eventId === item.id ? 'true' : undefined} onClick={() => chooseEvent(item.id)}><strong>{item.title}</strong><span>{item.status}</span></button></li>)}</ul>}
-        {events.data && <nav className={styles.pagination} aria-label="Event pages"><button type="button" disabled={page <= 1 || pending} onClick={() => changePage(page - 1)}>Previous</button><span>Page {events.data.pagination.page} of {events.data.pagination.totalPages}</span><button type="button" disabled={page >= events.data.pagination.totalPages || pending} onClick={() => changePage(page + 1)}>Next</button></nav>}
+        <h2 id="event-list-heading">Games</h2>
+        {events.isPending ? <p role="status">Loading Games…</p> : events.error ? <div><p role="alert">{listError}</p><button type="button" disabled={pending} onClick={() => void events.refetch()}>Retry Games</button></div> : events.data.data.length === 0 ? <p>No Games have been created.</p> : <ul className={styles.list}>{events.data.data.map((item) => <li key={item.id}><button type="button" disabled={pending} aria-current={eventId === item.id ? 'true' : undefined} onClick={() => chooseEvent(item.id)}><strong>{item.title}</strong><span>{item.status}</span></button></li>)}</ul>}
+        {events.data && <nav className={styles.pagination} aria-label="Game pages"><button type="button" disabled={page <= 1 || pending} onClick={() => changePage(page - 1)}>Previous</button><span>Page {events.data.pagination.page} of {events.data.pagination.totalPages}</span><button type="button" disabled={page >= events.data.pagination.totalPages || pending} onClick={() => changePage(page + 1)}>Next</button></nav>}
       </section>
       <section className={styles.panel} aria-labelledby="event-detail-heading">
-        <h2 id="event-detail-heading">Selected Event</h2>
-        {!eventId && <p>Select an Event from the list, or create one.</p>}
-        {eventId && selected.isPending && <p role="status">Loading Event details…</p>}
-        {eventId && selected.error && <div><p role="alert">{eventError(selected.error, 'We could not load this Event.')}</p><button type="button" onClick={() => void selected.refetch()}>Retry Event</button></div>}
+        <h2 id="event-detail-heading">Selected Game</h2>
+        {!eventId && <p>Select an Game from the list, or create one.</p>}
+        {eventId && selected.isPending && <p role="status">Loading Game details…</p>}
+        {eventId && selected.error && <div><p role="alert">{eventError(selected.error, 'We could not load this Game.')}</p><button type="button" onClick={() => void selected.refetch()}>Retry Game</button></div>}
         {selectedEvent && <>
           <h3 className={styles.eventName}>{selectedEvent.title}</h3>
           <dl className={styles.details}>
             <div><dt>Status</dt><dd>{selectedEvent.status}</dd></div>
-            <div><dt>Event ID</dt><dd>{selectedEvent.id}</dd></div>
+            <div><dt>Game ID</dt><dd>{selectedEvent.id}</dd></div>
             <div><dt>Description</dt><dd>{selectedEvent.description || 'No description'}</dd></div>
             <div><dt>Started</dt><dd>{selectedEvent.startedAt ? new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(selectedEvent.startedAt)) : 'Not started'}</dd></div>
             <div><dt>Completed</dt><dd>{selectedEvent.completedAt ? new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(selectedEvent.completedAt)) : 'Not completed'}</dd></div>
           </dl>
           <p><Link to={`/admin/questions?eventId=${encodeURIComponent(selectedEvent.id)}`}>Manage Questions &amp; Keys</Link></p>
-          {!editing && <div className={styles.actions}><button type="button" disabled={pending || terminal} onClick={() => setEditing(true)}>Edit Event</button></div>}
-          {!terminal && <div className={styles.actions} aria-label="Event lifecycle actions">
+          {!editing && <div className={styles.actions}><button type="button" disabled={pending || terminal} onClick={() => setEditing(true)}>Edit Game</button></div>}
+          {!terminal && <div className={styles.actions} aria-label="Game lifecycle actions">
             {selectedEvent.status === 'DRAFT' && <>
               <button type="button" disabled={pending} onClick={() => transitionEvent('READY')}>{pending && update.variables?.input.status === 'READY' ? 'Checking…' : 'Mark ready'}</button>
-              <button type="button" disabled={pending} onClick={() => transitionEvent('CANCELLED')}>Cancel Event</button>
+              <button type="button" disabled={pending} onClick={() => transitionEvent('CANCELLED')}>Cancel Game</button>
             </>}
             {selectedEvent.status === 'READY' && <>
               <button type="button" disabled={pending} onClick={() => transitionEvent('DRAFT')}>Return to draft</button>
-              <button type="button" disabled={pending} onClick={() => transitionEvent('LIVE')}>{pending && update.variables?.input.status === 'LIVE' ? 'Starting…' : 'Start Event'}</button>
-              <button type="button" disabled={pending} onClick={() => transitionEvent('CANCELLED')}>Cancel Event</button>
+              <button type="button" disabled={pending} onClick={() => transitionEvent('LIVE')}>{pending && update.variables?.input.status === 'LIVE' ? 'Starting…' : 'Start Game'}</button>
+              <button type="button" disabled={pending} onClick={() => transitionEvent('CANCELLED')}>Cancel Game</button>
             </>}
             {selectedEvent.status === 'LIVE' && <>
-              <button type="button" disabled={pending} onClick={() => transitionEvent('PAUSED')}>Pause Event</button>
-              <button type="button" disabled={pending} onClick={() => transitionEvent('COMPLETED')}>Complete Event</button>
+              <button type="button" disabled={pending} onClick={() => transitionEvent('PAUSED')}>Pause Game</button>
+              <button type="button" disabled={pending} onClick={() => transitionEvent('COMPLETED')}>Complete Game</button>
             </>}
             {selectedEvent.status === 'PAUSED' && <>
-              <button type="button" disabled={pending} onClick={() => transitionEvent('LIVE')}>{pending && update.variables?.input.status === 'LIVE' ? 'Resuming…' : 'Resume Event'}</button>
-              <button type="button" disabled={pending} onClick={() => transitionEvent('CANCELLED')}>Cancel Event</button>
+              <button type="button" disabled={pending} onClick={() => transitionEvent('LIVE')}>{pending && update.variables?.input.status === 'LIVE' ? 'Resuming…' : 'Resume Game'}</button>
+              <button type="button" disabled={pending} onClick={() => transitionEvent('CANCELLED')}>Cancel Game</button>
             </>}
           </div>}
           {editing && <form className={styles.form} onSubmit={submitUpdate}>
-            <Field label="Event title" value={form.title} onChange={(value) => selectInput('title', value)} maxLength={255} required disabled={pending} />
+            <Field label="Game title" value={form.title} onChange={(value) => selectInput('title', value)} maxLength={255} required disabled={pending} />
             <Field label="Description" value={form.description} onChange={(value) => selectInput('description', value)} maxLength={2000} disabled={pending} />
             <div className={styles.actions}>
               <button type="submit" disabled={pending}>{update.isPending ? 'Saving…' : 'Save changes'}</button>
@@ -195,12 +195,12 @@ export function AdminEventManagement() {
       </section>
     </div>
     {creating && <section className={styles.createPanel} aria-labelledby="create-event-heading">
-      <h2 id="create-event-heading">Create an Event</h2>
+      <h2 id="create-event-heading">Create an Game</h2>
       <form className={styles.form} onSubmit={submitCreate}>
-        <Field label="Event title" value={form.title} onChange={(value) => selectInput('title', value)} maxLength={255} required disabled={pending} />
+        <Field label="Game title" value={form.title} onChange={(value) => selectInput('title', value)} maxLength={255} required disabled={pending} />
         <Field label="Description" value={form.description} onChange={(value) => selectInput('description', value)} maxLength={2000} disabled={pending} />
         <div className={styles.actions}>
-          <button type="submit" disabled={pending}>{create.isPending ? 'Creating…' : 'Save Event'}</button>
+          <button type="submit" disabled={pending}>{create.isPending ? 'Creating…' : 'Save Game'}</button>
           <button type="button" disabled={pending} onClick={() => setCreating(false)}>Cancel</button>
         </div>
       </form>

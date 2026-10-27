@@ -1,4 +1,4 @@
-import { and, count, eq, inArray, isNotNull, sql } from 'drizzle-orm';
+import { and, count, countDistinct, eq, inArray, isNotNull, sql } from 'drizzle-orm';
 import { getDb } from '../../db/client.ts';
 import { lockParticipantEvent } from './participant.repository.ts';
 import { adminProfiles, participantProfiles, sessions, users } from '../../db/schema/users.ts';
@@ -25,9 +25,9 @@ export class ParticipantBatchRepository {
   async list(eventId: string) {
     return this.database().select({
       batchName: participantProfiles.batchName,
-      total: count(),
-      active: sql<number>`count(*) filter (where ${participantProfiles.status} = 'ACTIVE')::int`,
-    }).from(participantProfiles).where(and(eq(participantProfiles.eventId, eventId), isNotNull(participantProfiles.batchName)))
+      total: countDistinct(participantProfiles.userId),
+      active: sql<number>`count(distinct ${participantProfiles.userId}) filter (where ${users.status} = 'ACTIVE')::int`,
+    }).from(participantProfiles).innerJoin(users, eq(users.id, participantProfiles.userId)).where(isNotNull(participantProfiles.batchName))
       .groupBy(participantProfiles.batchName).orderBy(participantProfiles.batchName);
   }
 
@@ -38,9 +38,11 @@ export class ParticipantBatchRepository {
       .from(participantProfiles).where(eq(participantProfiles.id, scope.id)))[0]?.eventId;
     if (!eventId) return [];
     await lockParticipantEvent(eventId, tx);
+    const selected = await tx.select({ userId: participantProfiles.userId }).from(participantProfiles)
+      .where('id' in scope ? eq(participantProfiles.id, scope.id) : eq(participantProfiles.batchName, scope.batchName));
+    if (!selected.length) return [];
     return tx.select({ id: participantProfiles.id, userId: participantProfiles.userId }).from(participantProfiles)
-      .where('id' in scope ? eq(participantProfiles.id, scope.id) : and(eq(participantProfiles.eventId, scope.eventId), eq(participantProfiles.batchName, scope.batchName)))
-      .orderBy(participantProfiles.id).for('update');
+      .where(and(inArray(participantProfiles.userId, selected.map((row) => row.userId)), sql`NOT EXISTS (SELECT 1 FROM ${adminProfiles} WHERE ${adminProfiles.userId} = ${participantProfiles.userId})`)).orderBy(participantProfiles.id).for('update');
   }
 
   async hasHistory(members: Member[], tx: BatchTransaction) {
@@ -55,6 +57,7 @@ export class ParticipantBatchRepository {
     await tx.select({ id: users.id }).from(users).where(inArray(users.id, userIds)).orderBy(users.id).for('update');
     await tx.update(sessions).set({ revokedAt: new Date() }).where(inArray(sessions.userId, userIds));
     if (mode === 'deactivated') {
+      await tx.update(users).set({ status: 'INACTIVE', updatedAt: new Date() }).where(inArray(users.id, userIds));
       await tx.update(participantProfiles).set({ status: 'INACTIVE', updatedAt: new Date() }).where(inArray(participantProfiles.id, ids));
     } else {
       await tx.delete(participantProfiles).where(inArray(participantProfiles.id, ids));

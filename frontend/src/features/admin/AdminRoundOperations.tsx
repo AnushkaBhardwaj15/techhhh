@@ -12,7 +12,7 @@ const detailKey = (userId: string, eventId: string, roundId: string) => ['admin-
 const ticketCountKey = (userId: string, roundId: string) => ['admin-round-tickets', userId, roundId, 'count'] as const;
 
 const commandLabels: Record<Command, string> = {
-  ready: 'Mark ready', start: 'Start Round', pause: 'Pause Round', resume: 'Resume Round', complete: 'Complete Round', cancel: 'Cancel Round',
+  ready: 'Mark ready', start: 'Start Game', pause: 'Pause Game', resume: 'Resume Game', complete: 'Complete Game', cancel: 'Cancel Game',
 };
 
 async function runCommand(roundId: string, command: Command, idempotencyKey?: string) {
@@ -27,8 +27,8 @@ async function runCommand(roundId: string, command: Command, idempotencyKey?: st
 }
 
 function errorMessage(error: unknown) {
-  if (error instanceof ApiError && error.status === 0) return 'The outcome is uncertain. The Round was refreshed; retrying this command will reuse its idempotency key.';
-  return error instanceof ApiError ? error.message : 'The operation failed. Refresh the Round before trying again.';
+  if (error instanceof ApiError && error.status === 0) return 'The outcome is uncertain. The Game was refreshed; retrying this command will reuse its idempotency key.';
+  return error instanceof ApiError ? error.message : 'The operation failed. Refresh the Game before trying again.';
 }
 
 function confirmMessage(round: AdminRound, command: Command) {
@@ -107,7 +107,7 @@ export function AdminRoundOperations({ round, userId }: { round: AdminRound; use
   const terminal = round.status === 'COMPLETED' || round.status === 'CANCELLED';
   return <section className={styles.panel} aria-labelledby="round-operations-title">
     <p className={styles.eyebrow}>SERVER CONTROL</p>
-    <h4 id="round-operations-title">Round operations</h4>
+    <h4 id="round-operations-title">Game operations</h4>
     <p className={styles.authority}>Current status is supplied by the server: <strong>{round.status.replaceAll('_', ' ')}</strong>.</p>
     {round.status === 'DRAFT' && <>
       <div className={styles.allocation}>
@@ -116,21 +116,21 @@ export function AdminRoundOperations({ round, userId }: { round: AdminRound; use
         {!tickets.error && !tickets.isPending && <button type="button" disabled={pending} onClick={() => void tickets.refetch()}>Refresh count</button>}
       </div>
       {tickets.error && <p role="alert">Ticket allocation count could not be loaded. The generation result will still come from the server.</p>}
-      <p>Generate missing Tickets while this Round is in DRAFT. Readiness is checked by the server when you mark the Round ready.</p>
+      <p>Generate missing Tickets while this Game is in DRAFT. Readiness is checked by the server when you mark the Game ready.</p>
       <div className={styles.actions}>
         <button type="button" disabled={pending} onClick={requestGeneration}>{generate.isPending ? 'Generating…' : 'Generate Tickets'}</button>
         <button type="button" disabled={pending} onClick={() => request('ready')}>{transition.variables?.command === 'ready' && pending ? 'Checking…' : 'Mark ready'}</button>
       </div>
     </>}
-    {round.status === 'READY' && <button type="button" disabled={pending} onClick={() => request('start')}>{transition.variables?.command === 'start' && pending ? 'Starting…' : 'Start Round'}</button>}
+    {round.status === 'READY' && <button type="button" disabled={pending} onClick={() => request('start')}>{transition.variables?.command === 'start' && pending ? 'Starting…' : 'Start Game'}</button>}
     {round.status === 'ACTIVE' && <div className={styles.actions}>
-      <button type="button" disabled={pending} onClick={() => request('pause')}>{transition.variables?.command === 'pause' && pending ? 'Pausing…' : 'Pause Round'}</button>
-      <button type="button" disabled={pending} onClick={() => request('complete')}>{transition.variables?.command === 'complete' && pending ? 'Completing…' : 'Complete Round'}</button>
+      <button type="button" disabled={pending} onClick={() => request('pause')}>{transition.variables?.command === 'pause' && pending ? 'Pausing…' : 'Pause Game'}</button>
+      <button type="button" disabled={pending} onClick={() => request('complete')}>{transition.variables?.command === 'complete' && pending ? 'Completing…' : 'Complete Game'}</button>
     </div>}
-    {round.status === 'PAUSED' && <button type="button" disabled={pending} onClick={() => request('resume')}>{transition.variables?.command === 'resume' && pending ? 'Resuming…' : 'Resume Round'}</button>}
-    {round.status === 'RECOVERY_REQUIRED' && <p className={styles.recovery} role="alert">Recovery is required. The verified backend route does not expose a recovery command yet; this screen will not resume the Round automatically.</p>}
-    {!terminal && <button className={styles.cancel} type="button" disabled={pending} onClick={() => request('cancel')}>{transition.variables?.command === 'cancel' && pending ? 'Cancelling…' : 'Cancel Round'}</button>}
-    {terminal && <p>This Round is closed to further operations.</p>}
+    {round.status === 'PAUSED' && <button type="button" disabled={pending} onClick={() => request('resume')}>{transition.variables?.command === 'resume' && pending ? 'Resuming…' : 'Resume Game'}</button>}
+    {round.status === 'RECOVERY_REQUIRED' && <p className={styles.recovery} role="alert">Recovery is required. The verified backend route does not expose a recovery command yet; this screen will not resume the Game automatically.</p>}
+    {!terminal && <button className={styles.cancel} type="button" disabled={pending} onClick={() => request('cancel')}>{transition.variables?.command === 'cancel' && pending ? 'Cancelling…' : 'Cancel Game'}</button>}
+    {terminal && <p>This Game is closed to further operations.</p>}
     {report && <dl className={styles.report} aria-label="Ticket generation report">
       <div><dt>Participants</dt><dd>{report.totalParticipants}</dd></div><div><dt>Created</dt><dd>{report.created}</dd></div>
       <div><dt>Already had Tickets</dt><dd>{report.existing}</dd></div><div><dt>Skipped</dt><dd>{report.skipped}</dd></div>

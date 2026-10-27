@@ -113,3 +113,7 @@ export async function broadcastPlayRound(id: string, broadcast: boolean) {
     }),
   );
 }
+
+export async function deletePlayGame(id: string) {
+  return apiRequest<{ mode: 'deleted' | 'archived' }>(`/admin/play/rounds/${encodeURIComponent(id)}`, { method: 'DELETE' });
+}

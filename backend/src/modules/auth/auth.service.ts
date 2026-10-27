@@ -103,9 +103,9 @@ export class AuthService {
     }
 
     // 4. Check account status
-    const isProfileInactive = isParticipant && user.participantProfile?.status !== 'ACTIVE';
 
-    if (user.status !== 'ACTIVE' || isProfileInactive || (!isParticipant && !user.adminProfile)) {
+
+    if (user.status !== 'ACTIVE' || (!isParticipant && !user.adminProfile)) {
       this.rateLimiter.recordFailure(email, ip);
 
       await this.audit.record({
@@ -193,9 +193,9 @@ export class AuthService {
 
     const { session, user } = active;
     const isParticipant = !!user?.participantProfile && !user?.adminProfile;
-    const isProfileInactive = isParticipant && user?.participantProfile?.status !== 'ACTIVE';
 
-    if (!user || user.status !== 'ACTIVE' || isProfileInactive) {
+
+    if (!user || user.status !== 'ACTIVE') {
       throw new UnauthorizedError('User identity not found or inactive');
     }
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { validateRecoverySnapshot } from './recovery.domain.ts';
+import { reconcileRecoveryMarks, validateRecoverySnapshot } from './recovery.domain.ts';
 
 function snapshot() {
   return {
@@ -29,4 +29,18 @@ describe('recovery consistency validation', () => {
   it('rejects Winners scoped to another Event', () => { expect(() => validateRecoverySnapshot({ ...snapshot(), eventId: 'event', winnerRelations: [{ eventId: 'other', roundId: 'round', participantId: 'participant', patternType: 'EARLY_5', claimRoundId: 'round', claimParticipantId: 'participant', claimPatternType: 'EARLY_5' }] })).toThrow('Winner Event'); });
   it('rejects a verified Claim without a Winner', () => { expect(() => validateRecoverySnapshot({ ...snapshot(), claimRelations: [{ claimStatus: 'VERIFIED', claimRoundId: 'round', claimParticipantId: 'participant', claimPatternType: 'EARLY_5', claimTicketId: 'ticket', ticketId: 'ticket', ticketRoundId: 'round', ticketParticipantId: 'participant', winnerClaimId: null, winnerRoundId: null, winnerEventId: null, winnerParticipantId: null, winnerPatternType: null }] })).toThrow('Claim and verified Winner'); });
   it('rejects a Winner linked to a different Claim identity', () => { expect(() => validateRecoverySnapshot({ ...snapshot(), winnerRelations: [{ eventId: 'event', roundId: 'round', participantId: 'participant', patternType: 'EARLY_5', claimRoundId: 'other', claimParticipantId: 'participant', claimPatternType: 'EARLY_5' }] })).toThrow('Winner does not match'); });
+});
+
+describe('recovery of premature legacy marks', () => {
+  it('keeps drawn marks and removes only premature marks', () => {
+    const s = snapshot();
+    s.marks.push({ ticketId: 'ticket', cellTicketId: 'ticket', keyId: 'future' });
+    expect(reconcileRecoveryMarks(s)).toEqual([s.marks[0]!]);
+    expect(() => validateRecoverySnapshot({ ...s, marks: reconcileRecoveryMarks(s) })).not.toThrow();
+  });
+  it('does not repair cross-ticket corruption', () => {
+    const s = snapshot();
+    s.marks[0]!.cellTicketId = 'other';
+    expect(() => reconcileRecoveryMarks(s)).toThrow('Mark');
+  });
 });

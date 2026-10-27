@@ -42,7 +42,7 @@ export function ParticipantLobby({ waiting = false }: { waiting?: boolean }) {
     refetchOnWindowFocus: "always",
   });
 
-  // 2. Current Round Query (only poll if participant is in waiting state)
+  // 2. Current Game Query (only poll if participant is in waiting state)
   const currentRound = useQuery({
     queryKey: ["participant", user.id, "round", event.data?.id],
     queryFn: ({ signal }) => getCurrentRound(signal),

@@ -13,6 +13,7 @@ export interface WinnerListRow extends WinnerRecord {
 }
 
 export interface WinnerListOptions {
+  gameId?: string;
   page: number;
   limit: number;
 }
@@ -114,9 +115,10 @@ export class WinnerRepository implements IWinnerRepository {
       const db = getDb();
       const { page, limit } = options;
       const offset = (page - 1) * limit;
-      const where = participantId
-        ? or(eq(winners.participantId, participantId), eq(participantProfiles.userId, participantId))
-        : undefined;
+      const where = and(
+        participantId ? or(eq(winners.participantId, participantId), eq(participantProfiles.userId, participantId)) : undefined,
+        options.gameId ? eq(winners.roundId, options.gameId) : undefined
+      );
       const [totalRow] = await db
         .select({ count: count() })
         .from(winners)
@@ -134,9 +136,10 @@ export class WinnerRepository implements IWinnerRepository {
           verifiedAt: winners.verifiedAt,
           ticketId: sql<string>`COALESCE(${claims.ticketId}, ${winners.id})`,
           participantName: sql<string>`COALESCE(${users.name}, 'Player')`,
-          eventTitle: sql<string>`COALESCE(${events.title}, 'Tech Tambola')`,
+          eventTitle: sql<string>`COALESCE(${rounds.name}, 'Game')`,
         })
         .from(winners)
+        .leftJoin(rounds, eq(winners.roundId, rounds.id))
         .leftJoin(claims, eq(winners.claimId, claims.id))
         .leftJoin(participantProfiles, eq(winners.participantId, participantProfiles.id))
         .leftJoin(users, eq(participantProfiles.userId, users.id))
@@ -145,11 +148,11 @@ export class WinnerRepository implements IWinnerRepository {
         .orderBy(desc(winners.verifiedAt), desc(winners.id))
         .limit(limit)
         .offset(offset);
-      if (data && data.length > 0) {
+      if (data) {
         return { data: data as WinnerListRow[], total: Number(totalRow?.count ?? 0) };
       }
-    } catch {
-      // In-memory fallback
+    } catch (error) {
+      if (options.gameId) throw error;
     }
 
     const active = getSharedActiveGame();

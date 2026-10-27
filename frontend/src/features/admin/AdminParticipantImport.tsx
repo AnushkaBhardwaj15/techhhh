@@ -9,6 +9,7 @@ import styles from './AdminParticipants.module.css';
 
 export function AdminParticipantImport({ eventId, userId, disabled = false, onPendingChange }: { eventId: string; userId: string; disabled?: boolean; onPendingChange: (pending: boolean) => void }) {
   const queryClient = useQueryClient();
+  const fileInput = useRef<HTMLInputElement>(null);
   const [batchName, setBatchName] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<ParticipantCsvPreview | null>(null);
@@ -34,9 +35,11 @@ export function AdminParticipantImport({ eventId, userId, disabled = false, onPe
       return importAdminParticipants({ eventId, file, batchName: batchName.trim(), idempotencyKey: attemptKey.current });
     },
     onSuccess: async (result) => {
-      setReport(result); setAmbiguous(false); setRetryAllowed(false); setMessage('The server returned this import report.');
-      await queryClient.invalidateQueries({ queryKey: ['admin-participants', userId, eventId] });
-      await queryClient.invalidateQueries({ queryKey: ['participant-batches', userId, eventId] });
+      if (fileInput.current) fileInput.current.value = '';
+      setFile(null); setPreview(null); setBatchName(''); attemptKey.current = '';
+      setReport(result); setAmbiguous(false); setRetryAllowed(false); setMessage('Import complete. Results are shown below.');
+      void queryClient.invalidateQueries({ queryKey: ['admin-participants', userId, eventId] });
+      void queryClient.invalidateQueries({ queryKey: ['participant-batches', userId, eventId] });
     },
     onError: async (error) => {
       const uncertain = !(error instanceof ApiError) || error.status === 0 || error.status >= 500;
@@ -48,7 +51,7 @@ export function AdminParticipantImport({ eventId, userId, disabled = false, onPe
           : error instanceof ApiError
             ? `The server did not accept the import: ${error.message}`
             : 'The import could not be completed. Review the current Participant results before trying again.');
-      await queryClient.invalidateQueries({ queryKey: ['admin-participants', userId, eventId] });
+      void queryClient.invalidateQueries({ queryKey: ['admin-participants', userId, eventId] });
     },
     onSettled: () => { requestLock.current = false; onPendingChange(false); },
   });
@@ -90,14 +93,14 @@ export function AdminParticipantImport({ eventId, userId, disabled = false, onPe
     {ambiguous && retryAllowed && <p role="note">A retry will use the same idempotency key for this selected file.</p>}
     <div className={styles.form}>
       <label>Batch name<input value={batchName} maxLength={100} required disabled={disabled || mutation.isPending || ambiguous} onChange={(event) => { setBatchName(event.target.value); attemptKey.current = crypto.randomUUID(); }} /></label>
-      <label>CSV file<input type="file" accept=".csv,.xlsx,.xls,text/csv" disabled={disabled || mutation.isPending || reading || ambiguous} onChange={chooseFile} /></label>
+      <label>CSV file<input ref={fileInput} type="file" accept=".csv,.xlsx,.xls,text/csv" disabled={disabled || mutation.isPending || reading || ambiguous} onChange={chooseFile} /></label>
       <p>CSV or a single Excel sheet, up to 10 MiB and 500 data rows. Required headers: <code>email,password</code>; optional: <code>name,external_id</code>. Passwords must contain 8–128 characters. Give each group a batch name, such as testing1 or prod.</p>
     </div>
     {excel && !fileError && <div><p>{file?.name} will be validated by the server. Passwords are never shown in previews.</p><button type="button" disabled={disabled || !batchName.trim() || mutation.isPending || (ambiguous && !retryAllowed)} onClick={confirmImport}>{mutation.isPending ? 'Importing…' : 'Confirm Excel import'}</button></div>}
     {reading && <p role="status">Reading CSV…</p>}
     {fileError && <p role="alert">{fileError}</p>}
     {preview && <div className={styles.preview}>
-      <p>Local structure preview: {preview.totalRows} data rows. Showing up to {PARTICIPANT_CSV_PREVIEW_ROWS}. Duplicate account, Event and credential checks happen on the server after confirmation.</p>
+      <p>Local structure preview: {preview.totalRows} data rows. Showing up to {PARTICIPANT_CSV_PREVIEW_ROWS}. Duplicate account and credential checks happen on the server after confirmation.</p>
       {preview.issues.length > 0 && <ul className={styles.issues} aria-label="CSV structure issues">{preview.issues.map((issue) => <li key={issue}>{issue}</li>)}</ul>}
       {preview.headers.length > 0 && <div className={styles.tableWrap}><table><caption>CSV preview</caption><thead><tr>{preview.headers.map((header, index) => <th key={`${header}-${index}`} scope="col">{header || `Column ${index + 1}`}</th>)}</tr></thead><tbody>{preview.rows.map((row, rowIndex) => <tr key={rowIndex}>{preview.headers.map((_, columnIndex) => <td key={columnIndex}>{row[columnIndex] ?? ''}</td>)}</tr>)}</tbody></table></div>}
       <div className={styles.actions}>

@@ -31,7 +31,7 @@ export class PlayRepository implements PlayStore {
     const rows = await this.connection().unsafe<
       (PlaySummary & { is_broadcast?: boolean })[]
     >(
-      `SELECT id,event_id AS "eventId",name,game_code AS code,status,sequence_number AS "sequenceNumber",created_at AS "createdAt",COALESCE(is_broadcast,false) AS "isBroadcast" FROM rounds WHERE game_code IS NOT NULL ORDER BY (COALESCE(is_broadcast,false)=true) DESC, (status='ACTIVE') DESC, (status='READY') DESC, created_at DESC`,
+      `SELECT id,event_id AS "eventId",name,game_code AS code,status,sequence_number AS "sequenceNumber",created_at AS "createdAt",COALESCE(is_broadcast,false) AS "isBroadcast" FROM rounds WHERE game_code IS NOT NULL AND archived_at IS NULL ORDER BY (COALESCE(is_broadcast,false)=true) DESC, (status='ACTIVE') DESC, (status='READY') DESC, created_at DESC`,
     );
     return rows.map((r) => ({
       ...r,
@@ -39,10 +39,30 @@ export class PlayRepository implements PlayStore {
       isBroadcast: Boolean(r.isBroadcast),
     }));
   }
+  async remove(id: string, _actor: PlayActor): Promise<{ mode: 'deleted' | 'archived' }> {
+    return this.connection().begin(async (tx) => {
+      const [game] = await tx.unsafe<{ status: string }[]>('SELECT status FROM rounds WHERE id=$1 AND archived_at IS NULL FOR UPDATE', [id]);
+      if (!game) throw new NotFoundError('Game not found');
+      if (['ACTIVE', 'PAUSED'].includes(game.status)) throw new ConflictError('End this game before deleting it.');
+      const [history] = await tx.unsafe<{ present: boolean }[]>(`SELECT
+        EXISTS(SELECT 1 FROM draws WHERE round_id=$1) OR EXISTS(SELECT 1 FROM claims WHERE round_id=$1)
+        OR EXISTS(SELECT 1 FROM round_participant_joins WHERE round_id=$1)
+        OR EXISTS(SELECT 1 FROM ticket_marks m JOIN tickets t ON t.id=m.ticket_id WHERE t.round_id=$1) AS present`, [id]);
+      if (history?.present) {
+        await tx.unsafe("UPDATE rounds SET archived_at=now(),is_broadcast=false,status='COMPLETED',updated_at=now() WHERE id=$1", [id]);
+        return { mode: 'archived' as const };
+      }
+      await tx.unsafe('DELETE FROM tickets WHERE round_id=$1', [id]);
+      await tx.unsafe('DELETE FROM round_questions WHERE round_id=$1', [id]);
+      await tx.unsafe('DELETE FROM round_patterns WHERE round_id=$1', [id]);
+      await tx.unsafe('DELETE FROM rounds WHERE id=$1', [id]);
+      return { mode: 'deleted' as const };
+    }) as Promise<{ mode: 'deleted' | 'archived' }>;
+  }
   async findCode(code: string, actor: PlayActor) {
     return this.connection().begin(async (tx) => {
       const rounds = await tx.unsafe<{ id: string; event_id: string; status: string }[]>(
-        `SELECT id, event_id, status FROM rounds WHERE game_code=$1`,
+        `SELECT id, event_id, status FROM rounds WHERE game_code=$1 AND archived_at IS NULL`,
         [code],
       );
       if (!rounds[0])

@@ -178,7 +178,7 @@ export class ParticipantService {
   }
 
   async listParticipants(options: {
-    eventId: string;
+    eventId?: string;
     page?: number;
     limit?: number;
     search?: string;
@@ -213,6 +213,7 @@ export class ParticipantService {
     context?: { ip?: string; userAgent?: string; requestId?: string }
   ): Promise<ParticipantSummary> {
     const existing = await this.getParticipantById(id);
+    if ((await this.userRepo.findById(existing.userId))?.adminProfile) throw new ConflictError('Staff accounts must be managed in Administrators.');
 
     if (input.externalId !== undefined && input.externalId !== null && input.externalId !== existing.externalId) {
       const conflict = await this.repo.findByExternalIdAndEvent(

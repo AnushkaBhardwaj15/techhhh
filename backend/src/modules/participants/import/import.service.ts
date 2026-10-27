@@ -8,6 +8,9 @@ import {
 } from '../../../shared/idempotency/idempotency.repository.ts';
 import { ConflictError, NotFoundError, ValidationError } from '../../../shared/errors/app-error.ts';
 import { z } from 'zod';
+import { hashPassword } from '../../auth/auth.domain.ts';
+import { CredentialBatchRepository } from './credential-batch.repository.ts';
+import type { ParsedCsvRow } from './csv-parser.ts';
 import { createHash } from 'node:crypto';
 import { participantBatchRepository, type ParticipantBatchRepository } from '../participant-batch.repository.ts';
 
@@ -85,6 +88,7 @@ export class ImportService {
       const seenEmailsInFile = new Set<string>();
       const seenExternalIdsInFile = new Set<string>();
 
+      const credentialRows: ParsedCsvRow[] = [];
       // 4. Process each row independently
       for (const row of rows) {
         if ((batchName && row.password === undefined) || (row.password !== undefined && (row.password.length < 8 || row.password.length > 128))) {
@@ -141,6 +145,10 @@ export class ImportService {
           seenExternalIdsInFile.add(row.externalId);
         }
 
+        if (row.email.length > 255 || (row.externalId?.length ?? 0) > 255) {
+          failedCount++; errors.push({ rowIndex: row.rowIndex, email: row.email, reason: 'Email and external ID must be at most 255 characters' }); continue;
+        }
+        if (row.password !== undefined) { credentialRows.push(row); continue; }
         // Row creation attempt
         try {
           await this.partService.createParticipant(
@@ -174,6 +182,26 @@ export class ImportService {
             });
           }
         }
+      }
+
+      if (credentialRows.length) {
+        const repository = new CredentialBatchRepository();
+        const existing = await repository.existing(credentialRows.map((row) => row.email), credentialRows.flatMap((row) => row.externalId ? [row.externalId] : []), eventId, transaction);
+        const pending = credentialRows.filter((row) => {
+          if (!existing.emails.has(row.email) && !existing.externalIds.has(row.externalId)) return true;
+          skippedCount++; errors.push({ rowIndex: row.rowIndex, email: row.email, reason: 'Email or external ID already exists; credentials preserved' }); return false;
+        });
+        const hashed: Array<import('./credential-batch.repository.ts').CredentialRow> = [];
+        let next = 0;
+        await Promise.all(Array.from({ length: Math.min(2, pending.length) }, async () => {
+          while (next < pending.length) {
+            const row = pending[next++];
+            hashed.push({ rowIndex: row.rowIndex, email: row.email, name: row.name, externalId: row.externalId, passwordHash: await hashPassword(row.password!) });
+          }
+        }));
+        const created = await repository.create(actorId, eventId, batchName, hashed, transaction);
+        createdCount += created.size;
+        for (const row of pending) if (!created.has(row.email)) { skippedCount++; errors.push({ rowIndex: row.rowIndex, email: row.email, reason: 'Email already exists; credentials preserved' }); }
       }
 
       const report: ImportReport = {

@@ -36,7 +36,7 @@ export function GameRulesModal({ isOpen, onClose }: GameRulesModalProps) {
             <h2 id="rules-modal-title">
               <span>📖</span> How to Play Tech Tombola
             </h2>
-            <p>Official Event Guide & Winning Pattern Rules</p>
+            <p>Official Game Guide & Winning Pattern Rules</p>
           </div>
           <button type="button" className={styles.closeButton} onClick={onClose} aria-label="Close rules dialog">
             ✕

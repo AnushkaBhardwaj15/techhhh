@@ -21,7 +21,7 @@ const LEGACY_PLAYER_MAP: Record<string, string> = {
 const actor = (request: FastifyRequest): PlayActor => ({
   userId: LEGACY_PLAYER_MAP[request.user!.id] ?? request.user!.id,
   role: request.user!.role ?? "PARTICIPANT",
-  eventId: request.user!.eventId,
+  eventId: request.user!.role === "PARTICIPANT" ? undefined : request.user!.eventId,
 });
 const commands = z.discriminatedUnion("action", [
   z.object({ action: z.enum(["start", "pause", "resume", "end"]) }).strict(),
@@ -40,6 +40,7 @@ const commands = z.discriminatedUnion("action", [
 ]);
 export function createPlayRoutes(service: PlayService, roster: Pick<RoundRosterService, 'list'> = roundRosterService): FastifyPluginAsync {
   return async (app) => {
+    app.delete("/admin/play/rounds/:id", { preHandler: [requireAdmin] }, (request) => service.remove(roundParams.parse(request.params).id, actor(request)));
     app.get("/play/rounds", { preHandler: [requireAuth] }, (request) =>
       service.list(actor(request)),
     );

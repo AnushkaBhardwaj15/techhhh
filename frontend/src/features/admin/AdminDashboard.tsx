@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useNavigate, useOutletContext } from 'react-router-dom';
-import { createPlayRound, validatePlayBank, commandPlayRound, broadcastPlayRound } from '../../lib/api/play';
+import { Link, useNavigate, useOutletContext } from 'react-router-dom';
+import { deletePlayGame, createPlayRound, validatePlayBank, commandPlayRound, broadcastPlayRound } from '../../lib/api/play';
 import { listAdminAudit } from '../../lib/api/adminOperations';
 import type { AuthenticatedUser } from '../../types/auth';
 import { useAdminDashboard } from './useAdminDashboard';
@@ -52,6 +52,11 @@ export function AdminDashboard() {
     enabled: !!selectedRoundForAudit,
   });
 
+  async function handleDeleteGame(id: string) {
+    if (!window.confirm('Delete this game? Games with play history are archived. End a running game first.')) return;
+    try { await deletePlayGame(id); const result = await fetchActiveGame(); setGames(result.games); }
+    catch (err) { setError(err instanceof Error ? err.message : 'Could not delete game.'); }
+  }
   async function handleToggleBroadcast(gameId: string, currentStatus: boolean) {
     if (broadcastingId) return;
     setBroadcastingId(gameId);
@@ -154,16 +159,16 @@ export function AdminDashboard() {
           <section aria-label="Operational metrics">
             {dashboard.data.recoveryRequired && (
               <p className={styles.recovery} role="alert">
-                Recovery is required for the active Round. Review the Round before resuming operations.
+                Recovery is required for the active Game. Review the Game before resuming operations.
               </p>
             )}
-            <div className={styles.summary} aria-label="Event and active Round">
+            <div className={styles.summary} aria-label="Game and active Game">
               <article className={styles.event}>
                 <h2>EVENT STATUS</h2>
                 <p className={styles.eventName}>{dashboard.data.event?.title ?? 'Tech Tambola'}</p>
                 <div className={styles.eventMeta}>
                   <span className={styles.status}>{statusName(dashboard.data.event?.status ?? 'LIVE')}</span>
-                  {dashboard.data.event && <span>Event ID {dashboard.data.event.id}</span>}
+                  {dashboard.data.event && <span>Game ID {dashboard.data.event.id}</span>}
                 </div>
               </article>
               <article className={styles.event}>
@@ -172,11 +177,11 @@ export function AdminDashboard() {
                 <div className={styles.eventMeta}>
                   {dashboard.data.round ? (
                     <>
-                      <span>Round {dashboard.data.round.sequenceNumber}</span>
+                      <span>Game {dashboard.data.round.sequenceNumber}</span>
                       <span className={styles.status}>{statusName(dashboard.data.round.status)}</span>
                     </>
                   ) : (
-                    <span>Round information is live.</span>
+                    <span>Game information is live.</span>
                   )}
                 </div>
               </article>
@@ -243,7 +248,7 @@ export function AdminDashboard() {
                   onClick={() => void handleGameCommand(liveGame.id, 'resume')}
                   disabled={commandingId === liveGame.id}
                 >
-                  ▶ Resume Event
+                  ▶ Resume Game
                 </button>
               ) : (
                 <button
@@ -253,7 +258,7 @@ export function AdminDashboard() {
                   onClick={() => void handleGameCommand(liveGame.id, 'pause')}
                   disabled={commandingId === liveGame.id}
                 >
-                  ⏸ Pause Event
+                  ⏸ Pause Game
                 </button>
               )}
               <button
@@ -481,7 +486,7 @@ export function AdminDashboard() {
                       onClick={() => void handleGameCommand(game.id, 'start')}
                       disabled={commandingId === game.id}
                     >
-                      {commandingId === game.id ? 'Starting…' : '▶ Start Event'}
+                      {commandingId === game.id ? 'Starting…' : '▶ Start Game'}
                     </button>
                   )}
                   {game.status === 'ACTIVE' && (
@@ -492,7 +497,7 @@ export function AdminDashboard() {
                       onClick={() => void handleGameCommand(game.id, 'pause')}
                       disabled={commandingId === game.id}
                     >
-                      {commandingId === game.id ? 'Pausing…' : '⏸ Pause Event'}
+                      {commandingId === game.id ? 'Pausing…' : '⏸ Pause Game'}
                     </button>
                   )}
                   {game.status === 'PAUSED' && (
@@ -503,7 +508,7 @@ export function AdminDashboard() {
                       onClick={() => void handleGameCommand(game.id, 'resume')}
                       disabled={commandingId === game.id}
                     >
-                      {commandingId === game.id ? 'Resuming…' : '▶ Resume Event'}
+                      {commandingId === game.id ? 'Resuming…' : '▶ Resume Game'}
                     </button>
                   )}
                   <button
@@ -520,6 +525,9 @@ export function AdminDashboard() {
                   >
                     Open Game Control →
                   </button>
+                  <Link className={styles.manageGameBtn} to={`/admin/claims?gameId=${game.id}`}>Claims</Link>
+                  <Link className={styles.manageGameBtn} to={`/admin/winners?gameId=${game.id}`}>Winners</Link>
+                  <button className={styles.manageGameBtn} type="button" onClick={() => void handleDeleteGame(game.id)}>Delete game</button>
                 </div>
               </div>
             ))}
@@ -570,7 +578,7 @@ export function AdminDashboard() {
               <div className={styles.modalBody}>
                 <div className={styles.roundInfoBar}>
                   <div className={styles.roundInfoItem}>
-                    <span className={styles.roundInfoLabel}>Round Status</span>
+                    <span className={styles.roundInfoLabel}>Game Status</span>
                     <span className={styles.roundInfoValue}>{selectedRoundForAudit.status}</span>
                   </div>
                   <div className={styles.roundInfoItem}>
@@ -584,7 +592,7 @@ export function AdminDashboard() {
                 </div>
 
                 <div className={styles.auditSectionTitle}>
-                  <span>Audits for this Round</span>
+                  <span>Audits for this Game</span>
                   {roundAuditQuery.isFetching && <span style={{ fontSize: '12px', color: 'var(--retro-orange, #EE640F)' }}>Refreshing…</span>}
                 </div>
 

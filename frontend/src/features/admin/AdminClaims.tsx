@@ -1,3 +1,4 @@
+import { AdminGameSelector } from './AdminGameSelector';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
 import { Link, useOutletContext, useSearchParams } from 'react-router-dom';
@@ -30,6 +31,7 @@ function errorText(error: unknown) {
 export function AdminClaims() {
   const user = useOutletContext<AuthenticatedUser>();
   const [params, setParams] = useSearchParams();
+  const gameId = params.get('gameId') ?? '';
   const page = Math.max(1, Number(params.get('claimPage')) || 1);
   const selectedId = params.get('claimId') ?? '';
   const latestParams = useRef(params);
@@ -37,8 +39,9 @@ export function AdminClaims() {
   const queryClient = useQueryClient();
   const [message, setMessage] = useState('');
   const claims = useQuery({
-    queryKey: claimsKey(user.id, page),
-    queryFn: ({ signal }) => listAdminClaims({ page, limit: PAGE_SIZE, signal }),
+    queryKey: [...claimsKey(user.id, page), gameId],
+    enabled: Boolean(gameId),
+    queryFn: ({ signal }) => listAdminClaims({ page, limit: PAGE_SIZE, gameId, signal }),
     refetchInterval: 15_000,
     refetchIntervalInBackground: true,
     refetchOnReconnect: 'always',
@@ -107,8 +110,8 @@ export function AdminClaims() {
   const totalPages = claims.data ? Math.max(1, Math.ceil(claims.data.total / claims.data.limit)) : 1;
   const pendingOnPage = claims.data?.data.filter((claim) => claim.status === 'PENDING_VERIFICATION').length ?? 0;
 
-  return <main className={styles.page}>
-    <p className={styles.eyebrow}>EVENT OPERATIONS / CLAIM REVIEW</p>
+  return <main className={styles.page}><AdminGameSelector />
+    <p className={styles.eyebrow}>GAME OPERATIONS / CLAIM REVIEW</p>
     <header className={styles.heading}>
       <div><h1>Claim review</h1><p>Review persisted Claims. The server rechecks eligibility and Pattern capacity on every decision; this screen never awards a Winner optimistically.</p></div>
       <Link to={{ pathname: '/admin', search: params.toString() ? `?${params}` : '' }}>Dashboard</Link>
@@ -142,14 +145,14 @@ export function AdminClaims() {
           {selected && <>
             <dl className={styles.facts}>
               <dt>Participant</dt><dd>{selected.participantName}</dd>
-              <dt>Event</dt><dd>{selected.eventTitle}</dd>
+              <dt>Game</dt><dd>{selected.eventTitle}</dd>
               <dt>Pattern</dt><dd>{displayStatus(selected.patternType)}</dd>
               <dt>Status</dt><dd><span className={styles.claimStatus} data-status={selected.status}>{displayStatus(selected.status)}</span></dd>
               <dt>Submitted</dt><dd><time dateTime={selected.createdAt}>{new Intl.DateTimeFormat(undefined, { dateStyle: 'long', timeStyle: 'short' }).format(new Date(selected.createdAt))}</time></dd>
               {selected.verifiedAt && <><dt>Verified at</dt><dd><time dateTime={selected.verifiedAt}>{new Intl.DateTimeFormat(undefined, { dateStyle: 'long', timeStyle: 'short' }).format(new Date(selected.verifiedAt))}</time></dd></>}
               {selected.rejectionReason && <><dt>Rejection reason</dt><dd>{selected.rejectionReason}</dd></>}
               <dt>Claim ID</dt><dd>{selected.id}</dd>
-              <dt>Round ID</dt><dd>{selected.roundId}</dd>
+              <dt>Game ID</dt><dd>{selected.roundId}</dd>
             </dl>
             {selected.status === 'PENDING_VERIFICATION' ? <div className={styles.actions}>
               <button type="button" disabled={command.isPending} onClick={() => confirmAction(selected, 'verify')}>{command.isPending && command.variables?.claimId === selected.id && command.variables.action === 'verify' ? 'Verifying…' : hasIdempotencyKey(commandScope(user.id, selected.id, 'verify')) ? 'Retry same verification' : 'Verify Claim'}</button>

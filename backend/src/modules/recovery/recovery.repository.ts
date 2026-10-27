@@ -1,5 +1,5 @@
 import { alias } from 'drizzle-orm/pg-core';
-import { count, eq, or } from 'drizzle-orm';
+import { count, eq, or, sql } from 'drizzle-orm';
 import { getDb } from '../../db/client.ts';
 import { claims, winners } from '../../db/schema/claims.ts';
 import { draws } from '../../db/schema/draws.ts';
@@ -12,6 +12,7 @@ export interface IRecoveryRepository {
   listActiveRoundIds(tx: unknown): Promise<string[]>;
   findRound(roundId: string, tx: unknown): Promise<{ id: string; eventId: string; status: string } | null>;
   updateRoundStatus(roundId: string, status: 'RECOVERY_REQUIRED' | 'ACTIVE', tx: unknown): Promise<void>;
+  removeUndrawnMarks(roundId: string, tx: unknown): Promise<void>;
   getSnapshot(roundId: string, eventId: string, tx: unknown): Promise<RecoverySnapshot>;
 }
 
@@ -24,12 +25,21 @@ export class RecoveryRepository implements IRecoveryRepository {
   }
 
   async findRound(roundId: string, tx: unknown): Promise<{ id: string; eventId: string; status: string } | null> {
-    const [row] = await this.client(tx).select({ id: rounds.id, eventId: rounds.eventId, status: rounds.status }).from(rounds).where(eq(rounds.id, roundId)).limit(1);
+    const [row] = await this.client(tx).select({ id: rounds.id, eventId: rounds.eventId, status: rounds.status }).from(rounds).where(eq(rounds.id, roundId)).limit(1).for('update');
     return row ?? null;
   }
 
   async updateRoundStatus(roundId: string, status: 'RECOVERY_REQUIRED' | 'ACTIVE', tx: unknown): Promise<void> {
     await this.client(tx).update(rounds).set({ status, updatedAt: new Date() }).where(eq(rounds.id, roundId));
+  }
+
+  async removeUndrawnMarks(roundId: string, tx: unknown): Promise<void> {
+    await this.client(tx).execute(sql`
+      DELETE FROM ticket_marks m USING tickets t, ticket_cells c
+      WHERE m.ticket_id=t.id AND m.cell_id=c.id AND c.ticket_id=t.id
+        AND t.round_id=${roundId}::uuid
+        AND NOT EXISTS (SELECT 1 FROM draws d WHERE d.round_id=t.round_id AND d.key_id=c.key_id)
+    `);
   }
 
   async getSnapshot(roundId: string, eventId: string, tx: unknown) {

@@ -1,4 +1,4 @@
-import { and, count, desc, eq, ilike, or } from 'drizzle-orm';
+import { and, count, countDistinct, desc, eq, ilike, or } from 'drizzle-orm';
 import { getDb } from '../../db/client.ts';
 import {
   users,
@@ -25,7 +25,7 @@ export interface IParticipantRepository {
   findByUserIdAndEvent(userId: string, eventId: string, tx?: any): Promise<ParticipantSummary | null>;
   findByExternalIdAndEvent(eventId: string, externalId: string, tx?: any): Promise<ParticipantSummary | null>;
   list(options: {
-    eventId: string;
+    eventId?: string;
     page: number;
     limit: number;
     search?: string;
@@ -65,7 +65,7 @@ export class ParticipantRepository implements IParticipantRepository {
       name: user.name,
       externalId: profile.externalId,
       batchName: profile.batchName,
-      status: profile.status as any,
+      status: user.status as any,
       emailDeliveryStatus: profile.emailDeliveryStatus as any,
       emailDeliveryError: profile.emailDeliveryError,
       createdAt: profile.createdAt,
@@ -183,7 +183,7 @@ export class ParticipantRepository implements IParticipantRepository {
 
   async list(
     options: {
-      eventId: string;
+      eventId?: string;
       page: number;
       limit: number;
       search?: string;
@@ -194,9 +194,10 @@ export class ParticipantRepository implements IParticipantRepository {
     const client = this.getClient(tx);
     const offset = (options.page - 1) * options.limit;
 
-    const conditions = [eq(participantProfiles.eventId, options.eventId)];
+    const conditions = [];
+    if (options.eventId) conditions.push(eq(participantProfiles.eventId, options.eventId));
     if (options.status) {
-      conditions.push(eq(participantProfiles.status, options.status));
+      conditions.push(eq(users.status, options.status));
     }
     if (options.search) {
       const term = `%${options.search.trim()}%`;
@@ -206,7 +207,7 @@ export class ParticipantRepository implements IParticipantRepository {
     const whereClause = and(...conditions);
 
     const [totalRow] = await client
-      .select({ count: count() })
+      .select({ count: countDistinct(users.id) })
       .from(participantProfiles)
       .innerJoin(users, eq(participantProfiles.userId, users.id))
       .where(whereClause);
@@ -214,14 +215,14 @@ export class ParticipantRepository implements IParticipantRepository {
     const total = Number(totalRow?.count || 0);
 
     const rows = await client
-      .select({
+      .selectDistinctOn([users.id], {
         user: users,
         profile: participantProfiles,
       })
       .from(participantProfiles)
       .innerJoin(users, eq(participantProfiles.userId, users.id))
       .where(whereClause)
-      .orderBy(desc(participantProfiles.createdAt))
+      .orderBy(users.id, participantProfiles.createdAt)
       .limit(options.limit)
       .offset(offset);
 
@@ -264,6 +265,7 @@ export class ParticipantRepository implements IParticipantRepository {
       updatedProfileRecord = current;
     }
 
+    if (profileData?.status) await client.update(users).set({ status: profileData.status, updatedAt: new Date() }).where(eq(users.id, updatedProfileRecord.userId));
     let updatedUserRecord: UserRecord;
     if (userData && Object.keys(userData).length > 0) {
       const [uu] = await client

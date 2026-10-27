@@ -109,7 +109,7 @@ export function ParticipantProfile() {
             </div>
 
             <div className={styles.detailRow}>
-              <dt>Registered Event</dt>
+              <dt>Account</dt>
               <dd>{event.data?.title || 'Intro to Frontend'}</dd>
             </div>
 

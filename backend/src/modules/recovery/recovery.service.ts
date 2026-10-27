@@ -4,7 +4,7 @@ import { ConflictError, NotFoundError } from '../../shared/errors/app-error.ts';
 import type { RealtimeEvent } from '../../realtime/events.ts';
 import { roundRepository, type IRoundRepository } from '../rounds/round.repository.ts';
 import type { RoundSummary } from '../rounds/round.types.ts';
-import { validateRecoverySnapshot } from './recovery.domain.ts';
+import { reconcileRecoveryMarks, validateRecoverySnapshot } from './recovery.domain.ts';
 import { recoveryRepository, type IRecoveryRepository } from './recovery.repository.ts';
 
 export interface RecoveryTransactionRunner { transaction<T>(work: (tx: any) => Promise<T>): Promise<T>; }
@@ -45,7 +45,10 @@ export class RecoveryService {
         throw new ConflictError(`Round in '${round.status}' cannot be recovered`, 'ROUND_NOT_RECOVERABLE');
       }
       const snapshot = await this.repository.getSnapshot(roundId, round.eventId, tx);
-      validateRecoverySnapshot(snapshot);
+      const validMarks = reconcileRecoveryMarks(snapshot);
+      const removedInvalidMarks = snapshot.marks.length - validMarks.length;
+      validateRecoverySnapshot({ ...snapshot, marks: validMarks });
+      if (removedInvalidMarks > 0) await this.repository.removeUndrawnMarks(roundId, tx);
       await this.repository.updateRoundStatus(roundId, 'ACTIVE', tx);
       const summary = await this.rounds.findById(roundId, tx);
       if (!summary) throw new NotFoundError('Round not found');
@@ -55,7 +58,7 @@ export class RecoveryService {
         action: 'RECOVERY_COMPLETED',
         resourceType: 'round',
         resourceId: roundId,
-        metadata: { eventId: round.eventId, status: 'ACTIVE' },
+        metadata: { eventId: round.eventId, status: 'ACTIVE', removedInvalidMarks },
         ip: context?.ip,
         userAgent: context?.userAgent,
         requestId: context?.requestId,

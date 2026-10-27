@@ -30,7 +30,7 @@ export function AdminParticipantBatches({ eventId, userId, disabled = false, onP
     {batches.isPending && <p role="status">Loading batches…</p>}
     {batches.error && <p role="alert">Could not load batches. <button type="button" onClick={() => void batches.refetch()}>Retry batches</button></p>}
     {message && <p role="status">{message}</p>}
-    {batches.data?.length === 0 && <p>No named batches in this Event.</p>}
+    {batches.data?.length === 0 && <p>No named batches yet.</p>}
     {Boolean(batches.data?.length) && <div className={styles.tableWrap}><table><thead><tr><th scope="col">Batch</th><th scope="col">Participants</th><th scope="col">Active</th><th scope="col">Action</th></tr></thead>
       <tbody>{batches.data?.map((batch) => <tr key={batch.batchName}><th scope="row">{batch.batchName}</th><td>{batch.total}</td><td>{batch.active}</td><td>
         <button type="button" disabled={disabled || remove.isPending} onClick={() => { setSelection(batch.batchName); setMessage(''); }}>Remove batch {batch.batchName}</button>

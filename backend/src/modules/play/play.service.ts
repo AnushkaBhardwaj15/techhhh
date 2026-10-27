@@ -33,6 +33,7 @@ export class PlayService {
     },
     private readonly roster: Pick<RoundRosterService, 'recordJoin'> = roundRosterService,
   ) {}
+  async remove(id: string, actor: PlayActor) { this.admin(actor); return this.store.remove(id, actor); }
   async list(actor: PlayActor) {
     return { games: await this.store.list(actor) };
   }

@@ -14,7 +14,7 @@ export function usePlayState(roundId: string, publicView = false) {
     enabled: publicView || !!roundId,
     refetchInterval: (q) => {
       if (q.state.data?.status === 'COMPLETED') return false;
-      return wsConnected ? 1500 : 800;
+      return wsConnected ? 10_000 : 3_000;
     },
     refetchOnWindowFocus: "always",
   });

@@ -116,7 +116,7 @@ export function AdminDrawControl() {
   }
 
   function requestRandom() {
-    if (draw.isPending || !window.confirm('Ask the server to choose and save one eligible random Draw for this Round?')) return;
+    if (draw.isPending || !window.confirm('Ask the server to choose and save one eligible random Draw for this Game?')) return;
     setMessage('');
     draw.mutate({ eventId, roundId, userId: user.id, mode: 'RANDOM' });
   }
@@ -135,20 +135,20 @@ export function AdminDrawControl() {
   return <main className={styles.page}>
     <p className={styles.eyebrow}>OPERATIONS / DRAW CONTROL</p>
     <header className={styles.heading}><div><h1>Draw control</h1><p>Create one deliberate Draw at a time. The backend validates every selection and stores the sequence.</p></div>
-      <Link to={{ pathname: '/admin/rounds', search: params.toString() ? `?${params}` : '' }}>Select a Round</Link></header>
-    {!eventId || !roundId ? <p className={styles.notice} role="status">Select an Event and Round in Round configuration, then open Draw control from the navigation.</p> : null}
-    {round.isPending && eventId && roundId && <p role="status">Loading selected Round…</p>}
-    {round.error && <p className={styles.error} role="alert">{round.error instanceof ApiError && round.error.status === 403 ? 'Your account cannot view this Round.' : round.error instanceof ApiError ? round.error.message : 'The selected Round could not be loaded.'}</p>}
-    {round.data && !validRound && <p className={styles.error} role="alert">The selected Round belongs to another Event. Select it again from Round configuration.</p>}
+      <Link to={{ pathname: '/admin/rounds', search: params.toString() ? `?${params}` : '' }}>Select a Game</Link></header>
+    {!eventId || !roundId ? <p className={styles.notice} role="status">Select an Game and Game in Game configuration, then open Draw control from the navigation.</p> : null}
+    {round.isPending && eventId && roundId && <p role="status">Loading selected Game…</p>}
+    {round.error && <p className={styles.error} role="alert">{round.error instanceof ApiError && round.error.status === 403 ? 'Your account cannot view this Game.' : round.error instanceof ApiError ? round.error.message : 'The selected Game could not be loaded.'}</p>}
+    {round.data && !validRound && <p className={styles.error} role="alert">The selected Game belongs to another Game. Select it again from Game configuration.</p>}
     {validRound && <>
-      <section className={styles.roundBar} aria-label="Selected Round"><span>EVENT {eventId}</span><strong>{validRound.sequenceNumber}. {validRound.name}</strong><span>STATUS {validRound.status.replaceAll('_', ' ')}</span></section>
+      <section className={styles.roundBar} aria-label="Selected Game"><span>EVENT {eventId}</span><strong>{validRound.sequenceNumber}. {validRound.name}</strong><span>STATUS {validRound.status.replaceAll('_', ' ')}</span></section>
       <section className={styles.currentSection} aria-labelledby="current-draw-title">
         <div className={styles.sectionHeading}><div><p className={styles.eyebrow}>AUTHORITATIVE SNAPSHOT</p><h2 id="current-draw-title">Current Draw</h2></div><span className={styles.connection} data-state={connection} role="status" aria-live="polite">WebSocket {connection}</span></div>
         {latest.isPending && <p role="status">Loading saved Draws…</p>}
         {latest.error && <div className={styles.error}><p role="alert">{latest.error instanceof ApiError && latest.error.status === 403 ? 'Your account cannot view Draw history.' : 'Draw history could not be loaded.'}</p><button type="button" onClick={() => void latest.refetch()}>Refresh Draws</button></div>}
-        {currentDraw ? <DrawCard draw={currentDraw} current /> : latest.data && <p>No Draw has been saved for this Round.</p>}
+        {currentDraw ? <DrawCard draw={currentDraw} current /> : latest.data && <p>No Draw has been saved for this Game.</p>}
         {latest.error && currentDraw && <p role="status">Showing the last Draw received from the server.</p>}
-        {connection === 'inactive' && validRound.status !== 'ACTIVE' && validRound.status !== 'PAUSED' && <p>Real-time updates are unavailable while this Round is outside ACTIVE or PAUSED.</p>}
+        {connection === 'inactive' && validRound.status !== 'ACTIVE' && validRound.status !== 'PAUSED' && <p>Real-time updates are unavailable while this Game is outside ACTIVE or PAUSED.</p>}
         {connection === 'unavailable' && <p role="status">Live updates could not connect. REST refresh remains available.</p>}
       </section>
       <section className={styles.controls} aria-labelledby="draw-actions-title">
@@ -157,19 +157,19 @@ export function AdminDrawControl() {
           {live ? <>
             <button type="button" disabled={draw.isPending} onClick={requestRandom}>{draw.isPending && draw.variables?.mode === 'RANDOM' ? 'Saving random Draw…' : hasIdempotencyKey(randomScope(user.id, roundId)) ? 'Retry same random Draw' : 'Draw random Question'}</button>
             <label className={styles.manualField}>Manual Question
-              {questions.isPending ? <span role="status">Loading Round Questions…</span> : <select value={questionId} disabled={draw.isPending || !questions.data?.data.length} onChange={(event) => setQuestionId(event.target.value)}>
+              {questions.isPending ? <span role="status">Loading Game Questions…</span> : <select value={questionId} disabled={draw.isPending || !questions.data?.data.length} onChange={(event) => setQuestionId(event.target.value)}>
                 <option value="">Choose a Question</option>
                 {questions.data?.data.map((question) => <option key={question.id} value={question.id}>{question.questionText} — {question.keyValue}</option>)}
               </select>}
             </label>
-            {questions.error && <p role="alert">Round Questions could not be loaded. Try refreshing the page.</p>}
+            {questions.error && <p role="alert">Game Questions could not be loaded. Try refreshing the page.</p>}
             {questions.data?.pagination.totalPages && questions.data.pagination.totalPages > 1 && <nav className={styles.pagination} aria-label="Question options pages">
               <button type="button" disabled={questionPage <= 1 || draw.isPending} onClick={() => { setQuestionPage((page) => page - 1); setQuestionId(''); }}>Previous Questions</button>
               <span>Page {questionPage} of {questions.data.pagination.totalPages}</span>
               <button type="button" disabled={questionPage >= questions.data.pagination.totalPages || draw.isPending} onClick={() => { setQuestionPage((page) => page + 1); setQuestionId(''); }}>More Questions</button>
             </nav>}
             <button className={styles.manual} type="button" disabled={!questionId || draw.isPending} onClick={requestManual}>{draw.isPending && draw.variables?.mode === 'MANUAL' ? 'Saving manual Draw…' : questionId && hasIdempotencyKey(manualScope(user.id, roundId, questionId)) ? 'Retry same manual Draw' : 'Create manual Draw'}</button>
-          </> : <p className={styles.notice} role="status">Draw commands are available only when the server reports ACTIVE. This Round is {validRound.status.replaceAll('_', ' ')}.</p>}
+          </> : <p className={styles.notice} role="status">Draw commands are available only when the server reports ACTIVE. This Game is {validRound.status.replaceAll('_', ' ')}.</p>}
           {message && <p className={styles.message} role="status">{message}</p>}
         </div>
       </section>

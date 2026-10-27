@@ -62,7 +62,7 @@ export function AdminAudit() {
     <p className={styles.eyebrow}>OPERATIONS / RECORDS</p>
     <header className={styles.heading}><div><h1>Audit log</h1><p>Human-readable operational records. Tracks participant interactions, host commands, claims, and game lifecycle.</p></div></header>
     <form className={styles.filters} onSubmit={applyFilters} aria-label="Filter audit records">
-      <label>Search (User Email, Event, Keyword)<input inputMode="text" placeholder="e.g. alice@example.com or Tech Tombola" value={draft.search} onChange={(event) => setDraft((current) => ({ ...current, search: event.target.value }))} /></label>
+      <label>Search (User Email, Game, Keyword)<input inputMode="text" placeholder="e.g. alice@example.com or Tech Tombola" value={draft.search} onChange={(event) => setDraft((current) => ({ ...current, search: event.target.value }))} /></label>
       <label>Actor ID<input placeholder="e.g. 9a453a90-d858-477c-9af0-cda050464bc1" value={draft.actorId} onChange={(event) => setDraft((current) => ({ ...current, actorId: event.target.value }))} /></label>
       <label>Action<input placeholder="e.g. WIN_CLAIM or MARK" value={draft.action} maxLength={100} onChange={(event) => setDraft((current) => ({ ...current, action: event.target.value }))} /></label>
       <label>From<input type="datetime-local" value={draft.from} onChange={(event) => setDraft((current) => ({ ...current, from: event.target.value }))} /></label>

@@ -63,3 +63,13 @@ export function assertWinnerCapacityAndClosure(patterns: Array<{ patternType: st
     }
   }
 }
+
+// Older clients could persist premature marks. Recovery retains only drawn keys;
+// cross-ticket corruption remains a hard failure.
+export function reconcileRecoveryMarks(snapshot: RecoverySnapshot): RecoverySnapshot['marks'] {
+  if (snapshot.marks.some(mark => mark.ticketId !== mark.cellTicketId)) {
+    throw new ConflictError('Mark does not belong to its Ticket', 'RECOVERY_MARK_INVALID');
+  }
+  const drawn = new Set(snapshot.drawnKeyIds);
+  return snapshot.marks.filter(mark => drawn.has(mark.keyId));
+}

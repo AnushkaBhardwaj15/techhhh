@@ -9,18 +9,20 @@ const roundId = '00000000-0000-0000-0000-000000000011';
 const eventId = '00000000-0000-0000-0000-000000000012';
 const actorId = '00000000-0000-0000-0000-000000000013';
 
-function makeHarness(initialStatus: string = 'RECOVERY_REQUIRED', options: { invalid?: boolean; failAudit?: boolean; failBroadcast?: boolean; invalidWinnerScope?: boolean; invalidWinnerClaim?: boolean } = {}) {
+function makeHarness(initialStatus: string = 'RECOVERY_REQUIRED', options: { prematureMarks?: boolean; invalid?: boolean; failAudit?: boolean; failBroadcast?: boolean; invalidWinnerScope?: boolean; invalidWinnerClaim?: boolean } = {}) {
   let status = initialStatus;
   const auditActions: string[] = [];
   const broadcasts: unknown[] = [];
+  let markCleanups = 0;
   const summary = (): RoundSummary => ({ id: roundId, eventId, sequenceNumber: 1, name: 'Round 1', status: status as RoundSummary['status'], patterns: [], createdAt: new Date(), updatedAt: new Date() });
   const repository = {
     listActiveRoundIds: async () => status === 'ACTIVE' ? [roundId] : [],
     findRound: async () => ({ id: roundId, eventId, status }),
     updateRoundStatus: async (_id: string, next: 'RECOVERY_REQUIRED' | 'ACTIVE') => { status = next; },
+    removeUndrawnMarks: async () => { markCleanups++; },
     getSnapshot: async () => ({
       drawSequences: options.invalid ? [1, 3] : [1],
-      tickets: [], marks: [], drawnKeyIds: [], configuredPatterns: [], winnerPatternTypes: [], activeRoundCount: 0, eventId, ticketEventIds: [],
+      tickets: [], marks: options.prematureMarks ? [{ ticketId: 'ticket', cellTicketId: 'ticket', keyId: 'future' }] : [], drawnKeyIds: [], configuredPatterns: [], winnerPatternTypes: [], activeRoundCount: 0, eventId, ticketEventIds: [],
       claimRelations: [], winnerRelations: options.invalidWinnerScope || options.invalidWinnerClaim ? [{ eventId: options.invalidWinnerScope ? 'other-event' : eventId, roundId: options.invalidWinnerClaim ? 'other-round' : roundId, participantId: actorId, patternType: 'EARLY_5', claimRoundId: roundId, claimParticipantId: actorId, claimPatternType: 'EARLY_5' }] : [],
     }),
   } as unknown as IRecoveryRepository;
@@ -40,7 +42,7 @@ function makeHarness(initialStatus: string = 'RECOVERY_REQUIRED', options: { inv
   } };
   const publisher: RecoveryPublisher = { broadcastCommitted: async (event) => { if (options.failBroadcast) throw new Error('socket failed'); broadcasts.push(event); } };
   const service = new RecoveryService(repository, rounds, audit, transaction, publisher);
-  return { service, auditActions, broadcasts, getStatus: () => status };
+  return { service, auditActions, broadcasts, getMarkCleanups: () => markCleanups, getStatus: () => status };
 }
 
 describe('RecoveryService startup detection and command', () => {
@@ -144,5 +146,20 @@ describe('RecoveryService startup detection and command', () => {
   it('rejects cancelled rounds', async () => {
     const h = makeHarness('CANCELLED');
     await expect(h.service.recover(actorId, 'ADMIN', roundId)).rejects.toMatchObject({ code: 'ROUND_NOT_RECOVERABLE' });
+  });
+});
+
+describe('RecoveryService legacy mark repair', () => {
+  it('removes premature marks in the recovery transaction before resuming', async () => {
+    const h = makeHarness('RECOVERY_REQUIRED', { prematureMarks: true });
+    expect((await h.service.recover(actorId, 'ADMIN', roundId)).recovered).toBe(true);
+    expect(h.getMarkCleanups()).toBe(1);
+    expect(h.auditActions).toEqual(['RECOVERY_COMPLETED']);
+  });
+  it('does not clean marks when other persisted game state is invalid', async () => {
+    const h = makeHarness('RECOVERY_REQUIRED', { prematureMarks: true, invalid: true });
+    await expect(h.service.recover(actorId, 'ADMIN', roundId)).rejects.toMatchObject({ code: 'RECOVERY_DRAW_SEQUENCE_INVALID' });
+    expect(h.getMarkCleanups()).toBe(0);
+    expect(h.getStatus()).toBe('RECOVERY_REQUIRED');
   });
 });

@@ -7,6 +7,7 @@ import {
   participantPaginationSchema,
   updateParticipantSchema,
 } from './participant.schemas.ts';
+import { getParticipantPoolId } from './participant-pool.repository.ts';
 import { participantService } from './participant.service.ts';
 import { importService } from './import/import.service.ts';
 import { z } from 'zod';
@@ -20,7 +21,7 @@ export const participantRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get('/admin/participants', async (request) => {
     const query = participantPaginationSchema.parse(request.query);
     return participantService.listParticipants({
-      eventId: query.eventId,
+      eventId: undefined,
       page: query.page,
       limit: query.limit,
       search: query.search,
@@ -29,12 +30,12 @@ export const participantRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   fastify.get('/admin/participant-batches', async (request) => {
-    const { eventId } = z.object({ eventId: z.string().uuid() }).parse(request.query);
+    const eventId = await getParticipantPoolId();
     return { batches: await participantBatchService.list(eventId) };
   });
 
   fastify.delete('/admin/participant-batches', async (request) => {
-    return participantBatchService.remove(request.user!.id, batchScopeSchema.parse(request.body));
+    return participantBatchService.remove(request.user!.id, { ...batchScopeSchema.parse(request.body), eventId: await getParticipantPoolId() });
   });
 
   fastify.delete('/admin/participants/:id', async (request) => {
@@ -48,7 +49,7 @@ export const participantRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   fastify.post('/admin/participants', async (request, reply) => {
-    const body = createParticipantSchema.parse(request.body);
+    const body = { ...createParticipantSchema.parse(request.body), eventId: await getParticipantPoolId() };
 
     const created = await participantService.createParticipant(request.user!.id, body, {
       ip: request.ip,
@@ -95,9 +96,7 @@ export const participantRoutes: FastifyPluginAsync = async (fastify) => {
       }
     }
 
-    if (!eventId) {
-      throw new ValidationError('eventId is required');
-    }
+    eventId = await getParticipantPoolId();
 
     z.string().uuid().parse(eventId);
     z.string().max(10 * 1024 * 1024).parse(csvContent);

@@ -15,7 +15,7 @@ export class ParticipantBatchService {
       if (!members.length) throw new NotFoundError('No participants found for this selection');
       const mode = participantRemovalMode(await this.repo.hasHistory(members, tx));
       await this.repo.applyRemoval(members, mode, tx);
-      const result = { mode, count: members.length };
+      const result = { mode, count: new Set(members.map((member) => member.userId)).size };
       await this.audit.record({ actorId, actorType: 'ADMIN', action: 'PARTICIPANTS_REMOVED',
         resourceType: 'participant_batch', resourceId: 'eventId' in scope ? scope.eventId : scope.id,
         metadata: { ...scope, ...result },

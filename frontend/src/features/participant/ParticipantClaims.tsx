@@ -20,7 +20,7 @@ export function ParticipantClaims() {
       {claims.data && claims.data.data.length > 0 && <ol>{claims.data.data.map((claim) => <li key={claim.id}>
         <div><span>{patternNames[claim.patternType]}</span><time dateTime={claim.createdAt}>{new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(claim.createdAt))}</time></div>
         <strong data-status={claim.status}>{claimStatusText(claim.status).replace(/\.$/, '')}</strong>
-        <span className={styles.round}>Round {claim.roundId}</span>
+        <span className={styles.round}>Game {claim.roundId}</span>
       </li>)}</ol>}
       {claims.data && totalPages > 1 && <nav className={styles.pagination} aria-label="Claim history pages"><button type="button" onClick={() => setPage((value) => Math.max(1, value - 1))} disabled={page === 1}>Previous</button><span>Page {page} of {totalPages}</span><button type="button" onClick={() => setPage((value) => Math.min(totalPages, value + 1))} disabled={page === totalPages}>Next</button></nav>}
     </section>
