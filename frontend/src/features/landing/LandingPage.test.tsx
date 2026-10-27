@@ -1,12 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import { LandingPage } from './LandingPage';
 import { ApiError } from '../../lib/api/client';
 import * as authApi from '../../lib/api/auth';
 
-vi.mock('../../lib/api/auth', () => ({ getMe: vi.fn() }));
+vi.mock('../../lib/api/auth', () => ({ getMe: vi.fn(), quickJoin: vi.fn() }));
 
 function renderLanding() {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -20,6 +20,21 @@ function renderLanding() {
 }
 
 describe('LandingPage', () => {
+  it('requires a password for participant entry and sends it only to the authentication API', async () => {
+    vi.mocked(authApi.getMe).mockRejectedValue(new ApiError(401, 'Authentication required'));
+    vi.mocked(authApi.quickJoin).mockRejectedValue(new ApiError(401, 'Invalid email or password'));
+    renderLanding();
+    fireEvent.change(screen.getByLabelText('Full name'), { target: { value: 'Ari' } });
+    fireEvent.change(screen.getByLabelText('Email address'), { target: { value: 'ari@example.test' } });
+    const password = screen.getByLabelText('Password');
+    expect(password).toHaveAttribute('type', 'password');
+    expect(password).toHaveAttribute('minLength', '8');
+    fireEvent.change(password, { target: { value: 'valid-password' } });
+    fireEvent.click(screen.getByRole('button', { name: /GET TICKET/ }));
+    await waitFor(() => expect(authApi.quickJoin).toHaveBeenCalledWith('Ari', 'ari@example.test', 'valid-password'));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Invalid email or password');
+    expect(localStorage.getItem('tt_participant_pwd')).toBeNull();
+  });
   afterEach(cleanup);
   beforeEach(() => {
     vi.clearAllMocks();

@@ -149,6 +149,20 @@ describe('credentialed CORS preflight', () => {
     expect(response.body).not.toContain('https://malicious.example.test');
   });
 
+  it.each(['https://untrusted.vercel.app', 'https://localhost.attacker.example', 'http://127.0.0.1:9999'])('rejects unconfigured lookalike or preview origin %s', async (origin) => {
+    const response = await app.inject({ method: 'OPTIONS', url: '/api/v1/me', headers: {
+      origin, 'access-control-request-method': 'GET',
+    } });
+    expect(response.statusCode).toBe(403);
+    expect(response.headers['access-control-allow-origin']).toBeUndefined();
+  });
+
+  it('exposes the backend request ID for cross-origin diagnostics', async () => {
+    const response = await app.inject({ method: 'GET', url: '/health', headers: { origin: 'https://frontend.example.test' } });
+    expect(response.headers['access-control-expose-headers']?.toLowerCase()).toContain('x-request-id');
+    expect(response.headers['x-request-id']).toBeTruthy();
+  });
+
   it('does not treat a wildcard configuration as authorization for credentialed browser requests', async () => {
     const configuredOrigins = process.env.CORS_ORIGIN;
     process.env.CORS_ORIGIN = '*';

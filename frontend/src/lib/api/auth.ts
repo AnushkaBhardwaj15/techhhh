@@ -8,10 +8,10 @@ export async function login(email: string, password: string, signal?: AbortSigna
   return loginUserSchema.parse(response?.user);
 }
 
-export async function quickJoin(name: string, email: string, password?: string, signal?: AbortSignal): Promise<LoginUser> {
+export async function quickJoin(name: string, email: string, password: string, signal?: AbortSignal): Promise<LoginUser> {
   const response = await apiRequest<{ user: unknown }>('/auth/quick-join', {
     method: 'POST',
-    body: JSON.stringify({ name, email, ...(password ? { password } : {}) }),
+    body: JSON.stringify({ name, email, password }),
     signal,
   });
   return loginUserSchema.parse(response?.user);

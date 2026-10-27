@@ -202,23 +202,16 @@ export class ClaimService {
     options: { page?: number; limit?: number } = {}
   ): Promise<{ data: ClaimDto[]; total: number; page: number; limit: number }> {
     const profile = await participantRepository.findByUserIdAndEvent(userId, eventId);
-    const participantId = profile?.id ?? userId;
 
     const page = Math.max(1, options.page ?? 1);
     const limit = Math.min(100, Math.max(1, options.limit ?? 50));
 
-    let { data, total } = await this.claimRepo.listByParticipant(participantId, {
+    if (!profile) return { data: [], total: 0, page, limit };
+    const { data, total } = await this.claimRepo.listByParticipant(profile.id, {
       page,
       limit,
     });
 
-    if (!data.length && profile?.id && profile.id !== userId) {
-      const fallback = await this.claimRepo.listByParticipant(userId, { page, limit });
-      if (fallback.data.length > 0) {
-        data = fallback.data;
-        total = fallback.total;
-      }
-    }
 
     return {
       data: data.map((c) => ({

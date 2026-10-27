@@ -90,6 +90,17 @@ export function ParticipantLobby({ waiting = false }: { waiting?: boolean }) {
     const unsubscribe = subscribeToGameSync((updated) => {
       receivedUpdate = true;
       if (!stopped) setActiveGame(updated);
+    }, {
+      onSnapshot: ({ game }) => {
+        receivedUpdate = true;
+        if (!stopped) {
+          setActiveGame(game);
+          setErrorMsg((message) => message === "Game status is temporarily unavailable. Please try again." ? "" : message);
+        }
+      },
+      onError: () => {
+        if (!stopped) setErrorMsg("Game status is temporarily unavailable. Please try again.");
+      },
     });
     void fetchActiveGame()
       .then(({ game }) => {
@@ -162,7 +173,7 @@ export function ParticipantLobby({ waiting = false }: { waiting?: boolean }) {
         );
         setVerifiedCode(clean);
         setJoinedGameId(result.activeGame.id);
-        navigate("/participant/game", { replace: true });
+        navigate(result.activeGame.status === "ACTIVE" ? "/participant/game" : "/participant/waiting", { replace: true });
       } catch {
         setErrorMsg(
           "We could not join the game. Check your connection and try again.",

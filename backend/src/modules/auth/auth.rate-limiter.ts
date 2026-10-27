@@ -28,16 +28,6 @@ export class LoginRateLimiter {
 
   checkLimit(identifier: string, ip: string): void {
     const cleanId = identifier.trim().toLowerCase();
-    // Never lock out fixed demo seed accounts
-    if (
-      cleanId === 'admin@techtombola.internal' ||
-      cleanId === 'player@techtombola.internal' ||
-      cleanId === 'superadmin@techtombola.internal' ||
-      cleanId.startsWith('demo_')
-    ) {
-      return;
-    }
-
     const key = `${cleanId}:${ip.trim()}`;
     const now = Date.now();
     const validAttempts = this.cleanOldAttempts(key, now);

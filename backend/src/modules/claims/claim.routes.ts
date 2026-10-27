@@ -4,6 +4,7 @@ import { NotFoundError, ValidationError } from '../../shared/errors/index.ts';
 import {
   claimIdParamsSchema,
   listClaimsQuerySchema,
+  listAdminClaimsQuerySchema,
   listWinnersQuerySchema,
   rejectClaimBodySchema,
   submitClaimBodySchema,
@@ -29,7 +30,8 @@ export function createClaimRoutes(winnerService: WinnerService): FastifyPluginAs
     async (request, reply) => {
     const body = submitClaimBodySchema.parse(request.body);
     const round = await roundRepository.findById(body.roundId);
-    const eventId = round?.eventId || request.user!.eventId || 'e7bf4217-f212-4970-b3f1-e924e1782f25';
+    if (!round) throw new NotFoundError('Round not found');
+    const eventId = round.eventId;
 
     const result = await claimService.submitClaim({
       userId: request.user!.id,
@@ -45,18 +47,15 @@ export function createClaimRoutes(winnerService: WinnerService): FastifyPluginAs
   // Participant: List own claims
   fastify.get('/participant/claims', { preHandler: [requireParticipantToken] }, async (request) => {
     const query = listClaimsQuerySchema.parse(request.query);
-    const eventId = request.user!.eventId || 'e7bf4217-f212-4970-b3f1-e924e1782f25';
+    const eventId = request.user!.eventId;
+    if (!eventId) throw new ValidationError('An Event participant session is required');
 
-    try {
-      return await claimService.listParticipantClaims(request.user!.id, eventId, query);
-    } catch {
-      return { data: [], total: 0 };
-    }
+    return claimService.listParticipantClaims(request.user!.id, eventId, query);
   });
 
   // Admin: Review all pending and historical claims across Events.
   fastify.get('/admin/claims', { preHandler: [requireAdmin] }, async (request) => {
-    const query = listClaimsQuerySchema.parse(request.query);
+    const query = listAdminClaimsQuerySchema.parse(request.query);
     return winnerService.listAdminClaims(query);
   });
 
@@ -75,7 +74,6 @@ export function createClaimRoutes(winnerService: WinnerService): FastifyPluginAs
       actorId: request.user!.id,
       actorType: role,
       idempotencyKey,
-      adminOverride: true,
     });
   });
 
@@ -107,12 +105,9 @@ export function createClaimRoutes(winnerService: WinnerService): FastifyPluginAs
 
   fastify.get('/participant/wins', { preHandler: [requireParticipantToken] }, async (request) => {
     const query = listWinnersQuerySchema.parse(request.query);
-    const eventId = request.user!.eventId || 'e7bf4217-f212-4970-b3f1-e924e1782f25';
-    try {
-      return await winnerService.listParticipantWins(request.user!.id, eventId, query);
-    } catch {
-      return { data: [], total: 0 };
-    }
+    const eventId = request.user!.eventId;
+    if (!eventId) throw new ValidationError('An Event participant session is required');
+    return winnerService.listParticipantWins(request.user!.id, eventId, query);
   });
   };
 }

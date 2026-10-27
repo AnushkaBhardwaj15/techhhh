@@ -1,5 +1,12 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import postgres from "postgres";
+import { drizzle } from "drizzle-orm/postgres-js";
+import { WinnerService } from "../claims/winner.service.ts";
+import { WinnerRepository } from "../claims/winner.repository.ts";
+import { ClaimRepository } from "../claims/claim.repository.ts";
+import { TicketRepository } from "../tickets/ticket.repository.ts";
+import { DrawRepository } from "../draws/draw.repository.ts";
+import { IdempotencyRepository } from "../../shared/idempotency/idempotency.repository.ts";
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { PlayRepository } from "./play.repository.ts";
@@ -162,7 +169,19 @@ describe.skipIf(!url)(
       const claims = await Promise.all(
         players.map((p) => service.claim(active.id, p, "EARLY_5")),
       );
-      expect(claims.filter((c) => c.accepted)).toHaveLength(1);
+      expect(claims.filter((c) => c.accepted)).toHaveLength(2);
+      expect((await service.read(active.id, admin)).wins).toHaveLength(0);
+      const pending = await sql.unsafe<{id: string}[]>("SELECT id FROM claims WHERE round_id=$1 AND status='PENDING_VERIFICATION'",[active.id]);
+      const host = new WinnerService({
+        claimRepo: new ClaimRepository(), winnerRepo: new WinnerRepository(),
+        ticketRepo: new TicketRepository(), drawRepo: new DrawRepository(),
+        idempotency: new IdempotencyRepository(), audit: { record: async () => {} } as any,
+        transactionRunner: { transaction: <T>(callback: (tx: any) => Promise<T>) => scoped(tx => callback(drizzle(tx as unknown as postgres.Sql))) as Promise<T> },
+      });
+      const approvals = await Promise.allSettled(pending.map(row => host.verifyClaim({
+        claimId: row.id, actorId: admin.userId, actorType: "ADMIN", idempotencyKey: row.id,
+      })));
+      expect(approvals.filter(result => result.status === "fulfilled")).toHaveLength(1);
       const state = await service.read(active.id, admin);
       expect(state.wins).toHaveLength(1);
       expect(state.wins[0]!.points).toBe(10);

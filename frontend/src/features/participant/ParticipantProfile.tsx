@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useOutletContext } from 'react-router-dom';
 import { getParticipantClaims } from '../../lib/api/claims';
@@ -19,15 +19,12 @@ const patternNames: Record<string, string> = {
 
 export function ParticipantProfile() {
   const user = useOutletContext<AuthenticatedUser>();
-  const [showPassword, setShowPassword] = useState(false);
-  const [copied, setCopied] = useState(false);
   const [filter, setFilter] = useState<'ALL' | 'VERIFIED' | 'REJECTED' | 'PENDING'>('ALL');
 
-  // Load password from storage or fallback to default
-  const storedPassword =
-    localStorage.getItem('tt_participant_pwd') ||
-    sessionStorage.getItem('tt_participant_pwd') ||
-    'PlayerPass123!';
+  useEffect(() => {
+    localStorage.removeItem('tt_participant_pwd');
+    sessionStorage.removeItem('tt_participant_pwd');
+  }, []);
 
   // Event & Round context
   const event = useQuery({
@@ -70,13 +67,6 @@ export function ParticipantProfile() {
       ? pendingClaims
       : claims;
 
-  function handleCopyPassword() {
-    navigator.clipboard?.writeText(storedPassword).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
-  }
-
   const backLink =
     round.data?.status === 'ACTIVE' ? '/participant/game' : '/participant/lobby';
   const backLabel =
@@ -94,17 +84,17 @@ export function ParticipantProfile() {
 
         <header className={styles.header}>
           <p className={styles.eyebrow}>ACCOUNT & CLAIM HISTORY</p>
-          <h1>Profile & Credentials</h1>
+          <h1>Participant Profile</h1>
           <p className={styles.subhead}>
-            View your registered participant email, login credentials, and full record of accepted
+            View your registered participant email and full record of accepted
             and rejected win claims.
           </p>
         </header>
 
-        {/* 1. Account Credentials Card */}
+        {/* 1. Account Details Card */}
         <section className={styles.card} aria-labelledby="credentials-title">
           <div className={styles.cardHeader}>
-            <h2 id="credentials-title">Account Credentials</h2>
+            <h2 id="credentials-title">Account Details</h2>
             <span className={styles.statusPill} data-status={user.status}>
               {user.status}
             </span>
@@ -120,33 +110,6 @@ export function ParticipantProfile() {
               <dt>Registered Email</dt>
               <dd>
                 <code className={styles.emailCode}>{user.email}</code>
-              </dd>
-            </div>
-
-            <div className={styles.detailRow}>
-              <dt>Password</dt>
-              <dd className={styles.passwordCell}>
-                <span className={styles.passwordText}>
-                  {showPassword ? storedPassword : '••••••••••••'}
-                </span>
-                <div className={styles.passwordActions}>
-                  <button
-                    type="button"
-                    className={styles.toggleButton}
-                    onClick={() => setShowPassword((prev) => !prev)}
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  >
-                    {showPassword ? 'Hide' : 'Show'}
-                  </button>
-                  <button
-                    type="button"
-                    className={styles.copyButton}
-                    onClick={handleCopyPassword}
-                    title="Copy password to clipboard"
-                  >
-                    {copied ? 'Copied!' : 'Copy'}
-                  </button>
-                </div>
               </dd>
             </div>
 
