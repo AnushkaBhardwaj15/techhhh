@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { ArrowLeft } from '@phosphor-icons/react';
 import { z } from 'zod';
 import { ApiError } from '../../lib/api/client';
 import { login } from '../../lib/api/auth';
@@ -64,6 +65,10 @@ export function LoginPage() {
 
   return (
     <main className={styles.page}>
+      <Link to="/" className={styles.backLink}>
+        <ArrowLeft size={18} weight="bold" aria-hidden="true" />
+        Back to home
+      </Link>
       <header className={styles.brandGroup} aria-label="Tech Tambola">
         <span className={styles.brandBadge}>TECH</span>
         <strong className={styles.brandName}>

@@ -284,7 +284,7 @@
 }
 
 .primaryButton:hover {
-  background: #FFF152;
+  background: #c94d19;
   transform: translate(-1px, -1px);
   box-shadow: 6px 6px 0px #000000;
 }
@@ -319,9 +319,26 @@
 }
 
 .secondaryButton:hover {
-  background: #313540;
+  background: #33302c;
   transform: translate(-1px, -1px);
   box-shadow: 6px 6px 0px #000000;
+}
+
+.primaryButton, .secondaryButton, .navCta, .projectorButton {
+  min-height: 48px;
+}
+.primaryButton:hover { color: #fff; }
+@media (max-width: 480px) {
+  .navContainer { padding: 12px 14px; gap: 10px; }
+  .brandGroup { gap: 7px; }
+  .wordmark { font-size: 12px; }
+  .editionBadge { display: none; }
+  .navCta { padding: 9px 11px; font-size: 10px; }
+  .heroSection { padding: 52px 18px 44px; }
+  .heroHeadline { font-size: clamp(39px, 11vw, 54px); line-height: 0.98; }
+  .heroHeadline em { text-decoration-thickness: 4px; text-underline-offset: 5px; }
+  .heroCtaGroup { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .primaryButton, .secondaryButton { width: 100%; justify-content: center; }
 }
 
 .secondaryButton:active {

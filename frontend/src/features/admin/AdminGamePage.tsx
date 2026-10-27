@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Bell, Broadcast, LockKey, Trophy } from "@phosphor-icons/react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ApiError } from "../../lib/api/client";
@@ -271,7 +272,7 @@ export function AdminGamePage() {
                   }}
                   title="Toggle whether participants see this game and 1-click join button in their lobby"
                 >
-                  {broadcasting ? 'UPDATING…' : game.isBroadcast ? '📢 BROADCASTING TO USERS (ON)' : '🔒 HIDDEN FROM USERS (OFF)'}
+                  {broadcasting ? 'UPDATING…' : <>{game.isBroadcast ? <Broadcast size={17} weight="bold" aria-hidden="true" /> : <LockKey size={17} weight="bold" aria-hidden="true" />} {game.isBroadcast ? 'BROADCASTING TO USERS (ON)' : 'HIDDEN FROM USERS (OFF)'}</>}
                 </ActionButton>
               </div>
               <div className={styles.qrFrame}>
@@ -283,8 +284,8 @@ export function AdminGamePage() {
               </div>
               <p className={styles.qrInstruction}>
                 {game.isBroadcast
-                  ? "✅ This game is currently BROADCAST to participants' lobby with a 1-click Quick Join button."
-                  : "🔒 This game is HIDDEN from participants' lobby. Users must manually enter the 6-character code, or you can turn ON broadcast."}
+                  ? <>This game is currently BROADCAST to participants' lobby with a 1-click Quick Join button.</>
+                  : <>This game is HIDDEN from participants' lobby. Users must manually enter the 6-character code, or you can turn ON broadcast.</>}
               </p>
               <div className={styles.controlsBar}>
                 <span className={styles.statusBadge}>
@@ -596,7 +597,7 @@ export function AdminGamePage() {
                   <h3 style={{ fontSize: '14px', color: 'var(--color-oxblood, #8C4545)', margin: '0 0 8px 0' }}>Verified Winners:</h3>
                   {game.standings.map((row, index) => (
                     <p key={index} style={{ margin: '4px 0', fontSize: '13px' }}>
-                      🏆 <strong>{row.name}</strong>
+                      <Trophy size={18} weight="fill" aria-hidden="true" /> <strong>{row.name}</strong>
                     </p>
                   ))}
                 </div>
