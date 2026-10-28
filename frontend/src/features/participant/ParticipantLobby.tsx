@@ -355,6 +355,24 @@ export function ParticipantLobby({ waiting = false }: { waiting?: boolean }) {
           )}
         </div>
       </div>
+      <p style={{
+        marginTop: '32px',
+        fontFamily: 'var(--mono)',
+        fontSize: '11px',
+        fontWeight: 700,
+        letterSpacing: '0.06em',
+        color: 'var(--neo-ink-secondary, #4B4B52)',
+        textAlign: 'center',
+      }}>
+        Made with ⚡ by the Tech Tombola Team ·{' '}
+        <Link to="/team" style={{
+          color: 'var(--neo-orange, #EE640F)',
+          textDecoration: 'none',
+          borderBottom: '1.5px solid transparent',
+          transition: 'border-color 0.1s',
+          fontWeight: 900,
+        }}>Meet the Devs</Link>
+      </p>
     </main>
   );
 }

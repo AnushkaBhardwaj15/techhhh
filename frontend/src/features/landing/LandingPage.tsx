@@ -41,6 +41,9 @@ export function LandingPage() {
             <a href="#patterns" className={styles.navItem}>
               Winning Patterns
             </a>
+            <Link to="/team" className={styles.navItem}>
+              Team
+            </Link>
           </nav>
 
           <div className={styles.navActions}>
@@ -392,6 +395,7 @@ export function LandingPage() {
 
           <div className={styles.footerLinks}>
             <a href="#main-content">Back to Top ↑</a>
+            <Link to="/team">Meet the Team</Link>
             <Link to="/login">Sign In</Link>
           </div>
         </div>

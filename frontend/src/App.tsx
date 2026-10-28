@@ -39,6 +39,7 @@ const ParticipantProfile = lazy(() => import('./features/participant/Participant
 const LiveDisplay = lazy(() => import('./features/live/LiveDisplay').then((module) => ({ default: module.LiveDisplay })));
 const NotFoundPage = lazy(() => import('./features/error/NotFoundPage').then((module) => ({ default: module.NotFoundPage })));
 const ForbiddenPage = lazy(() => import('./features/error/ForbiddenPage').then((module) => ({ default: module.ForbiddenPage })));
+const TeamPage = lazy(() => import('./features/team/TeamPage').then((module) => ({ default: module.TeamPage })));
 
 function ProtectedLayout({ allowed }: { allowed: AuthenticatedUser['role'][] }) {
   const location = useLocation();
@@ -124,6 +125,8 @@ function AppRoutes() {
         <Route path="/display/round" element={<LiveDisplay />} />
         <Route path="/display/winner" element={<LiveDisplay />} />
         <Route path="/login" element={<LoginRoute />} />
+        <Route path="/team" element={<TeamPage />} />
+        <Route path="/developers" element={<Navigate to="/team" replace />} />
         <Route path="/sign-in" element={<LoginRoute />} />
         <Route path="/signin" element={<LoginRoute />} />
         <Route path="/host" element={<Navigate to="/admin" replace />} />

@@ -1,0 +1,447 @@
+/* ============================================================
+   TEAM PAGE — NEOBRUTALISM DESIGN SYSTEM
+   ============================================================ */
+
+.page {
+  min-height: 100dvh;
+  background: var(--neo-bg);
+  color: var(--neo-ink);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ————————————————————————————————————————————————
+   NAVBAR (mirrors Landing navbar exactly)
+   ———————————————————————————————————————————————— */
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--neo-bg);
+  border-bottom: var(--neo-border);
+  width: 100%;
+}
+
+.navContainer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px clamp(16px, 4vw, 48px);
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.brandGroup {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.wordmark {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  color: var(--neo-ink);
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.brandBadge {
+  background: var(--neo-ink);
+  color: var(--neo-surface);
+  padding: 4px 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  border-radius: var(--radius-xs, 2px);
+}
+
+.navActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.backButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 18px;
+  background: var(--neo-ink);
+  color: #FFFFFF;
+  text-decoration: none;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  border: 2px solid var(--neo-ink);
+  border-radius: var(--radius-xs, 2px);
+  box-shadow: var(--neo-shadow-xs);
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease;
+}
+
+.backButton:hover {
+  background: #242429;
+  transform: translate(-1px, -1px);
+  box-shadow: var(--neo-shadow-sm);
+}
+
+.backButton:active {
+  transform: translate(2px, 2px);
+  box-shadow: none;
+}
+
+.backButton:focus-visible {
+  outline: 3px solid var(--neo-ink);
+  outline-offset: 2px;
+}
+
+/* ————————————————————————————————————————————————
+   HERO HEADER
+   ———————————————————————————————————————————————— */
+.heroSection {
+  padding: clamp(48px, 8vw, 96px) clamp(20px, 5vw, 64px) clamp(32px, 5vw, 56px);
+  text-align: center;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.eyebrow {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--neo-ink-secondary);
+  margin-bottom: 16px;
+}
+
+.headline {
+  margin: 0 0 16px;
+  font-family: var(--display);
+  font-size: clamp(36px, 8vw, 64px);
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+  color: var(--neo-ink);
+}
+
+.headlineAccent {
+  color: var(--neo-orange);
+}
+
+.subtitle {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--neo-ink-secondary);
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+/* ————————————————————————————————————————————————
+   TEAM GRID
+   ———————————————————————————————————————————————— */
+.teamGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  padding: 0 clamp(20px, 5vw, 64px) clamp(48px, 6vw, 80px);
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ————————————————————————————————————————————————
+   MEMBER CARD — Neobrutalist
+   ———————————————————————————————————————————————— */
+.memberCard {
+  background: var(--neo-surface);
+  border: var(--neo-border);
+  border-radius: var(--radius-sm, 4px);
+  box-shadow: var(--neo-shadow-md);
+  overflow: hidden;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.memberCard:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--neo-shadow-lg);
+}
+
+/* Avatar area */
+.avatarWrap {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: var(--neo-sand);
+  border-bottom: var(--neo-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.avatarImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatarFallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background: var(--neo-sand);
+  position: relative;
+}
+
+.avatarInitials {
+  font-family: var(--display);
+  font-size: clamp(48px, 10vw, 72px);
+  font-weight: 900;
+  color: var(--neo-ink);
+  opacity: 0.12;
+  letter-spacing: -0.04em;
+  user-select: none;
+}
+
+.avatarIcon {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  background: var(--neo-orange);
+  border: 2px solid var(--neo-ink);
+  border-radius: var(--radius-xs, 2px);
+  box-shadow: var(--neo-shadow-xs);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatarIcon svg {
+  width: 18px;
+  height: 18px;
+  fill: #FFFFFF;
+}
+
+/* Card body */
+.cardBody {
+  padding: 20px 20px 24px;
+}
+
+.memberName {
+  margin: 0 0 4px;
+  font-family: var(--display);
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: var(--neo-ink);
+  line-height: 1.2;
+}
+
+.memberRole {
+  display: block;
+  margin: 0 0 16px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--neo-ink-secondary);
+  line-height: 1.5;
+}
+
+/* Social links row */
+.socialLinks {
+  display: flex;
+  gap: 8px;
+}
+
+.socialLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  text-decoration: none;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  border: 1.5px solid var(--neo-ink);
+  border-radius: var(--radius-xs, 2px);
+  box-shadow: 2px 2px 0px var(--neo-ink);
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease;
+  color: var(--neo-ink);
+  background: var(--neo-surface);
+}
+
+.socialLink:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px var(--neo-ink);
+  background: var(--neo-orange-tint);
+}
+
+.socialLink:active {
+  transform: translate(2px, 2px);
+  box-shadow: none;
+}
+
+.socialLink:focus-visible {
+  outline: 3px solid var(--neo-ink);
+  outline-offset: 2px;
+}
+
+.socialLinkIcon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+/* ————————————————————————————————————————————————
+   TRIBUTE STRIP
+   ———————————————————————————————————————————————— */
+.tributeStrip {
+  border-top: var(--neo-border);
+  padding: clamp(32px, 5vw, 56px) clamp(20px, 5vw, 64px);
+  text-align: center;
+}
+
+.tributeContent {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.tributeKicker {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--neo-ink-secondary);
+  margin-bottom: 12px;
+}
+
+.tributeHeading {
+  margin: 0 0 12px;
+  font-family: var(--display);
+  font-size: clamp(22px, 5vw, 32px);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  color: var(--neo-ink);
+  line-height: 1.15;
+}
+
+.tributeText {
+  margin: 0 0 20px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--neo-ink-secondary);
+}
+
+.techBadges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.techBadge {
+  display: inline-block;
+  padding: 5px 12px;
+  background: var(--neo-surface);
+  border: 1.5px solid var(--neo-ink);
+  border-radius: var(--radius-xs, 2px);
+  box-shadow: 2px 2px 0px var(--neo-ink);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--neo-ink);
+}
+
+/* ————————————————————————————————————————————————
+   FOOTER
+   ———————————————————————————————————————————————— */
+.footer {
+  margin-top: auto;
+  background: var(--neo-bg);
+  padding: 36px clamp(20px, 5vw, 64px);
+  border-top: 1px solid var(--neo-ink);
+}
+
+.footerContainer {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.footerWordmark {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  color: var(--neo-ink);
+}
+
+.footerLinks {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.footerLinks a {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--neo-ink);
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  transition: border-color 0.1s ease;
+}
+
+.footerLinks a:hover {
+  border-bottom-color: var(--neo-ink);
+}
+
+.footerLinks a:focus-visible {
+  outline: 3px solid var(--neo-ink);
+  outline-offset: 2px;
+}
+
+/* ————————————————————————————————————————————————
+   RESPONSIVE
+   ———————————————————————————————————————————————— */
+@media (max-width: 768px) {
+  .teamGrid {
+    grid-template-columns: 1fr;
+    max-width: 400px;
+  }
+  .footerContainer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 480px) {
+  .socialLinks {
+    flex-direction: column;
+  }
+  .socialLink {
+    width: 100%;
+    justify-content: center;
+  }
+}

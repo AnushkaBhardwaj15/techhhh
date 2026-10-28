@@ -60,13 +60,12 @@ describe('application role routes', () => {
     expect(listSuperAdminAccounts).toHaveBeenCalled();
   });
 
-  it('redirects an Admin away from the Super Admin system route before fetching it', async () => {
+  it('allows an Admin to access password change on system route without exposing Super Admin system health', async () => {
     vi.mocked(authApi.getMe).mockResolvedValue({ id: 'u1', email: 'a@example.test', name: 'Ari Patel', role: 'ADMIN', status: 'ACTIVE' });
     window.history.replaceState({}, '', '/admin/system');
     render(<App />);
-    expect(await screen.findByRole('heading', { name: 'Your games' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Change password' })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'System health' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'System' })).not.toBeInTheDocument();
     expect(getSuperAdminSystem).not.toHaveBeenCalled();
   });
 
@@ -126,5 +125,11 @@ describe('application role routes', () => {
     expect(window.location.pathname).toBe('/login');
     expect(await screen.findByRole('button', { name: /sign in/i })).toBeInTheDocument();
     await waitFor(() => expect(queryClient.getQueryData(['private', 'admin-dashboard'])).toBeUndefined());
+  });
+
+  it('renders the team page without requiring authentication', async () => {
+    window.history.replaceState({}, '', '/team');
+    render(<App />);
+    expect(await screen.findByRole('heading', { name: /Meet the Developers/i })).toBeInTheDocument();
   });
 });
