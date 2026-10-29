@@ -33,6 +33,12 @@ const envSchema = z
     CORS_ORIGIN: z.string().default('*'),
     LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
     TRUST_PROXY: z.string().optional().default('false').transform((val) => val === 'true' || val === '1'),
+    REDIS_URL: z.string().default('redis://localhost:6379'),
+    REDIS_ENABLED: z.string().optional().default('true').transform((val) => val === 'true' || val === '1'),
+    KAFKA_BROKERS: z.string().default('localhost:9094'),
+    KAFKA_CLIENT_ID: z.string().default('techtombola-backend'),
+    KAFKA_ENABLED: z.string().optional().default('true').transform((val) => val === 'true' || val === '1'),
+    QR_HMAC_SECRET: z.string().min(1).default('dev_qr_hmac_secret_must_be_32_characters_long_for_dev'),
   })
   .superRefine((data, ctx) => {
     if (data.NODE_ENV === 'production') {
@@ -48,6 +54,13 @@ const envSchema = z
           code: z.ZodIssueCode.custom,
           path: ['SESSION_SECRET'],
           message: 'SESSION_SECRET must be at least 32 characters long in production',
+        });
+      }
+      if (data.QR_HMAC_SECRET.length < 32) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['QR_HMAC_SECRET'],
+          message: 'QR_HMAC_SECRET must be at least 32 characters long in production',
         });
       }
     }
