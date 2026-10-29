@@ -1,0 +1,1044 @@
+/* ============================================================
+   MEET THE DEVELOPERS — TV BROADCAST STUDIO & BANNER STYLES
+   Neobrutalist Broadcast System with Moving TV Ticker
+   ============================================================ */
+
+.page {
+  min-height: 100vh;
+  background-color: var(--neo-bg, #F7F5EE);
+  color: var(--neo-ink, #121212);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow-x: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* CRT Scanlines Overlay */
+.scanlinesOverlay {
+  display: none;
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: linear-gradient(
+    rgba(18, 18, 18, 0) 50%, 
+    rgba(0, 0, 0, 0.25) 50%
+  ), linear-gradient(
+    90deg,
+    rgba(255, 0, 0, 0.03),
+    rgba(0, 255, 0, 0.01),
+    rgba(0, 0, 255, 0.03)
+  );
+  background-size: 100% 4px, 6px 100%;
+  opacity: 0.65;
+}
+
+.scanlinesActive .scanlinesOverlay {
+  display: block;
+}
+
+/* ============================================================
+   TOP BROADCAST STATUS BAR
+   ============================================================ */
+
+.broadcastTopBar {
+  background: var(--neo-ink, #121212);
+  color: #FFFFFF;
+  border-bottom: 3px solid var(--neo-orange, #EE640F);
+  padding: 10px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  z-index: 100;
+}
+
+.broadcastMeta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.liveBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #D92D20;
+  color: #FFFFFF;
+  padding: 4px 10px;
+  border-radius: 2px;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  animation: pulseLive 2s infinite ease-in-out;
+}
+
+.pulseDot {
+  width: 8px;
+  height: 8px;
+  background: #FFFFFF;
+  border-radius: 50%;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.9);
+}
+
+@keyframes pulseLive {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.75; }
+}
+
+.channelId {
+  color: var(--neo-orange, #EE640F);
+  font-weight: 800;
+}
+
+.telemetryStrip {
+  display: none;
+  color: #A1A1AA;
+}
+
+@media (min-width: 768px) {
+  .telemetryStrip {
+    display: inline;
+  }
+}
+
+.topControls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.broadcastButton {
+  background: #27272A;
+  color: #FFFFFF;
+  border: 1.5px solid #52525B;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 4px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+.broadcastButton:hover {
+  background: var(--neo-orange, #EE640F);
+  border-color: #FFFFFF;
+  color: #FFFFFF;
+}
+
+.broadcastButton.activeButton {
+  background: var(--neo-orange, #EE640F);
+  border-color: #FFFFFF;
+  color: #FFFFFF;
+}
+
+.returnLink {
+  background: #FFFFFF;
+  color: #121212;
+  text-decoration: none;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 800;
+  border-radius: 4px;
+  border: 1.5px solid #FFFFFF;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+
+.returnLink:hover {
+  background: var(--neo-orange, #EE640F);
+  color: #FFFFFF;
+  border-color: var(--neo-orange, #EE640F);
+}
+
+/* ============================================================
+   PAGE HEADER & HERO
+   ============================================================ */
+
+.heroHeader {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 40px 24px 20px;
+  width: 100%;
+}
+
+.heroTaglineRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.studioTag {
+  background: var(--neo-ink, #121212);
+  color: #FFFFFF;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-radius: 2px;
+}
+
+.editionTag {
+  background: var(--neo-orange-soft, #FDE8DA);
+  color: var(--neo-orange, #EE640F);
+  border: 1.5px solid var(--neo-orange, #EE640F);
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-radius: 2px;
+}
+
+.headline {
+  font-size: clamp(2rem, 5vw, 3.4rem);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  margin: 0 0 12px;
+  color: var(--neo-ink, #121212);
+}
+
+.subheadline {
+  font-size: clamp(1rem, 1.8vw, 1.25rem);
+  color: var(--neo-ink-secondary, #4B4B52);
+  max-width: 780px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ============================================================
+   MOVING TV BANNER / MARQUEE TICKER SECTION
+   ============================================================ */
+
+.movingBannerSection {
+  width: 100%;
+  margin: 28px 0 36px;
+  border-top: 3px solid var(--neo-ink, #121212);
+  border-bottom: 3px solid var(--neo-ink, #121212);
+  background: #18181B;
+  box-shadow: 0 6px 0 var(--neo-ink, #121212);
+  position: relative;
+  overflow: hidden;
+}
+
+.bannerTopBar {
+  background: var(--neo-orange, #EE640F);
+  color: #FFFFFF;
+  padding: 6px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-bottom: 2px solid var(--neo-ink, #121212);
+}
+
+.bannerLabelGroup {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bannerControls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tickerControlButton {
+  background: var(--neo-ink, #121212);
+  color: #FFFFFF;
+  border: 1px solid #FFFFFF;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 800;
+  border-radius: 2px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s ease;
+}
+
+.tickerControlButton:hover {
+  background: #FFFFFF;
+  color: #121212;
+}
+
+.tickerContainer {
+  padding: 18px 0;
+  display: flex;
+  overflow: hidden;
+  user-select: none;
+}
+
+.tickerTrack {
+  display: flex;
+  gap: 20px;
+  width: max-content;
+  animation: tickerSlide 25s linear infinite;
+}
+
+.tickerTrack.speedFast {
+  animation-duration: 14s;
+}
+
+.tickerTrack.paused,
+.tickerContainer:hover .tickerTrack,
+.tickerContainer:focus-within .tickerTrack {
+  animation-play-state: paused;
+}
+
+@keyframes tickerSlide {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+/* Ticker TV Card */
+.tickerCard {
+  background: #27272A;
+  border: 2px solid #3F3F46;
+  border-radius: 4px;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 280px;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+  color: #FFFFFF;
+  text-align: left;
+}
+
+.tickerCard:hover,
+.tickerCard.activeCard {
+  border-color: var(--neo-orange, #EE640F);
+  background: #323238;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 0 var(--neo-orange, #EE640F);
+}
+
+.tickerThumbFrame {
+  width: 48px;
+  height: 48px;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 2px solid var(--neo-orange, #EE640F);
+  flex-shrink: 0;
+  background: #000000;
+}
+
+.tickerThumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+}
+
+.tickerInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tickerChannelRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tickerChannel {
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+  font-weight: 800;
+  color: #A1A1AA;
+}
+
+.tickerLiveDot {
+  font-size: 10px;
+  color: #D92D20;
+  font-weight: 900;
+}
+
+.tickerName {
+  font-size: 15px;
+  font-weight: 900;
+  color: #FFFFFF;
+  letter-spacing: -0.01em;
+}
+
+.tickerRoleBadge {
+  background: var(--neo-orange, #EE640F);
+  color: #FFFFFF;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  align-self: flex-start;
+}
+
+/* ============================================================
+   MAIN STAGE: TV SPOTLIGHT MONITOR
+   ============================================================ */
+
+.spotlightSection {
+  max-width: 1280px;
+  margin: 0 auto 50px;
+  padding: 0 24px;
+  width: 100%;
+}
+
+.tvMonitor {
+  background: #18181B;
+  border: 3px solid var(--neo-ink, #121212);
+  border-radius: 6px;
+  box-shadow: 8px 8px 0px var(--neo-ink, #121212);
+  overflow: hidden;
+  color: #FFFFFF;
+}
+
+.tvMonitorHeader {
+  background: var(--neo-ink, #121212);
+  border-bottom: 2px solid #3F3F46;
+  padding: 10px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.channelTabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.channelTab {
+  background: #27272A;
+  color: #D4D4D8;
+  border: 1.5px solid #52525B;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 800;
+  border-radius: 3px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s ease;
+}
+
+.channelTab:hover {
+  border-color: var(--neo-orange, #EE640F);
+  color: #FFFFFF;
+}
+
+.channelTab.activeChannelTab {
+  background: var(--neo-orange, #EE640F);
+  border-color: #FFFFFF;
+  color: #FFFFFF;
+  box-shadow: 2px 2px 0px #000000;
+}
+
+.monitorStatus {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: #A1A1AA;
+}
+
+.recIndicator {
+  color: #EF4444;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.recDot {
+  width: 8px;
+  height: 8px;
+  background: #EF4444;
+  border-radius: 50%;
+  animation: pulseLive 1.5s infinite;
+}
+
+/* TV Stage View */
+.tvStageView {
+  padding: 32px 28px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+  align-items: center;
+}
+
+@media (min-width: 900px) {
+  .tvStageView {
+    grid-template-columns: 340px 1fr;
+    gap: 40px;
+  }
+}
+
+.portraitWrapper {
+  position: relative;
+  width: 100%;
+  max-width: 340px;
+  margin: 0 auto;
+}
+
+.portraitFrame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  background: #09090B;
+  border: 3px solid var(--neo-orange, #EE640F);
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 6px 6px 0px #000000;
+}
+
+.spotlightImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+}
+
+.cornerBracketTopLeft,
+.cornerBracketTopRight,
+.cornerBracketBottomLeft,
+.cornerBracketBottomRight {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-color: #00FFCC;
+  border-style: solid;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.cornerBracketTopLeft {
+  top: 8px;
+  left: 8px;
+  border-width: 2px 0 0 2px;
+}
+
+.cornerBracketTopRight {
+  top: 8px;
+  right: 8px;
+  border-width: 2px 2px 0 0;
+}
+
+.cornerBracketBottomLeft {
+  bottom: 8px;
+  left: 8px;
+  border-width: 0 0 2px 2px;
+}
+
+.cornerBracketBottomRight {
+  bottom: 8px;
+  right: 8px;
+  border-width: 0 2px 2px 0;
+}
+
+.portraitLowerBadge {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  right: 12px;
+  background: rgba(18, 18, 18, 0.88);
+  backdrop-filter: blur(4px);
+  border: 1.5px solid var(--neo-orange, #EE640F);
+  padding: 6px 10px;
+  border-radius: 3px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 800;
+  color: #FFFFFF;
+  z-index: 3;
+}
+
+.equalizerBar {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 12px;
+}
+
+.eqColumn {
+  width: 3px;
+  background: #00D084;
+  border-radius: 1px;
+  animation: eqBounce 1.2s infinite ease-in-out alternate;
+}
+
+.eqColumn:nth-child(2) { animation-delay: 0.2s; }
+.eqColumn:nth-child(3) { animation-delay: 0.4s; }
+.eqColumn:nth-child(4) { animation-delay: 0.1s; }
+
+@keyframes eqBounce {
+  0% { height: 3px; }
+  100% { height: 12px; }
+}
+
+/* Spotlight Dossier Content */
+.dossierContent {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.dossierHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dossierTagGroup {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.roleHighlightBadge {
+  background: var(--neo-orange, #EE640F);
+  color: #FFFFFF;
+  font-size: 13px;
+  font-weight: 900;
+  padding: 4px 12px;
+  border-radius: 2px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.verifiedPill {
+  background: #064E3B;
+  color: #34D399;
+  border: 1px solid #059669;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 2px;
+  font-family: ui-monospace, monospace;
+}
+
+.spotlightName {
+  font-size: clamp(2rem, 3.5vw, 2.75rem);
+  font-weight: 900;
+  color: #FFFFFF;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  margin: 0;
+}
+
+.spotlightTagline {
+  font-size: 1.15rem;
+  color: #FDBA74;
+  font-style: italic;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.dossierBio {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #D4D4D8;
+  margin: 0;
+  max-width: 680px;
+}
+
+.superpowerBlock {
+  background: #27272A;
+  border-left: 4px solid var(--neo-orange, #EE640F);
+  padding: 12px 16px;
+  border-radius: 0 4px 4px 0;
+}
+
+.superpowerLabel {
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--neo-orange, #EE640F);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.superpowerText {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #FFFFFF;
+  margin: 0;
+}
+
+.arsenalSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.arsenalLabel {
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 800;
+  color: #A1A1AA;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.arsenalPills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.arsenalPill {
+  background: #18181B;
+  color: #FFFFFF;
+  border: 1.5px solid #52525B;
+  padding: 4px 10px;
+  border-radius: 3px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.profileActionRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.githubLink {
+  background: #FFFFFF;
+  color: #121212;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 8px 16px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.15s ease;
+}
+
+.githubLink:hover {
+  background: var(--neo-orange, #EE640F);
+  color: #FFFFFF;
+}
+
+/* ============================================================
+   FULL SQUAD GRID (THE ROSTER)
+   ============================================================ */
+
+.rosterSection {
+  max-width: 1280px;
+  margin: 0 auto 60px;
+  padding: 0 24px;
+  width: 100%;
+}
+
+.rosterSectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 24px;
+  border-bottom: 2px solid var(--neo-ink, #121212);
+  padding-bottom: 12px;
+}
+
+.rosterTitleGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rosterEyebrow {
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--neo-orange, #EE640F);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.rosterTitle {
+  font-size: 1.75rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.rosterGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+@media (min-width: 640px) {
+  .rosterGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .rosterGrid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.rosterCard {
+  background: var(--neo-surface, #FFFFFF);
+  border: 3px solid var(--neo-ink, #121212);
+  border-radius: 6px;
+  box-shadow: 6px 6px 0px var(--neo-ink, #121212);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  position: relative;
+}
+
+.rosterCard:hover,
+.rosterCard.activeRosterCard {
+  transform: translateY(-4px);
+  box-shadow: 8px 8px 0px var(--neo-orange, #EE640F);
+  border-color: var(--neo-ink, #121212);
+}
+
+.cardTopRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cardChannelTag {
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 900;
+  color: var(--neo-ink, #121212);
+  background: var(--neo-sand, #ECE7DA);
+  padding: 2px 6px;
+  border-radius: 2px;
+  border: 1px solid var(--neo-ink, #121212);
+}
+
+.cardRoleTag {
+  background: var(--neo-orange, #EE640F);
+  color: #FFFFFF;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 3px 6px;
+  border-radius: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.cardImageFrame {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border: 2px solid var(--neo-ink, #121212);
+  border-radius: 4px;
+  overflow: hidden;
+  background: #000000;
+}
+
+.cardImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.rosterCard:hover .cardImage {
+  transform: scale(1.04);
+}
+
+.cardDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-grow: 1;
+}
+
+.cardName {
+  font-size: 1.25rem;
+  font-weight: 900;
+  margin: 0;
+  color: var(--neo-ink, #121212);
+  letter-spacing: -0.01em;
+}
+
+.cardTagline {
+  font-size: 0.85rem;
+  color: var(--neo-ink-secondary, #4B4B52);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.cardSkillsStrip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.cardSkillChip {
+  font-size: 10px;
+  font-weight: 700;
+  background: var(--neo-sand, #ECE7DA);
+  color: var(--neo-ink, #121212);
+  padding: 2px 6px;
+  border-radius: 2px;
+}
+
+.spotlightButton {
+  margin-top: auto;
+  background: var(--neo-ink, #121212);
+  color: #FFFFFF;
+  border: 2px solid var(--neo-ink, #121212);
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 800;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+}
+
+.spotlightButton:hover {
+  background: var(--neo-orange, #EE640F);
+  border-color: var(--neo-orange, #EE640F);
+  color: #FFFFFF;
+}
+
+/* ============================================================
+   BOTTOM TV CHYRON / NEWS CRAWLER
+   ============================================================ */
+
+.bottomChyron {
+  margin-top: auto;
+  background: var(--neo-ink, #121212);
+  color: #FFFFFF;
+  border-top: 3px solid var(--neo-orange, #EE640F);
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  height: 44px;
+  position: relative;
+  z-index: 50;
+}
+
+.chyronLabel {
+  background: #D92D20;
+  color: #FFFFFF;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  padding: 0 16px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  flex-shrink: 0;
+  z-index: 2;
+  border-right: 2px solid var(--neo-orange, #EE640F);
+}
+
+.chyronTrackWrapper {
+  overflow: hidden;
+  flex-grow: 1;
+  display: flex;
+}
+
+.chyronTrack {
+  display: flex;
+  white-space: nowrap;
+  animation: chyronScroll 30s linear infinite;
+  gap: 32px;
+  padding-left: 20px;
+}
+
+.chyronItem {
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #F4F4F5;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chyronBullet {
+  color: var(--neo-orange, #EE640F);
+  font-size: 14px;
+}
+
+@keyframes chyronScroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .headline {
+    font-size: 1.85rem;
+  }
+  
+  .tvStageView {
+    padding: 20px 16px;
+  }
+  
+  .channelTabs {
+    width: 100%;
+  }
+  
+  .channelTab {
+    flex: 1 1 calc(50% - 4px);
+    text-align: center;
+  }
+}

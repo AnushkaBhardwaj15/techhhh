@@ -38,6 +38,7 @@ const ParticipantClaims = lazy(() => import('./features/participant/ParticipantC
 const ParticipantResults = lazy(() => import('./features/participant/ParticipantResults').then((module) => ({ default: module.ParticipantResults })));
 const ParticipantProfile = lazy(() => import('./features/participant/ParticipantProfile').then((module) => ({ default: module.ParticipantProfile })));
 const LiveDisplay = lazy(() => import('./features/live/LiveDisplay').then((module) => ({ default: module.LiveDisplay })));
+const DevelopersPage = lazy(() => import('./features/developers/DevelopersPage').then((module) => ({ default: module.DevelopersPage })));
 const NotFoundPage = lazy(() => import('./features/error/NotFoundPage').then((module) => ({ default: module.NotFoundPage })));
 const ForbiddenPage = lazy(() => import('./features/error/ForbiddenPage').then((module) => ({ default: module.ForbiddenPage })));
 
@@ -139,6 +140,9 @@ function AppRoutes() {
         <Route path="/login" element={<LoginRoute />} />
         <Route path="/sign-in" element={<LoginRoute />} />
         <Route path="/signin" element={<LoginRoute />} />
+        <Route path="/developers" element={<DevelopersPage />} />
+        <Route path="/meet-the-developers" element={<DevelopersPage />} />
+        <Route path="/team" element={<DevelopersPage />} />
         <Route path="/host" element={<Navigate to="/admin" replace />} />
         <Route path="/admin/dashboard" element={<Navigate to="/admin" replace />} />
         <Route element={<ProtectedLayout allowed={['PARTICIPANT']} />}>
