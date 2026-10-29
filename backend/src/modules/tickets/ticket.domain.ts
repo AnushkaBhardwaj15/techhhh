@@ -1,3 +1,4 @@
+import { randomInt, createHash } from 'node:crypto';
 import { ValidationError } from '../../shared/errors/index.ts';
 
 export interface TicketKey {
@@ -19,7 +20,22 @@ export interface TicketLayout {
 }
 
 /**
- * Creates a deterministic pseudo-random number generator using Mulberry32.
+ * Creates a cryptographically secure random number in [0, 1) using 32-bit integer range.
+ */
+export function cryptoRng(): number {
+  return randomInt(0, 0x100000000) / 0x100000000;
+}
+
+/**
+ * Computes a deterministic SHA-256 fingerprint for a ticket's 15 keys to prevent duplicates.
+ */
+export function computeTicketFingerprint(keyIds: string[]): string {
+  const sorted = [...keyIds].sort();
+  return createHash('sha256').update(sorted.join(',')).digest('hex');
+}
+
+/**
+ * Creates a deterministic pseudo-random number generator using Mulberry32 (for seeded tests).
  */
 export function createSeededRng(seed: string | number): () => number {
   let s = typeof seed === 'number' ? seed : hashString(seed);
@@ -44,7 +60,7 @@ function hashString(str: string): number {
 /**
  * Shuffles an array in place using Fisher-Yates and provided RNG.
  */
-function shuffle<T>(array: T[], rng: () => number): T[] {
+export function shuffle<T>(array: T[], rng: () => number = cryptoRng): T[] {
   const result = [...array];
   for (let i = result.length - 1; i > 0; i--) {
     const j = Math.floor(rng() * (i + 1));
@@ -58,7 +74,7 @@ function shuffle<T>(array: T[], rng: () => number): T[] {
 /**
  * Generates the 3x9 grid coordinates (15 populated positions, 5 per row, at least 1 per column).
  */
-function generateGridPattern(rng: () => number): Array<{ rowIndex: number; colIndex: number }> {
+function generateGridPattern(rng: () => number = cryptoRng): Array<{ rowIndex: number; colIndex: number }> {
   // We need 15 cells total across 3 rows (5 per row) and 9 columns (0..8).
   // In a valid traditional Tombola card, each column must contain at least 1 number (1 to 3 cells per column).
   const maxAttempts = 1000;
@@ -101,7 +117,7 @@ function generateGridPattern(rng: () => number): Array<{ rowIndex: number; colIn
   ];
 }
 
-function pickKDistinct(n: number, k: number, rng: () => number): number[] {
+function pickKDistinct(n: number, k: number, rng: () => number = cryptoRng): number[] {
   const indices = Array.from({ length: n }, (_, i) => i);
   const shuffled = shuffle(indices, rng);
   return shuffled.slice(0, k);
@@ -141,9 +157,9 @@ export function generateTicketLayout(options: {
     );
   }
 
-  const effectiveRng = rng ?? (seed !== undefined ? createSeededRng(seed) : Math.random);
+  const effectiveRng = rng ?? (seed !== undefined ? createSeededRng(seed) : cryptoRng);
 
-  // Pick 15 distinct keys
+  // Pick 15 distinct keys using crypto or seeded RNG
   const shuffledKeys = shuffle(uniqueKeys, effectiveRng);
   const selectedKeys = shuffledKeys.slice(0, 15);
 
@@ -159,45 +175,54 @@ export function generateTicketLayout(options: {
 
   const layout: TicketLayout = {
     cells,
+    emptyCount: 27 - 15,
     populatedCount: 15,
-    emptyCount: 12,
   };
 
-  validateTicketLayout(layout.cells);
+  validateTicketLayout(layout);
   return layout;
 }
 
 /**
- * Validates all structural invariants of a Tombola ticket layout.
+ * Validates structural invariants of a ticket layout:
+ * - Exactly 15 cells total
+ * - Exactly 5 cells per row
+ * - All rowIndices in [0, 2]
+ * - All colIndices in [0, 8]
+ * - No duplicate cell positions
+ * - No duplicate keyIds
  */
-export function validateTicketLayout(cells: GeneratedCell[]): void {
-  if (!Array.isArray(cells) || cells.length !== 15) {
-    throw new ValidationError(`A ticket must have exactly 15 populated cells, found ${cells?.length ?? 0}`);
+export function validateTicketLayout(layoutOrCells: TicketLayout | GeneratedCell[]): void {
+  const cells = Array.isArray(layoutOrCells) ? layoutOrCells : layoutOrCells.cells;
+  const populatedCount = Array.isArray(layoutOrCells) ? cells.length : layoutOrCells.populatedCount;
+
+  if (!cells || populatedCount !== 15 || cells.length !== 15) {
+    throw new ValidationError(`Ticket must have exactly 15 cells, got ${cells ? cells.length : 0}`);
   }
 
   const rowCounts = [0, 0, 0];
   const colUsage = new Set<number>();
-  const positionSet = new Set<string>();
-  const keySet = new Set<string>();
+  const seenPositions = new Set<string>();
+  const seenKeyIds = new Set<string>();
 
   for (const cell of cells) {
     if (cell.rowIndex < 0 || cell.rowIndex > 2) {
-      throw new ValidationError(`Invalid row index ${cell.rowIndex}. Must be 0, 1, or 2.`);
+      throw new ValidationError(`Invalid row index: ${cell.rowIndex}. Must be 0, 1, or 2.`);
     }
     if (cell.colIndex < 0 || cell.colIndex > 8) {
-      throw new ValidationError(`Invalid column index ${cell.colIndex}. Must be between 0 and 8.`);
+      throw new ValidationError(`Invalid column index: ${cell.colIndex}. Must be between 0 and 8.`);
     }
 
-    const posKey = `${cell.rowIndex}:${cell.colIndex}`;
-    if (positionSet.has(posKey)) {
-      throw new ValidationError(`Duplicate cell position at row ${cell.rowIndex}, col ${cell.colIndex}`);
+    const posKey = `${cell.rowIndex},${cell.colIndex}`;
+    if (seenPositions.has(posKey)) {
+      throw new ValidationError(`Duplicate cell position: (${cell.rowIndex}, ${cell.colIndex})`);
     }
-    positionSet.add(posKey);
+    seenPositions.add(posKey);
 
-    if (keySet.has(cell.keyId)) {
-      throw new ValidationError(`Duplicate key ${cell.keyId} (${cell.keyValue}) on ticket`);
+    if (seenKeyIds.has(cell.keyId)) {
+      throw new ValidationError(`Duplicate key in ticket: ${cell.keyId}`);
     }
-    keySet.add(cell.keyId);
+    seenKeyIds.add(cell.keyId);
 
     rowCounts[cell.rowIndex]++;
     colUsage.add(cell.colIndex);
@@ -205,11 +230,11 @@ export function validateTicketLayout(cells: GeneratedCell[]): void {
 
   for (let r = 0; r < 3; r++) {
     if (rowCounts[r] !== 5) {
-      throw new ValidationError(`Row ${r} must contain exactly 5 cells, but has ${rowCounts[r]}`);
+      throw new ValidationError(`Row ${r} has ${rowCounts[r]} cells, expected exactly 5.`);
     }
   }
 
   if (colUsage.size < 9) {
-    throw new ValidationError(`Ticket layout must span all 9 columns, but only covers ${colUsage.size}`);
+    throw new ValidationError(`Ticket does not cover all 9 columns. Only covers ${colUsage.size}/9.`);
   }
 }

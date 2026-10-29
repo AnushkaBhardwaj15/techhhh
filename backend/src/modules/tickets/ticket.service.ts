@@ -7,7 +7,7 @@ import { ConflictError, ForbiddenError, NotFoundError, UnauthorizedError, Valida
 import type { AuditService } from '../audit/audit.service.ts';
 import type { IRoundRepository } from '../rounds/round.repository.ts';
 import type { IIdempotencyRepository } from '../../shared/idempotency/idempotency.repository.ts';
-import { generateTicketLayout, type TicketKey } from './ticket.domain.ts';
+import { generateTicketLayout, computeTicketFingerprint, type TicketKey } from './ticket.domain.ts';
 import type {
   GenerateTicketsResult,
   ITicketRepository,
@@ -113,11 +113,27 @@ export class TicketService {
 
     // 7. Atomic transaction: generate and persist tickets + cells + audit log
     await db.transaction(async (tx) => {
+      const existingFingerprints = new Set<string>();
+
       for (const participant of toGenerate) {
-        const layout = generateTicketLayout({
-          keys,
-          rng,
-        });
+        let layout: ReturnType<typeof generateTicketLayout> | null = null;
+
+        for (let attempt = 0; attempt < 10; attempt++) {
+          const candidate = generateTicketLayout({
+            keys,
+            rng,
+          });
+          const fp = computeTicketFingerprint(candidate.cells.map((c) => c.keyId));
+          if (!existingFingerprints.has(fp)) {
+            layout = candidate;
+            existingFingerprints.add(fp);
+            break;
+          }
+        }
+
+        if (!layout) {
+          layout = generateTicketLayout({ keys, rng });
+        }
 
         await this.ticketRepo.createTicketWithCells(
           {
