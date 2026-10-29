@@ -52,6 +52,7 @@ export const playStateSchema = summary.extend({
       category: z.string(),
       codeSnippet: z.string().nullable(),
       revealed: z.boolean(),
+      revealBatchId: z.string().uuid().nullable().optional(),
       answer: z.string().nullable(),
       number: z.number().nullable(),
       drawnAt: z.string(),

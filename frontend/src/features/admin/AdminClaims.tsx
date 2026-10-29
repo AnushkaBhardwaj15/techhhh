@@ -154,8 +154,8 @@ export function AdminClaims() {
               <dt>Round ID</dt><dd>{selected.roundId}</dd>
             </dl>
             {selected.status === 'PENDING_VERIFICATION' ? <div className={styles.actions}>
-              <button type="button" disabled={command.isPending} onClick={() => confirmAction(selected, 'verify')}>{command.isPending && command.variables?.claimId === selected.id && command.variables.action === 'verify' ? 'Verifying…' : hasIdempotencyKey(commandScope(user.id, selected.id, 'verify')) ? 'Retry same verification' : 'Verify Claim'}</button>
-              <button type="button" disabled={command.isPending} onClick={() => confirmAction(selected, 'reject')}>{command.isPending && command.variables?.claimId === selected.id && command.variables.action === 'reject' ? 'Rejecting…' : hasIdempotencyKey(commandScope(user.id, selected.id, 'reject')) ? 'Retry same rejection' : 'Reject Claim'}</button>
+              <button className="action-positive" type="button" disabled={command.isPending} onClick={() => confirmAction(selected, 'verify')}>{command.isPending && command.variables?.claimId === selected.id && command.variables.action === 'verify' ? 'Verifying…' : hasIdempotencyKey(commandScope(user.id, selected.id, 'verify')) ? 'Retry same verification' : 'Verify Claim'}</button>
+              <button className="action-danger" type="button" disabled={command.isPending} onClick={() => confirmAction(selected, 'reject')}>{command.isPending && command.variables?.claimId === selected.id && command.variables.action === 'reject' ? 'Rejecting…' : hasIdempotencyKey(commandScope(user.id, selected.id, 'reject')) ? 'Retry same rejection' : 'Reject Claim'}</button>
             </div> : <p className={styles.message}>This Claim has already been adjudicated. The server will not accept another decision.</p>}
             {message && <p className={styles.message} role="status">{message}</p>}
           </>}

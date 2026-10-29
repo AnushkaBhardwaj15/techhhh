@@ -1,4 +1,5 @@
 import {
+  act,
   cleanup,
   fireEvent,
   render,
@@ -9,14 +10,23 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import * as api from "../../lib/api/play";
-import { ApiError } from "../../lib/api/client";
+import { ApiError, apiRequest } from "../../lib/api/client";
 import { playFixture } from "../participant/playFixture";
 import { AdminGamePage } from "./AdminGamePage";
+import { listAdminClaims } from '../../lib/api/adminClaims';
+vi.mock('../../lib/api/adminClaims', () => ({
+  listAdminClaims: vi.fn(async () => ({ data: [], total: 0, page: 1, limit: 50 })),
+  verifyAdminClaim: vi.fn(), rejectAdminClaim: vi.fn(),
+}));
 vi.mock("../../lib/api/play", () => ({
   readPlayRound: vi.fn(),
   readPublicPlay: vi.fn(),
   listPlayRounds: vi.fn(),
   commandPlayRound: vi.fn(),
+}));
+vi.mock('../../lib/api/client', async (importOriginal) => ({
+  ...await importOriginal<typeof import('../../lib/api/client')>(),
+  apiRequest: vi.fn(async () => ({ participants: [], totalEnrolled: 0, livePlayers: 0 })),
 }));
 class Socket {
   close() {}
@@ -208,3 +218,61 @@ it("navigates history with Previous and Next without duplicate API calls, and ca
   );
 });
 
+
+
+it('separates enrolled standings from currently connected players', async () => {
+  vi.mocked(apiRequest).mockResolvedValue({ participants: [
+    { id: 'p1', name: 'Connected Player', points: 10, live: true },
+    { id: 'p2', name: 'Disconnected Player', points: 0, live: false },
+  ], totalEnrolled: 2, livePlayers: 1 });
+  mount();
+  await screen.findByRole('heading', { name: 'PLAYERS & STANDINGS' });
+  const live = await screen.findByRole('region', { name: 'Live players' });
+  await waitFor(() => expect(live).toHaveTextContent('Connected Player'));
+  expect(live).not.toHaveTextContent('Disconnected Player');
+  expect(screen.getByText('2 enrolled')).toBeInTheDocument();
+  expect(live).toHaveTextContent('1 connected');
+  act(() => client.setQueryData(['game-roster', game.id], {
+    participants: [
+      { id: 'p1', name: 'Connected Player', points: 10, live: false },
+      { id: 'p2', name: 'Disconnected Player', points: 0, live: false },
+    ], totalEnrolled: 2, livePlayers: 0,
+  }));
+  await waitFor(() => expect(live).toHaveTextContent('No players connected right now.'));
+  expect(screen.getByText('2 enrolled')).toBeInTheDocument();
+});
+
+
+it('shows valid, invalid and pending claims while hiding review actions for decided claims', async () => {
+  const claim = { id: 'valid', roundId: game.id, participantId: 'player', participantName: 'Valid Player', ticketId: 'ticket', eventId: game.eventId, eventTitle: 'Event', patternType: 'EARLY_5' as const, status: 'VERIFIED' as const, rejectionReason: null, createdAt: '2026-10-29T00:00:00Z', verifiedAt: '2026-10-29T00:00:00Z' };
+  vi.mocked(listAdminClaims).mockResolvedValueOnce({ data: [
+    claim,
+    { ...claim, id: 'invalid', participantName: 'Invalid Player', status: 'REJECTED', rejectionReason: 'Official calls do not complete this pattern.' },
+    { ...claim, id: 'pending', participantName: 'Pending Player', status: 'PENDING_VERIFICATION', verifiedAt: null },
+    { ...claim, id: 'other', roundId: 'other-game', participantName: 'Other Game Player' },
+  ], total: 4, page: 1, limit: 50 });
+  mount();
+  const claims = await screen.findByRole('region', { name: 'Game claims' });
+  await waitFor(() => expect(claims).toHaveTextContent('Valid Player'));
+  expect(claims).toHaveTextContent('Valid · Verified');
+  expect(claims).toHaveTextContent('Invalid · Rejected');
+  expect(claims).toHaveTextContent('Official calls do not complete this pattern.');
+  expect(claims).toHaveTextContent('Awaiting review');
+  expect(claims).not.toHaveTextContent('Other Game Player');
+  expect(screen.getAllByRole('button', { name: 'Approve' })).toHaveLength(1);
+  expect(screen.getAllByRole('button', { name: 'Reject' })).toHaveLength(1);
+});
+
+
+it('shows the pending reveal count and updates after the server reveals the answers', async () => {
+  const base = game.draws[0]!;
+  game.draws = Array.from({ length: 7 }, (_, index) => ({ ...base, id: `draw-${index}`, sequence: index + 1, revealed: index < 2 }));
+  vi.mocked(api.commandPlayRound).mockImplementation(async () => {
+    game.draws = game.draws.map(draw => ({ ...draw, revealed: true }));
+    return structuredClone(game);
+  });
+  mount();
+  fireEvent.click(await screen.findByRole('button', { name: 'Reveal pending answers (5)' }));
+  await waitFor(() => expect(api.commandPlayRound).toHaveBeenCalledWith(game.id, { action: 'reveal' }, expect.any(String)));
+  await waitFor(() => expect(screen.queryByRole('button', { name: /Reveal pending answers/ })).not.toBeInTheDocument());
+});

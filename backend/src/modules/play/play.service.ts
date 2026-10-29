@@ -204,15 +204,16 @@ export class PlayService {
   }
   async claim(id: string, actor: PlayActor, pattern: PlayPattern) {
     this.participant(actor);
-    const { state, result } = await this.store.change(id, actor, (s) =>
-      claimPrize(
+    const { state, result } = await this.store.change(id, actor, (s) => ({
+      ...claimPrize(
         s,
         pattern,
         actor,
         () => crypto.randomUUID(),
         new Date().toISOString(),
       ),
-    );
+      pattern,
+    }));
     if (result.accepted) {
       await this.notify(state);
       try {

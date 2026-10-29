@@ -642,3 +642,12 @@
 
 .playerLive { color: #16713b; font-weight: 700; }
 .playerOffline { color: #b42318; font-weight: 700; }
+
+.playerPanels { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.playerPanels > section { min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 600px) { .playerPanels { grid-template-columns: minmax(0, 1fr); } }
+
+.claimValid, .claimInvalid, .claimPending { display: inline-block; padding: 5px 8px; border: 1px solid currentColor; font: 700 11px var(--mono); }
+.claimValid { background: #dcf5e4; color: #17502b; }
+.claimInvalid { background: #fce5df; color: #8b2618; }
+.claimPending { background: #fff0d0; color: #684900; }

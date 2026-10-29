@@ -12,7 +12,6 @@ import styles from "./AdminGamePage.module.css";
 import { apiRequest } from "../../lib/api/client";
 export function AdminGamePage() {
   const [showQr, setShowQr] = useState(false);
-  const [showBank, setShowBank] = useState(false);
   const [copyMessage, setCopyMessage] = useState('');
   const [params] = useSearchParams();
   const client = useQueryClient();
@@ -37,11 +36,10 @@ export function AdminGamePage() {
   const claimsQuery = useQuery({
     queryKey: ["admin-claims-game", id],
     queryFn: () => listAdminClaims({ limit: 50, roundId: id }),
+    enabled: !!id,
     refetchInterval: 5000,
   });
-  const pendingClaims = (claimsQuery.data?.data ?? []).filter(
-    (c) => (c.roundId === id || !id) && c.status === "PENDING_VERIFICATION"
-  );
+  const gameClaims = (claimsQuery.data?.data ?? []).filter(claim => claim.roundId === id);
 
   async function handleApproveClaim(claimId: string) {
     setClaimActionId(claimId);
@@ -225,7 +223,7 @@ export function AdminGamePage() {
   }
   return <main className={styles.console}>
     <header className={styles.consoleHeader}>
-      <Link className={styles.consoleButton} to="/admin">← Back</Link>
+      <Link className={styles.consoleButton} to="/admin">← Back to dashboard</Link>
       <div className={styles.consoleTitle}><span>HOST CONSOLE</span><h1>{game?.name ?? 'Game control'}</h1></div>
       {game && <><span className={styles.consoleCode}>CODE: <strong>{game.code}</strong></span><button className={styles.consoleButton} onClick={() => setShowQr(value => !value)} aria-expanded={showQr}>QR</button></>}
     </header>
@@ -235,11 +233,11 @@ export function AdminGamePage() {
       <nav className={styles.consoleToolbar} aria-label="Game tools">
         <span className={styles.consoleStatus}>{lobby ? 'WAITING IN LOBBY' : game.status === 'ACTIVE' ? 'GAME ON · PLAYING' : game.status.replaceAll('_', ' ')}</span>
         <Link className={styles.consoleButton} to={`/admin/audit?roundId=${id}`}>Game audit</Link>
-        <button className={styles.consoleButton} onClick={() => setShowBank(value => !value)} aria-expanded={showBank}>Question bank</button>
+
         <Link className={styles.consoleButton} to="/live" target="_blank" rel="noreferrer">Projector view ↗</Link>
         <button className={styles.consoleButton} disabled={broadcasting} onClick={() => void handleToggleBroadcast()}>{game.isBroadcast ? 'Visible in lobby' : 'Hidden in lobby'}</button>
       </nav>
-      {showBank && <section className={styles.consolePanel}><h2>Question bank</h2>{game.bank?.length ? <ol>{game.bank.map(question => <li key={question.id}>{question.clue} — {question.term}</li>)}</ol> : <p>No question bank available.</p>}</section>}
+
       <div className={styles.consoleGrid}>
         <div className={styles.consoleMain}>
           {(lobby || showQr) && <section className={styles.lobbyPanel} aria-label="Game lobby">
@@ -266,16 +264,27 @@ export function AdminGamePage() {
               {game.status === 'RECOVERY_REQUIRED' && <ActionButton busy={recovering} onClick={() => void handleRecover()}>Recover Game</ActionButton>}
               {['ACTIVE', 'PAUSED'].includes(game.status) && <ActionButton busy={pending} onClick={() => { if (window.confirm('End this game?')) void run({ action: 'end' }); }}>End</ActionButton>}
               {currentDraw && !currentDraw.revealed && <ActionButton busy={pending} onClick={() => void run({ action: 'reveal', sequences: [currentDraw.sequence] })}>Reveal answer</ActionButton>}
-              {game.draws.some(draw => !draw.revealed) && <ActionButton busy={pending} onClick={() => void run({ action: 'reveal' })}>Reveal pending answers</ActionButton>}
+              {game.draws.some(draw => !draw.revealed) && <ActionButton busy={pending} onClick={() => void run({ action: 'reveal' })}>Reveal pending answers ({game.draws.filter(draw => !draw.revealed).length})</ActionButton>}
             </div>
           </>}
         </div>
         <aside className={styles.consoleSidebar}>
           {lobby ? <section className={styles.consolePanel}><h2>IN THE LOBBY</h2>{roster.isPending ? <p>Loading participants…</p> : roster.error ? <p role="alert">Could not load participants.</p> : roster.data?.participants.length ? <ol className={styles.roster}>{roster.data.participants.map(person => <li key={person.id}>{person.name}<small className={person.live ? styles.playerLive : styles.playerOffline}> · {person.live ? 'Live' : 'Offline'}</small></li>)}</ol> : <p>Waiting for participants to join.</p>}</section> : <>
-            <section className={styles.consolePanel}><h2>CLAIMS</h2><Link to={`/admin/claims?gameId=${id}`}>View all claims</Link>{claimFeedback && <p role="status">{claimFeedback}</p>}{pendingClaims.length ? pendingClaims.map(claim => <div className={styles.claimRow} key={claim.id}><strong>{claim.participantName}</strong><p>{claim.patternType.replaceAll('_', ' ')}</p><button disabled={!!claimActionId} onClick={() => void handleApproveClaim(claim.id)}>Approve</button><button disabled={!!claimActionId} onClick={() => void handleRejectClaim(claim.id)}>Reject</button></div>) : <p>No pending claims.</p>}</section>
-            <section className={styles.consolePanel}><h2>PLAYERS & STANDINGS</h2><p>{roster.data?.totalEnrolled ?? 0} enrolled · {roster.data?.livePlayers ?? 0} live</p>{roster.isPending ? <p>Loading players…</p> : roster.error ? <p role="alert">Could not load players.</p> : roster.data?.participants.length ? <ol className={styles.roster}>{roster.data.participants.map(row => <li key={row.id}>{row.name}<small className={row.live ? styles.playerLive : styles.playerOffline}> · {row.live ? 'Live' : 'Offline'}</small><strong>{row.points}</strong></li>)}</ol> : <p>No enrolled players yet.</p>}<Link to={`/admin/winners?gameId=${id}`}>View winners</Link></section>
+            <section className={styles.consolePanel} aria-label="Game claims"><h2>CLAIMS</h2><Link to={`/admin/claims?gameId=${id}`}>View all claims</Link>
+              {claimFeedback && <p role="status">{claimFeedback}</p>}
+              {claimsQuery.isPending ? <p>Loading claims…</p> : claimsQuery.error ? <p role="alert">Could not load claims.</p> : gameClaims.length ? gameClaims.map(claim => <div className={styles.claimRow} key={claim.id}>
+                <strong>{claim.participantName}</strong><p>{claim.patternType.replaceAll('_', ' ')}</p>
+                <span className={claim.status === 'VERIFIED' ? styles.claimValid : claim.status === 'PENDING_VERIFICATION' ? styles.claimPending : styles.claimInvalid}>
+                  {claim.status === 'VERIFIED' ? 'Valid · Verified' : claim.status === 'PENDING_VERIFICATION' ? 'Awaiting review' : claim.status === 'REJECTED_PATTERN_ALREADY_CLOSED' ? 'Rejected · Pattern already closed' : 'Invalid · Rejected'}
+                </span>
+                {claim.rejectionReason && <p>{claim.rejectionReason}</p>}
+                {claim.status === 'PENDING_VERIFICATION' && <div><button className="action-positive" disabled={!!claimActionId} onClick={() => void handleApproveClaim(claim.id)}>Approve</button><button className="action-danger" disabled={!!claimActionId} onClick={() => void handleRejectClaim(claim.id)}>Reject</button></div>}
+              </div>) : <p>No claims yet.</p>}
+            </section>
           </>}
         </aside>
+        {!lobby && <div className={styles.playerPanels}><section className={styles.consolePanel}><h2>PLAYERS & STANDINGS</h2><p>{roster.data?.totalEnrolled ?? 0} enrolled</p>{roster.isPending ? <p>Loading players…</p> : roster.error ? <p role="alert">Could not load players.</p> : roster.data?.participants.length ? <ol className={styles.roster}>{roster.data.participants.map(row => <li key={row.id}>{row.name}<small className={row.live ? styles.playerLive : styles.playerOffline}> · {row.live ? 'Live' : 'Offline'}</small><strong>{row.points}</strong></li>)}</ol> : <p>No enrolled players yet.</p>}<Link to={`/admin/winners?gameId=${id}`}>View winners</Link></section>
+            <section className={styles.consolePanel} aria-label="Live players"><h2>LIVE PLAYERS</h2><p>{roster.data?.livePlayers ?? 0} connected</p>{roster.isPending ? <p>Loading live players…</p> : roster.error ? <p role="alert">Could not load live players.</p> : roster.data?.participants.some(person => person.live) ? <ul className={styles.roster}>{roster.data.participants.filter(person => person.live).map(person => <li key={person.id}>{person.name}<small className={styles.playerLive}> · Live</small></li>)}</ul> : <p>No players connected right now.</p>}</section></div>}
       </div>
     </>}
   </main>;

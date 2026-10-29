@@ -121,23 +121,34 @@ describe('admin dashboard', () => {
     renderPage();
     const createBtn = (await screen.findAllByRole('button', { name: '+ Create Game' }))[0];
     fireEvent.click(createBtn);
+    expect(playApi.createPlayRound).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Create with default questions' }));
 
     await waitFor(() => {
       expect(playApi.createPlayRound).toHaveBeenCalledOnce();
     });
   });
 
-  it('toggles the Excel import panel', async () => {
+  it('opens per-game questions setup and cancels without creating a game', async () => {
     renderPage();
-    const importBtn = await screen.findByRole('button', { name: /Import Excel Bank/i });
-    expect(screen.queryByText('Import Questions from Excel / Spreadsheet')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Import question bank/i })).not.toBeInTheDocument();
+    fireEvent.click((await screen.findAllByRole('button', { name: '+ Create Game' }))[0]);
+    expect(screen.getByRole('heading', { name: 'Questions for this game' })).toBeVisible();
+    expect(screen.getByLabelText('Questions file (optional)')).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(screen.queryByRole('heading', { name: 'Questions for this game' })).not.toBeInTheDocument();
+    expect(playApi.createPlayRound).not.toHaveBeenCalled();
+  });
 
-    fireEvent.click(importBtn);
-    expect(screen.getByText('Import Questions from Excel / Spreadsheet')).toBeVisible();
-    expect(screen.getByRole('button', { name: /Close Import/i })).toBeVisible();
-
-    fireEvent.click(screen.getByRole('button', { name: /Close Import/i }));
-    expect(screen.queryByText('Import Questions from Excel / Spreadsheet')).not.toBeInTheDocument();
+  it('uses a validated upload only for the game being created', async () => {
+    const questions = Array.from({ length: 90 }, (_, i) => ({ number: i + 1, term: `Key ${i + 1}`, clue: `Clue ${i + 1}`, category: 'Technology', codeSnippet: null }));
+    vi.mocked(playApi.validatePlayBank).mockResolvedValueOnce({ valid: true, totalRows: 90, validRows: 90, errors: [], warnings: [], questions });
+    renderPage();
+    fireEvent.click((await screen.findAllByRole('button', { name: '+ Create Game' }))[0]);
+    fireEvent.change(screen.getByLabelText('Questions file (optional)'), { target: { files: [new File(['test'], 'questions.csv', { type: 'text/csv' })] } });
+    const create = await screen.findByRole('button', { name: /Create Game with This 90-Question Bank/ });
+    fireEvent.click(create);
+    await waitFor(() => expect(playApi.createPlayRound).toHaveBeenCalledWith(expect.any(String), questions));
   });
 
   it('shows System navigation only to a Super Admin', async () => {

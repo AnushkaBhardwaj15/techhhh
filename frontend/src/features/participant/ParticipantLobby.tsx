@@ -164,9 +164,13 @@ export function ParticipantLobby({ waiting = false }: { waiting?: boolean }) {
         setVerifiedCode(clean);
         setJoinedGameId(result.activeGame.id);
         navigate("/participant/game", { replace: true });
-      } catch {
+      } catch (error) {
         setErrorMsg(
-          "We could not join the game. Check your connection and try again.",
+          error instanceof ApiError && error.status >= 500
+            ? 'The game server couldn’t complete your join. Please try again shortly. If this continues, ask the admin to check the game setup.'
+            : error instanceof ApiError && error.status === 401
+              ? 'Your session has ended. Sign in again, then enter the game code.'
+              : 'We could not join the game. Check your connection and try again.',
         );
       } finally {
         joinInFlight.current = false;

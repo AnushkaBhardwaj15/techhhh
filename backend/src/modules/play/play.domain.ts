@@ -155,7 +155,6 @@ export function togglePlayMark(
     throw new ValidationError(
       "This cell does not belong to your assigned ticket.",
     );
-  if (marked && !state.draws.some(draw => draw.keyId === cell.keyId)) throw new ValidationError('This key has not been drawn.');
   cell.marked = marked;
 }
 export function eligiblePlayCells(
@@ -292,6 +291,7 @@ export function publicPlayState(state: PlayState, admin = false) {
       category: d.category,
       codeSnippet: d.codeSnippet,
       revealed: d.revealed,
+      revealBatchId: d.revealBatchId ?? null,
       answer: admin || d.revealed ? d.answer : null,
       number: admin || d.revealed ? d.number : null,
       drawnAt: d.drawnAt,

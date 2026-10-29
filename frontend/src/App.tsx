@@ -1,4 +1,5 @@
-import { BackLink } from './components/BackLink';
+import { PageBackNavigation } from './components/PageBackNavigation';
+import { NotificationHost } from './components/NotificationHost';
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { QueryClientProvider, useQuery, useQueryClient } from '@tanstack/react-query';
 import { BrowserRouter, Navigate, Outlet, Route, Routes, useLocation, useNavigate, useOutletContext } from 'react-router-dom';
@@ -88,7 +89,7 @@ function ProtectedLayout({ allowed }: { allowed: AuthenticatedUser['role'][] }) 
           {logoutError}
         </div>
       )}
-      {(['/participant/claims', '/participant/ticket-entry'].includes(location.pathname)) && <BackLink fallback={user.role === 'PARTICIPANT' ? '/lobby' : '/admin'} label={location.pathname === '/admin/claims' || location.pathname === '/admin/winners' ? 'Back to game' : user.role === 'PARTICIPANT' ? 'Back to lobby' : 'Back to dashboard'} />}
+      <PageBackNavigation role={user.role} />
       <Outlet context={user} />
     </div>
   );
@@ -96,7 +97,19 @@ function ProtectedLayout({ allowed }: { allowed: AuthenticatedUser['role'][] }) 
 
 function LoginRoute() {
   const sessionVersion = useAuthUiStore((state) => state.sessionVersion);
-  const session = useQuery({ queryKey: ['auth', 'me', sessionVersion], queryFn: ({ signal }) => getMe(signal) });
+  const session = useQuery({
+    queryKey: ['auth', 'me', sessionVersion],
+    queryFn: async ({ signal }) => {
+      try {
+        return await getMe(signal);
+      } catch (error) {
+        // An anonymous session is a resolved state. Keep the form mounted
+        // while focus/reconnect triggers a background session check.
+        if (error instanceof ApiError && error.status === 401) return null;
+        throw error;
+      }
+    },
+  });
   if (session.isPending) return <LoadingMessage />;
   if (session.data) return <Navigate to={roleHomePath(session.data.role)} replace />;
   if (session.error instanceof ApiError && session.error.status === 403) return <ErrorMessage>Access to this account is not permitted.</ErrorMessage>;
@@ -174,6 +187,7 @@ export function App() {
     <AppErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
+          <NotificationHost />
           <AppRoutes />
         </BrowserRouter>
       </QueryClientProvider>

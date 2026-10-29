@@ -1,4 +1,4 @@
-import { and, count, desc, eq, sql } from 'drizzle-orm';
+import { and, count, desc, eq, inArray, or, sql } from 'drizzle-orm';
 import { getDb } from '../../db/client.ts';
 import { claims, type ClaimRecord, type InsertClaim } from '../../db/schema/claims.ts';
 import { roundPatterns, rounds, type RoundPatternRecord } from '../../db/schema/rounds.ts';
@@ -12,6 +12,7 @@ export interface AdminClaimListRow extends ClaimRecord {
 }
 
 export interface IClaimRepository {
+  listByUser(userId: string, options: { page: number; limit: number }, tx?: any): Promise<{ data: ClaimRecord[]; total: number }>;
   findById(claimId: string, tx: any): Promise<ClaimRecord | null>;
   create(data: InsertClaim, tx?: any): Promise<ClaimRecord>;
   findExistingClaim(
@@ -39,6 +40,15 @@ export interface IClaimRepository {
 }
 
 export class ClaimRepository implements IClaimRepository {
+  async listByUser(userId: string, { page, limit }: { page: number; limit: number }, tx?: any): Promise<{ data: ClaimRecord[]; total: number }> {
+    const db = this.getDbInstance(tx);
+    const ownProfiles = db.select({ id: participantProfiles.id }).from(participantProfiles).where(eq(participantProfiles.userId, userId));
+    const owned = or(inArray(claims.participantId, ownProfiles), eq(claims.participantId, userId));
+    const [total] = await db.select({ count: count() }).from(claims).where(owned);
+    const data = await db.select().from(claims).where(owned).orderBy(desc(claims.createdAt), desc(claims.id)).limit(limit).offset((page - 1) * limit);
+    return { data, total: Number(total?.count ?? 0) };
+  }
+
   private getDbInstance(tx?: any) {
     return tx || getDb();
   }

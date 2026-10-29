@@ -9,6 +9,8 @@ import {
 import type { ParticipantSummary } from './participant.types.ts';
 
 export interface IParticipantRepository {
+  setAccountStatus(userId: string, status: 'ACTIVE' | 'INACTIVE', tx: any): Promise<boolean>;
+  restoreRemoved(userId: string, userData: { email: string; name: string; passwordHash: string }, profileData: { eventId: string; externalId?: string | null }, tx: any): Promise<ParticipantSummary | null>;
   create(
     userData: { email: string; name: string; passwordHash: string },
     profileData: { eventId: string; externalId?: string | null },
@@ -44,6 +46,33 @@ export interface IParticipantRepository {
 }
 
 export class ParticipantRepository implements IParticipantRepository {
+  async setAccountStatus(userId: string, status: 'ACTIVE' | 'INACTIVE', tx: any): Promise<boolean> {
+    const changed = await tx.execute(sql`UPDATE users SET status=${status}, updated_at=now()
+      WHERE id=${userId} AND participant_removed_at IS NULL
+      AND NOT EXISTS(SELECT 1 FROM admin_profiles WHERE user_id=${userId}) RETURNING id`);
+    if (!changed.length) return false;
+    await tx.update(participantProfiles).set({ status, updatedAt: new Date() }).where(eq(participantProfiles.userId, userId));
+    return true;
+  }
+
+  async restoreRemoved(
+    userId: string,
+    userData: { email: string; name: string; passwordHash: string },
+    profileData: { eventId: string; externalId?: string | null },
+    tx: any
+  ): Promise<ParticipantSummary | null> {
+    const result = await tx.execute(sql`UPDATE users SET status='ACTIVE', participant_removed_at=NULL,
+      participant_batch_name=NULL, name=${userData.name}, password_hash=${userData.passwordHash}, updated_at=now()
+      WHERE id=${userId} AND participant_removed_at IS NOT NULL
+      AND NOT EXISTS(SELECT 1 FROM admin_profiles WHERE user_id=${userId}) RETURNING id`);
+    if (!result.length) return null;
+    const existing = await this.findByUserIdAndEvent(userId, profileData.eventId, tx);
+    if (!existing) return this.create(userData, profileData, tx);
+    return this.update(existing.id, { name: userData.name }, {
+      status: 'ACTIVE', externalId: profileData.externalId ?? null,
+    }, tx);
+  }
+
   private getClient(tx?: any) {
     return tx || getDb();
   }

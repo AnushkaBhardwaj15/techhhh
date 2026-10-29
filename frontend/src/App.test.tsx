@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, render, screen } from '@testing-library/react';
+import { act, cleanup, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { waitFor } from '@testing-library/react';
 import { App } from './App';
 import { queryClient } from './lib/queryClient';
@@ -41,6 +42,28 @@ describe('application role routes', () => {
     vi.mocked(listAdminAudit).mockResolvedValue({ items: [], limit: 20, hasMore: false, nextCursor: null });
     vi.mocked(participantApi.getParticipantEvent).mockRejectedValue(new ApiError(404, 'No event associated'));
     vi.mocked(gameSync.fetchActiveGame).mockResolvedValue({ game: null, games: [] });
+  });
+
+  it('preserves login credentials through blur and a focus-triggered session recheck', async () => {
+    vi.mocked(authApi.getMe).mockRejectedValue(new ApiError(401, 'Authentication required'));
+    render(<App />);
+    const user = userEvent.setup();
+    const email = await screen.findByRole('textbox', { name: /Email address/ }, { timeout: 5000 });
+    await user.type(email, 'attendee@example.test');
+    await user.type(screen.getByLabelText('Password'), 'test-password');
+    await user.tab();
+    expect(email).toHaveValue('attendee@example.test');
+    let rejectRecheck!: (error: Error) => void;
+    vi.mocked(authApi.getMe).mockImplementationOnce(() => new Promise((_, reject) => { rejectRecheck = reject; }));
+    // Refetch the same query that TanStack Query rechecks on window focus.
+    let recheck!: Promise<void>;
+    act(() => { recheck = queryClient.refetchQueries({ queryKey: ['auth', 'me'] }); });
+    await waitFor(() => expect(authApi.getMe).toHaveBeenCalledTimes(2));
+    expect(screen.getByRole('textbox', { name: /Email address/ })).toHaveValue('attendee@example.test');
+    expect(screen.getByLabelText('Password')).toHaveValue('test-password');
+    await act(async () => { rejectRecheck(new ApiError(401, 'Authentication required')); await recheck; });
+    expect(screen.getByRole('textbox', { name: /Email address/ })).toHaveValue('attendee@example.test');
+    expect(screen.getByLabelText('Password')).toHaveValue('test-password');
   });
 
   it('restores an admin session before showing the protected surface', async () => {

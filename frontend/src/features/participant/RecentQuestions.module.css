@@ -1,0 +1,13 @@
+.history { padding: 20px; border: 2px solid #181818; background: #fffdf6; box-shadow: 4px 4px 0 #181818; margin-block: 20px; }
+.history summary { min-height: 44px; font-size: 18px; font-weight: 800; cursor: pointer; padding-block: 10px; }
+.history summary:focus-visible { outline: 3px solid #df6b27; outline-offset: 4px; }
+.history > p { font-size: 14px; line-height: 1.6; color: #62584c; }
+.list { margin: 0; padding: 0; list-style: none; }
+.list li { padding-block: 16px; border-top: 1px solid #c6bdad; overflow-wrap: anywhere; }
+.number { font: 700 11px var(--mono); color: #8a390e; }
+.prompt { margin: 8px 0; font-weight: 700; line-height: 1.5; }
+.list pre { white-space: pre-wrap; overflow-wrap: anywhere; max-width: 100%; font-size: 13px; }
+.answer, .pending { padding: 8px 12px; margin: 8px 0 0; font-size: 14px; line-height: 1.5; }
+.answer { background: #e2f4e7; color: #17552d; }
+.pending { background: #fff1d6; color: #714900; }
+@media (max-width: 600px) { .history { padding: 14px; } .history summary { font-size: 16px; } }

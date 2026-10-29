@@ -198,27 +198,12 @@ export class ClaimService {
 
   async listParticipantClaims(
     userId: string,
-    eventId: string,
+    _eventId: string,
     options: { page?: number; limit?: number } = {}
   ): Promise<{ data: ClaimDto[]; total: number; page: number; limit: number }> {
-    const profile = await participantRepository.findByUserIdAndEvent(userId, eventId);
-    const participantId = profile?.id ?? userId;
-
     const page = Math.max(1, options.page ?? 1);
     const limit = Math.min(100, Math.max(1, options.limit ?? 50));
-
-    let { data, total } = await this.claimRepo.listByParticipant(participantId, {
-      page,
-      limit,
-    });
-
-    if (!data.length && profile?.id && profile.id !== userId) {
-      const fallback = await this.claimRepo.listByParticipant(userId, { page, limit });
-      if (fallback.data.length > 0) {
-        data = fallback.data;
-        total = fallback.total;
-      }
-    }
+    const { data, total } = await this.claimRepo.listByUser(userId, { page, limit });
 
     return {
       data: data.map((c) => ({

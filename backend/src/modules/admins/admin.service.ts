@@ -1,4 +1,5 @@
 import { getDb } from '../../db/client.ts';
+import { sql } from 'drizzle-orm';
 import { hashPassword } from '../auth/auth.domain.ts';
 import { userRepository, type IUserRepository } from '../auth/user.repository.ts';
 import { sessionRepository, type ISessionRepository } from '../auth/session.repository.ts';
@@ -22,7 +23,8 @@ export class AdminService {
     private readonly adminRepo: IAdminRepository = adminRepository,
     private readonly userRepo: IUserRepository = userRepository,
     private readonly sessionRepo: ISessionRepository = sessionRepository,
-    private readonly audit: AuditService = auditService
+    private readonly audit: AuditService = auditService,
+    private readonly database: typeof getDb = getDb
   ) {}
 
   async createAdmin(
@@ -32,19 +34,26 @@ export class AdminService {
   ): Promise<{ admin: AdminSummary; temporaryPassword: string }> {
     if (input.role !== 'ADMIN') throw new ConflictError('Only one Super Admin is allowed. Create an Admin instead.');
     const email = input.email.trim().toLowerCase();
-    const existing = await this.userRepo.findByEmail(email);
-    if (existing) {
-      throw new ConflictError(`An account with email '${email}' already exists`);
-    }
 
     const temporaryPassword = generateSecureTemporaryPassword();
     const passwordHash = await hashPassword(temporaryPassword);
 
-    const db = getDb();
+    const db = this.database();
 
     let createdAdmin: AdminSummary;
 
     await db.transaction(async (tx) => {
+      await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${email}))`);
+      const existing = await this.userRepo.findByEmail(email, tx);
+      if (existing) {
+        if (existing.status !== 'INACTIVE' || existing.adminProfile || existing.participantProfile) {
+          throw new ConflictError(`An account with email '${email}' already exists`);
+        }
+        const restored = await this.adminRepo.restoreDeleted(existing.id, input.name.trim(), passwordHash, tx);
+        if (!restored) throw new ConflictError(`An account with email '${email}' already exists`);
+        createdAdmin = restored;
+        await this.sessionRepo.revokeAllForUser(existing.id, tx);
+      } else {
       const userWithProfile = await this.userRepo.create(
         {
           email,
@@ -66,6 +75,7 @@ export class AdminService {
         createdAt: userWithProfile.createdAt,
         updatedAt: userWithProfile.updatedAt,
       };
+      }
 
       await this.audit.record(
         {

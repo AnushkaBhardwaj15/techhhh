@@ -6,7 +6,7 @@ import styles from './AdminLayout.module.css';
 const links = [
   ['Dashboard', '/admin'],
   ['Participants', '/admin/participants'],
-  ['System', '/admin/system'],
+  ['Settings', '/admin/system'],
   ['Audit', '/admin/audit'],
 ] as const;
 

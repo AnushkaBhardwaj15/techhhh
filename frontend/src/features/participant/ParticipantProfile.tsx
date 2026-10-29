@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useOutletContext } from 'react-router-dom';
 import { getParticipantClaims } from '../../lib/api/claims';
@@ -20,15 +20,12 @@ const patternNames: Record<string, string> = {
 
 export function ParticipantProfile() {
   const user = useOutletContext<AuthenticatedUser>();
-  const [showPassword, setShowPassword] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const [filter, setFilter] = useState<'ALL' | 'VERIFIED' | 'REJECTED' | 'PENDING'>('ALL');
+  const [filter, setFilter] = useState<'ALL' | 'VERIFIED' | 'REJECTED'>('ALL');
 
-  // Load password from storage or fallback to default
-  const storedPassword =
-    localStorage.getItem('tt_participant_pwd') ||
-    sessionStorage.getItem('tt_participant_pwd') ||
-    'PlayerPass123!';
+  useEffect(() => {
+    localStorage.removeItem('tt_participant_pwd');
+    sessionStorage.removeItem('tt_participant_pwd');
+  }, []);
 
   // Event & Round context
   const event = useQuery({
@@ -51,32 +48,30 @@ export function ParticipantProfile() {
 
   // Participant claims history
   const claimsQuery = useQuery({
-    queryKey: ['participant', user.id, 'claims', 1],
-    queryFn: ({ signal }) => getParticipantClaims(1, 100, signal),
+    queryKey: ['participant', user.id, 'profile-claims'],
+    queryFn: async ({ signal }) => {
+      const first = await getParticipantClaims(1, 100, signal);
+      const data = [...first.data];
+      for (let page = 2; page <= Math.ceil(first.total / first.limit); page++) {
+        data.push(...(await getParticipantClaims(page, first.limit, signal)).data);
+      }
+      return { ...first, data };
+    },
+    refetchInterval: 5000,
   });
 
   const claims: ParticipantClaim[] = claimsQuery.data?.data ?? [];
 
   // Filtered claims
   const acceptedClaims = claims.filter((c) => c.status === 'VERIFIED');
-  const rejectedClaims = claims.filter((c) => c.status === 'REJECTED');
-  const pendingClaims = claims.filter((c) => c.status === 'PENDING_VERIFICATION');
+  const rejectedClaims = claims.filter((c) => c.status === 'REJECTED' || c.status === 'REJECTED_PATTERN_ALREADY_CLOSED');
 
   const displayedClaims =
     filter === 'VERIFIED'
       ? acceptedClaims
       : filter === 'REJECTED'
       ? rejectedClaims
-      : filter === 'PENDING'
-      ? pendingClaims
       : claims;
-
-  function handleCopyPassword() {
-    navigator.clipboard?.writeText(storedPassword).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
-  }
 
   const backLink =
     round.data?.status === 'ACTIVE' ? '/participant/game' : '/participant/lobby';
@@ -97,7 +92,7 @@ export function ParticipantProfile() {
           <p className={styles.eyebrow}>ACCOUNT & CLAIM HISTORY</p>
           <h1>Profile & Credentials</h1>
           <p className={styles.subhead}>
-            View your registered participant email, login credentials, and full record of accepted
+            View your registered participant details and full record of accepted
             and rejected win claims.
           </p>
         </header>
@@ -126,34 +121,12 @@ export function ParticipantProfile() {
 
             <div className={styles.detailRow}>
               <dt>Password</dt>
-              <dd className={styles.passwordCell}>
-                <span className={styles.passwordText}>
-                  {showPassword ? storedPassword : '••••••••••••'}
-                </span>
-                <div className={styles.passwordActions}>
-                  <button
-                    type="button"
-                    className={styles.toggleButton}
-                    onClick={() => setShowPassword((prev) => !prev)}
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  >
-                    {showPassword ? 'Hide' : 'Show'}
-                  </button>
-                  <button
-                    type="button"
-                    className={styles.copyButton}
-                    onClick={handleCopyPassword}
-                    title="Copy password to clipboard"
-                  >
-                    {copied ? 'Copied!' : 'Copy'}
-                  </button>
-                </div>
-              </dd>
+              <dd>Not displayed for security. Contact your administrator if you need help signing in.</dd>
             </div>
 
             <div className={styles.detailRow}>
               <dt>Registered Event</dt>
-              <dd>{event.data?.title || 'Intro to Frontend'}</dd>
+              <dd>{event.data?.title || 'Unavailable'}</dd>
             </div>
 
             <div className={styles.detailRow}>
@@ -176,21 +149,18 @@ export function ParticipantProfile() {
         {/* 2. Claims Metric Summary Dashboard */}
         <section className={styles.statsGrid} aria-label="Claims overview statistics">
           <div className={styles.statBox}>
-            <span className={styles.statNumber}>{claims.length}</span>
-            <span className={styles.statLabel}>Total Claims Added</span>
+            <span className={styles.statNumber}>{claimsQuery.isPending || claimsQuery.error ? '—' : claims.length}</span>
+            <span className={styles.statLabel}>Total Claims</span>
           </div>
           <div className={`${styles.statBox} ${styles.statAccepted}`}>
-            <span className={styles.statNumber}>{acceptedClaims.length}</span>
-            <span className={styles.statLabel}>Accepted (Verified)</span>
+            <span className={styles.statNumber}>{claimsQuery.isPending || claimsQuery.error ? '—' : acceptedClaims.length}</span>
+            <span className={styles.statLabel}>Accepted</span>
           </div>
           <div className={`${styles.statBox} ${styles.statRejected}`}>
-            <span className={styles.statNumber}>{rejectedClaims.length}</span>
-            <span className={styles.statLabel}>Rejected Claims</span>
+            <span className={styles.statNumber}>{claimsQuery.isPending || claimsQuery.error ? '—' : rejectedClaims.length}</span>
+            <span className={styles.statLabel}>Rejected</span>
           </div>
-          <div className={`${styles.statBox} ${styles.statPending}`}>
-            <span className={styles.statNumber}>{pendingClaims.length}</span>
-            <span className={styles.statLabel}>Pending Decision</span>
-          </div>
+
         </section>
 
         {/* 3. Detailed Claims History Section */}
@@ -225,13 +195,7 @@ export function ParticipantProfile() {
               >
                 Rejected ({rejectedClaims.length})
               </button>
-              <button
-                type="button"
-                className={`${styles.filterBtn} ${filter === 'PENDING' ? styles.filterActive : ''}`}
-                onClick={() => setFilter('PENDING')}
-              >
-                Pending ({pendingClaims.length})
-              </button>
+
             </div>
           </div>
 

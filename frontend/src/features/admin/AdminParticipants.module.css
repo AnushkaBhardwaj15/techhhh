@@ -486,3 +486,38 @@
 /* Staff panel treatment; layout and readable type remain compact. */
 .panel, .section, .createPanel { border: 2px solid #181818; border-radius: 4px; background: #fffdf6; box-shadow: 4px 4px 0 #181818; }
 .heading h1 { font-weight: 900; }
+
+.playerRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 20px;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.playerDetails {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) minmax(180px, 2fr) minmax(100px, 1fr) auto;
+  gap: 16px;
+  flex: 1 1 520px;
+  min-width: 0;
+  margin: 0;
+}
+
+.playerDetails > div { min-width: 0; }
+.playerDetails dt { margin-bottom: 6px; font: 700 11px var(--mono); color: var(--muted); }
+.playerDetails dd { margin: 0; overflow-wrap: anywhere; line-height: 1.5; font-size: 14px; }
+.playerDetails > div:first-child dd { font-weight: 800; }
+.list .removePlayer { width: auto; flex: 0 0 auto; min-height: 44px; padding: 10px 16px; }
+.playerActions { display: flex; flex-wrap: wrap; gap: 10px; flex: 0 0 auto; }
+.list .statusAction { width: auto; min-height: 44px; padding: 10px 16px; }
+.list .statusAction[data-status="ACTIVE"] { background: #fff1d6; color: #714900; border-color: #986300; }
+.list .statusAction[data-status="INACTIVE"] { background: #e2f4e7; color: #17552d; border-color: #277a43; }
+.list .removePlayer { background: #fff0ed; color: #952b20; border-color: #ad3c30; }
+
+@media (max-width: 800px) {
+  .playerRow { flex-wrap: wrap; align-items: flex-start; gap: 12px; }
+  .playerDetails { grid-template-columns: repeat(2, minmax(0, 1fr)); flex-basis: 100%; }
+  .playerDetails > div:nth-child(2) { grid-column: 1 / -1; grid-row: 2; }
+}

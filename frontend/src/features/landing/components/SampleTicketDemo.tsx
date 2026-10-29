@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { TicketGrid } from '../../participant/ParticipantTicket';
+import type { ParticipantTicket } from '../../../types/ticket';
 import styles from './SampleTicketDemo.module.css';
 
 interface DemoCell {
@@ -81,6 +83,16 @@ export function SampleTicketDemo() {
     { label: 'Full House', achieved: totalMarked === 15, desc: 'All 15 keys marked' },
   ];
 
+  const demoTicket: ParticipantTicket = {
+    id: 'demo-ticket', roundId: 'demo-round', eventId: 'demo-event',
+    participantId: 'demo-participant', createdAt: '2026-01-01T00:00:00.000Z',
+    cells: DEMO_CELLS.map((cell) => ({
+      id: cell.key, keyId: cell.key, keyValue: cell.key,
+      rowIndex: cell.row, colIndex: cell.col, row: cell.row, column: cell.col,
+      marked: markedKeys.has(cell.key),
+    })),
+  };
+
   return (
     <div className={styles.wrapper}>
       {/* Simulation Controls Bar */}
@@ -142,56 +154,12 @@ export function SampleTicketDemo() {
           </div>
         </div>
 
-        <div className={styles.gridContainer} tabIndex={0} role="region" aria-label="Interactive sample ticket grid">
-          <table className={styles.grid}>
-            <tbody>
-              {Array.from({ length: 3 }, (_, row) => (
-                <tr key={row}>
-                  {Array.from({ length: 9 }, (_, col) => {
-                    const cell = DEMO_CELLS.find((c) => c.row === row && c.col === col);
-                    if (!cell) {
-                      return (
-                        <td key={col} className={styles.emptyCell}>
-                          <span className={styles.emptyDot}>·</span>
-                        </td>
-                      );
-                    }
-                    const isMarked = markedKeys.has(cell.key);
-                    const isHighlighted = activeDraw?.key === cell.key;
-
-                    return (
-                      <td
-                        key={col}
-                        className={`${styles.playableCell} ${isMarked ? styles.cellMarked : ''} ${
-                          isHighlighted ? styles.cellHighlighted : ''
-                        }`}
-                        onClick={() => toggleMark(cell.key)}
-                        role="button"
-                        tabIndex={0}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            toggleMark(cell.key);
-                          }
-                        }}
-                        aria-pressed={isMarked}
-                        aria-label={`Row ${row + 1}, column ${col + 1}: ${cell.key}, ${
-                          isMarked ? 'marked' : 'not marked'
-                        }`}
-                      >
-                        <span className={styles.coord}>
-                          R{row + 1}:C{col + 1}
-                        </span>
-                        <strong className={styles.keyText}>{cell.key}</strong>
-                        <span className={styles.checkIcon}>{isMarked ? '✓' : '○'}</span>
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <TicketGrid
+          ticket={demoTicket}
+          revealedKey={activeDraw?.key}
+          canMark
+          onToggleCell={(cell) => toggleMark(cell.keyValue)}
+        />
       </div>
 
       {/* Pattern Progress Chips */}
@@ -203,8 +171,8 @@ export function SampleTicketDemo() {
               key={p.label}
               className={`${styles.patternChip} ${p.achieved ? styles.patternAchieved : ''}`}
             >
-              <span className={styles.patternIcon}>{p.achieved ? '★' : '○'}</span>
-              <strong>{p.label}</strong>
+              <span aria-hidden="true" className={styles.patternIcon}>{p.achieved ? '★' : '○'}</span>
+              <strong>{p.label}</strong>{' '}
               <span className={styles.patternDesc}>{p.desc}</span>
             </div>
           ))}
