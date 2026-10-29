@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { gsap } from 'gsap';
-import { Link, useLocation, useNavigate, useOutletContext } from 'react-router-dom';
+import { useLocation, useNavigate, useOutletContext } from 'react-router-dom';
 import { ApiError } from '../../lib/api/client';
 import { getCurrentRound, getParticipantEvent } from '../../lib/api/participant';
 import { getParticipantTicket } from '../../lib/api/ticket';
@@ -270,7 +270,7 @@ export function TicketGrid({
         </div>
         <div className={styles.legendItem}>
           <span className={`${styles.legendBox} ${styles.markedBox}`}>✓</span>
-          <span>Green: Selected / Marked</span>
+          <span>Orange: Selected / Marked</span>
         </div>
       </div>
       <p className={styles.hintText}>
@@ -658,7 +658,6 @@ export function ParticipantTicket({
   return (
     <main className={styles.page}>
       <header className={styles.intro}>
-        <Link className={styles.back} to="/participant/lobby">← Lobby</Link>
         <p className={styles.kicker}>YOUR TICKET</p>
         <h1>Find the key.<br /><em>Mark the cell.</em></h1>
         <p>When the host reveals a key, find the matching cell on this ticket. The host’s server holds your ticket and marked cells.</p>

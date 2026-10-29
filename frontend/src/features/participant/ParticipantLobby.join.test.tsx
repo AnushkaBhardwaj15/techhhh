@@ -338,6 +338,15 @@ describe("code entry and waiting lobby", () => {
     expect(await screen.findByText("Live round screen")).toBeInTheDocument();
   });
 
+  it('explains a server setup failure without blaming the player’s connection', async () => {
+    vi.mocked(validateGameCode).mockRejectedValue(new ApiError(500, 'private database error'));
+    const person = mount();
+    await person.type(await screen.findByLabelText('Enter or confirm 6-character game code:'), '8FEE1B');
+    await person.click(screen.getByRole('button', { name: 'VERIFY & JOIN' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('ask the admin to check the game setup');
+    expect(screen.queryByText('private database error')).not.toBeInTheDocument();
+  });
+
   it("sends an expired participant session back to authentication", async () => {
     saveJoin();
     vi.mocked(getParticipantEvent).mockRejectedValue(

@@ -37,7 +37,7 @@ export class PlayRepository implements PlayStore {
     });
   }
   async participants(id: string): Promise<Array<{ id: string; name: string; participantId: string }>> {
-    return this.connection().unsafe<Array<{ id: string; name: string; participantId: string }>>(`SELECT DISTINCT u.id,u.name,p.id AS "participantId" FROM tickets t JOIN participant_profiles p ON p.id=t.participant_id JOIN users u ON u.id=p.user_id WHERE t.round_id=$1 ORDER BY u.name,u.id`, [id]);
+    return this.connection().unsafe<Array<{ id: string; name: string; participantId: string }>>(`SELECT DISTINCT u.id,u.name,p.id AS "participantId" FROM tickets t JOIN participant_profiles p ON p.id=t.participant_id JOIN users u ON u.id=p.user_id WHERE t.round_id=$1 AND t.joined_at IS NOT NULL ORDER BY u.name,u.id`, [id]);
   }
   async list(_actor?: PlayActor): Promise<PlaySummary[]> {
     const rows = await this.connection().unsafe<
@@ -90,6 +90,10 @@ export class PlayRepository implements PlayStore {
           if (!hasTicket.length) {
             await this.allocateTickets(tx, round.id, round.event_id, [profile.id]);
           }
+          await tx.unsafe(
+            `UPDATE tickets SET joined_at=COALESCE(joined_at,now()) WHERE participant_id=$1 AND round_id=$2`,
+            [profile.id, round.id],
+          );
         }
       }
       return { id: round.id, eventId: round.event_id };
@@ -297,11 +301,6 @@ export class PlayRepository implements PlayStore {
       }
 
       if (marked) {
-        const [drawn] = await tx.unsafe(
-          'SELECT 1 FROM draws d JOIN ticket_cells c ON c.key_id=d.key_id WHERE c.id=$1 AND d.round_id=$2',
-          [cellId, id],
-        );
-        if (!drawn) throw new ValidationError('This key has not been drawn.');
         await tx.unsafe(
           `INSERT INTO ticket_marks(ticket_id, cell_id) VALUES($1, $2) ON CONFLICT(ticket_id, cell_id) DO NOTHING`,
           [ticketCell.ticket_id, cellId],
@@ -395,15 +394,19 @@ export class PlayRepository implements PlayStore {
             draw.category,
           ],
         );
-      for (const draw of state.draws)
+      const revealBatchId = crypto.randomUUID();
+      for (const draw of state.draws) {
         if (
           draw.revealed &&
           !before.draws.find((d) => d.id === draw.id)?.revealed
-        )
+        ) {
           await tx.unsafe(
-            `UPDATE draws SET answer_revealed=true WHERE id=$1 AND round_id=$2`,
-            [draw.id, id],
+            `UPDATE draws SET answer_revealed=true,reveal_batch_id=$3 WHERE id=$1 AND round_id=$2`,
+            [draw.id, id, revealBatchId],
           );
+          draw.revealBatchId = revealBatchId;
+        }
+      }
       if (state.ticket)
         for (const cell of state.ticket.cells) {
           const old = before.ticket?.cells.find((c) => c.id === cell.id);
@@ -438,11 +441,11 @@ export class PlayRepository implements PlayStore {
         SECOND_FULL_HOUSE: "Second Full House",
       };
       for (const win of state.wins.slice(before.wins.length)) {
-        await tx.unsafe(
+        const [savedClaim] = await tx.unsafe<{ id: string }[]>(
           `INSERT INTO claims(id,round_id,participant_id,ticket_id,pattern_type,status,verified_by,verified_at)
            VALUES($1,$2,$3,$4,$5,'VERIFIED',$6,$7)
            ON CONFLICT (round_id,participant_id,pattern_type)
-           DO UPDATE SET status='VERIFIED', verified_by=$6, verified_at=$7, updated_at=now()`,
+           DO UPDATE SET status='VERIFIED', rejection_reason=NULL, verified_by=$6, verified_at=$7, updated_at=now() RETURNING id`,
           [
             win.claimId,
             id,
@@ -453,6 +456,7 @@ export class PlayRepository implements PlayStore {
             win.createdAt,
           ],
         );
+        if (savedClaim) win.claimId = savedClaim.id;
         await tx.unsafe(
           `INSERT INTO winners(id,claim_id,participant_id,round_id,event_id,pattern_type,verified_by,verified_at)
            VALUES($1,$2,$3,$4,$5,$6,$7,$8)
@@ -538,6 +542,17 @@ export class PlayRepository implements PlayStore {
           });
         }
       }
+      if (result && typeof result === 'object' && 'accepted' in result && result.accepted === false && 'pattern' in result && state.ticket) {
+        const rejected = result as { pattern: string; warning?: string };
+        await tx.unsafe(
+          `INSERT INTO claims(id,round_id,participant_id,ticket_id,pattern_type,status,rejection_reason)
+           VALUES($1,$2,$3,$4,$5,$6,$7)
+           ON CONFLICT (round_id,participant_id,pattern_type) DO NOTHING`,
+          [crypto.randomUUID(), id, state.ticket.participantId, state.ticket.id, rejected.pattern,
+            state.wins.some(win => win.pattern === rejected.pattern) ? 'REJECTED_PATTERN_ALREADY_CLOSED' : 'REJECTED',
+            rejected.warning ?? 'Claim eligibility was not met.'],
+        );
+      }
       if (
         result &&
         typeof result === "object" &&
@@ -611,7 +626,7 @@ export class PlayRepository implements PlayStore {
     }
     const [draws, wins] = await Promise.all([
       sql.unsafe<PlayDraw[]>(
-        `SELECT d.id,d.sequence_number AS sequence,d.question_id AS "questionId",d.key_id AS "keyId",k.item_number AS number,d.question_text AS prompt,d.key_value AS answer,COALESCE(d.category,'General') AS category,d.code_snippet AS "codeSnippet",d.answer_revealed AS revealed,d.drawn_at AS "drawnAt" FROM draws d JOIN event_keys k ON k.id=d.key_id WHERE d.round_id=$1 ORDER BY d.sequence_number`,
+        `SELECT d.id,d.sequence_number AS sequence,d.question_id AS "questionId",d.key_id AS "keyId",k.item_number AS number,d.question_text AS prompt,d.key_value AS answer,COALESCE(d.category,'General') AS category,d.code_snippet AS "codeSnippet",d.answer_revealed AS revealed,d.reveal_batch_id AS "revealBatchId",d.drawn_at AS "drawnAt" FROM draws d JOIN event_keys k ON k.id=d.key_id WHERE d.round_id=$1 ORDER BY d.sequence_number`,
         [id],
       ),
       sql.unsafe<PlayWin[]>(

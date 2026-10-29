@@ -45,6 +45,9 @@ describe('LandingPage', () => {
     expect(screen.getByRole('link', { name: /How to Play/i })).toHaveAttribute('href', '#how-it-works');
     expect(screen.getByRole('link', { name: /Interactive Card/i })).toHaveAttribute('href', '#sample-ticket');
     expect(screen.getByRole('link', { name: /Winning Patterns/i })).toHaveAttribute('href', '#patterns');
+    expect(screen.queryByRole('link', { name: /Watch Public Live Screen/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /Launch Live Projector Screen/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /Big Screen Auditorium Mode/i })).not.toBeInTheDocument();
   });
 
   it('adapts CTAs for an authenticated participant', async () => {

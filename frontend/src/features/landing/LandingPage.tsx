@@ -80,10 +80,7 @@ export function LandingPage() {
                   <span>{ctaText}</span>
                   <span className={styles.buttonArrow} aria-hidden="true">↗</span>
                 </Link>
-                <Link to="/live" target="_blank" rel="noreferrer" className={styles.secondaryButton}>
-                  <span className={styles.liveDot} aria-hidden="true" />
-                  <span>Watch Public Live Screen</span>
-                </Link>
+
               </div>
 
               {/* Statistics & Confidence Strip */}
@@ -360,24 +357,6 @@ export function LandingPage() {
           </div>
         </section>
 
-        {/* Public Projector Screen Section */}
-        <section className={styles.liveDisplayTeaser} aria-labelledby="live-section-title">
-          <div className={styles.teaserContent}>
-            <span className={styles.sectionKickerLight}>VENUE DISPLAY FEED</span>
-            <h2 id="live-section-title">Big Screen Auditorium Mode.</h2>
-            <p>
-              Are you an audience member, organizer, or projecting the game onto hall screens? The
-              Live Display feed requires <strong>no login</strong> and broadcasts live questions,
-              revealed answer keys, and instant winner celebrations.
-            </p>
-            <div className={styles.teaserActions}>
-              <Link to="/live" target="_blank" rel="noreferrer" className={styles.projectorButton}>
-                <span>Launch Live Projector Screen</span>
-                <span aria-hidden="true">↗</span>
-              </Link>
-            </div>
-          </div>
-        </section>
       </main>
 
       {/* Footer */}

@@ -12,7 +12,7 @@ import {
   type SyncGameRecord,
 } from '../../lib/gameSync';
 import { formatAuditAction, formatAuditActor, formatAuditResource } from './auditFormatters';
-import { XIcon, FileSpreadsheetIcon, MegaphoneIcon, SettingsIcon } from '../../components/icons/Icons';
+import { XIcon, MegaphoneIcon, SettingsIcon } from '../../components/icons/Icons';
 import styles from './AdminDashboard.module.css';
 
 interface ImportedQuestion {
@@ -271,37 +271,11 @@ export function AdminDashboard() {
         <div className={styles.headerRow}>
           <h2 className={styles.titleGamesPlayed} style={{ margin: 0, fontSize: '22px' }}>Your games</h2>
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+
             <button
               type="button"
               className={styles.createGameBtn}
-              style={{
-                background: 'var(--color-paper, #FAF7F0)',
-                border: '1.5px solid #302820',
-                borderColor: 'var(--color-espresso, #302820)',
-                color: 'var(--color-espresso, #302820)',
-              }}
-              onClick={() => {
-                setShowImport(!showImport);
-                setImportError('');
-                setValidationResult(null);
-              }}
-            >
-              {showImport ? (
-                <>
-                  <XIcon width="13" height="13" aria-hidden="true" style={{ verticalAlign: '-1px', marginRight: '4px' }} />
-                  Close Import
-                </>
-              ) : (
-                <>
-                  <FileSpreadsheetIcon width="13" height="13" aria-hidden="true" style={{ verticalAlign: '-1px', marginRight: '4px' }} />
-                  Import question bank
-                </>
-              )}
-            </button>
-            <button
-              type="button"
-              className={styles.createGameBtn}
-              onClick={() => handleCreateGame()}
+              onClick={() => { setShowImport(true); setValidationResult(null); setImportError(''); }}
               disabled={creating}
             >
               {creating ? 'Creating…' : '+ Create Game'}
@@ -313,22 +287,23 @@ export function AdminDashboard() {
         {showImport && (
           <section
             style={{
-              background: 'rgba(10, 25, 45, 0.75)',
-              border: '1px solid rgba(0, 229, 255, 0.3)',
+              background: 'var(--color-paper, #FAF7F0)',
+              border: '2px solid var(--color-espresso, #302820)',
               borderRadius: '12px',
               padding: '20px',
               marginBottom: '24px',
             }}
-            aria-label="Import Question Bank from Excel"
+            aria-label="Create game"
           >
             <h2 style={{ fontSize: '18px', margin: '0 0 10px 0', color: 'var(--color-espresso, #302820)' }}>
-              Import Questions from Excel / Spreadsheet
+              Questions for this game
             </h2>
             <p style={{ margin: '0 0 16px 0', fontSize: '14px', color: 'var(--color-text-secondary, #62584C)' }}>
-              Select an Excel file (.xlsx, .xls) or CSV with question clues and answer terms. Tech Tambola will validate answer uniqueness, row formatting, and bank size.
+              Upload an optional Excel file (.xlsx, .xls) or CSV for this game. Without an upload, the game uses the default set of questions.
             </p>
 
             <input
+              aria-label="Questions file (optional)"
               type="file"
               accept=".xlsx,.xls,.csv"
               onChange={handleFileSelected}
@@ -420,6 +395,12 @@ export function AdminDashboard() {
                 )}
               </div>
             )}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginTop: '16px' }}>
+              <button type="button" className={styles.createGameBtn} disabled={creating || validating} onClick={() => handleCreateGame()}>
+                {creating ? 'Creating…' : 'Create with default questions'}
+              </button>
+              <button type="button" className={styles.createGameBtn} disabled={creating || validating} onClick={() => { setShowImport(false); setValidationResult(null); setImportError(''); }}>Cancel</button>
+            </div>
           </section>
         )}
 
@@ -544,7 +525,7 @@ export function AdminDashboard() {
             <button
               type="button"
               className={styles.createGameBtnCenter}
-              onClick={() => void handleCreateGame()}
+              onClick={() => { setShowImport(true); setValidationResult(null); setImportError(''); window.scrollTo({ top: 0 }); }}
               disabled={creating}
             >
               {creating ? 'Creating…' : '+ Create Game'}

@@ -23,7 +23,8 @@ export class ParticipantService {
     private readonly userRepo: IUserRepository = userRepository,
     private readonly sessionRepo: ISessionRepository = sessionRepository,
     private readonly audit: AuditService = auditService,
-    private readonly email: IEmailService = emailService
+    private readonly email: IEmailService = emailService,
+    private readonly database: typeof getDb = getDb
   ) {}
 
   async createParticipant(
@@ -47,77 +48,69 @@ export class ParticipantService {
     const email = input.email.trim().toLowerCase();
     const externalId = input.externalId?.trim() || null;
 
-    if (externalId) {
-      const existingExt = await this.repo.findByExternalIdAndEvent(input.eventId!, externalId);
-      if (existingExt) {
-        throw new ConflictError(
-          `External ID '${externalId}' already exists in this event`,
-          'DUPLICATE_EXTERNAL_ID'
-        );
-      }
-    }
-
-    // Upfront check for existing user enrolled in this event
-    const existingUser = await this.userRepo.findByEmail(email);
-    if (existingUser && !input.externalId) throw new ConflictError('An account with this email already exists');
-    if (existingUser?.adminProfile) throw new ConflictError('Administrator accounts cannot be imported as participants');
-    if (existingUser) {
-      const existingEnrollment = await this.repo.findByUserIdAndEvent(
-        existingUser.id,
-        input.eventId!
-      );
-      if (existingEnrollment) {
-        throw new ConflictError(
-          `A participant with email '${email}' is already enrolled in this event`,
-          'DUPLICATE_PARTICIPANT'
-        );
-      }
-    }
-
     if (!input.password || input.password.length < 8 || input.password.length > 128) throw new ValidationError('Password must contain 8 to 128 characters');
 
     // Hash supplied credentials
     const temporaryPassword = input.password;
     const passwordHash = await hashPassword(temporaryPassword);
 
-    const db = getDb();
+    const db = this.database();
     let created: ParticipantSummary;
 
     await db.transaction(async (tx) => {
       await lockParticipantAccounts(tx);
-      try {
-        created = await this.repo.create(
-          {
-            email,
-            name: input.name?.trim() || email.split('@')[0],
-            passwordHash,
-          },
-          {
-            eventId: input.eventId!,
-            externalId,
-          },
-          tx
-        );
-      } catch (err: any) {
-        const databaseError = err.cause ?? err;
-        if (databaseError.code === '23505') { // Postgres unique_violation
-          const constraint = databaseError.constraint_name || databaseError.constraint || '';
-          if (constraint.includes('user_event') || constraint.includes('users_email')) {
-            throw new ConflictError(
-              `A participant with email '${email}' is already enrolled in this event`,
-              'DUPLICATE_PARTICIPANT'
-            );
-          }
-          if (constraint.includes('external_id')) {
-            throw new ConflictError(
-              `External ID '${externalId}' already exists in this event`,
-              'DUPLICATE_EXTERNAL_ID'
-            );
-          }
-        }
-        throw err;
+      const existingUser = await this.userRepo.findByEmail(email, tx);
+      if (existingUser?.adminProfile) throw new ConflictError('Administrator accounts cannot be imported as participants');
+      const existingExt = externalId ? await this.repo.findByExternalIdAndEvent(input.eventId!, externalId, tx) : null;
+      if (existingExt && existingExt.userId !== existingUser?.id) {
+        throw new ConflictError(`External ID '${externalId}' already exists in this event`, 'DUPLICATE_EXTERNAL_ID');
       }
+      const restored = existingUser ? await this.repo.restoreRemoved(
+        existingUser.id,
+        { email, name: input.name?.trim() || email.split('@')[0], passwordHash },
+        { eventId: input.eventId!, externalId }, tx
+      ) : null;
+      if (restored) {
+        created = restored;
+      } else {
+        if (existingExt) throw new ConflictError(`External ID '${externalId}' already exists in this event`, 'DUPLICATE_EXTERNAL_ID');
+        if (existingUser && (!externalId || await this.repo.findByUserIdAndEvent(existingUser.id, input.eventId!, tx))) {
+          throw new ConflictError(`A participant with email '${email}' is already enrolled in this event`, 'DUPLICATE_PARTICIPANT');
+        }
+        try {
+          created = await this.repo.create(
+            {
+              email,
+              name: input.name?.trim() || email.split('@')[0],
+              passwordHash,
+            },
+            {
+              eventId: input.eventId!,
+              externalId,
+            },
+            tx
+          );
+        } catch (err: any) {
+          const databaseError = err.cause ?? err;
+          if (databaseError.code === '23505') { // Postgres unique_violation
+            const constraint = databaseError.constraint_name || databaseError.constraint || '';
+            if (constraint.includes('user_event') || constraint.includes('users_email')) {
+              throw new ConflictError(
+                `A participant with email '${email}' is already enrolled in this event`,
+                'DUPLICATE_PARTICIPANT'
+              );
+            }
+            if (constraint.includes('external_id')) {
+              throw new ConflictError(
+                `External ID '${externalId}' already exists in this event`,
+                'DUPLICATE_EXTERNAL_ID'
+              );
+            }
+          }
+          throw err;
+        }
 
+      }
       await assignAccountBatch(tx, created!.userId, input.batchName);
       await this.audit.record(
         {
@@ -201,15 +194,17 @@ export class ParticipantService {
       }
     }
 
-    // Deactivation revokes participant sessions immediately
-    if (input.status === 'INACTIVE' && existing.status !== 'INACTIVE') {
-      await this.sessionRepo.revokeAllForUser(existing.userId);
-    }
-
-    const db = getDb();
+    const db = this.database();
     let updated: ParticipantSummary;
 
     await db.transaction(async (tx) => {
+      await lockParticipantAccounts(tx);
+      if (input.status) {
+        if (!await this.repo.setAccountStatus(existing.userId, input.status, tx)) {
+          throw new ConflictError('This account was removed or cannot be changed here. Refresh the participant list.');
+        }
+        if (input.status === 'INACTIVE') await this.sessionRepo.revokeAllForUser(existing.userId, tx);
+      }
       updated = await this.repo.update(
         id,
         input.name ? { name: input.name.trim() } : undefined,

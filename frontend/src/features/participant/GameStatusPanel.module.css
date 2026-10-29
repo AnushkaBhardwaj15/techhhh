@@ -1,0 +1,8 @@
+.panel { padding: 12px 14px; margin-bottom: 16px; border: 2px solid #181818; border-left: 4px solid #dc6b26; background: #fff2df; color: #332416; box-shadow: 2px 2px 0 #181818; }
+.panel p { margin: 0; font-size: 14px; line-height: 1.5; }
+.label { display: inline-flex; align-items: center; gap: 6px; margin-right: 10px; font: 800 11px var(--mono); letter-spacing: .06em; white-space: nowrap; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.panel[data-state="ACTIVE"] { background: #e8f6ed; border-left-color: #267445; color: #17482b; }
+.panel[data-state="PAUSED"] { background: #fff1d6; border-left-color: #986300; color: #634000; }
+.panel[data-state="COMPLETED"], .panel[data-state="CANCELLED"] { background: #eeede8; border-left-color: #615b53; color: #38342f; }
+.panel[data-state="RECOVERY_REQUIRED"] { background: #fff0ed; border-left-color: #a63b2e; color: #812b21; }

@@ -11,6 +11,7 @@ import {
 import type { AdminSummary } from './admin.types.ts';
 
 export interface IAdminRepository {
+  restoreDeleted(userId: string, name: string, passwordHash: string, tx: any): Promise<AdminSummary | null>;
   listAdmins(options: { page: number; limit: number }, tx?: any): Promise<{ data: AdminSummary[]; total: number }>;
   findById(userId: string, tx?: any): Promise<AdminSummary | null>;
   countActiveSuperAdmins(tx?: any): Promise<number>;
@@ -23,6 +24,16 @@ export interface IAdminRepository {
 }
 
 export class AdminRepository implements IAdminRepository {
+  async restoreDeleted(userId: string, name: string, passwordHash: string, tx: any): Promise<AdminSummary | null> {
+    const restored = await tx.execute(sql`UPDATE users SET status='ACTIVE', name=${name}, password_hash=${passwordHash}, updated_at=now()
+      WHERE id=${userId} AND status='INACTIVE'
+      AND NOT EXISTS(SELECT 1 FROM admin_profiles WHERE user_id=${userId})
+      AND NOT EXISTS(SELECT 1 FROM participant_profiles WHERE user_id=${userId}) RETURNING id`);
+    if (!restored.length) return null;
+    await tx.insert(adminProfiles).values({ userId, role: 'ADMIN' });
+    return this.findById(userId, tx);
+  }
+
   private getClient(tx?: any) {
     return tx || getDb();
   }

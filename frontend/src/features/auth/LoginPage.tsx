@@ -1,4 +1,3 @@
-import { BackLink } from '../../components/BackLink';
 import { useState, type FormEvent } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -63,7 +62,6 @@ export function LoginPage() {
 
   return (
     <main className={styles.page}>
-      <BackLink label="Back to home" />
       <header className={styles.brandGroup} aria-label="Tech Tambola">
         <span className={styles.brandBadge}>TECH</span>
         <strong className={styles.brandName}>

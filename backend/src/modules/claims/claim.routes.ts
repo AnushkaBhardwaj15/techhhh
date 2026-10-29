@@ -45,13 +45,7 @@ export function createClaimRoutes(winnerService: WinnerService): FastifyPluginAs
   // Participant: List own claims
   fastify.get('/participant/claims', { preHandler: [requireParticipantToken] }, async (request) => {
     const query = listClaimsQuerySchema.parse(request.query);
-    const eventId = request.user!.eventId || 'e7bf4217-f212-4970-b3f1-e924e1782f25';
-
-    try {
-      return await claimService.listParticipantClaims(request.user!.id, eventId, query);
-    } catch {
-      return { data: [], total: 0 };
-    }
+    return await claimService.listParticipantClaims(request.user!.id, request.user!.eventId ?? '', query);
   });
 
   // Admin: Review all pending and historical claims across Events.

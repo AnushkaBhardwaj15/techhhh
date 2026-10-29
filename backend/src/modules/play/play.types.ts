@@ -49,6 +49,7 @@ export interface PlayDraw {
   category: string;
   codeSnippet: string | null;
   revealed: boolean;
+  revealBatchId?: string | null;
   drawnAt: string;
 }
 export interface PlayWin {

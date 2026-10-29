@@ -1,4 +1,5 @@
 import { reportDiagnostic } from '../diagnostics';
+import { mutationSucceeded, mutationFailed } from '../notifications';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '';
 const TIMEOUT_MS = 25_000;
@@ -28,7 +29,7 @@ export async function apiRequest<T>(path: string, options: RequestInit = {}): Pr
       credentials: 'include',
       headers,
     });
-    if (response.status === 204) return undefined;
+    if (response.status === 204) { mutationSucceeded(path, requestedMethod); return undefined; }
 
     const contentType = response.headers.get('content-type') ?? '';
     const body: unknown = contentType.includes('application/json') ? await response.json() : await response.text();
@@ -42,18 +43,22 @@ export async function apiRequest<T>(path: string, options: RequestInit = {}): Pr
         : undefined;
       throw new ApiError(response.status, message, code);
     }
+    mutationSucceeded(path, requestedMethod, body);
     return body as T;
   } catch (error) {
     if (error instanceof ApiError) {
+      mutationFailed(path, requestedMethod, error.status, error.message);
       if (error.status >= 500) reportDiagnostic('api', { ...(method ? { method } : {}), status: error.status });
       throw error;
     }
     if (error instanceof DOMException && error.name === 'AbortError') throw error;
     if (error instanceof DOMException && error.name === 'TimeoutError') {
+      mutationFailed(path, requestedMethod, 0);
       reportDiagnostic('api', { ...(method ? { method } : {}), status: 0 });
       throw new ApiError(0, 'The request timed out. Try again.');
     }
     if (error instanceof TypeError) {
+      mutationFailed(path, requestedMethod, 0);
       reportDiagnostic('api', { ...(method ? { method } : {}), status: 0 });
       throw new ApiError(0, 'Unable to reach Tech Tombola. Check your connection and try again.');
     }

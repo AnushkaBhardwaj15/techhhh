@@ -1,4 +1,6 @@
 import {
+  act,
+  within,
   cleanup,
   fireEvent,
   render,
@@ -107,14 +109,16 @@ describe("reference participant game", () => {
   it("wrong claims display only a warning and preserve ticket cells and score", async () => {
     vi.mocked(api.claimPlayPrize).mockResolvedValue({
       accepted: false,
-      warning: "Keep playing. No penalty was applied.",
+      warning: "Your saved marks and the official calls do not complete this pattern yet.",
       game,
     });
     mount();
     fireEvent.click(
       await screen.findByRole("button", { name: "Claim Full House" }),
     );
-    expect(await screen.findByRole("alert")).toHaveTextContent("No penalty");
+    expect(await screen.findByRole("status")).toHaveTextContent("haven't completed Full House yet");
+    fireEvent.click(screen.getByRole('button', { name: 'Dismiss notification' }));
+    expect(screen.queryByText(/haven't completed Full House yet/)).not.toBeInTheDocument();
     expect(
       screen.getByRole("table", { name: "Your Tombola ticket" }),
     ).toBeVisible();
@@ -153,10 +157,13 @@ describe("reference participant game", () => {
       ).not.toBeInTheDocument();
     },
   );
-  it("routes READY snapshots back to the waiting lobby", async () => {
+  it("makes READY snapshots an explicit waiting lobby with a saved ticket preview", async () => {
     game.status = "READY";
     mount();
-    expect(await screen.findByText("Waiting lobby")).toBeVisible();
+    expect(await screen.findByRole('region', { name: 'Game status' })).toHaveTextContent('You’re in the lobby—waiting for other players');
+    expect(screen.getByText(/You can start marking cells and claiming prizes when the host starts/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Claim Early Five' })).toBeDisabled();
+    expect(screen.getByRole('table', { name: 'Your Tombola ticket' })).toBeVisible();
   });
   it("routes a participant without a joined round to code entry", async () => {
     sessionStorage.clear();
@@ -172,4 +179,20 @@ describe("reference participant game", () => {
     );
     expect(screen.queryByRole("table")).not.toBeInTheDocument();
   });
+});
+
+
+it('keeps all five revealed answers in history and announces the revealed question range', async () => {
+  const base = game.draws[0]!;
+  game.draws = Array.from({ length: 5 }, (_, index) => ({ ...base, id: `draw-${index}`, sequence: index + 1, prompt: `Clue ${index + 1}`, answer: null, revealed: false }));
+  mount();
+  await screen.findByRole('region', { name: 'Current clue' });
+  game.draws = game.draws.map((draw, index) => ({ ...draw, revealed: true, answer: `Answer ${index + 1}` }));
+  act(() => client.setQueryData(['reference-play', 'private', game.id], structuredClone(game)));
+  await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Answers for questions 1–5 are revealed'));
+  expect(screen.getByRole('status')).toHaveTextContent('Scroll down to Previous questions & answers');
+  const current = screen.getByRole('region', { name: 'Current clue' });
+  expect(within(current).queryByText('Answer 5')).not.toBeInTheDocument();
+  fireEvent.click(screen.getByText('Previous questions & answers (5)'));
+  for (let i = 1; i <= 5; i++) expect(screen.getByText(`Answer ${i}`)).toBeInTheDocument();
 });
