@@ -30,6 +30,7 @@
         "@types/node": "^22.13.10",
         "@types/ws": "^8.5.14",
         "drizzle-kit": "^0.31.11",
+        "pglite-server": "^0.1.5",
         "typescript": "^5.8.2",
       },
     },
@@ -269,6 +270,8 @@
     "on-exit-leak-free": ["on-exit-leak-free@2.1.2", "", {}, "sha512-0eJJY6hXLGf1udHwfNftBqH+g73EU4B504nZeKpz1sYRKafAghwxEJunB2O7rDZkL4PGfsMVnTXZ2EjibbqcsA=="],
 
     "once": ["once@1.4.0", "", { "dependencies": { "wrappy": "1" } }, "sha512-lNaJgI+2Q5URQBkccEKHTQOPaXdUxnZZElQTZY0MFUAuaEqe1E+Nyvgdz/aIyNi6Z9MzO5dv1H8n58/GELp3+w=="],
+
+    "pglite-server": ["pglite-server@0.1.5", "", { "peerDependencies": { "@electric-sql/pglite": ">=0.2.0" } }, "sha512-vJe8NVbrwSN7g0v6BaHtvVxSO9OiYw6JhMfAPWm00eI/eNVmfFfLLoZDQONBlsK/uASca9kvRWnrvB6WJnVIJg=="],
 
     "pino": ["pino@10.4.0", "", { "dependencies": { "@pinojs/redact": "^0.4.0", "atomic-sleep": "^1.0.0", "on-exit-leak-free": "^2.1.0", "pino-abstract-transport": "^3.0.0", "pino-std-serializers": "^7.0.0", "process-warning": "^5.0.0", "quick-format-unescaped": "^4.0.3", "real-require": "^1.0.0", "safe-stable-stringify": "^2.3.1", "sonic-boom": "^4.0.1", "thread-stream": "^4.0.0" }, "bin": { "pino": "bin.js" } }, "sha512-bk1ZMTwG/Vymx+zPoa28MhNzucFvXJWp3csrSuxuHPSMeUettaCoQ5Jvg07mtC4JGNpcfTwz41oVCnNgBK9+vA=="],
 

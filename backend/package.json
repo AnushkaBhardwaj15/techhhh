@@ -14,6 +14,7 @@
     "db:migrate": "bun src/db/migrate.ts",
     "db:check": "bun src/db/check.ts",
     "db:seed": "bun src/db/seed.ts",
+    "db:dev": "bun src/db/dev-db-server.ts",
     "test": "bun test src/modules/play tests/unit src/app.test.ts src/modules/auth/*.test.ts src/modules/claims/*.test.ts src/modules/operations/*.test.ts src/modules/live/*.test.ts src/modules/recovery/*.test.ts src/shared/email/*.test.ts src/realtime/*.test.ts tests/operations/*.test.ts tests/restore/guards.test.ts tests/security/rate-limit.test.ts",
     "test:security": "bun test --parallel=1 tests/security tests/unit/logger-security.test.ts src/shared/email/email.service.test.ts tests/integration/auth.test.ts tests/integration/errors.test.ts tests/integration/import.test.ts tests/integration/participant.test.ts tests/integration/ticket.test.ts tests/integration/mark-persistence.test.ts tests/integration/draw-engine.test.ts tests/integration/claim-submission.test.ts tests/integration/live-display.test.ts tests/integration/operations.test.ts tests/integration/recovery.test.ts tests/integration/question.test.ts tests/integration/round-operation.test.ts tests/integration/event.test.ts tests/integration/admin.test.ts src/modules/live/live.service.test.ts src/modules/operations/operations.test.ts src/realtime/events.test.ts src/realtime/realtime.routes.test.ts",
     "test:integration": "bun test --parallel=1 tests/integration src/realtime/realtime.routes.test.ts"
@@ -44,6 +45,7 @@
     "@types/node": "^22.13.10",
     "@types/ws": "^8.5.14",
     "drizzle-kit": "^0.31.11",
+    "pglite-server": "^0.1.5",
     "typescript": "^5.8.2"
   },
   "overrides": {

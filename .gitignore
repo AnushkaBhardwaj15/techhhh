@@ -74,3 +74,5 @@ backend/tests/restore/reports/run-*.json
 .neon
 
 .agents/teamwork/
+
+.pglite-data

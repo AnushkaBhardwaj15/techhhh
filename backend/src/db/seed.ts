@@ -16,7 +16,7 @@ export async function seed() {
     const anushka = await userRepository.findByEmail('anushka.admin@techtombola.internal', tx);
     if (!anushka) {
       await userRepository.create({ email: 'anushka.admin@techtombola.internal', name: 'Anushka Admin',
-        passwordHash: await hashPassword('AnushkaAdmin123!'), status: 'ACTIVE' }, { role: 'SUPER_ADMIN' }, tx);
+        passwordHash: await hashPassword('AnushkaAdmin123!'), status: 'ACTIVE' }, { role: 'ADMIN' }, tx);
     }
 
     const anushkaPlayer = await userRepository.findByEmail('anushka@techtombola.internal', tx);
@@ -29,6 +29,6 @@ export async function seed() {
 
 if (import.meta.main) {
   try { await seed(); console.log('Super Admin setup complete. Existing credentials preserved.'); }
-  catch { console.error('Super Admin setup failed.'); process.exitCode = 1; }
+  catch (err) { console.error('Super Admin setup failed.', err); process.exitCode = 1; }
   finally { await closeDb(); }
 }
