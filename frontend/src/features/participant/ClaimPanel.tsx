@@ -245,7 +245,7 @@ export function ClaimPanel({
       </div>
 
       <p className={styles.guidance}>
-        When your marked cells meet a pattern requirement, click the claim button below. The server validates your claim.
+        When your marked cells meet a pattern requirement, click the claim button below. The server validates your claim (max 3 attempts per pattern).
       </p>
 
       {validationWarning && (
@@ -292,6 +292,10 @@ export function ClaimPanel({
           const isVerified = userClaim?.status === 'VERIFIED';
           const isRejected = userClaim?.status === 'REJECTED';
 
+          const usedAttempts = (claims.data as any)?.patternAttempts?.[card.pattern] ?? (isRejected ? 1 : 0);
+          const attemptsRemaining = Math.max(0, 3 - usedAttempts);
+          const isExhausted = attemptsRemaining === 0;
+
           const boxCheck = checkPatternBoxes(card.pattern, effectiveTicket);
 
           const canClick =
@@ -301,6 +305,7 @@ export function ClaimPanel({
             canSubmit &&
             !isPendingVerification &&
             !isVerified &&
+            !isExhausted &&
             !pending;
 
           return (
@@ -317,6 +322,45 @@ export function ClaimPanel({
               </div>
 
               <p className={styles.cardDesc}>{card.description}</p>
+
+              <div style={{ marginTop: '6px', marginBottom: '6px' }}>
+                <span
+                  style={{
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    padding: '2px 8px',
+                    borderRadius: '4px',
+                    display: 'inline-block',
+                    background: isExhausted
+                      ? '#f3f4f6'
+                      : attemptsRemaining === 1
+                      ? '#fee2e2'
+                      : attemptsRemaining === 2
+                      ? '#fef3c7'
+                      : '#ecfdf5',
+                    color: isExhausted
+                      ? '#6b7280'
+                      : attemptsRemaining === 1
+                      ? '#991b1b'
+                      : attemptsRemaining === 2
+                      ? '#92400e'
+                      : '#065f46',
+                    border: `1px solid ${
+                      isExhausted
+                        ? '#d1d5db'
+                        : attemptsRemaining === 1
+                        ? '#fca5a5'
+                        : attemptsRemaining === 2
+                        ? '#fde68a'
+                        : '#a7f3d0'
+                    }`,
+                  }}
+                >
+                  {attemptsRemaining === 0
+                    ? 'No attempts remaining'
+                    : `${attemptsRemaining} attempt${attemptsRemaining === 1 ? '' : 's'} remaining`}
+                </span>
+              </div>
 
               {boxCheck.label && (
                 <div className={styles.cardRequirement}>
@@ -335,14 +379,16 @@ export function ClaimPanel({
                     VERIFIED WINNER
                   </span>
                 ) : isPendingVerification ? (
-                  <span className={styles.statusPending}>PENDING REVIEW</span>
+                  <span className={styles.statusPending}>⏳ PENDING REVIEW</span>
                 ) : isRejected ? (
                   <div className={styles.rejectedBox}>
                     <span className={styles.statusRejected}>
                       <XCircleIcon width="14" height="14" aria-hidden="true" style={{ verticalAlign: '-1px', marginRight: '5px' }} />
                       REJECTED
                     </span>
-                    {canClick && (
+                    {isExhausted ? (
+                      <span style={{ fontSize: '0.8rem', color: '#6b7280' }}>Attempts exhausted (0/3)</span>
+                    ) : canClick ? (
                       <button
                         type="button"
                         className={styles.retryBtn}
@@ -350,7 +396,7 @@ export function ClaimPanel({
                       >
                         Retry Claim
                       </button>
-                    )}
+                    ) : null}
                   </div>
                 ) : !isConfigOpen || !isEnabled ? (
                   <span className={styles.statusClosed}>CLOSED</span>
@@ -371,10 +417,10 @@ export function ClaimPanel({
                     <button
                       type="button"
                       className={styles.claimBtn}
-                      disabled={!canClick}
+                      disabled={!canClick || isExhausted}
                       onClick={() => void handleClaim(card.pattern)}
                     >
-                      {pending ? 'Submitting…' : `Claim ${card.title}`}
+                      {pending ? 'Submitting…' : isExhausted ? 'Attempts exhausted' : `Claim ${card.title}`}
                     </button>
                   </div>
                 )}

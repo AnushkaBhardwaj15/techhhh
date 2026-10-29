@@ -1,6 +1,7 @@
 import { and, count, desc, eq, inArray, or, sql } from 'drizzle-orm';
 import { getDb } from '../../db/client.ts';
 import { claims, type ClaimRecord, type InsertClaim } from '../../db/schema/claims.ts';
+import { claimAttempts, type ClaimAttemptRecord, type InsertClaimAttempt } from '../../db/schema/claim-attempts.ts';
 import { roundPatterns, rounds, type RoundPatternRecord } from '../../db/schema/rounds.ts';
 import { events } from '../../db/schema/events.ts';
 import { participantProfiles, users } from '../../db/schema/users.ts';
@@ -37,6 +38,9 @@ export interface IClaimRepository {
   closePattern(roundId: string, patternType: string, tx: any): Promise<void>;
   getEventAndParticipantName(claimId: string, tx: any): Promise<{ eventId: string; participantName: string } | null>;
   listAll(options: { page: number; limit: number; roundId?: string; status?: string }): Promise<{ data: AdminClaimListRow[]; total: number }>;
+  recordAttempt(data: InsertClaimAttempt, tx?: any): Promise<ClaimAttemptRecord>;
+  getAttemptCount(roundId: string, participantId: string, patternType: string, tx?: any): Promise<number>;
+  getAttemptCountsForRound(roundId: string, participantId: string, tx?: any): Promise<Record<string, number>>;
 }
 
 export class ClaimRepository implements IClaimRepository {
@@ -197,40 +201,84 @@ export class ClaimRepository implements IClaimRepository {
     options: { page: number; limit: number; roundId?: string; status?: string }
   ): Promise<{ data: AdminClaimListRow[]; total: number }> {
     const db = getDb();
-      const { page, limit } = options;
-      const offset = (page - 1) * limit;
-      const where = and(
-        options.roundId ? eq(claims.roundId, options.roundId) : undefined,
-        options.status ? eq(claims.status, options.status) : undefined,
-      );
-      const [totalRow] = await db.select({ count: count() }).from(claims).where(where);
-      const data = await db
-        .select({
-          id: claims.id,
-          roundId: claims.roundId,
-          participantId: claims.participantId,
-          ticketId: claims.ticketId,
-          patternType: claims.patternType,
-          status: claims.status,
-          rejectionReason: claims.rejectionReason,
-          verifiedBy: claims.verifiedBy,
-          verifiedAt: claims.verifiedAt,
-          createdAt: claims.createdAt,
-          updatedAt: claims.updatedAt,
-          participantName: sql<string>`COALESCE(${users.name}, 'Player')`,
-          eventId: rounds.eventId,
-          eventTitle: sql<string>`COALESCE(${events.title}, 'Tech Tambola')`,
-        })
-        .from(claims)
-        .leftJoin(rounds, eq(claims.roundId, rounds.id))
-        .leftJoin(events, eq(rounds.eventId, events.id))
-        .leftJoin(participantProfiles, eq(claims.participantId, participantProfiles.id))
-        .leftJoin(users, eq(participantProfiles.userId, users.id))
-        .where(where)
-        .orderBy(desc(claims.createdAt), desc(claims.id))
-        .limit(limit)
-        .offset(offset);
+    const { page, limit } = options;
+    const offset = (page - 1) * limit;
+    const where = and(
+      options.roundId ? eq(claims.roundId, options.roundId) : undefined,
+      options.status ? eq(claims.status, options.status) : undefined,
+    );
+    const [totalRow] = await db.select({ count: count() }).from(claims).where(where);
+    const data = await db
+      .select({
+        id: claims.id,
+        roundId: claims.roundId,
+        participantId: claims.participantId,
+        ticketId: claims.ticketId,
+        patternType: claims.patternType,
+        status: claims.status,
+        rejectionReason: claims.rejectionReason,
+        verifiedBy: claims.verifiedBy,
+        verifiedAt: claims.verifiedAt,
+        createdAt: claims.createdAt,
+        updatedAt: claims.updatedAt,
+        participantName: sql<string>`COALESCE(${users.name}, 'Player')`,
+        eventId: rounds.eventId,
+        eventTitle: sql<string>`COALESCE(${events.title}, 'Tech Tambola')`,
+      })
+      .from(claims)
+      .leftJoin(rounds, eq(claims.roundId, rounds.id))
+      .leftJoin(events, eq(rounds.eventId, events.id))
+      .leftJoin(participantProfiles, eq(claims.participantId, participantProfiles.id))
+      .leftJoin(users, eq(participantProfiles.userId, users.id))
+      .where(where)
+      .orderBy(desc(claims.createdAt), desc(claims.id))
+      .limit(limit)
+      .offset(offset);
     return { data: data as AdminClaimListRow[], total: Number(totalRow?.count ?? 0) };
+  }
+
+  async recordAttempt(data: InsertClaimAttempt, tx?: any): Promise<ClaimAttemptRecord> {
+    const db = this.getDbInstance(tx);
+    const [created] = await db.insert(claimAttempts).values(data).returning();
+    return created;
+  }
+
+  async getAttemptCount(roundId: string, participantId: string, patternType: string, tx?: any): Promise<number> {
+    const db = this.getDbInstance(tx);
+    const [result] = await db
+      .select({ count: count() })
+      .from(claimAttempts)
+      .where(
+        and(
+          eq(claimAttempts.roundId, roundId),
+          eq(claimAttempts.participantId, participantId),
+          eq(claimAttempts.patternType, patternType)
+        )
+      );
+    return Number(result?.count ?? 0);
+  }
+
+  async getAttemptCountsForRound(roundId: string, participantId: string, tx?: any): Promise<Record<string, number>> {
+    const db = this.getDbInstance(tx);
+    const rows = await db
+      .select({
+        patternType: claimAttempts.patternType,
+        count: count(),
+      })
+      .from(claimAttempts)
+      .where(
+        and(
+          eq(claimAttempts.roundId, roundId),
+          eq(claimAttempts.participantId, participantId)
+        )
+      )
+      .groupBy(claimAttempts.patternType);
+
+    const counts: Record<string, number> = {};
+    for (const r of rows) {
+      counts[r.patternType] = Number(r.count);
+    }
+    return counts;
   }
 }
 

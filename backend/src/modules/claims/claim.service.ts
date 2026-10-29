@@ -1,5 +1,11 @@
 import { getDb } from '../../db/client.ts';
-import { ConflictError, ForbiddenError, NotFoundError, UnprocessableEntityError } from '../../shared/errors/index.ts';
+import {
+  ConflictError,
+  ForbiddenError,
+  NotFoundError,
+  RateLimitError,
+  UnprocessableEntityError,
+} from '../../shared/errors/index.ts';
 import type { AuditService } from '../audit/audit.service.ts';
 import { auditService } from '../audit/audit.service.ts';
 import type { IRoundRepository } from '../rounds/round.repository.ts';
@@ -16,6 +22,12 @@ import {
   validateRoundActiveForClaim,
   type WinningPatternType,
 } from './winner.domain.ts';
+import {
+  checkAndIncrementClaimAttempt,
+  checkRateLimit,
+} from '../../infrastructure/redis/claim-limiter.ts';
+import { publishEventAsync } from '../../infrastructure/kafka/producer.ts';
+import { KAFKA_TOPICS } from '../../events/schemas.ts';
 
 export interface ClaimDto {
   id: string;
@@ -25,6 +37,8 @@ export interface ClaimDto {
   patternType: string;
   status: string;
   createdAt: string;
+  attemptsRemaining?: number;
+  maxAttempts?: number;
 }
 
 export interface RealtimePublisher {
@@ -51,8 +65,11 @@ export class ClaimService {
     eventId: string;
     roundId: string;
     pattern: WinningPatternType;
+    idempotencyKey?: string;
+    ipAddress?: string;
+    userAgent?: string;
   }): Promise<{ claim: ClaimDto }> {
-    const { userId, eventId, roundId, pattern } = params;
+    const { userId, eventId, roundId, pattern, idempotencyKey, ipAddress, userAgent } = params;
     const db = getDb();
 
     // 1. Resolve Participant Profile and User
@@ -62,6 +79,12 @@ export class ClaimService {
     }
     if (profile.status !== 'ACTIVE') {
       throw new ForbiddenError('Participant account is inactive');
+    }
+
+    // Rate limit per participant profile
+    const rateCheck = await checkRateLimit(profile.id, 10, 10);
+    if (!rateCheck.allowed) {
+      throw new RateLimitError('Too many claim requests. Please wait a moment before trying again.', 'RATE_LIMIT_EXCEEDED');
     }
 
     // 2. Fetch Round & Assert ACTIVE
@@ -85,7 +108,7 @@ export class ClaimService {
       throw new NotFoundError('Ticket not found for participant in this round');
     }
 
-    // 5. Check if claim already exists
+    // 5. Check if claim already awarded or pending
     const existingClaim = await this.claimRepo.findExistingClaim(roundId, profile.id, pattern);
     if (existingClaim) {
       if (existingClaim.status === 'VERIFIED') {
@@ -100,27 +123,117 @@ export class ClaimService {
           'CLAIM_ALREADY_EXISTS'
         );
       }
-      // If previous status was REJECTED, participant is allowed to re-claim once eligible
     }
 
-    // 6. Recalculate Eligibility Server-Side from Official Draws + Ticket Layout
-    const drawnKeyIds = await this.drawRepo.getDrawnKeyIds(roundId);
-    const cells = ticket.cells.map((c) => ({
-      rowIndex: c.rowIndex,
-      colIndex: c.colIndex,
-      keyId: c.keyId,
-    }));
-
-    const isEligible = evaluatePattern(pattern, cells, drawnKeyIds);
-    if (!isEligible) {
-      throw new UnprocessableEntityError(
-        `Ticket does not satisfy the requirements for winning pattern ${pattern}. Please ensure all required keys for this pattern have been drawn.`,
-        'CLAIM_INELIGIBLE'
+    // 6. Redis atomic pre-check: ensure participant has attempts remaining for this (roundId, participantId, pattern)
+    const redisCheck = await checkAndIncrementClaimAttempt(roundId, profile.id, pattern, 3);
+    if (!redisCheck.allowed) {
+      throw new ConflictError(
+        'Maximum claim attempts (3) reached for this pattern in this round. No attempts remaining.',
+        'CLAIM_ATTEMPTS_EXHAUSTED'
       );
     }
 
-    // 7. Persist Claim inside Transaction
-    const claim = await db.transaction(async (tx) => {
+    // 7. Atomic DB Transaction to verify eligibility and record attempt
+    const { claim, attemptsRemaining } = await db.transaction(async (tx) => {
+      // Authoritative database attempt count check
+      const dbAttemptCount = await this.claimRepo.getAttemptCount(roundId, profile.id, pattern, tx);
+      if (dbAttemptCount >= 3) {
+        throw new ConflictError(
+          'Maximum claim attempts (3) reached for this pattern in this round. No attempts remaining.',
+          'CLAIM_ATTEMPTS_EXHAUSTED'
+        );
+      }
+
+      const nextAttemptNumber = dbAttemptCount + 1;
+      const remaining = Math.max(0, 3 - nextAttemptNumber);
+
+      // Recalculate Eligibility Server-Side from Official Draws + Ticket Layout
+      const drawnKeyIds = await this.drawRepo.getDrawnKeyIds(roundId, tx);
+      const cells = ticket.cells.map((c) => ({
+        rowIndex: c.rowIndex,
+        colIndex: c.colIndex,
+        keyId: c.keyId,
+      }));
+
+      const isEligible = evaluatePattern(pattern, cells, drawnKeyIds);
+      if (!isEligible) {
+        // Record failed attempt in persistent database ledger
+        await this.claimRepo.recordAttempt(
+          {
+            roundId,
+            participantId: profile.id,
+            ticketId: ticket.id,
+            patternType: pattern,
+            attemptNumber: nextAttemptNumber,
+            status: 'INELIGIBLE',
+            rejectionReason: `Ticket does not satisfy pattern requirements yet`,
+            idempotencyKey: idempotencyKey || null,
+            ipAddress: ipAddress || null,
+            userAgent: userAgent || null,
+          },
+          tx
+        );
+
+        publishEventAsync(KAFKA_TOPICS.CLAIMS, `${roundId}:${pattern}`, {
+          eventId: crypto.randomUUID(),
+          traceId: idempotencyKey || crypto.randomUUID(),
+          timestamp: new Date().toISOString(),
+          version: '1.0',
+          type: 'CLAIM_ATTEMPT_RECORDED',
+          payload: {
+            attemptId: crypto.randomUUID(),
+            roundId,
+            participantId: profile.id,
+            ticketId: ticket.id,
+            patternType: pattern,
+            attemptNumber: nextAttemptNumber,
+            attemptsRemaining: remaining,
+            status: 'INELIGIBLE',
+            rejectionReason: `Ticket does not satisfy pattern requirements yet`,
+          },
+        });
+
+        throw new UnprocessableEntityError(
+          `Ticket does not satisfy the requirements for winning pattern ${pattern}. Please ensure all required keys for this pattern have been drawn. (${remaining} attempt${remaining === 1 ? '' : 's'} remaining)`,
+          'CLAIM_INELIGIBLE'
+        );
+      }
+
+      // Record valid eligible attempt
+      await this.claimRepo.recordAttempt(
+        {
+          roundId,
+          participantId: profile.id,
+          ticketId: ticket.id,
+          patternType: pattern,
+          attemptNumber: nextAttemptNumber,
+          status: 'PENDING_VERIFICATION',
+          idempotencyKey: idempotencyKey || null,
+          ipAddress: ipAddress || null,
+          userAgent: userAgent || null,
+        },
+        tx
+      );
+
+      publishEventAsync(KAFKA_TOPICS.CLAIMS, `${roundId}:${pattern}`, {
+        eventId: crypto.randomUUID(),
+        traceId: idempotencyKey || crypto.randomUUID(),
+        timestamp: new Date().toISOString(),
+        version: '1.0',
+        type: 'CLAIM_ATTEMPT_RECORDED',
+        payload: {
+          attemptId: crypto.randomUUID(),
+          roundId,
+          participantId: profile.id,
+          ticketId: ticket.id,
+          patternType: pattern,
+          attemptNumber: nextAttemptNumber,
+          attemptsRemaining: remaining,
+          status: 'PENDING_VERIFICATION',
+        },
+      });
+
       let created: any;
       if (existingClaim && existingClaim.status.startsWith('REJECTED')) {
         created = await this.claimRepo.updateStatus(
@@ -156,12 +269,14 @@ export class ClaimService {
             participantName: profile.name,
             actorEmail: (profile as any).email ?? null,
             resourceName: `Pattern: ${pattern}`,
+            attemptNumber: nextAttemptNumber,
+            attemptsRemaining: remaining,
           },
         },
         tx
       );
 
-      return created;
+      return { claim: created, attemptsRemaining: remaining };
     });
 
     // 8. Post-Commit Real-Time Broadcast (Admin-only audience)
@@ -192,29 +307,43 @@ export class ClaimService {
         patternType: claim.patternType,
         status: claim.status,
         createdAt: claim.createdAt.toISOString(),
+        attemptsRemaining,
+        maxAttempts: 3,
       },
     };
   }
 
   async listParticipantClaims(
     userId: string,
-    _eventId: string,
+    eventId: string,
     options: { page?: number; limit?: number } = {}
-  ): Promise<{ data: ClaimDto[]; total: number; page: number; limit: number }> {
+  ): Promise<{ data: ClaimDto[]; patternAttempts?: Record<string, number>; total: number; page: number; limit: number }> {
     const page = Math.max(1, options.page ?? 1);
     const limit = Math.min(100, Math.max(1, options.limit ?? 50));
     const { data, total } = await this.claimRepo.listByUser(userId, { page, limit });
 
+    let patternAttempts: Record<string, number> = {};
+    const profile = await participantRepository.findByUserIdAndEvent(userId, eventId);
+    if (profile && data.length > 0) {
+      patternAttempts = await this.claimRepo.getAttemptCountsForRound(data[0]!.roundId, profile.id);
+    }
+
     return {
-      data: data.map((c) => ({
-        id: c.id,
-        roundId: c.roundId,
-        participantId: c.participantId,
-        ticketId: c.ticketId,
-        patternType: c.patternType,
-        status: c.status,
-        createdAt: c.createdAt.toISOString(),
-      })),
+      data: data.map((c) => {
+        const used = patternAttempts[c.patternType] || 0;
+        return {
+          id: c.id,
+          roundId: c.roundId,
+          participantId: c.participantId,
+          ticketId: c.ticketId,
+          patternType: c.patternType,
+          status: c.status,
+          createdAt: c.createdAt.toISOString(),
+          attemptsRemaining: Math.max(0, 3 - used),
+          maxAttempts: 3,
+        };
+      }),
+      patternAttempts,
       total,
       page,
       limit,

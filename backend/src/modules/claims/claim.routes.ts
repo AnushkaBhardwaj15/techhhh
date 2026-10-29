@@ -14,99 +14,106 @@ import { roundRepository } from '../rounds/round.repository.ts';
 
 export function createClaimRoutes(winnerService: WinnerService): FastifyPluginAsync {
   return async (fastify) => {
-  // Participant: Submit win claim
-  fastify.post(
-    '/participant/claims',
-    {
-      preHandler: [requireParticipantToken],
-      config: {
-        rateLimit: {
-          max: process.env.NODE_ENV === 'test' ? 100_000 : 30,
-          timeWindow: 60_000,
+    // Participant: Submit win claim
+    fastify.post(
+      '/participant/claims',
+      {
+        preHandler: [requireParticipantToken],
+        config: {
+          rateLimit: {
+            max: process.env.NODE_ENV === 'test' ? 100_000 : 30,
+            timeWindow: 60_000,
+          },
         },
       },
-    },
-    async (request, reply) => {
-    const body = submitClaimBodySchema.parse(request.body);
-    const round = await roundRepository.findById(body.roundId);
-    const eventId = round?.eventId || request.user!.eventId || 'e7bf4217-f212-4970-b3f1-e924e1782f25';
+      async (request, reply) => {
+        const body = submitClaimBodySchema.parse(request.body);
+        const round = await roundRepository.findById(body.roundId);
+        const eventId = round?.eventId || request.user!.eventId || 'e7bf4217-f212-4970-b3f1-e924e1782f25';
+        const idempotencyKey = typeof request.headers['idempotency-key'] === 'string'
+          ? request.headers['idempotency-key']
+          : undefined;
 
-    const result = await claimService.submitClaim({
-      userId: request.user!.id,
-      eventId,
-      roundId: body.roundId,
-      pattern: body.pattern,
+        const result = await claimService.submitClaim({
+          userId: request.user!.id,
+          eventId,
+          roundId: body.roundId,
+          pattern: body.pattern,
+          idempotencyKey,
+          ipAddress: request.ip,
+          userAgent: typeof request.headers['user-agent'] === 'string' ? request.headers['user-agent'] : undefined,
+        });
+
+        reply.status(200);
+        return result;
+      }
+    );
+
+    // Participant: List own claims
+    fastify.get('/participant/claims', { preHandler: [requireParticipantToken] }, async (request) => {
+      const query = listClaimsQuerySchema.parse(request.query);
+      return await claimService.listParticipantClaims(request.user!.id, request.user!.eventId ?? '', query);
     });
 
-    reply.status(200);
-    return result;
-  });
-
-  // Participant: List own claims
-  fastify.get('/participant/claims', { preHandler: [requireParticipantToken] }, async (request) => {
-    const query = listClaimsQuerySchema.parse(request.query);
-    return await claimService.listParticipantClaims(request.user!.id, request.user!.eventId ?? '', query);
-  });
-
-  // Admin: Review all pending and historical claims across Events.
-  fastify.get('/admin/claims', { preHandler: [requireAdmin] }, async (request) => {
-    const query = listClaimsQuerySchema.parse(request.query);
-    return winnerService.listAdminClaims(query);
-  });
-
-  fastify.post('/admin/claims/:id/verify', { preHandler: [requireAdmin] }, async (request) => {
-    const { id } = claimIdParamsSchema.parse(request.params);
-    const idempotencyKey = request.headers['idempotency-key'];
-    if (typeof idempotencyKey !== 'string') {
-      throw new ValidationError('Idempotency-Key header is required', 'IDEMPOTENCY_KEY_REQUIRED');
-    }
-    const role = request.user!.role;
-    if (role !== 'ADMIN' && role !== 'SUPER_ADMIN') {
-      throw new ValidationError('Unsupported administrator role');
-    }
-    return winnerService.verifyClaim({
-      claimId: id,
-      actorId: request.user!.id,
-      actorType: role,
-      idempotencyKey,
-      adminOverride: true,
+    // Admin: Review all pending and historical claims across Events.
+    fastify.get('/admin/claims', { preHandler: [requireAdmin] }, async (request) => {
+      const query = listClaimsQuerySchema.parse(request.query);
+      return winnerService.listAdminClaims(query);
     });
-  });
 
-  fastify.post('/admin/claims/:id/reject', { preHandler: [requireAdmin] }, async (request) => {
-    const { id } = claimIdParamsSchema.parse(request.params);
-    const bodyResult = rejectClaimBodySchema.safeParse(request.body);
-    const reason = bodyResult.success && bodyResult.data?.reason ? bodyResult.data.reason : 'ADMIN_REJECTED';
-    const idempotencyKey = request.headers['idempotency-key'];
-    if (typeof idempotencyKey !== 'string') {
-      throw new ValidationError('Idempotency-Key header is required', 'IDEMPOTENCY_KEY_REQUIRED');
-    }
-    const role = request.user!.role;
-    if (role !== 'ADMIN' && role !== 'SUPER_ADMIN') {
-      throw new ValidationError('Unsupported administrator role');
-    }
-    return winnerService.rejectClaim({
-      claimId: id,
-      actorId: request.user!.id,
-      actorType: role,
-      idempotencyKey,
-      reason,
+    fastify.post('/admin/claims/:id/verify', { preHandler: [requireAdmin] }, async (request) => {
+      const { id } = claimIdParamsSchema.parse(request.params);
+      const idempotencyKey = request.headers['idempotency-key'];
+      if (typeof idempotencyKey !== 'string') {
+        throw new ValidationError('Idempotency-Key header is required', 'IDEMPOTENCY_KEY_REQUIRED');
+      }
+      const role = request.user!.role;
+      if (role !== 'ADMIN' && role !== 'SUPER_ADMIN') {
+        throw new ValidationError('Unsupported administrator role');
+      }
+      return winnerService.verifyClaim({
+        claimId: id,
+        actorId: request.user!.id,
+        actorType: role,
+        idempotencyKey,
+        adminOverride: true,
+      });
     });
-  });
 
-  fastify.get('/admin/winners', { preHandler: [requireAdmin] }, async (request) => {
-    const query = listWinnersQuerySchema.parse(request.query);
-    return winnerService.listAdminWinners(query);
-  });
+    fastify.post('/admin/claims/:id/reject', { preHandler: [requireAdmin] }, async (request) => {
+      const { id } = claimIdParamsSchema.parse(request.params);
+      const bodyResult = rejectClaimBodySchema.safeParse(request.body);
+      const reason = bodyResult.success && bodyResult.data?.reason ? bodyResult.data.reason : 'ADMIN_REJECTED';
+      const idempotencyKey = request.headers['idempotency-key'];
+      if (typeof idempotencyKey !== 'string') {
+        throw new ValidationError('Idempotency-Key header is required', 'IDEMPOTENCY_KEY_REQUIRED');
+      }
+      const role = request.user!.role;
+      if (role !== 'ADMIN' && role !== 'SUPER_ADMIN') {
+        throw new ValidationError('Unsupported administrator role');
+      }
+      return winnerService.rejectClaim({
+        claimId: id,
+        actorId: request.user!.id,
+        actorType: role,
+        idempotencyKey,
+        reason,
+      });
+    });
 
-  fastify.get('/participant/wins', { preHandler: [requireParticipantToken] }, async (request) => {
-    const query = listWinnersQuerySchema.parse(request.query);
-    const eventId = request.user!.eventId || 'e7bf4217-f212-4970-b3f1-e924e1782f25';
-    try {
-      return await winnerService.listParticipantWins(request.user!.id, eventId, query);
-    } catch {
-      return { data: [], total: 0 };
-    }
-  });
+    fastify.get('/admin/winners', { preHandler: [requireAdmin] }, async (request) => {
+      const query = listWinnersQuerySchema.parse(request.query);
+      return winnerService.listAdminWinners(query);
+    });
+
+    fastify.get('/participant/wins', { preHandler: [requireParticipantToken] }, async (request) => {
+      const query = listWinnersQuerySchema.parse(request.query);
+      const eventId = request.user!.eventId || 'e7bf4217-f212-4970-b3f1-e924e1782f25';
+      try {
+        return await winnerService.listParticipantWins(request.user!.id, eventId, query);
+      } catch {
+        return { data: [], total: 0 };
+      }
+    });
   };
 }
