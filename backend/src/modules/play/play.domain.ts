@@ -101,9 +101,10 @@ export function callQuestion(
   requirePlaying(state);
   const used = new Set(state.draws.map((d) => d.questionId));
   const remaining = state.bank.filter((q) => !used.has(q.id));
+  const randomIndex = remaining.length > 0 ? Math.min(remaining.length - 1, Math.max(0, Math.floor(rng() * remaining.length))) : 0;
   const question =
     number === undefined
-      ? remaining[0]
+      ? remaining[randomIndex]
       : remaining.find((q) => q.number === number);
   if (!question)
     throw new ConflictError(
@@ -122,6 +123,7 @@ export function callQuestion(
     codeSnippet: question.codeSnippet,
     revealed: false,
     drawnAt: at,
+    drawMode: number === undefined ? "RANDOM" : "MANUAL",
   });
   if (
     state.closingSequence !== null &&

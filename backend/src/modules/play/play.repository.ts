@@ -378,13 +378,14 @@ export class PlayRepository implements PlayStore {
         );
       for (const draw of state.draws.slice(before.draws.length))
         await tx.unsafe(
-          `INSERT INTO draws(id,round_id,question_id,key_id,sequence_number,draw_mode,question_text,key_value,drawn_by,drawn_at,answer_revealed,code_snippet,category) VALUES($1,$2,$3,$4,$5,'MANUAL',$6,$7,$8,$9,$10,$11,$12)`,
+          `INSERT INTO draws(id,round_id,question_id,key_id,sequence_number,draw_mode,question_text,key_value,drawn_by,drawn_at,answer_revealed,code_snippet,category) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
           [
             draw.id,
             id,
             draw.questionId,
             draw.keyId,
             draw.sequence,
+            draw.drawMode || (draw.number ? 'MANUAL' : 'RANDOM'),
             draw.prompt,
             draw.answer,
             actor.userId,

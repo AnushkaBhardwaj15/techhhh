@@ -13,8 +13,9 @@ export function getSqlClient(overrideUrl?: string): postgres.Sql {
 
   if (!sqlClient) {
     const env = getEnv();
+    const isLocal = env.DATABASE_URL.includes('localhost') || env.DATABASE_URL.includes('127.0.0.1');
     sqlClient = postgres(env.DATABASE_URL, {
-      max: env.NODE_ENV === 'test' ? 5 : 20,
+      max: env.NODE_ENV === 'test' ? 5 : isLocal ? 10 : 20,
       connect_timeout: 15,
       idle_timeout: 20,
     });
