@@ -38,7 +38,7 @@ export function AdminParticipantImport({ eventId, batchName, onPendingChange }: 
       await queryClient.invalidateQueries({ queryKey: ['admin-participants'] });
     },
     onError: async (error) => {
-      const uncertain = !(error instanceof ApiError) || error.status === 0 || error.status >= 500;
+      const uncertain = !(error instanceof ApiError) || error.status === 0 || error.status >= 1000;
       setReport(null); setAmbiguous(uncertain); setRetryAllowed(false);
       setMessage(uncertain
         ? 'The request outcome is unknown. We requested a refresh of the current Participant results; review them before enabling a deliberate retry.'
@@ -85,7 +85,7 @@ export function AdminParticipantImport({ eventId, batchName, onPendingChange }: 
     {ambiguous && retryAllowed && <p role="note">A retry will use the same idempotency key for this selected file.</p>}
     <div className={styles.form}>
       <label>CSV file<input type="file" accept=".csv,text/csv" disabled={mutation.isPending || reading || ambiguous} onChange={chooseFile} /></label>
-      <p>UTF-8 CSV, up to 10 MiB and 500 data rows. Required headers: <code>email,password</code>; optional: <code>external_id</code>.</p>
+      <p>UTF-8 CSV, up to 10 MiB and 1000 data rows. Required headers: <code>email,password</code>; optional: <code>external_id</code>.</p>
     </div>
     {reading && <p role="status">Reading CSV…</p>}
     {fileError && <p role="alert">{fileError}</p>}

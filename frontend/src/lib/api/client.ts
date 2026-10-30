@@ -13,7 +13,7 @@ export class ApiError extends Error {
 
 export async function apiRequest<T>(path: string, options: RequestInit = {}): Promise<T | undefined> {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(new DOMException('Request timed out', 'TimeoutError')), TIMEOUT_MS);
+  const timeout = setTimeout(() => controller.abort(new DOMException('Request timed out', 'TimeoutError')), path.split('?')[0] === '/admin/participants/import' ? 15 * 60_000 : TIMEOUT_MS);
   const signal = options.signal
     ? AbortSignal.any([options.signal, controller.signal])
     : controller.signal;

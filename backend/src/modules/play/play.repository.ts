@@ -207,7 +207,7 @@ export class PlayRepository implements PlayStore {
         event_id: event!.id,
         value: item.term,
         normalized_value: item.term.trim().replace(/\s+/g, " ").toUpperCase(),
-        item_number: item.id,
+        item_number: null,
       }));
 
       const keyRows = await tx.unsafe<
@@ -217,7 +217,7 @@ export class PlayRepository implements PlayStore {
          SELECT event_id, value, normalized_value, item_number
          FROM jsonb_to_recordset($1::text::jsonb) AS x(event_id uuid, value text, normalized_value text, item_number integer)
          ON CONFLICT(event_id, normalized_value)
-         DO UPDATE SET item_number = EXCLUDED.item_number
+         DO UPDATE SET normalized_value = EXCLUDED.normalized_value
          RETURNING id, normalized_value, item_number`,
         [JSON.stringify(eventKeyRows)],
       );
@@ -233,6 +233,7 @@ export class PlayRepository implements PlayStore {
           id: crypto.randomUUID(),
           round_id: id,
           key_id: keyId,
+          item_number: item.id,
           question_text: item.clue,
           category: item.category,
           code_snippet: item.codeSnippet ?? null,
@@ -240,9 +241,9 @@ export class PlayRepository implements PlayStore {
       });
 
       await tx.unsafe(
-        `INSERT INTO round_questions(id, round_id, key_id, question_text, category, code_snippet)
-         SELECT id, round_id, key_id, question_text, category, code_snippet
-         FROM jsonb_to_recordset($1::text::jsonb) AS x(id uuid, round_id uuid, key_id uuid, question_text text, category text, code_snippet text)`,
+        `INSERT INTO round_questions(id, round_id, key_id, item_number, question_text, category, code_snippet)
+         SELECT id, round_id, key_id, item_number, question_text, category, code_snippet
+         FROM jsonb_to_recordset($1::text::jsonb) AS x(id uuid, round_id uuid, key_id uuid, item_number integer, question_text text, category text, code_snippet text)`,
         [JSON.stringify(questionRows)],
       );
 
@@ -663,14 +664,14 @@ export class PlayRepository implements PlayStore {
     let bank = this.bankCache.get(id);
     if (!bank) {
       bank = await sql.unsafe<PlayQuestion[]>(
-        `SELECT q.id,q.key_id AS "keyId",k.item_number AS number,k.value AS term,q.question_text AS clue,COALESCE(q.category,'General') AS category,q.code_snippet AS "codeSnippet" FROM round_questions q JOIN event_keys k ON k.id=q.key_id WHERE q.round_id=$1 ORDER BY k.item_number`,
+        `SELECT q.id,q.key_id AS "keyId",COALESCE(q.item_number,k.item_number) AS number,k.value AS term,q.question_text AS clue,COALESCE(q.category,'General') AS category,q.code_snippet AS "codeSnippet" FROM round_questions q JOIN event_keys k ON k.id=q.key_id WHERE q.round_id=$1 ORDER BY COALESCE(q.item_number,k.item_number)`,
         [id],
       );
       this.bankCache.set(id, bank);
     }
     const [draws, wins] = await Promise.all([
       sql.unsafe<PlayDraw[]>(
-        `SELECT d.id,d.sequence_number AS sequence,d.question_id AS "questionId",d.key_id AS "keyId",k.item_number AS number,d.question_text AS prompt,d.key_value AS answer,COALESCE(d.category,'General') AS category,d.code_snippet AS "codeSnippet",d.answer_revealed AS revealed,d.reveal_batch_id AS "revealBatchId",d.drawn_at AS "drawnAt" FROM draws d JOIN event_keys k ON k.id=d.key_id WHERE d.round_id=$1 ORDER BY d.sequence_number`,
+        `SELECT d.id,d.sequence_number AS sequence,d.question_id AS "questionId",d.key_id AS "keyId",COALESCE(q.item_number,k.item_number) AS number,d.question_text AS prompt,d.key_value AS answer,COALESCE(d.category,'General') AS category,d.code_snippet AS "codeSnippet",d.answer_revealed AS revealed,d.reveal_batch_id AS "revealBatchId",d.drawn_at AS "drawnAt" FROM draws d JOIN round_questions q ON q.id=d.question_id JOIN event_keys k ON k.id=d.key_id WHERE d.round_id=$1 ORDER BY d.sequence_number`,
         [id],
       ),
       sql.unsafe<PlayWin[]>(
@@ -740,7 +741,7 @@ export class PlayRepository implements PlayStore {
       }
       if (row) {
         const cells = await sql.unsafe<PlayCell[]>(
-          `SELECT c.id,c.key_id AS "keyId",k.item_number AS number,k.value AS term,c.row_index AS row,c.col_index AS column,(m.id IS NOT NULL) AS marked FROM ticket_cells c JOIN event_keys k ON k.id=c.key_id LEFT JOIN ticket_marks m ON m.ticket_id=c.ticket_id AND m.cell_id=c.id WHERE c.ticket_id=$1 ORDER BY c.row_index,c.col_index`,
+          `SELECT c.id,c.key_id AS "keyId",COALESCE(q.item_number,k.item_number) AS number,k.value AS term,c.row_index AS row,c.col_index AS column,(m.id IS NOT NULL) AS marked FROM ticket_cells c JOIN tickets t ON t.id=c.ticket_id JOIN round_questions q ON q.round_id=t.round_id AND q.key_id=c.key_id JOIN event_keys k ON k.id=c.key_id LEFT JOIN ticket_marks m ON m.ticket_id=c.ticket_id AND m.cell_id=c.id WHERE c.ticket_id=$1 ORDER BY c.row_index,c.col_index`,
           [row.id],
         );
         ticket = { id: row.id, participantId: profile.id, cells, paymentDeclared: row.paymentDeclared };
@@ -784,7 +785,7 @@ export class PlayRepository implements PlayStore {
   ) {
     if (!profileIds.length) return;
     const bank = await sql.unsafe<PlayQuestion[]>(
-      `SELECT q.id,q.key_id AS "keyId",k.item_number AS number,k.value AS term,q.question_text AS clue,COALESCE(q.category,'General') AS category,q.code_snippet AS "codeSnippet" FROM round_questions q JOIN event_keys k ON k.id=q.key_id WHERE q.round_id=$1 ORDER BY k.item_number`,
+      `SELECT q.id,q.key_id AS "keyId",COALESCE(q.item_number,k.item_number) AS number,k.value AS term,q.question_text AS clue,COALESCE(q.category,'General') AS category,q.code_snippet AS "codeSnippet" FROM round_questions q JOIN event_keys k ON k.id=q.key_id WHERE q.round_id=$1 ORDER BY COALESCE(q.item_number,k.item_number)`,
       [roundId],
     );
     if (!bank.length) return;

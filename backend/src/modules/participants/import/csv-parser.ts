@@ -40,10 +40,10 @@ export function parseParticipantCsv(rawContent: string): ParsedCsvRow[] {
 
   const dataRecords = records.slice(1);
 
-  // 4. Maximum 500 data rows enforcement
-  if (dataRecords.length > 500) {
+  // 4. Maximum 1000 data rows enforcement
+  if (dataRecords.length > 1000) {
     throw new ValidationError(
-      `CSV file exceeds maximum limit of 500 data rows (found ${dataRecords.length})`
+      `CSV file exceeds maximum limit of 1000 data rows (found ${dataRecords.length})`
     );
   }
 
