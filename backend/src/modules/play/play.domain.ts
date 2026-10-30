@@ -25,6 +25,11 @@ export function requirePlaying(state: PlayState) {
       "ROUND_NOT_ACTIVE",
     );
 }
+export function assertPaymentDeclarationChange(status: PlayStatus, current: boolean, next: boolean): void {
+  if (status !== 'READY' && current !== next) {
+    throw new ConflictError('Payment declarations close when the game starts. Unpaid winners cannot collect prizes.');
+  }
+}
 export function changePlayStatus(state: PlayState, status: PlayStatus) {
   const valid =
     (state.status === "READY" && status === "ACTIVE") ||
@@ -276,6 +281,7 @@ export function publicPlayState(state: PlayState, admin = false) {
     name: state.name,
     code: state.code,
     status: state.status,
+    paymentDeclarationOpen: state.status === 'READY',
     sequenceNumber: state.sequenceNumber,
     createdAt: state.createdAt,
     closingSequence: state.closingSequence,

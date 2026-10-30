@@ -59,13 +59,18 @@ export async function validatePlayBank(file: File) {
     body: formData,
   });
 }
-export async function joinPlayRound(code: string) {
+export async function joinPlayRound(code: string, paymentDeclared?: boolean) {
   return playStateSchema.parse(
     await apiRequest("/participant/play/join", {
       method: "POST",
-      body: JSON.stringify({ code }),
+      body: JSON.stringify({ code, ...(paymentDeclared === undefined ? {} : { paymentDeclared }) }),
     }),
   );
+}
+export async function declarePlayPayment(id: string, paymentDeclared: boolean) {
+  return playStateSchema.parse(await apiRequest(`/participant/play/rounds/${encodeURIComponent(id)}/payment-declaration`, {
+    method: 'PUT', body: JSON.stringify({ paymentDeclared }),
+  }));
 }
 export async function commandPlayRound(
   id: string,

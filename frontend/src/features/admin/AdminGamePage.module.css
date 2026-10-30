@@ -10,6 +10,9 @@
   color: var(--retro-ink, #18130F);
   border-radius: var(--radius-sm, 4px);
 }
+.paymentTableWrap { overflow-x: auto; }
+.paymentTable { width: 100%; border-collapse: collapse; text-align: left; }
+.paymentTable th, .paymentTable td { padding: 12px 8px; border-bottom: 1px solid currentColor; }
 
 .gameContainer {
   max-width: 1060px;

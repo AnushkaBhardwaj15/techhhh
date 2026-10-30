@@ -141,21 +141,25 @@ export function createPlayRoutes(service: PlayService): FastifyPluginAsync {
     app.post(
       "/participant/play/join",
       { preHandler: [requireParticipantToken] },
-      (request) =>
-        service.join(
-          z
+      (request) => {
+        const body = z
             .object({
               code: z
                 .string()
                 .trim()
                 .toUpperCase()
                 .regex(/^[A-Z0-9]{6}$/),
+              paymentDeclared: z.boolean().optional(),
             })
             .strict()
-            .parse(request.body).code,
-          actor(request),
-        ),
+            .parse(request.body);
+        return service.join(body.code, actor(request), body.paymentDeclared);
+      },
     );
+    app.put('/participant/play/rounds/:id/payment-declaration', { preHandler: [requireParticipantToken] }, request => {
+      const body = z.object({ paymentDeclared: z.boolean() }).strict().parse(request.body);
+      return service.declarePayment(roundParams.parse(request.params).id, actor(request), body.paymentDeclared);
+    });
     app.put(
       "/participant/play/rounds/:id/marks",
       { preHandler: [requireParticipantToken] },

@@ -23,6 +23,8 @@ import { ParticipantTicket, TicketGrid } from './ParticipantTicket';
 import { ClaimPanel } from './ClaimPanel';
 import { WinnerBanner } from './WinnerBanner';
 import { usePlayState } from './usePlayState';
+import { PaymentDeclaration } from './PaymentDeclaration';
+import { GamePaymentNotice } from '../../components/GamePaymentNotice';
 import styles from './ParticipantGame.module.css';
 import refStyles from './ReferencePlay.module.css';
 
@@ -169,6 +171,8 @@ function ReferenceParticipantGame({ id }: { id: string }) {
       {game && (
         <>
           <GameStatusPanel gameId={game.id} status={game.status} onNotify={showStatusNotice} />
+          <GamePaymentNotice />
+          <PaymentDeclaration key={game.id} game={game} />
           <header className={refStyles.heading}>
             <div>
               <p className={refStyles.kicker}>GAME #{game.sequenceNumber} · CODE {game.code}</p>

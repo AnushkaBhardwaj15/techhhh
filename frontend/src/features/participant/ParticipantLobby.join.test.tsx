@@ -249,11 +249,11 @@ describe("code entry and waiting lobby", () => {
     ).toBeInTheDocument();
   });
 
-  it("processes a scanned query code once", async () => {
-    mount("/participant/lobby?code=ABC123");
-    expect(
-      await screen.findByText("Waiting for the admin"),
-    ).toBeInTheDocument();
+  it("prefills a scanned query code for explicit confirmation", async () => {
+    const person = mount("/participant/lobby?code=ABC123");
+    expect(await screen.findByLabelText('Enter or confirm 6-character game code:')).toHaveValue('ABC123');
+    expect(validateGameCode).not.toHaveBeenCalled();
+    await person.click(screen.getByRole('button', { name: 'VERIFY & JOIN' }));
     expect(validateGameCode).toHaveBeenCalledTimes(1);
   });
 

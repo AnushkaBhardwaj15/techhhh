@@ -37,8 +37,10 @@ export interface PlayTicket {
   id: string;
   participantId: string;
   cells: PlayCell[];
+  paymentDeclared?: boolean;
 }
 export interface PlayDraw {
+  drawMode?: 'MANUAL' | 'RANDOM';
   id: string;
   sequence: number;
   questionId: string;
@@ -93,7 +95,8 @@ export interface ClaimOutcome {
   points?: number;
 }
 export interface PlayStore {
-  participants?(id: string): Promise<Array<{ id: string; name: string; participantId: string }>>;
+  participants?(id: string): Promise<Array<{ id: string; name: string; participantId: string; paymentDeclared?: boolean }>>;
+  declarePayment(id: string, actor: PlayActor, paymentDeclared: boolean): Promise<void>;
   archive?(id: string, actor: PlayActor): Promise<void>;
   list(actor?: PlayActor): Promise<PlaySummary[]>;
   create(
@@ -109,7 +112,7 @@ export interface PlayStore {
     }[],
   ): Promise<string>;
   read(id: string, actor?: PlayActor): Promise<PlayState>;
-  findCode(code: string, actor: PlayActor): Promise<{ id: string; eventId: string } | string>;
+  findCode(code: string, actor: PlayActor, paymentDeclared?: boolean): Promise<{ id: string; eventId: string } | string>;
   broadcast(id: string, actor: PlayActor, broadcast: boolean): Promise<PlayState>;
   change<T>(
     id: string,

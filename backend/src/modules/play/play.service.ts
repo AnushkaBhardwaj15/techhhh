@@ -41,7 +41,7 @@ export class PlayService {
     const state = await this.store.read(id, actor);
     const enrolled = await this.store.participants?.(id) ?? [];
     const connected = new Set(this.publish?.connectedParticipantIds?.(id) ?? []);
-    const participants = enrolled.map(person => ({ id: person.id, name: person.name, live: connected.has(person.id), points: state.wins.filter(win => win.participantId === person.participantId).reduce((total, win) => total + win.points, 0) })).sort((a, b) => b.points - a.points || a.name.localeCompare(b.name));
+    const participants = enrolled.map(person => ({ id: person.id, name: person.name, paymentDeclared: person.paymentDeclared ?? false, live: connected.has(person.id), points: state.wins.filter(win => win.participantId === person.participantId).reduce((total, win) => total + win.points, 0) })).sort((a, b) => b.points - a.points || a.name.localeCompare(b.name));
     return { participants, totalEnrolled: participants.length, livePlayers: participants.filter(person => person.live).length };
   }
   async list(actor: PlayActor) {
@@ -122,9 +122,14 @@ export class PlayService {
     );
     return this.read(id, actor);
   }
-  async join(code: string, actor: PlayActor) {
+  async declarePayment(id: string, actor: PlayActor, paymentDeclared: boolean) {
+    if (actor.role !== 'PARTICIPANT') throw new ForbiddenError();
+    await this.store.declarePayment(id, actor, paymentDeclared);
+    return this.read(id, actor);
+  }
+  async join(code: string, actor: PlayActor, paymentDeclared?: boolean) {
     if (actor.role !== "PARTICIPANT") throw new ForbiddenError();
-    const found = await this.store.findCode(code, actor);
+    const found = await this.store.findCode(code, actor, paymentDeclared);
     const roundId = typeof found === "string" ? found : found.id;
     const eventId = typeof found === "string" ? actor.eventId : found.eventId;
     const state = await this.store.read(roundId, { ...actor, eventId });

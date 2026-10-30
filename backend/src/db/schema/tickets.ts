@@ -1,4 +1,4 @@
-import { index, integer, pgTable, timestamp, unique, uuid } from 'drizzle-orm/pg-core';
+import { boolean, index, integer, pgTable, timestamp, unique, uuid } from 'drizzle-orm/pg-core';
 import { events } from './events.ts';
 import { rounds } from './rounds.ts';
 import { participantProfiles } from './users.ts';
@@ -8,6 +8,7 @@ export const tickets = pgTable(
   'tickets',
   {
     id: uuid('id').defaultRandom().primaryKey(),
+    paymentDeclared: boolean('payment_declared').notNull().default(false),
     roundId: uuid('round_id')
       .notNull()
       .references(() => rounds.id, { onDelete: 'restrict' }),

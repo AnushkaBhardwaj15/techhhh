@@ -796,6 +796,25 @@ Connection status must be visible to participants.
 
 ------------------------------------------------------------------------
 
+# 20A. Per-game ₹10 ticket declaration
+
+- Show the ₹10-per-game fee and prize-collection warning in the participant
+  entry flow, joined game, and public projector lobby: pay before the game
+  starts; unpaid winners cannot collect prizes. Joining unpaid stays enabled.
+- After code entry, offer an optional unchecked "I have paid ₹10 for this game"
+  checkbox. Manual entry, Quick Join, and scanned code links must offer the
+  same declaration choice; scanned links prefill the code for confirmation.
+- In the joined game, display the saved declaration and allow changes only
+  when the backend reports `paymentDeclarationOpen`. Disable updates once
+  started, including paused/completed/recovering games. Use backend state
+  after saves and reloads; never infer payment from local storage.
+- Show a per-game "Paid?" table in the shared Admin/Super Admin console, with
+  each participant's yes/no declaration and an explicit self-reported label.
+  Provide loading, error, and empty states. Do not add staff editing controls
+  or public participant payment lists.
+- Keep game actions and win verification unchanged. Explain that staff handle
+  prize collection and that the declaration is not verification of payment.
+
 # 21. WebSocket Reconnection
 
 A dropped connection must not destroy local game state.

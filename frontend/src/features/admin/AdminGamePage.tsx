@@ -20,7 +20,7 @@ export function AdminGamePage() {
     queryFn: ({ signal }) => listPlayRounds(signal),
   });
   const id = params.get("gameId") ?? rounds.data?.games[0]?.id ?? "";
-  const roster = useQuery({ queryKey: ['game-roster', id], enabled: !!id, queryFn: ({ signal }) => apiRequest<{ participants: Array<{ id: string; name: string; points: number; live: boolean }>; totalEnrolled: number; livePlayers: number }>(`/admin/play/rounds/${id}/participants`, { signal }), refetchInterval: 5000 });
+  const roster = useQuery({ queryKey: ['game-roster', id], enabled: !!id, queryFn: ({ signal }) => apiRequest<{ participants: Array<{ id: string; name: string; points: number; live: boolean; paymentDeclared: boolean }>; totalEnrolled: number; livePlayers: number }>(`/admin/play/rounds/${id}/participants`, { signal }), refetchInterval: 5000 });
   const state = usePlayState(id);
   const game = state.data;
   const [pending, setPending] = useState(false);
@@ -237,7 +237,6 @@ export function AdminGamePage() {
         <Link className={styles.consoleButton} to="/live" target="_blank" rel="noreferrer">Projector view ↗</Link>
         <button className={styles.consoleButton} disabled={broadcasting} onClick={() => void handleToggleBroadcast()}>{game.isBroadcast ? 'Visible in lobby' : 'Hidden in lobby'}</button>
       </nav>
-
       <div className={styles.consoleGrid}>
         <div className={styles.consoleMain}>
           {(lobby || showQr) && <section className={styles.lobbyPanel} aria-label="Game lobby">
@@ -286,6 +285,15 @@ export function AdminGamePage() {
         {!lobby && <div className={styles.playerPanels}><section className={styles.consolePanel}><h2>PLAYERS & STANDINGS</h2><p>{roster.data?.totalEnrolled ?? 0} enrolled</p>{roster.isPending ? <p>Loading players…</p> : roster.error ? <p role="alert">Could not load players.</p> : roster.data?.participants.length ? <ol className={styles.roster}>{roster.data.participants.map(row => <li key={row.id}>{row.name}<small className={row.live ? styles.playerLive : styles.playerOffline}> · {row.live ? 'Live' : 'Offline'}</small><strong>{row.points}</strong></li>)}</ol> : <p>No enrolled players yet.</p>}<Link to={`/admin/winners?gameId=${id}`}>View winners</Link></section>
             <section className={styles.consolePanel} aria-label="Live players"><h2>LIVE PLAYERS</h2><p>{roster.data?.livePlayers ?? 0} connected</p>{roster.isPending ? <p>Loading live players…</p> : roster.error ? <p role="alert">Could not load live players.</p> : roster.data?.participants.some(person => person.live) ? <ul className={styles.roster}>{roster.data.participants.filter(person => person.live).map(person => <li key={person.id}>{person.name}<small className={styles.playerLive}> · Live</small></li>)}</ul> : <p>No players connected right now.</p>}</section></div>}
       </div>
+      <section className={styles.consolePanel} aria-labelledby="payment-roster-title">
+        <h2 id="payment-roster-title">Paid? · ₹10 per game</h2>
+        <p>Participant declarations only; not verified payments. Unpaid winners cannot collect prizes. Staff handle prize collection.</p>
+        {roster.isPending ? <p role="status">Loading payment declarations…</p> : roster.error ? <p role="alert">Could not load payment declarations.</p> : !roster.data?.participants.length ? <p>No payment declarations yet.</p> :
+          <div className={styles.paymentTableWrap}><table className={styles.paymentTable} aria-label="This game's payment declarations">
+            <thead><tr><th scope="col">Participant</th><th scope="col">Paid?</th></tr></thead>
+            <tbody>{roster.data.participants.map(person => <tr key={person.id}><th scope="row">{person.name}</th><td>{person.paymentDeclared ? 'Yes — self-reported' : 'No — not declared'}</td></tr>)}</tbody>
+          </table></div>}
+      </section>
     </>}
   </main>;
 }

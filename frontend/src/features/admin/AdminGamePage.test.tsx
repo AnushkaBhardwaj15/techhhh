@@ -1,4 +1,5 @@
 import {
+  within,
   act,
   cleanup,
   fireEvent,
@@ -61,6 +62,33 @@ afterEach(() => {
   cleanup();
   client.clear();
   vi.unstubAllGlobals();
+});
+it('shows read-only payment declarations for the selected game', async () => {
+  vi.mocked(apiRequest).mockResolvedValueOnce({ participants: [
+    { id: 'paid', name: 'Paid Participant', points: 0, live: true, paymentDeclared: true },
+    { id: 'unpaid', name: 'Unpaid Participant', points: 0, live: false, paymentDeclared: false },
+  ], totalEnrolled: 2, livePlayers: 1 });
+  mount();
+  const table = await screen.findByRole('table', { name: "This game's payment declarations" });
+  expect(within(table).getByRole('row', { name: 'Paid Participant Yes — self-reported' })).toBeVisible();
+  expect(within(table).getByRole('row', { name: 'Unpaid Participant No — not declared' })).toBeVisible();
+  expect(within(table).queryByRole('checkbox')).not.toBeInTheDocument();
+  expect(within(table).queryByRole('button')).not.toBeInTheDocument();
+  expect(apiRequest).toHaveBeenCalledWith(`/admin/play/rounds/${game.id}/participants`, { signal: expect.any(AbortSignal) });
+});
+it('shows an empty payment section for a game with no joined participants', async () => {
+  mount();
+  expect(await screen.findByText('No payment declarations yet.')).toBeVisible();
+});
+it('shows an error if the game payment roster cannot be read', async () => {
+  vi.mocked(apiRequest).mockRejectedValueOnce(new ApiError(503, 'Unavailable'));
+  mount();
+  expect(await screen.findByText('Could not load payment declarations.')).toBeVisible();
+});
+it('shows payment roster loading while the server request is pending', async () => {
+  vi.mocked(apiRequest).mockImplementationOnce(() => new Promise(() => {}));
+  mount();
+  expect(await screen.findByText('Loading payment declarations…')).toBeVisible();
 });
 it("keeps call and answer reveal as separate deliberate commands", async () => {
   mount();

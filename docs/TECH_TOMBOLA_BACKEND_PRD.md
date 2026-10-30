@@ -110,6 +110,30 @@ The backend must:
 
 ------------------------------------------------------------------------
 
+# 3A. Manual ticket payment declaration (agreed requirement)
+
+- Each Round has a ₹10 ticket fee. Joining without payment is allowed.
+- Participants may optionally declare that they have paid ₹10 when joining,
+  and change their own declaration while that Round is READY. Declarations
+  are locked once the Round starts, including PAUSED, RECOVERY_REQUIRED,
+  and COMPLETED states. A late unpaid join remains allowed.
+- Persist the declaration per participant ticket and Round, defaulting to false.
+  Rejoining without a declaration preserves the saved value. Repeating the
+  same declaration is idempotent; attempts to change it after start return 409.
+- Serialize payment changes and Round start using the same database Round lock.
+- Admin and Super Admin can read declarations in each Round's participant
+  roster. They cannot change declarations or access a participant update API.
+- This is self-reported payment, not verified receipt. Unpaid winners are not
+  entitled to collect prizes; staff handle collection checks. Do not change
+  claim eligibility, winner evaluation, verification, tickets, or draw rules.
+- POST `/api/v1/participant/play/join` accepts optional boolean
+  `paymentDeclared`. PUT `/api/v1/participant/play/rounds/:id/payment-declaration`
+  accepts required boolean `paymentDeclared` for the authenticated participant.
+  Invalid bodies return 400, wrong roles 403, missing/unjoined tickets 404,
+  and locked changes 409. Never accept a participant ID from the client.
+- No payment gateway, transaction processing, refund workflow, or staff payment
+  editing is introduced. Existing historical tickets default to not declared.
+
 # 4. Non-Goals
 
 The backend MVP does not include:

@@ -50,6 +50,15 @@ afterEach(() => {
   vi.useRealTimers();
 });
 describe("reference live display", () => {
+  it('announces the per-game ticket fee and unpaid prize restriction in the projector lobby', async () => {
+    game.status = 'READY'; game.draws = [];
+    mount();
+    const notice = screen.getByLabelText('Ticket fee and prize rules');
+    expect(notice).toHaveTextContent('₹10 ticket per game');
+    expect(notice).toHaveTextContent('unpaid winners cannot collect prizes');
+    expect(notice).toHaveTextContent('Payments close when the game starts');
+    await screen.findByText('READY');
+  });
   it("shows clue and code while hiding unrevealed answers", async () => {
     mount();
     expect(

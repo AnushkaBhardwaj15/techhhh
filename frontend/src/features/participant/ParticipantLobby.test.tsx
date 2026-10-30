@@ -190,12 +190,51 @@ describe('ParticipantLobby', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Invalid game code provided.');
   });
 
-  it('automatically verifies scanned game code from URL query parameter', async () => {
+  it('prefills a scanned code and offers payment declaration before joining', async () => {
     renderLobby({ initialEntries: ['/participant/lobby?code=SCAN12'] });
-
+    expect(await screen.findByLabelText(/Enter or confirm 6-character game code/i)).toHaveValue('SCAN12');
+    expect(gameSync.validateGameCode).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('checkbox', { name: 'I have paid ₹10 for this game' }));
+    fireEvent.click(screen.getByRole('button', { name: 'VERIFY & JOIN' }));
     await waitFor(() => {
-      expect(gameSync.validateGameCode).toHaveBeenCalledWith('SCAN12');
+      expect(gameSync.validateGameCode).toHaveBeenCalledWith('SCAN12', true);
     });
+  });
+
+  it('allows unpaid entry while explaining the prize restriction', async () => {
+    renderLobby();
+    expect(screen.getByRole('checkbox', { name: 'I have paid ₹10 for this game' })).not.toBeChecked();
+    expect(screen.getByLabelText('Ticket fee and prize rules')).toHaveTextContent('unpaid winners cannot collect prizes');
+    fireEvent.click(await screen.findByRole('button', { name: /QUICK JOIN GAME/i }));
+    await waitFor(() => expect(gameSync.validateGameCode).toHaveBeenCalledWith('TOM123'));
+  });
+
+  it('locks the declaration choice for an already started advertised game', async () => {
+    renderLobby();
+    await screen.findByText('Tech Tambola Live Arena');
+    expect(screen.getByRole('checkbox', { name: 'I have paid ₹10 for this game' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /QUICK JOIN GAME/i })).toBeEnabled();
+  });
+
+  it('sends a paid declaration through quick join before start', async () => {
+    const ready = { ...activeGameRecord, status: 'READY' as const };
+    vi.mocked(gameSync.fetchActiveGame).mockResolvedValue({ game: ready, games: [ready] });
+    vi.mocked(gameSync.subscribeToGameSync).mockImplementation(callback => { callback(ready); return () => {}; });
+    renderLobby();
+    await screen.findByText('Tech Tambola Live Arena');
+    fireEvent.click(screen.getByRole('checkbox', { name: 'I have paid ₹10 for this game' }));
+    fireEvent.click(screen.getByRole('button', { name: /QUICK JOIN GAME/i }));
+    await waitFor(() => expect(gameSync.validateGameCode).toHaveBeenCalledWith('TOM123', true));
+  });
+  it('prevents Quick Join from changing the target of a checked declaration', async () => {
+    renderLobby();
+    await screen.findByText('Tech Tambola Live Arena');
+    fireEvent.change(screen.getByLabelText(/Enter or confirm 6-character game code/i), { target: { value: 'OTHER1' } });
+    fireEvent.click(screen.getByRole('checkbox', { name: 'I have paid ₹10 for this game' }));
+    expect(screen.getByRole('button', { name: /QUICK JOIN GAME/i })).toBeDisabled();
+    expect(screen.getByText(/Clear the entered code to use it/)).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: 'VERIFY & JOIN' }));
+    await waitFor(() => expect(gameSync.validateGameCode).toHaveBeenCalledWith('OTHER1', true));
   });
 
   it('redirects to lobby if accessing waiting screen without verified session', async () => {

@@ -8,7 +8,7 @@ import {
   ValidationError,
 } from "../../shared/errors/index.ts";
 import { DEFAULT_TECHNICAL_BANK } from "./technical-bank.ts";
-import { generateReferenceCells, PLAY_POINTS } from "./play.domain.ts";
+import { assertPaymentDeclarationChange, generateReferenceCells, PLAY_POINTS } from "./play.domain.ts";
 import {
   PLAY_PATTERNS,
   type PlayActor,
@@ -36,8 +36,8 @@ export class PlayRepository implements PlayStore {
 
     });
   }
-  async participants(id: string): Promise<Array<{ id: string; name: string; participantId: string }>> {
-    return this.connection().unsafe<Array<{ id: string; name: string; participantId: string }>>(`SELECT DISTINCT u.id,u.name,p.id AS "participantId" FROM tickets t JOIN participant_profiles p ON p.id=t.participant_id JOIN users u ON u.id=p.user_id WHERE t.round_id=$1 AND t.joined_at IS NOT NULL ORDER BY u.name,u.id`, [id]);
+  async participants(id: string): Promise<Array<{ id: string; name: string; participantId: string; paymentDeclared: boolean }>> {
+    return this.connection().unsafe<Array<{ id: string; name: string; participantId: string; paymentDeclared: boolean }>>(`SELECT DISTINCT u.id,u.name,p.id AS "participantId",t.payment_declared AS "paymentDeclared" FROM tickets t JOIN participant_profiles p ON p.id=t.participant_id JOIN users u ON u.id=p.user_id WHERE t.round_id=$1 AND t.joined_at IS NOT NULL ORDER BY u.name,u.id`, [id]);
   }
   async list(_actor?: PlayActor): Promise<PlaySummary[]> {
     const rows = await this.connection().unsafe<
@@ -51,10 +51,25 @@ export class PlayRepository implements PlayStore {
       isBroadcast: Boolean(r.isBroadcast),
     }));
   }
-  async findCode(code: string, actor: PlayActor) {
+  async declarePayment(id: string, actor: PlayActor, paymentDeclared: boolean): Promise<void> {
+    await this.connection().begin(async tx => {
+      const [round] = await tx.unsafe<{ status: PlayState['status'] }[]>(
+        'SELECT status FROM rounds WHERE id=$1 AND archived_at IS NULL AND game_code IS NOT NULL FOR UPDATE', [id],
+      );
+      if (!round) throw new NotFoundError('Round not found.');
+      const [ticket] = await tx.unsafe<{ id: string; paymentDeclared: boolean }[]>(
+        `SELECT t.id,t.payment_declared AS "paymentDeclared" FROM tickets t JOIN participant_profiles p ON p.id=t.participant_id JOIN users u ON u.id=p.user_id WHERE t.round_id=$1 AND p.user_id=$2 AND p.status='ACTIVE' AND u.status='ACTIVE' AND t.joined_at IS NOT NULL`,
+        [id, actor.userId],
+      );
+      if (!ticket) throw new NotFoundError('Join this game before declaring payment.');
+      assertPaymentDeclarationChange(round.status, ticket.paymentDeclared, paymentDeclared);
+      await tx.unsafe('UPDATE tickets SET payment_declared=$2 WHERE id=$1', [ticket.id, paymentDeclared]);
+    });
+  }
+  async findCode(code: string, actor: PlayActor, paymentDeclared?: boolean) {
     return this.connection().begin(async (tx) => {
-      const rounds = await tx.unsafe<{ id: string; event_id: string; status: string }[]>(
-        `SELECT id, event_id, status FROM rounds WHERE archived_at IS NULL AND game_code=$1`,
+      const rounds = await tx.unsafe<{ id: string; event_id: string; status: PlayState['status'] }[]>(
+        `SELECT id, event_id, status FROM rounds WHERE archived_at IS NULL AND game_code=$1 FOR UPDATE`,
         [code],
       );
       if (!rounds[0])
@@ -89,6 +104,13 @@ export class PlayRepository implements PlayStore {
           );
           if (!hasTicket.length) {
             await this.allocateTickets(tx, round.id, round.event_id, [profile.id]);
+          }
+          if (paymentDeclared !== undefined) {
+            const [ticket] = await tx.unsafe<{ paymentDeclared: boolean }[]>(
+              `SELECT payment_declared AS "paymentDeclared" FROM tickets WHERE participant_id=$1 AND round_id=$2`, [profile.id, round.id],
+            );
+            assertPaymentDeclarationChange(round.status, ticket?.paymentDeclared ?? false, paymentDeclared);
+            await tx.unsafe('UPDATE tickets SET payment_declared=$3 WHERE participant_id=$1 AND round_id=$2', [profile.id, round.id, paymentDeclared]);
           }
           await tx.unsafe(
             `UPDATE tickets SET joined_at=COALESCE(joined_at,now()) WHERE participant_id=$1 AND round_id=$2`,
@@ -655,8 +677,8 @@ export class PlayRepository implements PlayStore {
         throw new ForbiddenError(
           "Participant account is not active in this Event.",
         );
-      let [row] = await sql.unsafe<{ id: string }[]>(
-        "SELECT id FROM tickets WHERE participant_id=$1 AND round_id=$2",
+      let [row] = await sql.unsafe<{ id: string; paymentDeclared: boolean }[]>(
+        'SELECT id,payment_declared AS "paymentDeclared" FROM tickets WHERE participant_id=$1 AND round_id=$2',
         [profile.id, id],
       );
       if (!row && ["READY", "ACTIVE", "PAUSED"].includes(round.status)) {
@@ -665,8 +687,8 @@ export class PlayRepository implements PlayStore {
           `INSERT INTO tickets(id, participant_id, round_id, event_id) VALUES($1, $2, $3, $4) ON CONFLICT DO NOTHING`,
           [ticketId, profile.id, id, round.eventId],
         );
-        const [assigned] = await sql.unsafe<{ id: string }[]>(
-          "SELECT id FROM tickets WHERE participant_id=$1 AND round_id=$2",
+        const [assigned] = await sql.unsafe<{ id: string; paymentDeclared: boolean }[]>(
+          'SELECT id,payment_declared AS "paymentDeclared" FROM tickets WHERE participant_id=$1 AND round_id=$2',
           [profile.id, id],
         );
         if (assigned) {
@@ -700,7 +722,7 @@ export class PlayRepository implements PlayStore {
           `SELECT c.id,c.key_id AS "keyId",k.item_number AS number,k.value AS term,c.row_index AS row,c.col_index AS column,(m.id IS NOT NULL) AS marked FROM ticket_cells c JOIN event_keys k ON k.id=c.key_id LEFT JOIN ticket_marks m ON m.ticket_id=c.ticket_id AND m.cell_id=c.id WHERE c.ticket_id=$1 ORDER BY c.row_index,c.col_index`,
           [row.id],
         );
-        ticket = { id: row.id, participantId: profile.id, cells };
+        ticket = { id: row.id, participantId: profile.id, cells, paymentDeclared: row.paymentDeclared };
       }
     }
     return {

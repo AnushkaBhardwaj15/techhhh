@@ -178,5 +178,22 @@ describe.skipIf(!url)(
         (await service.current()).game!.draws.every((d) => d.answer === null),
       ).toBe(true);
     }, 60000);
+    test('payment declarations race safely with starting the same round', async () => {
+      const game = await service.create(admin, 'payment-race-game');
+      await service.join(game.code, players[0]!);
+      const [payment, start] = await Promise.allSettled([
+        service.declarePayment(game.id, players[0]!, true),
+        service.command(game.id, admin, { action: 'start' }, 'payment-race-start'),
+      ]);
+      expect(start.status).toBe('fulfilled');
+      const saved = await service.read(game.id, players[0]!);
+      expect(saved.status).toBe('ACTIVE');
+      if (payment.status === 'fulfilled') expect(saved.ticket?.paymentDeclared).toBe(true);
+      else {
+        expect(payment.reason).toMatchObject({ statusCode: 409 });
+        expect(saved.ticket?.paymentDeclared).toBe(false);
+      }
+      await expect(service.declarePayment(game.id, players[0]!, !saved.ticket?.paymentDeclared)).rejects.toMatchObject({ statusCode: 409 });
+    }, 60000);
   },
 );

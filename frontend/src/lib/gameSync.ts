@@ -54,10 +54,11 @@ export type CodeValidation =
   | { valid: false; message: string; matchedCode: string };
 export async function validateGameCode(
   code: string,
+  paymentDeclared?: boolean,
 ): Promise<CodeValidation> {
   const clean = code.trim().toUpperCase();
   try {
-    const game = await joinPlayRound(clean);
+    const game = await joinPlayRound(clean, paymentDeclared);
     return { valid: true, activeGame: summary(game), matchedCode: clean };
   } catch (error) {
     if (

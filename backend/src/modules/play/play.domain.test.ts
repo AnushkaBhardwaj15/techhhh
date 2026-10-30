@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { DEFAULT_TECHNICAL_BANK } from "./technical-bank.ts";
 import {
   callQuestion,
+  assertPaymentDeclarationChange,
   changePlayStatus,
   claimPrize,
   generateReferenceCells,
@@ -11,6 +12,21 @@ import {
   togglePlayMark,
 } from "./play.domain.ts";
 import { PLAY_PATTERNS, type PlayState } from "./play.types.ts";
+
+describe('payment declaration policy', () => {
+  test('allows declarations and corrections before start', () => {
+    expect(() => assertPaymentDeclarationChange('READY', false, true)).not.toThrow();
+    expect(() => assertPaymentDeclarationChange('READY', true, false)).not.toThrow();
+  });
+  for (const status of ['ACTIVE', 'PAUSED', 'RECOVERY_REQUIRED', 'COMPLETED'] as const) {
+    test(`locks changes in ${status} while allowing identical retries`, () => {
+      expect(() => assertPaymentDeclarationChange(status, false, true)).toThrow('close when the game starts');
+      expect(() => assertPaymentDeclarationChange(status, true, false)).toThrow('close when the game starts');
+      expect(() => assertPaymentDeclarationChange(status, true, true)).not.toThrow();
+      expect(() => assertPaymentDeclarationChange(status, false, false)).not.toThrow();
+    });
+  }
+});
 
 // Scenarios: reference bank, layout bands/rows/corners, immutable layouts, invalid
 // inputs, transitions, duplicate/exhausted calls, hidden/revealed answers, manual

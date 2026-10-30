@@ -35,12 +35,14 @@ const cell = z.object({
   marked: z.boolean(),
 });
 export const playStateSchema = summary.extend({
+  paymentDeclarationOpen: z.boolean().optional(),
   closingSequence: z.number().nullable(),
   score: z.number().nullable(),
   ticket: z
     .object({
       id: z.string().uuid(),
       participantId: z.string().uuid(),
+      paymentDeclared: z.boolean().optional(),
       cells: z.array(cell).length(15),
     })
     .nullable(),

@@ -6,6 +6,7 @@ import { getLiveDraws, getLiveEvent, getLiveRound } from '../../lib/api/liveDisp
 import { cancelOnReducedMotion } from '../../lib/reducedMotion';
 import { useLiveDisplayRealtime } from '../../lib/websocket/useLiveDisplayRealtime';
 import { usePlayState } from '../participant/usePlayState';
+import { GamePaymentNotice } from '../../components/GamePaymentNotice';
 import styles from './LiveDisplay.module.css';
 import play from '../participant/ReferencePlay.module.css';
 
@@ -94,6 +95,7 @@ export function LiveDisplay() {
           </span>
         </div>
       </header>
+      <GamePaymentNotice projector />
 
       {playQuery.isPending && (
         <div className={styles.statusNotice}>

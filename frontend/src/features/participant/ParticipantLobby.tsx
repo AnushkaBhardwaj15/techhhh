@@ -16,6 +16,7 @@ import { getParticipantTicket } from "../../lib/api/ticket";
 import { SampleTicketDemo } from "../landing/components/SampleTicketDemo";
 import { useAuthUiStore } from "../auth/authStore";
 import { ActionButton } from "../../components/ActionButton";
+import { GamePaymentNotice } from "../../components/GamePaymentNotice";
 import {
   fetchActiveGame,
   subscribeToGameSync,
@@ -75,6 +76,9 @@ export function ParticipantLobby({ waiting = false }: { waiting?: boolean }) {
   );
   const [errorMsg, setErrorMsg] = useState("");
   const [customCode, setCustomCode] = useState("");
+  const [paymentDeclared, setPaymentDeclared] = useState(false);
+  const declarationCode = (customCode || activeGame?.code || '').trim().toUpperCase();
+  const declarationLocked = !!activeGame && declarationCode === activeGame.code && activeGame.status !== 'READY';
   const [joining, setJoining] = useState(false);
   const joinInFlight = useRef(false);
   const scannedCode = useRef("");
@@ -143,7 +147,9 @@ export function ParticipantLobby({ waiting = false }: { waiting?: boolean }) {
       joinInFlight.current = true;
       setJoining(true);
       try {
-        const result = await validateGameCode(clean);
+        const result = paymentDeclared && !declarationLocked && declarationCode === clean
+          ? await validateGameCode(clean, true)
+          : await validateGameCode(clean);
         if (!result.valid) {
           setErrorMsg(
             result.message ||
@@ -177,18 +183,17 @@ export function ParticipantLobby({ waiting = false }: { waiting?: boolean }) {
         setJoining(false);
       }
     },
-    [ticket.data?.id, user.id, navigate],
+    [ticket.data?.id, user.id, navigate, declarationCode, declarationLocked, paymentDeclared],
   );
 
-  // Preserve scanned links; process a given query code only once per page visit.
+  // Scanned links prefill the code so participants can declare payment first.
   useEffect(() => {
     const code = params.get("code");
     if (!waiting && code && scannedCode.current !== code) {
       scannedCode.current = code;
       setCustomCode(code.toUpperCase());
-      void verifyCode(code);
     }
-  }, [params, waiting, verifyCode]);
+  }, [params, waiting]);
 
   function handleCustomSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -213,6 +218,7 @@ export function ParticipantLobby({ waiting = false }: { waiting?: boolean }) {
             The game will start when the admin starts your game. We’ll take you
             there automatically.
           </p>
+          <GamePaymentNotice />
           <div className={styles.waitingStatus} role="status">
             <span className={styles.waitingDot} aria-hidden="true" />
             <div>
@@ -269,6 +275,7 @@ export function ParticipantLobby({ waiting = false }: { waiting?: boolean }) {
         </div>
       )}
       <div className={styles.outerCard}>
+        <GamePaymentNotice />
         {/* DIRECT QUICK JOIN BANNER: DISPLAYED ONLY WHEN HOST TURNS ON BROADCAST */}
         {activeGame && activeGame.isBroadcast && (
           <div className={styles.activeGameCard}>
@@ -298,16 +305,6 @@ export function ParticipantLobby({ waiting = false }: { waiting?: boolean }) {
                 </button>
               </div>
 
-              <ActionButton
-                type="button"
-                busy={joining}
-                className={styles.primaryJoinBtn}
-                onClick={() => verifyCode(activeGame.code)}
-              >
-                {joining
-                  ? "JOINING…"
-                  : `QUICK JOIN GAME (#${activeGame.code}) →`}
-              </ActionButton>
             </div>
           </div>
         )}
@@ -333,12 +330,20 @@ export function ParticipantLobby({ waiting = false }: { waiting?: boolean }) {
                 value={customCode}
                 onChange={(e) => {
                   setCustomCode(e.target.value.toUpperCase());
+                  setPaymentDeclared(false);
                   setErrorMsg("");
                 }}
                 placeholder={activeGame?.isBroadcast ? `e.g. ${activeGame.code}` : "e.g. 1A2B3C"}
                 className={styles.customCodeInput}
                 autoCapitalize="characters"
               />
+            </div>
+            <label className={styles.paymentCheckbox}>
+              <input type="checkbox" checked={paymentDeclared && !declarationLocked} disabled={joining || declarationLocked}
+                onChange={event => setPaymentDeclared(event.target.checked)} aria-describedby="join-payment-help" />
+              I have paid ₹10 for this game
+            </label>
+            <p id="join-payment-help" className={styles.paymentHelp}>Optional. You can join unpaid, but unpaid winners cannot collect prizes. Declarations can only be changed before the game starts.</p>
               <ActionButton
                 type="submit"
                 busy={joining}
@@ -346,7 +351,13 @@ export function ParticipantLobby({ waiting = false }: { waiting?: boolean }) {
               >
                 {joining ? "JOINING…" : "VERIFY & JOIN"}
               </ActionButton>
-            </div>
+            {activeGame?.isBroadcast && customCode.trim() !== '' && customCode.trim().toUpperCase() !== activeGame.code &&
+              <p className={styles.paymentHelp}>Quick Join is for game {activeGame.code}. Clear the entered code to use it.</p>}
+            {activeGame?.isBroadcast && <ActionButton type="button" busy={joining} className={styles.primaryJoinBtn}
+              disabled={customCode.trim() !== '' && customCode.trim().toUpperCase() !== activeGame.code}
+              onClick={() => void verifyCode(activeGame.code)}>
+              {joining ? 'JOINING…' : `QUICK JOIN GAME (#${activeGame.code}) →`}
+            </ActionButton>}
           </form>
 
           {errorMsg && (

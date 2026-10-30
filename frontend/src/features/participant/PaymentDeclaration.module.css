@@ -1,0 +1,6 @@
+.section { margin-block: 16px; padding-block: 12px; border-block: 1px solid currentColor; }
+.section p { margin: 8px 0 0; line-height: 1.6; font-size: 14px; }
+.checkbox { display: flex; align-items: center; gap: 12px; min-height: 44px; font-weight: 700; cursor: pointer; }
+.checkbox input { width: 20px; height: 20px; flex-shrink: 0; accent-color: var(--neo-orange, #b84312); }
+.checkbox input:focus-visible { outline: 3px solid currentColor; outline-offset: 4px; }
+.warning { font-weight: 700; }

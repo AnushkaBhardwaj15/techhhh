@@ -1,0 +1,18 @@
+.notice {
+  border-left: 4px solid var(--neo-orange, #b84312);
+  padding: 12px 16px;
+  margin-block: 16px;
+  background: var(--color-surface, #fffdf7);
+  color: var(--color-text-primary, #191714);
+  font-size: 15px;
+  line-height: 1.6;
+}
+.notice strong { font-size: 18px; }
+.notice p { margin: 4px 0 0; }
+.projector {
+  margin: 0;
+  background: #fff1d6;
+  color: #191714;
+  font-size: clamp(18px, 1.8vw, 28px);
+}
+.projector strong { font-size: clamp(24px, 2.5vw, 40px); }
