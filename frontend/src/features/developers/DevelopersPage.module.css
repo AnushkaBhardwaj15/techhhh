@@ -357,7 +357,16 @@
   }
 
   .navContainer {
-    flex-wrap: wrap;
+    padding: 10px 14px;
+  }
+
+  .navCenter {
+    display: none;
+  }
+
+  .backLink {
+    padding: 5px 10px;
+    font-size: 13px;
   }
 
   .footerContainer {

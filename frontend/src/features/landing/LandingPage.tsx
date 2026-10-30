@@ -47,6 +47,13 @@ export function LandingPage() {
           </nav>
 
           <div className={styles.navActions}>
+            <Link
+              to="/meet-the-developer"
+              className={styles.navMobileDevLink}
+              aria-label="Meet the Developers"
+            >
+              Meet Devs
+            </Link>
             <Link to={destination} className={styles.navCta}>
               {ctaText}
               <span aria-hidden="true">→</span>
@@ -83,7 +90,10 @@ export function LandingPage() {
                   <span>{ctaText}</span>
                   <span className={styles.buttonArrow} aria-hidden="true">↗</span>
                 </Link>
-
+                <Link to="/meet-the-developer" className={styles.secondaryButton}>
+                  <span>MEET THE DEVELOPER</span>
+                  <span className={styles.buttonArrow} aria-hidden="true">→</span>
+                </Link>
               </div>
 
               {/* Statistics & Confidence Strip */}
