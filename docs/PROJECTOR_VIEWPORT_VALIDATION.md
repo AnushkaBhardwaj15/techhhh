@@ -15,12 +15,20 @@ declaration feature at `220565e`.
 
 Validation:
 
-- **20 component/unit tests passed**, covering QR link, no-game state, answer
+- **25 component/unit tests passed**, covering QR link, no-game state, answer
   visibility, existing updates/retry/cleanup and payment notice.
-- **10 projector browser tests passed** in Edge: lobby and long clue with code,
+- **11 projector browser tests passed** in Edge: lobby and long clue with code,
   answer and seven standings at 1920×1080, 1366×768, 1280×720, 1024×600; portrait
   390×844; and a 40-line snippet on 1024×600. Tests measure document scrolling,
   actual content overflow, QR/panel bounds, QR size and heading contrast.
+- A READY game previously borrowed the legacy live feed's historical final
+  draw when its own draw list was empty. Regression tests reproduced READY
+  and ACTIVE current games mixing with another cached Round's #90 clue.
+  The current-game snapshot now owns the whole frame. READY displays the
+  lobby; legacy fallback activates only after a successful no-current-game
+  response. A browser test verifies an old legacy clue transitions to the
+  new READY lobby/code/QR without a reload. Pending requests do not display
+  cached legacy metadata, and genuine legacy-only playback still works.
 - The **five payment browser regressions passed** with the new layout.
 - Frontend build, TypeScript and changed-file ESLint passed. Screenshots of
   lobby, active clue and portrait layouts were inspected.

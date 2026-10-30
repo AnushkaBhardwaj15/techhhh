@@ -20,15 +20,17 @@ export function LiveDisplay() {
   // 1. Source A: Reference Play state from /live/play
   const playQuery = usePlayState("", true);
   const refGame = playQuery.data;
-  const refLatest = refGame?.draws?.at(-1);
+  const refLatest = refGame?.status === 'READY' ? undefined : refGame?.draws?.at(-1);
+  const useLegacyFeed = playQuery.isSuccess && !refGame;
 
   // 2. Source B: Authoritative Live Event / Round / Draws
-  const event = useQuery({ queryKey: eventKey, queryFn: ({ signal }) => getLiveEvent(signal), refetchInterval: 5_000 });
-  const round = useQuery({ queryKey: roundKey, queryFn: ({ signal }) => getLiveRound(signal), refetchInterval: 3_000 });
+  const event = useQuery({ queryKey: eventKey, queryFn: ({ signal }) => getLiveEvent(signal), enabled: useLegacyFeed, refetchInterval: 5_000 });
+  const round = useQuery({ queryKey: roundKey, queryFn: ({ signal }) => getLiveRound(signal), enabled: useLegacyFeed, refetchInterval: 3_000 });
   const activeRoundId = round.data?.id;
   const authDraws = useQuery({
     queryKey: [...drawsKey, activeRoundId ?? 'none'],
     queryFn: ({ signal }) => getLiveDraws(signal),
+    enabled: useLegacyFeed && !!activeRoundId && round.data?.status !== 'READY',
     refetchInterval: 2_000,
   });
 
@@ -37,17 +39,19 @@ export function LiveDisplay() {
     void queryClient.invalidateQueries({ queryKey: key });
   }, [queryClient]);
 
-  useLiveDisplayRealtime(event.data?.id, round.data?.id, round.data?.eventId, round.data?.status, refresh);
+  useLiveDisplayRealtime(useLegacyFeed ? event.data?.id : undefined, useLegacyFeed ? round.data?.id : undefined,
+    useLegacyFeed ? round.data?.eventId : undefined, useLegacyFeed ? round.data?.status : undefined, refresh);
 
-  // Merge & resolve the active question
-  const authDrawList = activeRoundId && authDraws.data?.roundId === activeRoundId ? authDraws.data.data : [];
+  // A current game snapshot owns the entire frame, including an empty draw list.
+  // Never fill a new game's lobby with a cached legacy round's final clue.
+  const authDrawList = useLegacyFeed && round.data?.status !== 'READY' && activeRoundId && authDraws.data?.roundId === activeRoundId ? authDraws.data.data : [];
   const latestAuthDraw = authDrawList.length
     ? [...authDrawList].sort((a, b) => b.sequenceNumber - a.sequenceNumber)[0]
     : undefined;
 
   // Determine game info & current question
-  const gameName = refGame?.name ?? round.data?.name ?? event.data?.title ?? 'Tech Tambola Live';
-  const gameStatus = refGame?.status ?? round.data?.status ?? 'ACTIVE';
+  const gameName = refGame?.name ?? (useLegacyFeed ? round.data?.name ?? event.data?.title : undefined) ?? 'Tech Tambola Live';
+  const gameStatus = refGame?.status ?? (useLegacyFeed ? round.data?.status : undefined) ?? 'WAITING';
 
   const activeQuestion = refLatest
     ? {

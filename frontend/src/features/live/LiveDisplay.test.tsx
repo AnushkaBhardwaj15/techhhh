@@ -3,6 +3,7 @@ import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { readPublicPlay } from "../../lib/api/play";
+import { getLiveRound, getLiveDraws } from '../../lib/api/liveDisplay';
 import { playFixture } from "../participant/playFixture";
 import { LiveDisplay } from "./LiveDisplay";
 vi.mock("../../lib/api/play", () => ({
@@ -29,8 +30,9 @@ class Socket {
 }
 let game = playFixture();
 let client: QueryClient;
-function mount() {
+function mount(seed?: (client: QueryClient) => void) {
   client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  seed?.(client);
   return render(
     <MemoryRouter>
       <QueryClientProvider client={client}>
@@ -46,6 +48,8 @@ beforeEach(() => {
   game = playFixture();
   game.ticket = null;
   game.score = null;
+  vi.mocked(getLiveRound).mockResolvedValue(null);
+  vi.mocked(getLiveDraws).mockResolvedValue({ roundId: null, data: [] });
   vi.mocked(readPublicPlay).mockImplementation(async () => ({
     game: structuredClone(game),
     games: [game],
@@ -58,6 +62,48 @@ afterEach(() => {
   vi.useRealTimers();
 });
 describe("reference live display", () => {
+  it.each(['READY', 'ACTIVE'] as const)('does not mix a %s current game with another round\'s historical draw', async status => {
+    game.status = status; game.draws = [];
+    const oldId = '22222222-2222-4222-8222-222222222222';
+    const oldRound = { id: oldId, eventId: game.eventId, sequenceNumber: 1, name: 'Previous game', status: 'COMPLETED' as const, updatedAt: game.createdAt };
+    const oldDraws = { roundId: oldId, data: [{ id: '33333333-3333-4333-8333-333333333333', roundId: oldId, sequenceNumber: 90,
+      drawMode: 'RANDOM' as const, question: 'Historical final clue from another game', key: 'OLD_KEY', drawnAt: game.createdAt }] };
+    vi.mocked(getLiveRound).mockResolvedValue(oldRound);
+    vi.mocked(getLiveDraws).mockResolvedValue(oldDraws);
+    mount(cache => {
+      cache.setQueryData(['live', 'round'], oldRound);
+      cache.setQueryData(['live', 'draws', oldId], oldDraws);
+    });
+    await screen.findByText(status);
+    expect(screen.queryByText('Historical final clue from another game')).not.toBeInTheDocument();
+    expect(screen.queryByText('CALL #90')).not.toBeInTheDocument();
+    expect(screen.getByText('ABC123')).toBeVisible();
+  });
+  it('shows the lobby for READY even if its snapshot still contains a historical draw', async () => {
+    game.status = 'READY';
+    mount();
+    await screen.findByText('READY');
+    expect(screen.queryByText('Which tool runs containers?')).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Join the game. Get your ticket ready.' })).toBeVisible();
+  });
+  it('continues to show the genuine legacy live feed when no current game exists', async () => {
+    const legacyId = '22222222-2222-4222-8222-222222222222';
+    vi.mocked(readPublicPlay).mockResolvedValue({ game: null, games: [] });
+    vi.mocked(getLiveRound).mockResolvedValue({ id: legacyId, eventId: game.eventId, sequenceNumber: 1,
+      name: 'Legacy live round', status: 'ACTIVE', updatedAt: game.createdAt });
+    vi.mocked(getLiveDraws).mockResolvedValue({ roundId: legacyId, data: [{ id: '33333333-3333-4333-8333-333333333333',
+      roundId: legacyId, sequenceNumber: 1, drawMode: 'RANDOM', question: 'Current legacy clue', key: 'HIDDEN_KEY', drawnAt: game.createdAt }] });
+    mount();
+    expect(await screen.findByRole('heading', { name: 'Current legacy clue' })).toBeVisible();
+    expect(screen.queryByText('HIDDEN_KEY')).not.toBeInTheDocument();
+  });
+  it('does not show cached legacy draws while the current-game request is pending', async () => {
+    vi.mocked(readPublicPlay).mockImplementation(() => new Promise(() => {}));
+    mount(cache => cache.setQueryData(['live', 'round'], { id: 'old', name: 'Old game', status: 'ACTIVE' }));
+    expect(screen.getByRole('status')).toHaveTextContent('Loading');
+    expect(screen.queryByText('Old game')).not.toBeInTheDocument();
+    expect(getLiveRound).not.toHaveBeenCalled();
+  });
   it('shows the backend game code and matching join link with a QR in the lobby', async () => {
     game.status = 'READY'; game.draws = [];
     mount();

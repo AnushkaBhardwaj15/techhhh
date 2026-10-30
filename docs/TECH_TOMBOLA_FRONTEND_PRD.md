@@ -1296,6 +1296,10 @@ Use large typography and strong contrast.
   `/lobby?code=<code>` URL on the current deployment origin.
 - Never fabricate a code or show a previous game's QR when no game is loaded.
   Keep unrevealed keys private and all game rules server-authoritative.
+- A current game snapshot owns the entire projector frame. READY shows the
+  pre-start lobby, never a clue. An empty current-game draw list must not fall
+  back to a historical draw from another feed or cached Round. Use the legacy
+  live feed only when the current-game endpoint successfully reports no game.
 - The projector must fit one viewport without horizontal or vertical scrolling
   at 1920×1080, 1366×768, 1280×720 and 1024×600. Preserve compact mobile support.
 - Keep the code, QR, fee/prize warning, clue, optional code snippet, revealed

@@ -69,3 +69,30 @@ test('a forty-line code snippet fits completely on a short projector without cli
   expect(await page.locator('pre').evaluate(element => element.scrollHeight <= element.clientHeight + 1)).toBe(true);
   await page.screenshot({ path: 'test-results/projector-long-snippet.png' });
 });
+
+test('a new READY game replaces a legacy final clue with its own lobby, code and QR', async ({ page }) => {
+  await page.setViewportSize({ width: 1366, height: 768 });
+  await feed(page, true);
+  const current = playFixture(); current.status = 'READY'; current.draws = []; current.ticket = null;
+  current.code = '2BEA7E'; current.name = 'New unstarted game';
+  const oldId = '22222222-2222-4222-8222-222222222222';
+  let publishCurrent = false;
+  await page.route('**/api/v1/live/play', route => route.fulfill({ contentType: 'application/json', body: JSON.stringify({ game: publishCurrent ? current : null, games: publishCurrent ? [current] : [] }) }));
+  await page.route('**/api/v1/live/round', route => route.fulfill({ contentType: 'application/json', body: JSON.stringify({ round: {
+    id: oldId, eventId: current.eventId, name: 'Previous round', sequenceNumber: 1, status: 'ACTIVE', updatedAt: current.createdAt,
+  } }) }));
+  await page.route('**/api/v1/live/draws', route => route.fulfill({ contentType: 'application/json', body: JSON.stringify({ roundId: oldId, data: [{
+    id: '33333333-3333-4333-8333-333333333333', roundId: oldId, sequenceNumber: 90, drawMode: 'RANDOM',
+    question: 'Previous round final clue', key: 'PRIVATE_OLD_KEY', drawnAt: current.createdAt,
+  }] }) }));
+  await page.goto('/live');
+  await expect(page.getByRole('heading', { name: 'Previous round final clue' })).toBeVisible();
+  publishCurrent = true;
+  await expect(page.getByRole('heading', { name: 'Join the game. Get your ticket ready.' })).toBeVisible({ timeout: 20000 });
+  await expect(page.getByText('READY', { exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Join game 2BEA7E' })).toBeVisible();
+  await expect(page.getByText('Previous round final clue')).toHaveCount(0);
+  await expect(page.getByText('CALL #90')).toHaveCount(0);
+  await expect(page.getByText('PRIVATE_OLD_KEY')).toHaveCount(0);
+  await fits(page);
+});
