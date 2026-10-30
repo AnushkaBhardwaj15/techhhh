@@ -141,6 +141,7 @@ function AppRoutes() {
         <Route path="/sign-in" element={<LoginRoute />} />
         <Route path="/signin" element={<LoginRoute />} />
         <Route path="/developers" element={<DevelopersPage />} />
+        <Route path="/meet-the-developer" element={<DevelopersPage />} />
         <Route path="/meet-the-developers" element={<DevelopersPage />} />
         <Route path="/team" element={<DevelopersPage />} />
         <Route path="/host" element={<Navigate to="/admin" replace />} />

@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, cleanup } from '@testing-library/react';
+import { render, screen, cleanup } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, afterEach } from 'vitest';
 import { DevelopersPage } from './DevelopersPage';
@@ -14,33 +14,34 @@ describe('DevelopersPage', () => {
     );
   }
 
-  it('renders the broadcast header, live on-air badge, and headline', () => {
+  it('renders the header, brand title, and main page headline', () => {
     renderWithRouter();
 
-    expect(screen.getByText(/LIVE BROADCAST/i)).toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 1, name: /MEET THE DEVELOPERS/i })).toBeInTheDocument();
+    expect(screen.getAllByText(/MEET THE DEVELOPER/i).length).toBeGreaterThan(0);
+    expect(screen.getByRole('heading', { level: 1, name: /Meet the Developers/i })).toBeInTheDocument();
+    expect(screen.getAllByText(/TECH TOMBOLA/i).length).toBeGreaterThan(0);
   });
 
   it('renders all four team members with their exact assigned roles', () => {
     renderWithRouter();
 
     // Verify Saransh - Tech Head
-    expect(screen.getAllByText(/Saransh/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/Tech Head/i).length).toBeGreaterThan(0);
+    expect(screen.getByRole('heading', { level: 2, name: /Saransh Sharma/i })).toBeInTheDocument();
+    expect(screen.getByText(/Tech Head/i)).toBeInTheDocument();
 
     // Verify Abhi - Tech Executive
-    expect(screen.getAllByText(/Abhi/i).length).toBeGreaterThan(0);
+    expect(screen.getByRole('heading', { level: 2, name: /Abhi/i })).toBeInTheDocument();
 
     // Verify Anushka - Tech Executive
-    expect(screen.getAllByText(/Anushka/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/Tech Executive/i).length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByRole('heading', { level: 2, name: /Anushka Bhardwaj/i })).toBeInTheDocument();
+    expect(screen.getAllByText(/Tech Executive/i).length).toBe(2);
 
     // Verify Ashutosh Singh - Techno Ambassador
-    expect(screen.getAllByText(/Ashutosh Singh/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/Techno Ambassador/i).length).toBeGreaterThan(0);
+    expect(screen.getByRole('heading', { level: 2, name: /Ashutosh Singh/i })).toBeInTheDocument();
+    expect(screen.getByText(/Techno Ambassador/i)).toBeInTheDocument();
   });
 
-  it('renders photos for all team members', () => {
+  it('renders profile photos for all team members', () => {
     renderWithRouter();
 
     const images = screen.getAllByRole('img');
@@ -52,55 +53,42 @@ describe('DevelopersPage', () => {
     expect(srcs.some((src) => src?.includes('ashutosh.jpg'))).toBe(true);
   });
 
-  it('allows switching the spotlight developer via channel selector', () => {
+  it('renders developer biographies and skills', () => {
     renderWithRouter();
 
-    // Find channel tab for Abhi
-    const abhiTab = screen.getByRole('tab', { name: /Abhi/i });
-    expect(abhiTab).toBeInTheDocument();
-
-    fireEvent.click(abhiTab);
-
-    // Now Abhi should be prominently displayed in the spotlight stage
-    const spotlightHeading = screen.getByTestId('spotlight-name');
-    expect(spotlightHeading).toHaveTextContent(/Abhi/i);
+    // Check specific focus areas/skills
+    expect(screen.getAllByText(/System Architecture/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/WebSocket Streams/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/React 19 & Vite/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Tournament Operations/i).length).toBeGreaterThan(0);
   });
 
-  it('allows pausing and resuming the moving TV banner ticker', () => {
+  it('renders working GitHub links for members who have one', () => {
     renderWithRouter();
 
-    const pauseButton = screen.getByRole('button', { name: /pause ticker/i });
-    expect(pauseButton).toBeInTheDocument();
+    const githubLinks = screen.getAllByRole('link', { name: /github/i });
+    expect(githubLinks.length).toBeGreaterThanOrEqual(4);
 
-    fireEvent.click(pauseButton);
-    expect(screen.getByRole('button', { name: /resume ticker/i })).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole('button', { name: /resume ticker/i }));
-    expect(screen.getByRole('button', { name: /pause ticker/i })).toBeInTheDocument();
+    const saranshLink = githubLinks.find((link) =>
+      link.getAttribute('href')?.includes('saransh-sh')
+    );
+    expect(saranshLink).toBeDefined();
+    expect(saranshLink).toHaveAttribute('target', '_blank');
   });
 
-  it('toggles CRT scanlines when scanlines button is clicked', () => {
+  it('provides navigation links back to the home page', () => {
     renderWithRouter();
 
-    const scanlinesToggle = screen.getByRole('button', { name: /scanlines/i });
-    expect(scanlinesToggle).toBeInTheDocument();
-
-    // Default: scanlines on
-    const container = screen.getByTestId('developers-container');
-    expect(container).toHaveClass(/scanlinesActive/);
-
-    fireEvent.click(scanlinesToggle);
-    expect(container).not.toHaveClass(/scanlinesActive/);
-
-    fireEvent.click(scanlinesToggle);
-    expect(container).toHaveClass(/scanlinesActive/);
+    const homeLinks = screen.getAllByRole('link', { name: /home/i });
+    expect(homeLinks.length).toBeGreaterThan(0);
+    expect(homeLinks.some((link) => link.getAttribute('href') === '/')).toBe(true);
   });
 
-  it('provides a return navigation link to home / lobby', () => {
+  it('renders the project technology stack section', () => {
     renderWithRouter();
 
-    const backLinks = screen.getAllByRole('link', { name: /return|back/i });
-    expect(backLinks.length).toBeGreaterThan(0);
-    expect(backLinks[0]).toHaveAttribute('href', '/');
+    expect(screen.getByRole('heading', { level: 2, name: /The Technology Stack/i })).toBeInTheDocument();
+    expect(screen.getByText(/Bun \+ Fastify/i)).toBeInTheDocument();
+    expect(screen.getByText(/PostgreSQL/i)).toBeInTheDocument();
   });
 });
