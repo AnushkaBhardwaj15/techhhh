@@ -6,7 +6,7 @@ export function notify(notice: Notice) {
 }
 
 function hasLocalFeedback(path: string) {
-  return /\/participant\/play\/rounds\/[^/]+\/(marks|claims)/.test(path);
+  return /\/participant\/play\/rounds\/[^/]+\/(marks|claims|payment-declaration)/.test(path);
 }
 
 export function mutationSucceeded(path: string, method: string, body?: unknown) {

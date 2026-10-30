@@ -63,6 +63,7 @@ function mount(path = "/participant/lobby") {
         <Routes>
           <Route element={<Outlet context={user} />}>
             <Route path="/participant/lobby" element={<ParticipantLobby />} />
+            <Route path="/participant/notice" element={<p>Important notification page</p>} />
             <Route
               path="/participant/waiting"
               element={<ParticipantLobby waiting />}
@@ -145,7 +146,7 @@ describe("code entry and waiting lobby", () => {
     expect(screen.queryByText("Waiting for the admin")).not.toBeInTheDocument();
   });
 
-  it("moves a manual code join to the waiting page and preserves the simulator there", async () => {
+  it("moves a manual code join to the notification before the lobby", async () => {
     const person = mount();
     await person.type(
       screen.getByLabelText("Enter or confirm 6-character game code:"),
@@ -153,9 +154,9 @@ describe("code entry and waiting lobby", () => {
     );
     await person.click(screen.getByRole("button", { name: "VERIFY & JOIN" }));
     expect(
-      await screen.findByText("Waiting for the admin"),
+      await screen.findByText("Important notification page"),
     ).toBeInTheDocument();
-    expect(screen.getByText("Practice ticket simulator")).toBeInTheDocument();
+    expect(screen.queryByText("Practice ticket simulator")).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "VERIFY & JOIN" }),
     ).not.toBeInTheDocument();
@@ -163,7 +164,7 @@ describe("code entry and waiting lobby", () => {
     expect(sessionStorage.getItem(`tt_joined_game_${user.id}`)).toBe(game.id);
   });
 
-  it("moves the advertised quick join to the same waiting page", async () => {
+  it("moves the advertised quick join to the same notification page", async () => {
     const person = mount();
     await person.click(
       await screen.findByRole("button", {
@@ -171,7 +172,7 @@ describe("code entry and waiting lobby", () => {
       }),
     );
     expect(
-      await screen.findByText("Waiting for the admin"),
+      await screen.findByText("Important notification page"),
     ).toBeInTheDocument();
     expect(validateGameCode).toHaveBeenCalledTimes(1);
   });
@@ -245,7 +246,7 @@ describe("code entry and waiting lobby", () => {
       finish({ valid: true, activeGame: game, matchedCode: game.code }),
     );
     expect(
-      await screen.findByText("Waiting for the admin"),
+      await screen.findByText("Important notification page"),
     ).toBeInTheDocument();
   });
 

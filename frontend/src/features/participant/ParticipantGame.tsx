@@ -6,7 +6,7 @@ import { GameStatusPanel } from './GameStatusPanel';
 import type { Notice } from '../../lib/notifications';
 import { useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import { gsap } from 'gsap';
-import { Navigate, useOutletContext } from 'react-router-dom';
+import { Link, Navigate, useOutletContext } from 'react-router-dom';
 import { ApiError } from '../../lib/api/client';
 import { cancelOnReducedMotion } from '../../lib/reducedMotion';
 import { getParticipantDraws } from '../../lib/api/draws';
@@ -23,8 +23,6 @@ import { ParticipantTicket, TicketGrid } from './ParticipantTicket';
 import { ClaimPanel } from './ClaimPanel';
 import { WinnerBanner } from './WinnerBanner';
 import { usePlayState } from './usePlayState';
-import { PaymentDeclaration } from './PaymentDeclaration';
-import { GamePaymentNotice } from '../../components/GamePaymentNotice';
 import styles from './ParticipantGame.module.css';
 import refStyles from './ReferencePlay.module.css';
 
@@ -171,8 +169,7 @@ function ReferenceParticipantGame({ id }: { id: string }) {
       {game && (
         <>
           <GameStatusPanel gameId={game.id} status={game.status} onNotify={showStatusNotice} />
-          <GamePaymentNotice />
-          <PaymentDeclaration key={game.id} game={game} />
+          <p>Payment: {game.ticket?.paymentDeclared ? 'Declared paid' : 'Not declared'}. <Link to="/participant/notice">Review important notification</Link></p>
           <header className={refStyles.heading}>
             <div>
               <p className={refStyles.kicker}>GAME #{game.sequenceNumber} · CODE {game.code}</p>

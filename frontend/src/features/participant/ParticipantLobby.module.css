@@ -477,9 +477,6 @@
   flex-direction: column;
   gap: 8px;
 }
-.paymentCheckbox { display: flex; align-items: center; gap: 12px; min-height: 44px; font-weight: 700; }
-.paymentCheckbox input { width: 20px; height: 20px; flex-shrink: 0; accent-color: var(--neo-orange, #b84312); }
-.paymentCheckbox input:focus-visible { outline: 3px solid currentColor; outline-offset: 4px; }
 .paymentHelp { margin: 0 0 8px; font-size: 14px; line-height: 1.6; }
 
 .customCodeLabel {

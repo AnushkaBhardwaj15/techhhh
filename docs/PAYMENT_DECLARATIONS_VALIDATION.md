@@ -53,3 +53,12 @@ These failures prevent declaring the repository's full completion/merge gate
 passed. No tests were disabled or excluded from the full-suite checks. Filtered
 runs above isolate new feature assertions in files with known older failures.
 No changes have been pushed to main.
+
+## Separate notification step
+
+The updated flow is code verification / Quick Join → Important Notification →
+lobby. The optional checkbox is only on the notice; the lobby shows a saved
+summary and review link. Continue waits for pending saves. Feedback stays inline
+so a toast cannot cover the Continue button. Backend rules are unchanged.
+Validation: 54 related component tests passed; six browser scenarios passed;
+frontend build, type check, changed-file lint and both reviews passed.

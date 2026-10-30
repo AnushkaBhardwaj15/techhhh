@@ -31,6 +31,7 @@ const AdminAdministrators = lazy(() => import('./features/admin/AdminAdministrat
 const AdminAudit = lazy(() => import('./features/admin/AdminAudit').then((module) => ({ default: module.AdminAudit })));
 const AdminSystem = lazy(() => import('./features/admin/AdminSystem').then((module) => ({ default: module.AdminSystem })));
 const ParticipantLobby = lazy(() => import('./features/participant/ParticipantLobby').then((module) => ({ default: module.ParticipantLobby })));
+const ParticipantNotice = lazy(() => import('./features/participant/ParticipantNotice').then((module) => ({ default: module.ParticipantNotice })));
 const ParticipantTicketEntry = lazy(() => import('./features/participant/ParticipantTicketEntry').then((module) => ({ default: module.ParticipantTicketEntry })));
 const ParticipantTicket = lazy(() => import('./features/participant/ParticipantTicket').then((module) => ({ default: module.ParticipantTicket })));
 const ParticipantGame = lazy(() => import('./features/participant/ParticipantGame').then((module) => ({ default: module.ParticipantGame })));
@@ -149,6 +150,7 @@ function AppRoutes() {
         <Route element={<ProtectedLayout allowed={['PARTICIPANT']} />}>
           <Route path="/participant" element={<Navigate to="/lobby" replace />} />
           <Route path="/participant/lobby" element={<ParticipantLobby />} />
+          <Route path="/participant/notice" element={<ParticipantNotice />} />
           <Route path="/participant/waiting" element={<ParticipantLobby waiting />} />
           <Route path="/lobby" element={<ParticipantLobby />} />
           <Route path="/participant/ticket-entry" element={<ParticipantTicketEntry />} />

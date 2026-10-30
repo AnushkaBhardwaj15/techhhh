@@ -16,7 +16,6 @@ import { getParticipantTicket } from "../../lib/api/ticket";
 import { SampleTicketDemo } from "../landing/components/SampleTicketDemo";
 import { useAuthUiStore } from "../auth/authStore";
 import { ActionButton } from "../../components/ActionButton";
-import { GamePaymentNotice } from "../../components/GamePaymentNotice";
 import {
   fetchActiveGame,
   subscribeToGameSync,
@@ -76,9 +75,6 @@ export function ParticipantLobby({ waiting = false }: { waiting?: boolean }) {
   );
   const [errorMsg, setErrorMsg] = useState("");
   const [customCode, setCustomCode] = useState("");
-  const [paymentDeclared, setPaymentDeclared] = useState(false);
-  const declarationCode = (customCode || activeGame?.code || '').trim().toUpperCase();
-  const declarationLocked = !!activeGame && declarationCode === activeGame.code && activeGame.status !== 'READY';
   const [joining, setJoining] = useState(false);
   const joinInFlight = useRef(false);
   const scannedCode = useRef("");
@@ -147,9 +143,7 @@ export function ParticipantLobby({ waiting = false }: { waiting?: boolean }) {
       joinInFlight.current = true;
       setJoining(true);
       try {
-        const result = paymentDeclared && !declarationLocked && declarationCode === clean
-          ? await validateGameCode(clean, true)
-          : await validateGameCode(clean);
+        const result = await validateGameCode(clean);
         if (!result.valid) {
           setErrorMsg(
             result.message ||
@@ -169,7 +163,7 @@ export function ParticipantLobby({ waiting = false }: { waiting?: boolean }) {
         );
         setVerifiedCode(clean);
         setJoinedGameId(result.activeGame.id);
-        navigate("/participant/game", { replace: true });
+        navigate("/participant/notice", { replace: true });
       } catch (error) {
         setErrorMsg(
           error instanceof ApiError && error.status >= 500
@@ -183,10 +177,10 @@ export function ParticipantLobby({ waiting = false }: { waiting?: boolean }) {
         setJoining(false);
       }
     },
-    [ticket.data?.id, user.id, navigate, declarationCode, declarationLocked, paymentDeclared],
+    [ticket.data?.id, user.id, navigate],
   );
 
-  // Scanned links prefill the code so participants can declare payment first.
+  // Scanned links prefill the code for confirmation before the notice step.
   useEffect(() => {
     const code = params.get("code");
     if (!waiting && code && scannedCode.current !== code) {
@@ -218,7 +212,6 @@ export function ParticipantLobby({ waiting = false }: { waiting?: boolean }) {
             The game will start when the admin starts your game. We’ll take you
             there automatically.
           </p>
-          <GamePaymentNotice />
           <div className={styles.waitingStatus} role="status">
             <span className={styles.waitingDot} aria-hidden="true" />
             <div>
@@ -275,7 +268,6 @@ export function ParticipantLobby({ waiting = false }: { waiting?: boolean }) {
         </div>
       )}
       <div className={styles.outerCard}>
-        <GamePaymentNotice />
         {/* DIRECT QUICK JOIN BANNER: DISPLAYED ONLY WHEN HOST TURNS ON BROADCAST */}
         {activeGame && activeGame.isBroadcast && (
           <div className={styles.activeGameCard}>
@@ -330,7 +322,6 @@ export function ParticipantLobby({ waiting = false }: { waiting?: boolean }) {
                 value={customCode}
                 onChange={(e) => {
                   setCustomCode(e.target.value.toUpperCase());
-                  setPaymentDeclared(false);
                   setErrorMsg("");
                 }}
                 placeholder={activeGame?.isBroadcast ? `e.g. ${activeGame.code}` : "e.g. 1A2B3C"}
@@ -338,12 +329,6 @@ export function ParticipantLobby({ waiting = false }: { waiting?: boolean }) {
                 autoCapitalize="characters"
               />
             </div>
-            <label className={styles.paymentCheckbox}>
-              <input type="checkbox" checked={paymentDeclared && !declarationLocked} disabled={joining || declarationLocked}
-                onChange={event => setPaymentDeclared(event.target.checked)} aria-describedby="join-payment-help" />
-              I have paid ₹10 for this game
-            </label>
-            <p id="join-payment-help" className={styles.paymentHelp}>Optional. You can join unpaid, but unpaid winners cannot collect prizes. Declarations can only be changed before the game starts.</p>
               <ActionButton
                 type="submit"
                 busy={joining}

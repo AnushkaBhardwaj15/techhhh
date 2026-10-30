@@ -801,9 +801,15 @@ Connection status must be visible to participants.
 - Show the ₹10-per-game fee and prize-collection warning in the participant
   entry flow, joined game, and public projector lobby: pay before the game
   starts; unpaid winners cannot collect prizes. Joining unpaid stays enabled.
-- After code entry, offer an optional unchecked "I have paid ₹10 for this game"
-  checkbox. Manual entry, Quick Join, and scanned code links must offer the
-  same declaration choice; scanned links prefill the code for confirmation.
+- Code entry, Quick Join, and scanned-code confirmation lead to a separate
+  Important Notification page before the lobby. Put the fee/deadline/prize
+  notice and optional "I have paid ₹10 for this game" checkbox on that page,
+  not on code entry or inside the lobby. Show the saved declaration on reload.
+  "Continue to lobby" allows unchecked declarations but waits for any in-flight
+  declaration save. Keep load/error/retry and back-to-code-entry controls.
+- The lobby displays a read-only payment summary and a link to review the
+  notification. Updates there remain possible only before the backend locks
+  declarations at game start. No new payment or winner rules are introduced.
 - In the joined game, display the saved declaration and allow changes only
   when the backend reports `paymentDeclarationOpen`. Disable updates once
   started, including paused/completed/recovering games. Use backend state

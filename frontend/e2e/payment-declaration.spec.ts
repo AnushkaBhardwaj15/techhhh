@@ -40,11 +40,13 @@ test('scanned entry offers optional payment, saves before start, survives reload
   await page.goto('/participant/lobby?code=ABC123');
   const checkbox = page.getByRole('checkbox', { name: 'I have paid ₹10 for this game' });
   await expect(page.getByLabel('Enter or confirm 6-character game code:')).toHaveValue('ABC123');
-  await expect(checkbox).not.toBeChecked();
+  await expect(checkbox).toHaveCount(0);
   expect(state.joins()).toBe(0);
-  await checkbox.check();
   await page.getByRole('button', { name: 'VERIFY & JOIN' }).click();
-  await expect(page).toHaveURL(/\/participant\/game$/);
+  await expect(page).toHaveURL(/\/participant\/notice$/);
+  await expect(page.getByRole('heading', { name: 'Important Notification' })).toBeVisible();
+  await expect(checkbox).not.toBeChecked();
+  await checkbox.click();
   await expect(checkbox).toBeChecked();
   await page.reload();
   await expect(checkbox).toBeChecked();
@@ -53,8 +55,13 @@ test('scanned entry offers optional payment, saves before start, survives reload
   expect(state.game.ticket!.paymentDeclared).toBe(false);
   await checkbox.click();
   await expect(checkbox).toBeChecked();
+  await page.screenshot({ path: 'test-results/payment-notice-mobile.png', fullPage: true });
+  await page.getByRole('button', { name: 'Continue to lobby →' }).click();
+  await expect(page).toHaveURL(/\/participant\/game$/);
+  await expect(checkbox).toHaveCount(0);
+  await expect(page.getByText(/Payment: Declared paid/)).toBeVisible();
   state.game.status = 'ACTIVE'; state.game.paymentDeclarationOpen = false;
-  await page.reload();
+  await page.getByRole('link', { name: 'Review important notification' }).click();
   await expect(checkbox).toBeChecked();
   await expect(checkbox).toBeDisabled();
   await expect(page.getByText(/Payment declarations are locked/)).toBeVisible();
@@ -66,9 +73,22 @@ test('unpaid participants can join and see the prize restriction', async ({ page
   await setup(page, 'PARTICIPANT');
   await page.goto('/participant/lobby?code=ABC123');
   await page.getByRole('button', { name: 'VERIFY & JOIN' }).click();
-  await expect(page).toHaveURL(/\/participant\/game$/);
+  await expect(page).toHaveURL(/\/participant\/notice$/);
   await expect(page.getByRole('checkbox')).not.toBeChecked();
   await expect(page.getByText(/No payment declared/)).toBeVisible();
+  await page.getByRole('button', { name: 'Continue to lobby →' }).click();
+  await expect(page).toHaveURL(/\/participant\/game$/);
+  await expect(page.getByRole('checkbox')).toHaveCount(0);
+  await expect(page.getByText(/Payment: Not declared/)).toBeVisible();
+});
+
+test('Quick Join also opens the important notification before the lobby', async ({ page }) => {
+  await setup(page, 'PARTICIPANT');
+  await page.goto('/participant/lobby');
+  await page.getByRole('button', { name: /QUICK JOIN GAME/ }).click();
+  await expect(page).toHaveURL(/\/participant\/notice$/);
+  await expect(page.getByRole('heading', { name: 'Important Notification' })).toBeVisible();
+  await expect(page.getByRole('checkbox')).not.toBeChecked();
 });
 
 for (const role of ['ADMIN', 'SUPER_ADMIN'] as const) test(`${role} sees per-game paid declarations without edit controls`, async ({ page }) => {

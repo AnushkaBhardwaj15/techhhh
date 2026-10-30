@@ -81,7 +81,7 @@ function renderLobby({
           <Route element={<Outlet context={user} />}>
             <Route path="/participant/lobby" element={<ParticipantLobby waiting={false} />} />
             <Route path="/participant/waiting" element={<ParticipantLobby waiting={true} />} />
-            <Route path="/participant/game" element={<div>Live Game Page</div>} />
+            <Route path="/participant/game" element={<div>Live Game Page</div>} /><Route path="/participant/notice" element={<p>Important notification page</p>} />
           </Route>
         </Routes>
       </MemoryRouter>
@@ -190,53 +190,37 @@ describe('ParticipantLobby', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Invalid game code provided.');
   });
 
-  it('prefills a scanned code and offers payment declaration before joining', async () => {
+  it('prefills scanned code and moves to the notification after verification', async () => {
     renderLobby({ initialEntries: ['/participant/lobby?code=SCAN12'] });
     expect(await screen.findByLabelText(/Enter or confirm 6-character game code/i)).toHaveValue('SCAN12');
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
     expect(gameSync.validateGameCode).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole('checkbox', { name: 'I have paid ₹10 for this game' }));
     fireEvent.click(screen.getByRole('button', { name: 'VERIFY & JOIN' }));
-    await waitFor(() => {
-      expect(gameSync.validateGameCode).toHaveBeenCalledWith('SCAN12', true);
-    });
+    expect(await screen.findByText('Important notification page')).toBeVisible();
+    expect(gameSync.validateGameCode).toHaveBeenCalledWith('SCAN12');
   });
-
-  it('allows unpaid entry while explaining the prize restriction', async () => {
+  it('keeps the payment choice off code entry and sends Quick Join to the notice', async () => {
     renderLobby();
-    expect(screen.getByRole('checkbox', { name: 'I have paid ₹10 for this game' })).not.toBeChecked();
-    expect(screen.getByLabelText('Ticket fee and prize rules')).toHaveTextContent('unpaid winners cannot collect prizes');
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Ticket fee and prize rules')).not.toBeInTheDocument();
     fireEvent.click(await screen.findByRole('button', { name: /QUICK JOIN GAME/i }));
-    await waitFor(() => expect(gameSync.validateGameCode).toHaveBeenCalledWith('TOM123'));
+    expect(await screen.findByText('Important notification page')).toBeVisible();
+    expect(gameSync.validateGameCode).toHaveBeenCalledWith('TOM123');
   });
-
-  it('locks the declaration choice for an already started advertised game', async () => {
+  it('allows an already started game to proceed to its notification', async () => {
     renderLobby();
     await screen.findByText('Tech Tambola Live Arena');
-    expect(screen.getByRole('checkbox', { name: 'I have paid ₹10 for this game' })).toBeDisabled();
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /QUICK JOIN GAME/i })).toBeEnabled();
   });
-
-  it('sends a paid declaration through quick join before start', async () => {
-    const ready = { ...activeGameRecord, status: 'READY' as const };
-    vi.mocked(gameSync.fetchActiveGame).mockResolvedValue({ game: ready, games: [ready] });
-    vi.mocked(gameSync.subscribeToGameSync).mockImplementation(callback => { callback(ready); return () => {}; });
-    renderLobby();
-    await screen.findByText('Tech Tambola Live Arena');
-    fireEvent.click(screen.getByRole('checkbox', { name: 'I have paid ₹10 for this game' }));
-    fireEvent.click(screen.getByRole('button', { name: /QUICK JOIN GAME/i }));
-    await waitFor(() => expect(gameSync.validateGameCode).toHaveBeenCalledWith('TOM123', true));
-  });
-  it('prevents Quick Join from changing the target of a checked declaration', async () => {
+  it('keeps manual and quick join targets distinct', async () => {
     renderLobby();
     await screen.findByText('Tech Tambola Live Arena');
     fireEvent.change(screen.getByLabelText(/Enter or confirm 6-character game code/i), { target: { value: 'OTHER1' } });
-    fireEvent.click(screen.getByRole('checkbox', { name: 'I have paid ₹10 for this game' }));
     expect(screen.getByRole('button', { name: /QUICK JOIN GAME/i })).toBeDisabled();
-    expect(screen.getByText(/Clear the entered code to use it/)).toBeVisible();
     fireEvent.click(screen.getByRole('button', { name: 'VERIFY & JOIN' }));
-    await waitFor(() => expect(gameSync.validateGameCode).toHaveBeenCalledWith('OTHER1', true));
+    await waitFor(() => expect(gameSync.validateGameCode).toHaveBeenCalledWith('OTHER1'));
   });
-
   it('redirects to lobby if accessing waiting screen without verified session', async () => {
     renderLobby({ waiting: true, initialEntries: ['/participant/waiting'] });
 
