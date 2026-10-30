@@ -1289,6 +1289,21 @@ Use large typography and strong contrast.
 
 # 37. Live Display Responsiveness
 
+## Projector join panel and viewport fit (agreed requirement)
+
+- Display the current backend-supplied game code and a scannable join QR in
+  the public projector lobby and during the game. Reuse the admin console's
+  `/lobby?code=<code>` URL on the current deployment origin.
+- Never fabricate a code or show a previous game's QR when no game is loaded.
+  Keep unrevealed keys private and all game rules server-authoritative.
+- The projector must fit one viewport without horizontal or vertical scrolling
+  at 1920×1080, 1366×768, 1280×720 and 1024×600. Preserve compact mobile support.
+- Keep the code, QR, fee/prize warning, clue, optional code snippet, revealed
+  answer and standings inside that viewport. Resize the layout and clue text
+  to available space; do not fix scrolling merely by clipping the question.
+- Preserve loading/error/retry and no-game states, high contrast, readable
+  QR quiet zone, reduced motion and automatic backend state refresh.
+
 Primary target:
 
 ``` text
