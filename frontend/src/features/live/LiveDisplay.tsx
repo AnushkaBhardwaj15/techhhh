@@ -20,7 +20,7 @@ export function LiveDisplay() {
   // 1. Source A: Reference Play state from /live/play
   const playQuery = usePlayState("", true);
   const refGame = playQuery.data;
-  const refLatest = refGame?.status === 'READY' ? undefined : refGame?.draws?.at(-1);
+  const refLatest = refGame?.status === 'READY' ? undefined : (refGame?.draws?.find(draw => draw.sequence === refGame.displayedSequence) ?? refGame?.draws?.at(-1));
   const useLegacyFeed = playQuery.isSuccess && !refGame;
 
   // 2. Source B: Authoritative Live Event / Round / Draws
@@ -138,10 +138,6 @@ export function LiveDisplay() {
               </div>
               <h1 className={styles.questionHeading}>{activeQuestion.prompt}</h1>
               {activeQuestion.codeSnippet && <pre className={styles.codeSnippet}>{activeQuestion.codeSnippet}</pre>}
-              {activeQuestion.revealed && activeQuestion.answer && <div className={styles.revealedAnswerBox}>
-                <span className={styles.revealedLabel}>OFFICIAL ANSWER</span>
-                <strong className={styles.revealedValue}>{activeQuestion.answer}</strong>
-              </div>}
             </> : !playQuery.isPending && !playQuery.isError && <div className={styles.emptyScreen}>
               <h1 className={styles.questionHeading}>{refGame ? 'Join the game. Get your ticket ready.' : 'Waiting for the admin to create a game.'}</h1>
               <p className={styles.emptySubtext}>{refGame ? 'Scan the QR or enter the game code. Clues appear here when the host starts calling.' : 'The screen will automatically show clues once the game begins.'}</p>

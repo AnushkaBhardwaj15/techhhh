@@ -88,6 +88,8 @@ export class WinnerService {
         throw new ConflictError('Claim is already in a terminal state', 'CLAIM_ALREADY_TERMINAL');
       }
 
+      if (!await this.winnerRepo.paymentDeclared(claim.ticketId, tx)) throw new ConflictError('Pending payment verification. This participant has not declared payment and cannot receive a prize.', 'PAYMENT_NOT_DECLARED');
+
       const pattern = await this.claimRepo.lockRoundPattern(claim.roundId, claim.patternType, tx);
       if (!pattern) throw new ConflictError('Claim pattern configuration was not found', 'PATTERN_NOT_FOUND');
 
@@ -244,9 +246,13 @@ export class WinnerService {
       if (!claim) throw new NotFoundError('Claim not found', 'CLAIM_NOT_FOUND');
       const replay = await this.idempotency.find(storageKey, tx) as CommandOutcome<{ claim: { id: string; status: string; rejectionReason: string } }> | null;
       if (replay) return { outcome: replay };
-      if (claim.status !== 'PENDING_VERIFICATION') {
-        throw new ConflictError('Claim is already in a terminal state', 'CLAIM_ALREADY_TERMINAL');
+      if (!['PENDING_VERIFICATION', 'VERIFIED'].includes(claim.status)) {
+        throw new ConflictError('Claim is already rejected', 'CLAIM_ALREADY_TERMINAL');
       }
+      const revoked = claim.status === 'VERIFIED';
+      const pattern = await this.claimRepo.lockRoundPattern(claim.roundId, claim.patternType, tx);
+      if (!pattern) throw new ConflictError('Pattern not found');
+      const removedWinners = revoked ? await this.winnerRepo.revokeClaim(claim.id, claim.roundId, claim.patternType, tx) : [];
 
       const rejectionReason = params.reason || 'ADMIN_REJECTED';
       const updated = await this.claimRepo.updateStatus(
@@ -258,7 +264,7 @@ export class WinnerService {
         {
           actorId: params.actorId,
           actorType: params.actorType,
-          action: 'WIN_CLAIM_REJECTED',
+          action: revoked ? 'WINNER_REVOKED' : 'WIN_CLAIM_REJECTED',
           resourceType: 'CLAIM',
           resourceId: claim.id,
           metadata: {
@@ -267,6 +273,7 @@ export class WinnerService {
             rejectionReason,
             participantId: claim.participantId,
             resourceName: `Rejected: ${claim.patternType}`,
+            removedWinners,
           },
         },
         tx
@@ -276,9 +283,19 @@ export class WinnerService {
         body: { claim: { id: updated.id, status: updated.status, rejectionReason: updated.rejectionReason ?? rejectionReason } },
       };
       await this.idempotency.save(storageKey, 'CLAIM_REJECTION', outcome, tx);
-      return { outcome };
+      const context = await this.claimRepo.getEventAndParticipantName(claim.id, tx);
+      return { outcome, event: context ? {
+        type: 'ANNOUNCEMENT', eventId: context.eventId, roundId: claim.roundId,
+        occurredAt: new Date().toISOString(),
+        payload: { message: 'A claim was removed by staff. Standings and prize availability have been updated.' },
+      } : undefined };
+
     });
     if (committed.outcome.kind === 'error') throw new ConflictError(committed.outcome.message, committed.outcome.code);
+    if ('event' in committed && committed.event && this.realtimePublisher) {
+      try { await this.realtimePublisher.broadcastCommitted(committed.event); }
+      catch (error) { console.error('Failed to broadcast claim removal:', error); }
+    }
     return committed.outcome.body;
   }
 

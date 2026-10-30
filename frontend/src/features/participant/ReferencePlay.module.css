@@ -519,3 +519,9 @@
     grid-template-columns: 1fr;
   }
 }
+
+.mobilePrizeLabel { display: none; }
+@media (max-width: 768px) {
+  .desktopPrizeLabel { display: none; }
+  .mobilePrizeLabel { display: inline; }
+}

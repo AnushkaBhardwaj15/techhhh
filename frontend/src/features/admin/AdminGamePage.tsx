@@ -11,6 +11,7 @@ import { recoverRound } from "../../lib/api/adminOperations";
 import styles from "./AdminGamePage.module.css";
 import { apiRequest } from "../../lib/api/client";
 export function AdminGamePage() {
+  const [paymentSaving, setPaymentSaving] = useState<string | null>(null);
   const [showQr, setShowQr] = useState(false);
   const [copyMessage, setCopyMessage] = useState('');
   const [params] = useSearchParams();
@@ -41,6 +42,17 @@ export function AdminGamePage() {
   });
   const gameClaims = (claimsQuery.data?.data ?? []).filter(claim => claim.roundId === id);
 
+  async function changePayment(userId: string, paid: boolean) {
+    if (paymentSaving) return;
+    if (!paid && !window.confirm('Mark unpaid? Claiming will be blocked and existing verified wins for this player will be revoked.')) return;
+    setPaymentSaving(userId);
+    setError('');
+    try {
+      await apiRequest(`/admin/play/rounds/${id}/participants/${userId}/payment`, {method:'PUT',body:JSON.stringify({paid})});
+      await Promise.all([roster.refetch(),claimsQuery.refetch(),client.invalidateQueries({queryKey:['reference-play']}),client.invalidateQueries({queryKey:['admin-claims']})]);
+    } catch (error) { setError(error instanceof Error ? error.message : 'Could not update payment.'); }
+    finally { setPaymentSaving(null); }
+  }
   async function handleApproveClaim(claimId: string) {
     setClaimActionId(claimId);
     setClaimFeedback("");
@@ -63,10 +75,11 @@ export function AdminGamePage() {
   }
 
   async function handleRejectClaim(claimId: string) {
+    if (!window.confirm("Unclaim this participant? Any verified win and its points will be removed and the prize reopened.")) return;
     setClaimActionId(claimId);
     setClaimFeedback("");
     try {
-      await rejectAdminClaim(claimId, crypto.randomUUID());
+      await rejectAdminClaim(claimId, crypto.randomUUID(), 'Unclaimed by staff: payment not confirmed');
       setClaimFeedback("Claim was rejected.");
       await Promise.all([
         claimsQuery.refetch(),
@@ -146,6 +159,7 @@ export function AdminGamePage() {
   }
   const draws = game?.draws ?? [];
   const totalCalls = draws.length;
+  const totalQuestions = game?.bank?.length ?? 0;
   const effectiveIndex =
     totalCalls === 0
       ? null
@@ -159,14 +173,16 @@ export function AdminGamePage() {
   function handlePrevious() {
     if (effectiveIndex !== null && effectiveIndex > 0) {
       setViewingIndex(effectiveIndex - 1);
+      void run({ action: "display", number: draws[effectiveIndex - 1].sequence });
     }
   }
 
   function handleNext() {
     if (isViewingHistory && effectiveIndex !== null) {
       setViewingIndex(effectiveIndex + 1);
+      void run({ action: "display", number: draws[effectiveIndex + 1].sequence });
     } else {
-      if (game?.status === "ACTIVE" && totalCalls < 90) {
+      if (game?.status === "ACTIVE" && totalCalls < totalQuestions) {
         setViewingIndex(null);
         void run({ action: "call" });
       }
@@ -189,7 +205,8 @@ export function AdminGamePage() {
         if (isViewingHistory && effectiveIndex !== null) {
           event.preventDefault();
           setViewingIndex(effectiveIndex + 1);
-        } else if (game?.status === "ACTIVE" && totalCalls < 90) {
+      void run({ action: "display", number: draws[effectiveIndex + 1].sequence });
+        } else if (game?.status === "ACTIVE" && totalCalls < totalQuestions) {
           event.preventDefault();
           setViewingIndex(null);
           void run({ action: "call" });
@@ -249,7 +266,7 @@ export function AdminGamePage() {
           </section>}
           {!lobby && <>
             <section className={styles.questionStage}>
-              <span className={styles.consoleStatus}>{currentDraw ? `QUESTION ${currentDraw.sequence} / 90${isViewingHistory ? ' · HISTORY' : ''}` : 'READY TO START'}</span>
+              <span className={styles.consoleStatus}>{currentDraw ? `QUESTION ${currentDraw.sequence} / ${totalQuestions}${isViewingHistory ? ' · HISTORY' : ''}` : 'READY TO START'}</span>
               <h2>{currentDraw?.prompt ?? (game.status === 'RECOVERY_REQUIRED' ? 'Recover this game to continue' : 'Technical Tambola Challenge')}</h2>
               {!currentDraw && <p>Press Call Next Question or Spacebar to reveal the first clue.</p>}
               {currentDraw?.codeSnippet && <pre>{currentDraw.codeSnippet}</pre>}
@@ -257,7 +274,7 @@ export function AdminGamePage() {
             </section>
             <div className={styles.questionControls}>
               <ActionButton busy={pending} disabled={effectiveIndex === null || effectiveIndex <= 0} onClick={handlePrevious}>Previous</ActionButton>
-              <ActionButton className={styles.callButton} busy={pending} disabled={!isViewingHistory && (game.status !== 'ACTIVE' || totalCalls >= 90)} onClick={handleNext}>{isViewingHistory ? 'Next Question' : `Call Next Question ${totalCalls}/90`} <kbd>Space</kbd></ActionButton>
+              <ActionButton className={styles.callButton} busy={pending} disabled={!isViewingHistory && (game.status !== 'ACTIVE' || totalCalls >= totalQuestions)} onClick={handleNext}>{isViewingHistory ? 'Next Question' : `Call Next Question ${totalCalls}/${totalQuestions}`} <kbd>Space</kbd></ActionButton>
               {game.status === 'ACTIVE' && <ActionButton busy={pending} onClick={() => void run({ action: 'pause' })}>Pause</ActionButton>}
               {game.status === 'PAUSED' && <ActionButton busy={pending} onClick={() => void run({ action: 'resume' })}>Resume</ActionButton>}
               {game.status === 'RECOVERY_REQUIRED' && <ActionButton busy={recovering} onClick={() => void handleRecover()}>Recover Game</ActionButton>}
@@ -274,24 +291,30 @@ export function AdminGamePage() {
               {claimsQuery.isPending ? <p>Loading claims…</p> : claimsQuery.error ? <p role="alert">Could not load claims.</p> : gameClaims.length ? gameClaims.map(claim => <div className={styles.claimRow} key={claim.id}>
                 <strong>{claim.participantName}</strong><p>{claim.patternType.replaceAll('_', ' ')}</p>
                 <span className={claim.status === 'VERIFIED' ? styles.claimValid : claim.status === 'PENDING_VERIFICATION' ? styles.claimPending : styles.claimInvalid}>
-                  {claim.status === 'VERIFIED' ? 'Valid · Verified' : claim.status === 'PENDING_VERIFICATION' ? 'Awaiting review' : claim.status === 'REJECTED_PATTERN_ALREADY_CLOSED' ? 'Rejected · Pattern already closed' : 'Invalid · Rejected'}
+                  {claim.status === 'VERIFIED' ? 'Valid · Verified' : claim.status === 'PENDING_VERIFICATION' ? (claim.rejectionReason === 'PENDING_PAYMENT_VERIFICATION' ? 'Pending payment verification' : 'Awaiting review') : claim.status === 'REJECTED_PATTERN_ALREADY_CLOSED' ? 'Rejected · Pattern already closed' : 'Invalid · Rejected'}
                 </span>
-                {claim.rejectionReason && <p>{claim.rejectionReason}</p>}
-                {claim.status === 'PENDING_VERIFICATION' && <div><button className="action-positive" disabled={!!claimActionId} onClick={() => void handleApproveClaim(claim.id)}>Approve</button><button className="action-danger" disabled={!!claimActionId} onClick={() => void handleRejectClaim(claim.id)}>Reject</button></div>}
+                {claim.rejectionReason && claim.rejectionReason !== 'PENDING_PAYMENT_VERIFICATION' && <p>{claim.rejectionReason}</p>}
+                {claim.status === 'VERIFIED' && <button className="action-danger" disabled={!!claimActionId} onClick={() => void handleRejectClaim(claim.id)}>Unclaim win</button>}
+                {claim.status === 'PENDING_VERIFICATION' && <div><button className="action-positive" disabled={!!claimActionId || claim.rejectionReason === 'PENDING_PAYMENT_VERIFICATION'} onClick={() => void handleApproveClaim(claim.id)}>Approve</button><button className="action-danger" disabled={!!claimActionId} onClick={() => void handleRejectClaim(claim.id)}>Reject</button></div>}
               </div>) : <p>No claims yet.</p>}
             </section>
           </>}
         </aside>
-        {!lobby && <div className={styles.playerPanels}><section className={styles.consolePanel}><h2>PLAYERS & STANDINGS</h2><p>{roster.data?.totalEnrolled ?? 0} enrolled</p>{roster.isPending ? <p>Loading players…</p> : roster.error ? <p role="alert">Could not load players.</p> : roster.data?.participants.length ? <ol className={styles.roster}>{roster.data.participants.map(row => <li key={row.id}>{row.name}<small className={row.live ? styles.playerLive : styles.playerOffline}> · {row.live ? 'Live' : 'Offline'}</small><strong>{row.points}</strong></li>)}</ol> : <p>No enrolled players yet.</p>}<Link to={`/admin/winners?gameId=${id}`}>View winners</Link></section>
-            <section className={styles.consolePanel} aria-label="Live players"><h2>LIVE PLAYERS</h2><p>{roster.data?.livePlayers ?? 0} connected</p>{roster.isPending ? <p>Loading live players…</p> : roster.error ? <p role="alert">Could not load live players.</p> : roster.data?.participants.some(person => person.live) ? <ul className={styles.roster}>{roster.data.participants.filter(person => person.live).map(person => <li key={person.id}>{person.name}<small className={styles.playerLive}> · Live</small></li>)}</ul> : <p>No players connected right now.</p>}</section></div>}
+
       </div>
+      {!lobby && <section className={styles.consolePanel} aria-label="Live players">
+        <h2>LIVE PLAYERS</h2>
+        <p>{roster.data?.livePlayers ?? 0} connected</p>
+        {roster.isPending ? <p>Loading live players…</p> : roster.error ? <p role="alert">Could not load live players.</p> : roster.data?.participants.some(person => person.live) ? <ul className={styles.roster}>{roster.data.participants.filter(person => person.live).map(person => <li key={person.id}>{person.name}<small className={styles.playerLive}> · Live</small></li>)}</ul> : <p>No players connected right now.</p>}
+      </section>}
       <section className={styles.consolePanel} aria-labelledby="payment-roster-title">
-        <h2 id="payment-roster-title">Paid? · ₹10 per game</h2>
-        <p>Participant declarations only; not verified payments. Unpaid winners cannot collect prizes. Staff handle prize collection.</p>
+        <h2 id="payment-roster-title">Players, standings & payment · ₹10 per game</h2>
+        <p>{roster.data?.totalEnrolled ?? 0} enrolled · {roster.data?.livePlayers ?? 0} live · <Link to={`/admin/winners?gameId=${id}`}>View winners</Link></p>
+        <p>Admins can correct payment status. Unpaid players cannot claim prizes. Marking unpaid revokes existing verified wins for this player.</p>
         {roster.isPending ? <p role="status">Loading payment declarations…</p> : roster.error ? <p role="alert">Could not load payment declarations.</p> : !roster.data?.participants.length ? <p>No payment declarations yet.</p> :
           <div className={styles.paymentTableWrap}><table className={styles.paymentTable} aria-label="This game's payment declarations">
-            <thead><tr><th scope="col">Participant</th><th scope="col">Paid?</th></tr></thead>
-            <tbody>{roster.data.participants.map(person => <tr key={person.id}><th scope="row">{person.name}</th><td>{person.paymentDeclared ? 'Yes — self-reported' : 'No — not declared'}</td></tr>)}</tbody>
+            <thead><tr><th scope="col">Participant</th><th scope="col">Points</th><th scope="col">Paid?</th></tr></thead>
+            <tbody>{roster.data.participants.map(person => <tr key={person.id}><th scope="row">{person.name}</th><td>{person.points}</td><td>{person.paymentDeclared ? 'Paid' : 'Unpaid'} <button type="button" disabled={!!paymentSaving} onClick={() => void changePayment(person.id, !person.paymentDeclared)}>{paymentSaving === person.id ? 'Saving…' : person.paymentDeclared ? 'Mark unpaid' : 'Mark paid'}</button></td></tr>)}</tbody>
           </table></div>}
       </section>
     </>}

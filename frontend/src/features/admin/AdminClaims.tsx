@@ -100,8 +100,8 @@ export function AdminClaims() {
   function confirmAction(claim: AdminClaim, action: 'verify' | 'reject') {
     const prompt = action === 'verify'
       ? `Ask the server to verify ${claim.participantName}'s ${displayStatus(claim.patternType)} Claim? Eligibility and Pattern capacity will be checked again.`
-      : `Reject ${claim.participantName}'s ${displayStatus(claim.patternType)} Claim? The server will record its standard ADMIN_REJECTED reason.`;
-    if (command.isPending || claim.status !== 'PENDING_VERIFICATION' || !window.confirm(prompt)) return;
+      : `Reject ${claim.participantName}'s ${displayStatus(claim.patternType)} Claim? Any verified win and points will be removed and its prize reopened.`;
+    if (command.isPending || (claim.status !== 'PENDING_VERIFICATION' && !(action === 'reject' && claim.status === 'VERIFIED')) || !window.confirm(prompt)) return;
     setMessage('');
     command.mutate({ claimId: claim.id, action });
   }
@@ -125,7 +125,7 @@ export function AdminClaims() {
           {claims.data.data.map((claim) => <button className={styles.claimButton} key={claim.id} type="button" aria-pressed={selectedId === claim.id} onClick={() => selectClaim(claim.id)}>
             <span className={styles.claimTitle}>{claim.participantName} · {displayStatus(claim.patternType)}</span>
             <span className={styles.claimMeta}>{claim.eventTitle} · {new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(claim.createdAt))}</span>
-            <span className={styles.claimStatus} data-status={claim.status}>{displayStatus(claim.status)}</span>
+            <span className={styles.claimStatus} data-status={claim.status}>{claim.rejectionReason === 'PENDING_PAYMENT_VERIFICATION' ? 'Pending payment verification' : displayStatus(claim.status)}</span>
           </button>)}
         </div>}
         {claims.data && claims.data.total > claims.data.limit && <nav className={styles.pagination} aria-label="Claim pages">
@@ -146,17 +146,18 @@ export function AdminClaims() {
               <dt>Participant</dt><dd>{selected.participantName}</dd>
               <dt>Event</dt><dd>{selected.eventTitle}</dd>
               <dt>Pattern</dt><dd>{displayStatus(selected.patternType)}</dd>
-              <dt>Status</dt><dd><span className={styles.claimStatus} data-status={selected.status}>{displayStatus(selected.status)}</span></dd>
+              <dt>Status</dt><dd><span className={styles.claimStatus} data-status={selected.status}>{selected.rejectionReason === 'PENDING_PAYMENT_VERIFICATION' ? 'Pending payment verification' : displayStatus(selected.status)}</span></dd>
               <dt>Submitted</dt><dd><time dateTime={selected.createdAt}>{new Intl.DateTimeFormat(undefined, { dateStyle: 'long', timeStyle: 'short' }).format(new Date(selected.createdAt))}</time></dd>
               {selected.verifiedAt && <><dt>Verified at</dt><dd><time dateTime={selected.verifiedAt}>{new Intl.DateTimeFormat(undefined, { dateStyle: 'long', timeStyle: 'short' }).format(new Date(selected.verifiedAt))}</time></dd></>}
               {selected.rejectionReason && <><dt>Rejection reason</dt><dd>{selected.rejectionReason}</dd></>}
               <dt>Claim ID</dt><dd>{selected.id}</dd>
               <dt>Round ID</dt><dd>{selected.roundId}</dd>
             </dl>
+            {selected.status === 'VERIFIED' && <button className="action-danger" type="button" disabled={command.isPending} onClick={() => confirmAction(selected, 'reject')}>Unclaim win</button>}
             {selected.status === 'PENDING_VERIFICATION' ? <div className={styles.actions}>
-              <button className="action-positive" type="button" disabled={command.isPending} onClick={() => confirmAction(selected, 'verify')}>{command.isPending && command.variables?.claimId === selected.id && command.variables.action === 'verify' ? 'Verifying…' : hasIdempotencyKey(commandScope(user.id, selected.id, 'verify')) ? 'Retry same verification' : 'Verify Claim'}</button>
+              <button className="action-positive" type="button" disabled={command.isPending || selected.rejectionReason === 'PENDING_PAYMENT_VERIFICATION'} onClick={() => confirmAction(selected, 'verify')}>{command.isPending && command.variables?.claimId === selected.id && command.variables.action === 'verify' ? 'Verifying…' : hasIdempotencyKey(commandScope(user.id, selected.id, 'verify')) ? 'Retry same verification' : 'Verify Claim'}</button>
               <button className="action-danger" type="button" disabled={command.isPending} onClick={() => confirmAction(selected, 'reject')}>{command.isPending && command.variables?.claimId === selected.id && command.variables.action === 'reject' ? 'Rejecting…' : hasIdempotencyKey(commandScope(user.id, selected.id, 'reject')) ? 'Retry same rejection' : 'Reject Claim'}</button>
-            </div> : <p className={styles.message}>This Claim has already been adjudicated. The server will not accept another decision.</p>}
+            </div> : <p className={styles.message}>This claim has been reviewed. Verified wins can be unclaimed above if payment is not confirmed.</p>}
             {message && <p className={styles.message} role="status">{message}</p>}
           </>}
         </div>

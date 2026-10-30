@@ -97,9 +97,9 @@ export function TicketGrid({
           <table className={styles.mobileGrid} aria-label="Your mobile Tambola ticket">
             <thead>
               <tr>
-                <th className={styles.mobileColHeader}>ROW 1</th>
-                <th className={styles.mobileColHeader}>ROW 2</th>
-                <th className={styles.mobileColHeader}>ROW 3</th>
+                <th className={styles.mobileColHeader}>COLUMN 1 · TOP LINE</th>
+                <th className={styles.mobileColHeader}>COLUMN 2 · MIDDLE LINE</th>
+                <th className={styles.mobileColHeader}>COLUMN 3 · BOTTOM LINE</th>
               </tr>
             </thead>
             <tbody>
@@ -143,7 +143,7 @@ export function TicketGrid({
                         {cell ? (
                           <div className={styles.cellContent}>
                             <span className={styles.position}>
-                              Col {colIdx + 1}
+                              Position {colIdx + 1}
                             </span>
                             <strong className={styles.cellText}>{cell.keyValue}</strong>
                             {winning && <span className={styles.winningState}>Verified win</span>}

@@ -48,10 +48,10 @@ export class OperationsRepository implements IOperationsRepository {
         .orderBy(sql`CASE status WHEN 'ACTIVE' THEN 0 WHEN 'PAUSED' THEN 1 WHEN 'RECOVERY_REQUIRED' THEN 2 WHEN 'READY' THEN 3 ELSE 4 END`, desc(rounds.updatedAt), desc(rounds.id)).limit(1);
       if (!game) return { event: null, round: null, participants: 0, drawCount: 0, pendingClaims: 0, verifiedWinners: 0, recoveryRequired: false, systemStatus: 'operational' };
       const result = await tx.execute(sql`SELECT
-        (SELECT count(DISTINCT participant_id)::int FROM tickets WHERE round_id=${game.id}) AS participants,
+        (SELECT count(DISTINCT participant_id)::int FROM tickets WHERE round_id=${game.id} AND joined_at IS NOT NULL) AS participants,
         (SELECT count(*)::int FROM draws WHERE round_id=${game.id}) AS "drawCount",
         (SELECT count(*)::int FROM claims WHERE round_id=${game.id} AND status='PENDING') AS "pendingClaims",
-        (SELECT count(*)::int FROM winners WHERE round_id=${game.id}) AS "verifiedWinners"`);
+        (SELECT count(*)::int FROM winners WHERE round_id=${game.id} AND EXISTS (SELECT 1 FROM claims c WHERE c.id=winners.claim_id AND c.status='VERIFIED')) AS "verifiedWinners"`);
       const metrics = result[0] as unknown as Pick<DashboardReadModel, 'participants' | 'drawCount' | 'pendingClaims' | 'verifiedWinners'>;
       return { event: null, round: game, ...metrics, recoveryRequired: game.status === 'RECOVERY_REQUIRED', systemStatus: game.status === 'RECOVERY_REQUIRED' ? 'recovery_required' : 'operational' };
     }, { isolationLevel: 'repeatable read', accessMode: 'read only' });

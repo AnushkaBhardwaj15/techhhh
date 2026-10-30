@@ -73,6 +73,8 @@ export interface PlayState {
   status: PlayStatus;
   createdAt: string;
   closingSequence: number | null;
+  displayedSequence?: number | null;
+  pendingPaymentPatterns?: PlayPattern[];
   bank: PlayQuestion[];
   draws: PlayDraw[];
   ticket: PlayTicket | null;
@@ -96,6 +98,7 @@ export interface ClaimOutcome {
 }
 export interface PlayStore {
   participants?(id: string): Promise<Array<{ id: string; name: string; participantId: string; paymentDeclared?: boolean }>>;
+  setParticipantPayment?(id: string, actor: PlayActor, userId: string, paid: boolean): Promise<void>;
   declarePayment(id: string, actor: PlayActor, paymentDeclared: boolean): Promise<void>;
   archive?(id: string, actor: PlayActor): Promise<void>;
   list(actor?: PlayActor): Promise<PlaySummary[]>;

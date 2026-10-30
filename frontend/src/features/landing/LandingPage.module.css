@@ -944,3 +944,45 @@
     font-size: 10.5px;
   }
 }
+
+/* Keep navigation actions aligned and hero actions consistently sized. */
+.navCta {
+  justify-content: center;
+  min-height: 40px;
+  white-space: nowrap;
+}
+.heroCtaGroup > a {
+  min-height: 52px;
+  border: 2px solid #000;
+  border-radius: 3px;
+  justify-content: space-between;
+  box-sizing: border-box;
+}
+@media (max-width: 700px) {
+  .navCta,
+  .navMobileDevLink {
+    min-height: 40px;
+    box-sizing: border-box;
+    justify-content: center;
+    border: 2px solid var(--neo-ink);
+    border-radius: 3px;
+  }
+  .heroCtaGroup {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    max-width: 360px;
+    gap: 16px;
+  }
+  .heroCtaGroup > a {
+    width: 100%;
+    padding: 0 22px;
+  }
+}
+@media (max-width: 400px) {
+  .navContainer {
+    flex-wrap: wrap;
+  }
+  .navActions {
+    margin-left: auto;
+  }
+}

@@ -18,6 +18,8 @@ export interface WinnerListOptions {
 }
 
 export interface IWinnerRepository {
+  paymentDeclared(ticketId: string, tx: any): Promise<boolean>;
+  revokeClaim(claimId: string, roundId: string, patternType: string, tx: any): Promise<WinnerRecord[]>;
   create(data: InsertWinner, tx: any): Promise<WinnerRecord>;
   countByRoundPattern(roundId: string, patternType: string, tx: any): Promise<number>;
   findParticipantIdByUserId(userId: string, eventId: string): Promise<string | null>;
@@ -26,6 +28,20 @@ export interface IWinnerRepository {
 }
 
 export class WinnerRepository implements IWinnerRepository {
+  async paymentDeclared(ticketId: string, tx: any): Promise<boolean> {
+    const rows = await tx.execute(sql`SELECT payment_declared FROM tickets WHERE id=${ticketId}`);
+    return rows[0]?.payment_declared === true;
+  }
+
+  async revokeClaim(claimId: string, roundId: string, patternType: string, tx: any): Promise<WinnerRecord[]> {
+    const removed = await tx.select().from(winners).where(eq(winners.claimId, claimId));
+    await tx.execute(sql`UPDATE round_patterns SET status='OPEN' WHERE round_id=${roundId} AND pattern_type=${patternType} AND (SELECT count(*) FROM winners WHERE round_id=${roundId} AND pattern_type=${patternType} AND claim_id<>${claimId} AND EXISTS (SELECT 1 FROM claims c WHERE c.id=winners.claim_id AND c.status='VERIFIED')) < max_winners`);
+    if (patternType === 'FULL_HOUSE') {
+      await tx.execute(sql`UPDATE rounds SET closing_sequence=NULL WHERE id=${roundId} AND NOT EXISTS (SELECT 1 FROM winners WHERE round_id=${roundId} AND pattern_type='FULL_HOUSE' AND claim_id<>${claimId} AND EXISTS (SELECT 1 FROM claims c WHERE c.id=winners.claim_id AND c.status='VERIFIED'))`);
+    }
+    return removed;
+  }
+
   async findParticipantIdByUserId(userId: string, eventId: string): Promise<string | null> {
     const [profile] = await getDb().select({ id: participantProfiles.id }).from(participantProfiles).where(and(eq(participantProfiles.userId, userId), eq(participantProfiles.eventId, eventId))).limit(1);
     return profile?.id ?? null;
@@ -43,7 +59,7 @@ export class WinnerRepository implements IWinnerRepository {
     const [filtered] = await tx
       .select({ count: count() })
       .from(winners)
-      .where(and(eq(winners.roundId, roundId), eq(winners.patternType, patternType)));
+      .where(and(eq(winners.roundId, roundId), eq(winners.patternType, patternType), sql`EXISTS (SELECT 1 FROM claims active_claim WHERE active_claim.id = ${winners.claimId} AND active_claim.status='VERIFIED')`));
     return Number(filtered?.count ?? 0);
   }
 
@@ -67,7 +83,7 @@ export class WinnerRepository implements IWinnerRepository {
     const db = getDb();
       const { page, limit } = options;
       const offset = (page - 1) * limit;
-      const where = and(participantId ? eq(winners.participantId, participantId) : undefined, options.roundId ? eq(winners.roundId, options.roundId) : undefined);
+      const where = and(sql`EXISTS (SELECT 1 FROM claims active_claim WHERE active_claim.id = ${winners.claimId} AND active_claim.status='VERIFIED')`, participantId ? eq(winners.participantId, participantId) : undefined, options.roundId ? eq(winners.roundId, options.roundId) : undefined);
       const [totalRow] = await db
         .select({ count: count() })
         .from(winners)

@@ -28,7 +28,6 @@ export function LandingPage() {
               <span className={styles.brandBadge}>TECH</span>
               <strong>TAMBOLA</strong>
             </Link>
-            <span className={styles.editionBadge}>MUACM 2026</span>
           </div>
 
           <nav className={styles.navLinks} aria-label="Main landing navigation">
@@ -68,7 +67,7 @@ export function LandingPage() {
           <div className={styles.heroContent}>
             <div className={styles.heroHeader}>
               <div className={styles.eyebrowContainer}>
-                <span className={styles.eyebrow}>MUACM ANNUAL TECH EVENT</span>
+                <span className={styles.eyebrow}>POWERED BY MU ACM</span>
                 <span className={styles.badgeRule}>·</span>
                 <span className={styles.eyebrowAccent}>SYNCHRONIZED DIGITAL TAMBOLA</span>
               </div>

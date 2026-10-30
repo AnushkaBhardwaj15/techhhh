@@ -44,6 +44,14 @@ export class PlayService {
     const participants = enrolled.map(person => ({ id: person.id, name: person.name, paymentDeclared: person.paymentDeclared ?? false, live: connected.has(person.id), points: state.wins.filter(win => win.participantId === person.participantId).reduce((total, win) => total + win.points, 0) })).sort((a, b) => b.points - a.points || a.name.localeCompare(b.name));
     return { participants, totalEnrolled: participants.length, livePlayers: participants.filter(person => person.live).length };
   }
+  async setParticipantPayment(id: string, actor: PlayActor, userId: string, paid: boolean) {
+    this.admin(actor);
+    await this.store.read(id, actor);
+    if (!this.store.setParticipantPayment) throw new ConflictError('Payment editing unavailable');
+    await this.store.setParticipantPayment(id, actor, userId, paid);
+    await this.notify(await this.store.read(id, actor));
+    return this.participants(id, actor);
+  }
   async list(actor: PlayActor) {
     return { games: await this.store.list(actor) };
   }
@@ -147,7 +155,7 @@ export class PlayService {
     id: string,
     actor: PlayActor,
     input: {
-      action: "start" | "pause" | "resume" | "end" | "call" | "reveal";
+      action: "start" | "pause" | "resume" | "end" | "call" | "reveal" | "display";
       number?: number;
       sequences?: number[];
     },
@@ -175,6 +183,12 @@ export class PlayService {
           throw new ConflictError(
             "This action is unavailable in the current game state.",
           );
+        if (input.action === "display") {
+          if (!s.draws.some(draw => draw.sequence === input.number)) throw new ConflictError("Question has not been called.");
+          s.displayedSequence = input.number;
+          return;
+        }
+        if (input.action === "call") s.displayedSequence = null;
         if (transitions[input.action])
           changePlayStatus(s, transitions[input.action]!);
         else if (input.action === "call")
@@ -209,7 +223,9 @@ export class PlayService {
   }
   async claim(id: string, actor: PlayActor, pattern: PlayPattern) {
     this.participant(actor);
-    const { state, result } = await this.store.change(id, actor, (s) => ({
+    const { state, result } = await this.store.change(id, actor, (s) => {
+      if (s.ticket?.paymentDeclared !== true) throw new ConflictError('Claims are blocked because payment has not been declared for this game.', 'PAYMENT_NOT_DECLARED');
+      return ({
       ...claimPrize(
         s,
         pattern,
@@ -218,7 +234,8 @@ export class PlayService {
         new Date().toISOString(),
       ),
       pattern,
-    }));
+    }); });
+    if (!result.accepted) await this.notify(state);
     if (result.accepted) {
       await this.notify(state);
       try {

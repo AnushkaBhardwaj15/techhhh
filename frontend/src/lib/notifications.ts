@@ -15,6 +15,7 @@ export function mutationSucceeded(path: string, method: string, body?: unknown) 
     notify({ tone: Number(body.failedCount) || Number(body.skippedCount) ? 'info' : 'success', title: 'Import finished', message: `${body.createdCount} players added, ${body.skippedCount} skipped, ${body.failedCount} failed. Review the row results below.` });
     return;
   }
+  if (path.endsWith('/commands') && body && typeof body === 'object' && 'displayedSequence' in body && body.displayedSequence != null) return;
   let message = 'Your changes have been saved.';
   if (path === '/auth/login') message = 'You’re signed in. Welcome to Tech Tambola.';
   else if (path === '/auth/logout') message = 'You’ve been signed out.';
@@ -28,7 +29,9 @@ export function mutationSucceeded(path: string, method: string, body?: unknown) 
   else if (/\/admin\/participants\/[^/]+$/.test(path)) message = 'Player details and access have been updated.';
   else if (path === '/admin/play/rounds' && method === 'POST') message = 'Game created. Share its game code when you’re ready for players to join.';
   else if (path.endsWith('/commands')) message = 'The game has been updated. Players will receive the latest state.';
-  else if (path.endsWith('/broadcast')) message = 'Game visibility has been updated in the participant lobby.';
+  else if (path.endsWith('/broadcast')) message = body && typeof body === 'object' && 'isBroadcast' in body && body.isBroadcast
+    ? 'Game is now visible in the participant lobby.'
+    : 'Game is now hidden from the participant lobby.';
   notify({ message, tone: 'success', title: 'Success' });
 }
 

@@ -75,7 +75,7 @@ export async function declarePlayPayment(id: string, paymentDeclared: boolean) {
 export async function commandPlayRound(
   id: string,
   command: {
-    action: "start" | "pause" | "resume" | "end" | "call" | "reveal";
+    action: "start" | "pause" | "resume" | "end" | "call" | "reveal" | "display";
     number?: number;
     sequences?: number[];
   },

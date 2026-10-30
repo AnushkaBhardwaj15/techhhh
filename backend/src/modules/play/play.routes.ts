@@ -24,6 +24,7 @@ const actor = (request: FastifyRequest): PlayActor => ({
     request.user!.role === "PARTICIPANT" ? undefined : request.user!.eventId,
 });
 const commands = z.discriminatedUnion("action", [
+  z.object({ action: z.literal("display"), number: z.number().int().positive() }).strict(),
   z.object({ action: z.enum(["start", "pause", "resume", "end"]) }).strict(),
   z
     .object({
@@ -41,6 +42,10 @@ const commands = z.discriminatedUnion("action", [
 export function createPlayRoutes(service: PlayService): FastifyPluginAsync {
   return async (app) => {
     app.get('/admin/play/rounds/:id/participants', { preHandler: [requireAdmin] }, request => service.participants(roundParams.parse(request.params).id, actor(request)));
+    app.put('/admin/play/rounds/:id/participants/:userId/payment', { preHandler: [requireAdmin] }, request => {
+      const params = z.object({id:z.string().uuid(),userId:z.string().uuid()}).parse(request.params);
+      return service.setParticipantPayment(params.id,actor(request),params.userId,z.object({paid:z.boolean()}).strict().parse(request.body).paid);
+    });
     app.delete('/admin/play/rounds/:id', { preHandler: [requireAdmin] }, async (request, reply) => {
       await service.remove(roundParams.parse(request.params).id, actor(request));
       return reply.status(204).send();

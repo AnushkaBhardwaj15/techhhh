@@ -29,9 +29,9 @@ import refStyles from './ReferencePlay.module.css';
 const labels = {
   EARLY_5: 'Early Five',
   FOUR_CORNERS: 'Four Corners',
-  TOP_LINE: 'Top Line',
-  MIDDLE_LINE: 'Middle Line',
-  BOTTOM_LINE: 'Bottom Line',
+  TOP_LINE: 'Row 1 · Top Line',
+  MIDDLE_LINE: 'Row 2 · Middle Line',
+  BOTTOM_LINE: 'Row 3 · Bottom Line',
   FULL_HOUSE: 'Full House',
   SECOND_FULL_HOUSE: 'Second Full House',
 };
@@ -132,6 +132,7 @@ function ReferenceParticipantGame({ id }: { id: string }) {
       const result = await claimPlayPrize(id, pattern);
       client.setQueryData(['reference-play', 'private', id], result.game);
       setAccepted(result.accepted);
+      if (result.pendingPayment) setFeedbackTitle('Pending payment verification');
       setFeedback(
         result.accepted
           ? `${labels[pattern]} confirmed! ${result.points === undefined ? 'Your prize has been recorded.' : `You earned ${result.points} points.`}`
@@ -156,7 +157,7 @@ function ReferenceParticipantGame({ id }: { id: string }) {
 
 
 
-  const latest = game?.draws.at(-1);
+  const latest = game?.draws.find(draw => draw.sequence === game.displayedSequence) ?? game?.draws.at(-1);
 
   return (
     <main className={refStyles.page}>
@@ -210,19 +211,20 @@ function ReferenceParticipantGame({ id }: { id: string }) {
           <RecentQuestions draws={game.draws} />
           <section className={refStyles.panel} aria-label="Available prizes">
             <h2>Available prizes</h2>
+            <p>Complete all 5 populated cells in Column 1, 2 or 3 on phones, or Row 1, 2 or 3 on laptops, to claim the matching line prize.</p>
             <div className={refStyles.claimList}>
               {game.patterns.map((p) => (
                 <div key={p.pattern} className={refStyles.claimItem}>
                   <div className={refStyles.claimItemHeader}>
-                    <span className={refStyles.claimName}>{labels[p.pattern]}</span>
+                    <span className={refStyles.claimName}><span className={refStyles.desktopPrizeLabel}>{labels[p.pattern]}</span><span className={refStyles.mobilePrizeLabel}>{labels[p.pattern].replace('Row', 'Column')}</span></span>
                     <span className={refStyles.points}>{p.points} PTS</span>
                   </div>
                   <ActionButton
                     busy={claimingPattern === p.pattern}
-                    disabled={game.status !== 'ACTIVE' || p.closed || Boolean(claimingPattern)}
+                    disabled={game.ticket?.paymentDeclared !== true || game.status !== 'ACTIVE' || p.closed || game.pendingPaymentPatterns?.includes(p.pattern) || Boolean(claimingPattern)}
                     onClick={() => void claim(p.pattern)}
                   >
-                    {p.closed ? 'Already won' : `Claim ${labels[p.pattern]}`}
+                    {game.ticket?.paymentDeclared !== true ? 'Claim blocked · unpaid' : game.pendingPaymentPatterns?.includes(p.pattern) ? 'Pending payment verification' : p.closed ? 'Already won' : <>Claim <span className={refStyles.desktopPrizeLabel}>{labels[p.pattern]}</span><span className={refStyles.mobilePrizeLabel}>{labels[p.pattern].replace('Row', 'Column')}</span></>}
                   </ActionButton>
                 </div>
               ))}

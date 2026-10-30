@@ -257,6 +257,11 @@ export function claimPrize(
       warning:
         "Your saved marks and the official calls do not complete this pattern yet. Keep playing—no points or cells were removed.",
     };
+  if (state.ticket.paymentDeclared !== true) return {
+    accepted: false,
+    pendingPayment: true,
+    warning: 'Pending payment verification. No points or prize have been awarded.',
+  };
   for (const c of proof) {
     c.marked = true;
   }
@@ -282,9 +287,11 @@ export function publicPlayState(state: PlayState, admin = false) {
     code: state.code,
     status: state.status,
     paymentDeclarationOpen: state.status === 'READY',
+    pendingPaymentPatterns: state.pendingPaymentPatterns ?? [],
     sequenceNumber: state.sequenceNumber,
     createdAt: state.createdAt,
     closingSequence: state.closingSequence,
+    displayedSequence: state.displayedSequence ?? null,
     isBroadcast: state.isBroadcast ?? false,
     ticket: state.ticket,
     score: state.ticket

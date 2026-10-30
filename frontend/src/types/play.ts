@@ -35,6 +35,8 @@ const cell = z.object({
   marked: z.boolean(),
 });
 export const playStateSchema = summary.extend({
+  displayedSequence: z.number().int().positive().nullable().optional(),
+  pendingPaymentPatterns: z.array(playPatternSchema).optional(),
   paymentDeclarationOpen: z.boolean().optional(),
   closingSequence: z.number().nullable(),
   score: z.number().nullable(),
@@ -98,6 +100,7 @@ export const playCurrentSchema = z.object({
 });
 export const playClaimSchema = z.object({
   accepted: z.boolean(),
+  pendingPayment: z.boolean().optional(),
   warning: z.string().optional(),
   points: z.number().optional(),
   game: playStateSchema,

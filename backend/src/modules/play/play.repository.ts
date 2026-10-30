@@ -66,6 +66,25 @@ export class PlayRepository implements PlayStore {
       await tx.unsafe('UPDATE tickets SET payment_declared=$2 WHERE id=$1', [ticket.id, paymentDeclared]);
     });
   }
+  async setParticipantPayment(id: string, actor: PlayActor, userId: string, paid: boolean): Promise<void> {
+    await this.connection().begin(async tx => {
+      const [round] = await tx.unsafe("SELECT id FROM rounds WHERE id=$1 AND archived_at IS NULL FOR UPDATE", [id]);
+      if (!round) throw new NotFoundError('Game not found');
+      const [ticket] = await tx.unsafe<{id: string; payment_declared: boolean}[]>("SELECT t.id,t.payment_declared FROM tickets t JOIN participant_profiles p ON p.id=t.participant_id WHERE t.round_id=$1 AND p.user_id=$2 AND t.joined_at IS NOT NULL", [id,userId]);
+      if (!ticket) throw new NotFoundError('Participant has not joined this game');
+      await tx.unsafe("SELECT id FROM round_patterns WHERE round_id=$1 FOR UPDATE", [id]);
+      await tx.unsafe('UPDATE tickets SET payment_declared=$2 WHERE id=$1', [ticket.id,paid]);
+      if (paid) {
+        await tx.unsafe("UPDATE claims SET rejection_reason=NULL,updated_at=now() WHERE ticket_id=$1 AND status='PENDING_VERIFICATION' AND rejection_reason='PENDING_PAYMENT_VERIFICATION'", [ticket.id]);
+      } else {
+        await tx.unsafe("UPDATE claims SET status='REJECTED',rejection_reason='Payment marked unpaid by staff',updated_at=now() WHERE ticket_id=$1 AND status='VERIFIED'", [ticket.id]);
+        await tx.unsafe("UPDATE claims SET rejection_reason='PENDING_PAYMENT_VERIFICATION',updated_at=now() WHERE ticket_id=$1 AND status='PENDING_VERIFICATION'", [ticket.id]);
+        await tx.unsafe("UPDATE round_patterns rp SET status='OPEN' WHERE rp.round_id=$1 AND (SELECT count(*) FROM winners w JOIN claims c ON c.id=w.claim_id WHERE w.round_id=rp.round_id AND w.pattern_type=rp.pattern_type AND c.status='VERIFIED') < rp.max_winners", [id]);
+        await tx.unsafe("UPDATE rounds SET closing_sequence=NULL WHERE id=$1 AND NOT EXISTS (SELECT 1 FROM winners w JOIN claims c ON c.id=w.claim_id WHERE w.round_id=$1 AND w.pattern_type='FULL_HOUSE' AND c.status='VERIFIED')", [id]);
+      }
+      await this.audit(tx,actor,id,'PAYMENT_STATUS_CHANGED',{participantUserId:userId,previousPaid:ticket.payment_declared,paid});
+    });
+  }
   async findCode(code: string, actor: PlayActor, paymentDeclared?: boolean) {
     return this.connection().begin(async (tx) => {
       const rounds = await tx.unsafe<{ id: string; event_id: string; status: PlayState['status'] }[]>(
@@ -390,8 +409,8 @@ export class PlayRepository implements PlayStore {
         }
       }
       await tx.unsafe(
-        `UPDATE rounds SET status=$2,closing_sequence=$3,updated_at=now() WHERE id=$1`,
-        [id, state.status, state.closingSequence],
+        `UPDATE rounds SET status=$2,closing_sequence=$3,displayed_sequence=$4,updated_at=now() WHERE id=$1`,
+        [id, state.status, state.closingSequence, state.displayedSequence ?? null],
       );
       if (state.status === "ACTIVE")
         await tx.unsafe(
@@ -566,14 +585,16 @@ export class PlayRepository implements PlayStore {
         }
       }
       if (result && typeof result === 'object' && 'accepted' in result && result.accepted === false && 'pattern' in result && state.ticket) {
-        const rejected = result as { pattern: string; warning?: string };
+        const rejected = result as { pattern: string; warning?: string; pendingPayment?: boolean };
         await tx.unsafe(
           `INSERT INTO claims(id,round_id,participant_id,ticket_id,pattern_type,status,rejection_reason)
            VALUES($1,$2,$3,$4,$5,$6,$7)
-           ON CONFLICT (round_id,participant_id,pattern_type) DO NOTHING`,
+           ON CONFLICT (round_id,participant_id,pattern_type) DO UPDATE
+           SET status=EXCLUDED.status,rejection_reason=EXCLUDED.rejection_reason,updated_at=now()
+           WHERE claims.status<>'VERIFIED' AND EXCLUDED.rejection_reason='PENDING_PAYMENT_VERIFICATION'`,
           [crypto.randomUUID(), id, state.ticket.participantId, state.ticket.id, rejected.pattern,
-            state.wins.some(win => win.pattern === rejected.pattern) ? 'REJECTED_PATTERN_ALREADY_CLOSED' : 'REJECTED',
-            rejected.warning ?? 'Claim eligibility was not met.'],
+            rejected.pendingPayment ? 'PENDING_VERIFICATION' : state.wins.some(win => win.pattern === rejected.pattern) ? 'REJECTED_PATTERN_ALREADY_CLOSED' : 'REJECTED',
+            rejected.pendingPayment ? 'PENDING_PAYMENT_VERIFICATION' : rejected.warning ?? 'Claim eligibility was not met.'],
         );
       }
       if (
@@ -622,7 +643,7 @@ export class PlayRepository implements PlayStore {
     const [round] = await sql.unsafe<
       (PlayState & { is_broadcast?: boolean })[]
     >(
-      `SELECT id,event_id AS "eventId",name,game_code AS code,status,sequence_number AS "sequenceNumber",created_at AS "createdAt",closing_sequence AS "closingSequence",COALESCE(is_broadcast,false) AS "isBroadcast" FROM rounds WHERE archived_at IS NULL AND id=$1 AND game_code IS NOT NULL`,
+      `SELECT id,event_id AS "eventId",name,game_code AS code,status,sequence_number AS "sequenceNumber",created_at AS "createdAt",closing_sequence AS "closingSequence",displayed_sequence AS "displayedSequence",COALESCE(is_broadcast,false) AS "isBroadcast" FROM rounds WHERE archived_at IS NULL AND id=$1 AND game_code IS NOT NULL`,
       [id],
     );
     if (!round) throw new NotFoundError("Round not found.");
@@ -653,7 +674,7 @@ export class PlayRepository implements PlayStore {
         [id],
       ),
       sql.unsafe<PlayWin[]>(
-        `SELECT w.id,w.claim_id AS "claimId",w.participant_id AS "participantId",COALESCE(p.user_id,w.participant_id) AS "userId",COALESCE(u.name,'Player') AS name,w.pattern_type AS pattern,w.verified_at AS "createdAt" FROM winners w LEFT JOIN participant_profiles p ON p.id=w.participant_id LEFT JOIN users u ON u.id=p.user_id WHERE w.round_id=$1 ORDER BY w.verified_at,w.id`,
+        `SELECT w.id,w.claim_id AS "claimId",w.participant_id AS "participantId",COALESCE(p.user_id,w.participant_id) AS "userId",COALESCE(u.name,'Player') AS name,w.pattern_type AS pattern,w.verified_at AS "createdAt" FROM winners w LEFT JOIN participant_profiles p ON p.id=w.participant_id LEFT JOIN users u ON u.id=p.user_id WHERE w.round_id=$1 AND EXISTS (SELECT 1 FROM claims c WHERE c.id=w.claim_id AND c.status='VERIFIED') ORDER BY w.verified_at,w.id`,
         [id],
       ),
     ]);
@@ -729,6 +750,9 @@ export class PlayRepository implements PlayStore {
       ...round,
       createdAt: iso(round.createdAt),
       isBroadcast: Boolean(round.isBroadcast),
+      pendingPaymentPatterns: ticket ? (await sql.unsafe<{ pattern: PlayPattern }[]>(
+        "SELECT pattern_type AS pattern FROM claims WHERE ticket_id=$1 AND status='PENDING_VERIFICATION' AND rejection_reason='PENDING_PAYMENT_VERIFICATION'", [ticket.id],
+      )).map(claim => claim.pattern) : [],
       bank: [...bank],
       draws: draws.map((d) => ({ ...d, drawnAt: iso(d.drawnAt) })),
       ticket,

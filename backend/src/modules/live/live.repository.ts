@@ -113,7 +113,7 @@ export class LiveReadRepository implements ILiveReadRepository {
         .select({ id: draws.id, roundId: draws.roundId, sequenceNumber: draws.sequenceNumber, drawMode: draws.drawMode, questionText: draws.questionText, keyValue: sql<string>`CASE WHEN draws.answer_revealed THEN ${draws.keyValue} ELSE '' END`, drawnAt: draws.drawnAt })
         .from(draws)
         .innerJoin(rounds, eq(draws.roundId, rounds.id))
-        .where(and(eq(draws.roundId, roundId), eq(rounds.eventId, eventId)))
+        .where(and(eq(draws.roundId, roundId), eq(rounds.eventId, eventId), sql`EXISTS (SELECT 1 FROM claims active_claim WHERE active_claim.id = ${winners.claimId} AND active_claim.status='VERIFIED')`))
         .orderBy(asc(draws.sequenceNumber), asc(draws.id));
       if (rows && rows.length > 0) return rows as LiveDrawRecord[];
     } catch {
@@ -140,9 +140,9 @@ export class LiveReadRepository implements ILiveReadRepository {
         .innerJoin(rounds, eq(winners.roundId, rounds.id))
         .innerJoin(participantProfiles, eq(winners.participantId, participantProfiles.id))
         .innerJoin(users, eq(participantProfiles.userId, users.id))
-        .where(and(eq(winners.eventId, eventId), eq(winners.roundId, roundId), eq(rounds.eventId, eventId)))
+        .where(and(eq(winners.eventId, eventId), eq(winners.roundId, roundId), eq(rounds.eventId, eventId), sql`EXISTS (SELECT 1 FROM claims active_claim WHERE active_claim.id = ${winners.claimId} AND active_claim.status='VERIFIED')`))
         .orderBy(asc(winners.patternType), asc(winners.verifiedAt), asc(winners.id));
-      if (rows && rows.length > 0) return rows as LiveWinnerRecord[];
+      return rows as LiveWinnerRecord[];
     } catch {
       // In-memory fallback
     }
