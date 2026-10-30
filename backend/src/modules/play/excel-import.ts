@@ -48,7 +48,7 @@ export function parseAndValidateBankSpreadsheet(
 ): BankImportValidationResult {
   let workbook: XLSX.WorkBook;
   try {
-    workbook = XLSX.read(buffer, { type: "buffer" });
+    workbook = XLSX.read(buffer, { type: "buffer", raw: true });
   } catch (err) {
     throw new ValidationError(
       `Unable to parse spreadsheet file: ${err instanceof Error ? err.message : "Invalid format"}`,
