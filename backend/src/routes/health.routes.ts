@@ -1,6 +1,8 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { checkMigrations } from '../db/check.ts';
 import { checkDbHealth } from '../db/client.ts';
+import { checkRedisHealth } from '../infrastructure/redis/redis.client.ts';
+import { checkKafkaHealth } from '../infrastructure/kafka/producer.ts';
 import { ServiceUnavailableError } from '../shared/errors/app-error.ts';
 
 export const healthRoutes: FastifyPluginAsync = async (fastify) => {
@@ -38,12 +40,17 @@ export const healthRoutes: FastifyPluginAsync = async (fastify) => {
       throw new ServiceUnavailableError('Database is unavailable');
     }
 
+    const redisStatus = await checkRedisHealth(1000);
+    const kafkaStatus = await checkKafkaHealth(1000);
+
     return {
       status: 'ready',
       checks: {
         database: 'ok',
         migrations: 'ok',
         config: 'ok',
+        redis: redisStatus.ok ? 'ok' : 'offline',
+        kafka: kafkaStatus.ok ? 'ok' : 'offline',
       },
       latencyMs: dbStatus.latencyMs,
       timestamp: new Date().toISOString(),

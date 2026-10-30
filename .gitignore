@@ -72,3 +72,7 @@ ruvector.db*
 backend/tests/restore/reports/*.dump
 backend/tests/restore/reports/run-*.json
 .neon
+
+.agents/teamwork/
+
+.pglite-data
