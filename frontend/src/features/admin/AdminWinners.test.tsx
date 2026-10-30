@@ -15,7 +15,7 @@ const winner: AdminWinner = {
   id: 'd89d76f6-86a3-4ef6-8c4a-fdbbf1319480', claimId: '76ab2634-5973-4bbb-b28d-6c19bcf953a1',
   participantId: '8d632d5f-16b1-4292-99e5-0d3628914c2c', roundId: '0d3aa3e6-4c58-4c36-b363-d5f11640ba52',
   eventId: '91c16f5c-7285-4fc2-9954-7043a0d6e5b4', patternType: 'EARLY_5', participantName: 'Sam Rivera',
-  eventTitle: 'Tech Tombola', verifiedAt: '2026-10-17T10:05:00.000Z',
+  eventTitle: 'Tech Tambola', verifiedAt: '2026-10-17T10:05:00.000Z',
 };
 const result = (data: AdminWinner[] = [winner], total = data.length, page = 1) => ({ data, total, page, limit: 20 });
 
@@ -30,14 +30,29 @@ describe('Admin Winner history', () => {
     vi.clearAllMocks();
     vi.mocked(listAdminWinners).mockResolvedValue(result());
   });
-  afterEach(() => { cleanup(); vi.restoreAllMocks(); });
+  afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
+
+  it('downloads the winners CSV with Tambola branding', async () => {
+    vi.stubGlobal('URL', class extends URL {
+      static createObjectURL = vi.fn(() => 'blob:winners');
+      static revokeObjectURL = vi.fn();
+    });
+    const downloads: string[] = [];
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
+      downloads.push(this.download);
+    });
+    renderWinners(`?gameId=${winner.roundId}`);
+    await screen.findByText('Sam Rivera');
+    fireEvent.click(screen.getByRole('button', { name: /Export CSV/i }));
+    expect(downloads).toEqual(['tech-tambola-winners-page-1.csv']);
+  });
 
   it('renders the server Winner identity, Event, Round, Pattern, and verification time', async () => {
     renderWinners();
     expect(await screen.findByRole('heading', { name: 'Winner history' })).toBeInTheDocument();
     expect(await screen.findByRole('table', { name: 'Verified Winner history, newest first' })).toBeInTheDocument();
     expect(screen.getByText('Sam Rivera')).toBeInTheDocument();
-    expect(screen.getByText('Tech Tombola')).toBeInTheDocument();
+    expect(screen.getByText('Tech Tambola')).toBeInTheDocument();
     expect(screen.getByText(winner.roundId)).toBeInTheDocument();
     expect(screen.getByText('EARLY 5')).toBeInTheDocument();
     expect(listAdminWinners).toHaveBeenCalledWith({ page: 1, limit: 20, signal: expect.any(AbortSignal) });

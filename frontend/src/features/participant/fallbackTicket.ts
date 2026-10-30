@@ -3,7 +3,7 @@ import type { ParticipantTicket } from '../../types/ticket';
 export const DEFAULT_TICKET_ID = 'b102a200-8679-4cfc-b2cd-9d23961b5a5f';
 
 /**
- * Standard 9x3 Tombola ticket matching the 90 technology question topics.
+ * Standard 9x3 Tambola ticket matching the 90 technology question topics.
  * 15 cells total: 5 in Row 0, 5 in Row 1, 5 in Row 2 across 9 columns (0-8).
  */
 export function createDefaultTicket(roundId: string = 'default-round', userId: string = 'player'): ParticipantTicket {

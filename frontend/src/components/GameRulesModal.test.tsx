@@ -14,7 +14,7 @@ describe('GameRulesModal', () => {
     render(<GameRulesModal isOpen={true} onClose={vi.fn()} />);
 
     expect(screen.getByRole('dialog')).toBeInTheDocument();
-    expect(screen.getByText(/How to Play Tech Tombola/i)).toBeInTheDocument();
+    expect(screen.getByText(/How to Play Tech Tambola/i)).toBeInTheDocument();
     expect(screen.getByText(/Not a Quiz!/i)).toBeInTheDocument();
     expect(screen.getByText('Early 5')).toBeInTheDocument();
     expect(screen.getByText('Four Corners')).toBeInTheDocument();

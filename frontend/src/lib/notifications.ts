@@ -16,7 +16,7 @@ export function mutationSucceeded(path: string, method: string, body?: unknown) 
     return;
   }
   let message = 'Your changes have been saved.';
-  if (path === '/auth/login') message = 'You’re signed in. Welcome to Tech Tombola.';
+  if (path === '/auth/login') message = 'You’re signed in. Welcome to Tech Tambola.';
   else if (path === '/auth/logout') message = 'You’ve been signed out.';
   else if (path.includes('password')) message = 'Your password has been changed. Sign in again with your new password.';
   else if (path.endsWith('/join')) message = 'You’ve joined the game. Your ticket is ready.';

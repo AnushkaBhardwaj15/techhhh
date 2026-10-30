@@ -23,7 +23,7 @@ async function mockAuthentication(page: Page, role?: 'PARTICIPANT' | 'ADMIN' | '
     status: user?.role === 'PARTICIPANT' ? 200 : 403,
     contentType: 'application/json',
     body: JSON.stringify(user?.role === 'PARTICIPANT'
-      ? { event: { id: 'event-1', title: 'Autumn Tombola', description: null, status: 'READY', scheduledAt: null, startedAt: null, completedAt: null, createdAt: '2026-10-17T10:00:00.000Z', updatedAt: '2026-10-17T10:00:00.000Z' } }
+      ? { event: { id: 'event-1', title: 'Autumn Tambola', description: null, status: 'READY', scheduledAt: null, startedAt: null, completedAt: null, createdAt: '2026-10-17T10:00:00.000Z', updatedAt: '2026-10-17T10:00:00.000Z' } }
       : { error: { code: 'FORBIDDEN', message: 'Participant access required' } }),
   }));
   await page.route('**/api/v1/participant/round/current', (route) => route.fulfill({
@@ -35,14 +35,14 @@ async function mockAuthentication(page: Page, role?: 'PARTICIPANT' | 'ADMIN' | '
     status: 200,
     contentType: 'application/json',
     body: JSON.stringify({
-      event: { id: 'event-1', title: 'Tech Tombola 2026', status: 'LIVE' },
+      event: { id: 'event-1', title: 'Tech Tambola 2026', status: 'LIVE' },
       round: { id: 'round-1', name: 'Round 1', sequenceNumber: 1, status: 'ACTIVE' },
       participants: 500, connectedConnections: 431, drawCount: 12, pendingClaims: 2,
       verifiedWinners: 4, recoveryRequired: false, systemStatus: 'operational',
     }),
   }));
   const event = {
-    id: '0d3aa3e6-4c58-4c36-b363-d5f11640ba52', title: 'Tech Tombola 2026', description: 'Annual event', status: 'READY',
+    id: '0d3aa3e6-4c58-4c36-b363-d5f11640ba52', title: 'Tech Tambola 2026', description: 'Annual event', status: 'READY',
     scheduledAt: null, startedAt: null, completedAt: null,
     createdAt: '2026-10-17T10:00:00.000Z', updatedAt: '2026-10-17T10:00:00.000Z',
   };
@@ -131,7 +131,7 @@ test('successful participant login opens the participant route', async ({ page }
   await page.getByRole('button', { name: /sign in/i }).click();
   await expect(page).toHaveURL(/\/participant\/lobby$/);
   await expect(page.getByRole('heading', { name: /welcome, ari/i })).toBeVisible();
-  await expect(page.getByText('Autumn Tombola')).toBeVisible();
+  await expect(page.getByText('Autumn Tambola')).toBeVisible();
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.screenshot({ path: 'design/screenshots/lobby-desktop.png', fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });
@@ -165,7 +165,7 @@ test('admin dashboard shows operational metrics and keyboard navigation at table
   await mockAuthentication(page, 'ADMIN', true);
   await page.setViewportSize({ width: 1024, height: 900 });
   await page.goto('/admin');
-  await expect(page.getByText('Tech Tombola 2026')).toBeVisible();
+  await expect(page.getByText('Tech Tambola 2026')).toBeVisible();
   await expect(page.getByText('431', { exact: true })).toBeVisible();
   await expect(page.getByText('12', { exact: true })).toBeVisible();
   await page.setViewportSize({ width: 1440, height: 1000 });
@@ -179,7 +179,7 @@ test('admin dashboard shows operational metrics and keyboard navigation at table
   await page.getByRole('link', { name: 'Event' }).click();
   await expect(page).toHaveURL(/\/admin\/event$/);
   await expect(page.getByRole('heading', { name: 'Event management' })).toBeVisible();
-  await page.getByRole('button', { name: /Tech Tombola 2026/ }).click();
+  await page.getByRole('button', { name: /Tech Tambola 2026/ }).click();
   await expect(page.getByText('Annual event')).toBeVisible();
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.screenshot({ path: 'design/screenshots/admin-event-management-desktop.png', fullPage: true });
@@ -454,7 +454,7 @@ test('Claim review confirms server adjudication and shows persisted status on de
   const claimId = '76ab2634-5973-4bbb-b28d-6c19bcf953a1';
   const claim = {
     id: claimId, roundId: '5c15e548-2bf0-4b12-8e8b-7d2c7cd91872', participantId: '4d9ec244-a97a-4c8c-a657-1e7fd5b9be69',
-    participantName: 'Sam Rivera', ticketId: 'd89d76f6-86a3-4ef6-8c4a-fdbbf1319480', eventId: '0d3aa3e6-4c58-4c36-b363-d5f11640ba52', eventTitle: 'Tech Tombola 2026',
+    participantName: 'Sam Rivera', ticketId: 'd89d76f6-86a3-4ef6-8c4a-fdbbf1319480', eventId: '0d3aa3e6-4c58-4c36-b363-d5f11640ba52', eventTitle: 'Tech Tambola 2026',
     patternType: 'EARLY_5', status: 'PENDING_VERIFICATION', rejectionReason: null, createdAt: '2026-10-17T10:00:00.000Z', verifiedAt: null,
   };
   let currentClaim = { ...claim };
@@ -467,7 +467,7 @@ test('Claim review confirms server adjudication and shows persisted status on de
     currentClaim = { ...currentClaim, status: 'VERIFIED', verifiedAt: '2026-10-17T10:05:00.000Z' };
     return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ winner: {
       id: '229f4f40-cff3-48a5-b177-8fbd55c1ed3b', claimId, participantId: claim.participantId, roundId: claim.roundId, eventId: claim.eventId,
-      patternType: 'EARLY_5', participantName: 'Sam Rivera', eventTitle: 'Tech Tombola 2026', verifiedAt: currentClaim.verifiedAt,
+      patternType: 'EARLY_5', participantName: 'Sam Rivera', eventTitle: 'Tech Tambola 2026', verifiedAt: currentClaim.verifiedAt,
     } }) });
   });
   page.on('dialog', (dialog) => dialog.accept());
@@ -493,13 +493,13 @@ test('Admin Winner history shows server records on desktop and mobile', async ({
       id: 'd89d76f6-86a3-4ef6-8c4a-fdbbf1319480', claimId: '76ab2634-5973-4bbb-b28d-6c19bcf953a1',
       participantId: '8d632d5f-16b1-4292-99e5-0d3628914c2c', roundId: '0d3aa3e6-4c58-4c36-b363-d5f11640ba52',
       eventId: '91c16f5c-7285-4fc2-9954-7043a0d6e5b4', patternType: 'EARLY_5', participantName: 'Sam Rivera',
-      eventTitle: 'Tech Tombola 2026', verifiedAt: '2026-10-17T10:05:00.000Z',
+      eventTitle: 'Tech Tambola 2026', verifiedAt: '2026-10-17T10:05:00.000Z',
     }], total: 1, page: Number(url.searchParams.get('page') ?? 1), limit: Number(url.searchParams.get('limit') ?? 20) }) });
   });
   await page.goto('/admin/winners');
   await expect(page.getByRole('heading', { name: 'Winner history' })).toBeVisible();
   await expect(page.getByRole('table')).toContainText('Sam Rivera');
-  await expect(page.getByRole('table')).toContainText('Tech Tombola 2026');
+  await expect(page.getByRole('table')).toContainText('Tech Tambola 2026');
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.screenshot({ path: 'design/screenshots/admin-winner-history-desktop.png', fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });

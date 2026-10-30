@@ -34,7 +34,7 @@ export function ParticipantNav({ user, onLogout, isLoggingOut = false }: Partici
       <header className={styles.header} role="banner">
         <div className={styles.topRow}>
           <div className={styles.brandGroup}>
-            <Link to="/lobby" className={styles.wordmark} aria-label="Tech Tombola home page" tabIndex={-1}>
+            <Link to="/lobby" className={styles.wordmark} aria-label="Tech Tambola home page" tabIndex={-1}>
               <span className={styles.badge}>TECH</span>
               <strong>TAMBOLA</strong>
             </Link>
@@ -50,7 +50,7 @@ export function ParticipantNav({ user, onLogout, isLoggingOut = false }: Partici
               className={styles.navButton}
               onClick={() => setShowRules(true)}
               aria-label="View game rules and winning patterns"
-              title="How to Play Tech Tombola"
+              title="How to Play Tech Tambola"
               tabIndex={-1}
             >
               <BookOpenIcon width="14" height="14" aria-hidden="true" />

@@ -16,7 +16,7 @@ describe('AppErrorBoundary', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('This page hit a problem. Reload to try again.');
     expect(screen.getByRole('button', { name: 'Reload page' })).toBeInTheDocument();
     expect(screen.queryByText(/private@example|secret-token/)).not.toBeInTheDocument();
-    const safeLog = errorLog.mock.calls.find(([label]) => label === 'Tech Tombola diagnostic');
+    const safeLog = errorLog.mock.calls.find(([label]) => label === 'Tech Tambola diagnostic');
     expect(safeLog?.[1]).toMatchObject({ type: 'render' });
     expect(JSON.stringify(safeLog?.[1])).not.toMatch(/private@example|secret-token/);
   });

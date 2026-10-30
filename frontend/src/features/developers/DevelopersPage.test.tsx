@@ -1,4 +1,4 @@
-import { render, screen, cleanup } from '@testing-library/react';
+import { render, screen, cleanup, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, afterEach } from 'vitest';
 import { DevelopersPage } from './DevelopersPage';
@@ -19,7 +19,8 @@ describe('DevelopersPage', () => {
 
     expect(screen.getAllByText(/MEET THE DEVELOPER/i).length).toBeGreaterThan(0);
     expect(screen.getByRole('heading', { level: 1, name: /Meet the Developers/i })).toBeInTheDocument();
-    expect(screen.getAllByText(/TECH TOMBOLA/i).length).toBeGreaterThan(0);
+    expect(within(screen.getByRole('banner')).getByText('TECH TAMBOLA')).toBeVisible();
+    expect(screen.getByTestId('developers-container')).not.toHaveTextContent(/tombola/i);
   });
 
   it('renders all four team members with their exact names and roles', () => {

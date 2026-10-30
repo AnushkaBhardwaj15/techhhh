@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render, screen, within } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import { LandingPage } from './LandingPage';
@@ -25,14 +25,18 @@ describe('LandingPage', () => {
     vi.clearAllMocks();
   });
 
-  it('renders the hero section with the core Tech Tombola message', async () => {
+  it('renders the hero section with the core Tech Tambola message', async () => {
     vi.mocked(authApi.getMe).mockRejectedValue(new ApiError(401, 'Authentication required'));
     renderLanding();
+
+    const wordmark = screen.getByRole('link', { name: 'Tech Tambola Home' });
+    expect(within(wordmark).getByText('TAMBOLA')).toBeVisible();
+    expect(screen.getByRole('main')).not.toHaveTextContent(/tombola/i);
 
     expect(
       screen.getByRole('heading', { name: /Listen for the clue\..*Spot the key\..*Claim the win\./i })
     ).toBeInTheDocument();
-    expect(screen.getByText(/Tech Tombola is/i)).toBeInTheDocument();
+    expect(screen.getByText(/Tech Tambola is/i)).toBeInTheDocument();
     expect(screen.getByText(/not a quiz/i)).toBeInTheDocument();
   });
 

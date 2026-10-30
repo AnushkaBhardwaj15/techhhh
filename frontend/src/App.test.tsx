@@ -112,7 +112,8 @@ describe('application role routes', () => {
   it('shows a connection error instead of treating session restoration failure as logout', async () => {
     vi.mocked(authApi.getMe).mockRejectedValue(new ApiError(503, 'Unavailable'));
     render(<App />);
-    expect(await screen.findByRole('alert')).toHaveTextContent('Connection failed');
+    expect(await screen.findByRole('alert', {}, { timeout: 5000 })).toHaveTextContent('Connection failed');
+    expect(authApi.getMe).toHaveBeenCalledTimes(3);
     expect(screen.queryByRole('button', { name: /sign in/i })).not.toBeInTheDocument();
   });
 

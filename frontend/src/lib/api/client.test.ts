@@ -38,7 +38,7 @@ describe('apiRequest', () => {
     const errorLog = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({ error: { code: 'FAILED', message: 'secret response' } }), { status: 500, headers: { 'content-type': 'application/json' } })));
     await expect(apiRequest('/participants/import', { method: 'POST', body: JSON.stringify({ password: 'secret request' }) })).rejects.toMatchObject({ status: 500 });
-    const safeLog = errorLog.mock.calls.find(([label]) => label === 'Tech Tombola diagnostic');
+    const safeLog = errorLog.mock.calls.find(([label]) => label === 'Tech Tambola diagnostic');
     expect(safeLog?.[1]).toMatchObject({ type: 'api', method: 'POST', status: 500 });
     expect(safeLog?.[1]).toHaveProperty('correlationId');
     expect(JSON.stringify(safeLog?.[1])).not.toMatch(/secret response|secret request|participants\/import/);
@@ -51,7 +51,7 @@ describe('apiRequest', () => {
   });
   it('reports network failures without exposing request data', async () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('fetch failed')));
-    await expect(apiRequest('/auth/login', { method: 'POST', body: JSON.stringify({ password: 'secret' }) })).rejects.toThrow('Unable to reach Tech Tombola');
+    await expect(apiRequest('/auth/login', { method: 'POST', body: JSON.stringify({ password: 'secret' }) })).rejects.toThrow('Unable to reach Tech Tambola');
   });
   it('preserves caller cancellation', async () => {
     const controller = new AbortController(); controller.abort();

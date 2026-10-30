@@ -9,7 +9,7 @@ describe('SampleTicketDemo', () => {
   it('uses the game ticket mobile layout with three row headers and all 27 positions', async () => {
     vi.stubGlobal('innerWidth', 390);
     render(<SampleTicketDemo />);
-    const ticket = screen.getByRole('table', { name: 'Your mobile Tombola ticket' });
+    const ticket = screen.getByRole('table', { name: 'Your mobile Tambola ticket' });
     expect(within(ticket).getAllByRole('columnheader').map((header) => header.textContent)).toEqual(['ROW 1', 'ROW 2', 'ROW 3']);
     expect(within(ticket).getAllByRole('row')).toHaveLength(10);
     expect(within(ticket).getAllByRole('cell')).toHaveLength(27);

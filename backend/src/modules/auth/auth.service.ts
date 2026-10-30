@@ -254,8 +254,8 @@ export class AuthService {
           targetEventId = anyEvent[0].id;
         } else {
           const [newEvent] = await db.insert(events).values({
-            title: 'Tech Tombola 2026',
-            description: 'Synchronized Digital Tombola',
+            title: 'Tech Tambola 2026',
+            description: 'Synchronized Digital Tambola',
             status: 'LIVE',
           }).returning({ id: events.id });
           targetEventId = newEvent.id;

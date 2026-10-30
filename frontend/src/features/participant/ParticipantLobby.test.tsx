@@ -35,7 +35,7 @@ const user: AuthenticatedUser = {
 const timestamp = '2026-10-17T14:00:00.000Z';
 const event: ParticipantEvent = {
   id: 'e1',
-  title: 'Autumn Tombola',
+  title: 'Autumn Tambola',
   description: null,
   status: 'READY',
   scheduledAt: null,
@@ -58,7 +58,7 @@ const round: ParticipantRound = {
 
 const activeGameRecord: gameSync.SyncGameRecord = {
   id: 'game-1',
-  name: 'Tech Tombola Live Arena',
+  name: 'Tech Tambola Live Arena',
   code: 'TOM123',
   status: 'ACTIVE',
   isBroadcast: true,
@@ -126,7 +126,7 @@ describe('ParticipantLobby', () => {
   it('renders active game broadcast header when enabled and does not display QR code', async () => {
     renderLobby();
     expect(await screen.findByText(/ACTIVE GAME ANNOUNCED BY HOST/i)).toBeInTheDocument();
-    expect(screen.getByText('Tech Tombola Live Arena')).toBeInTheDocument();
+    expect(screen.getByText('Tech Tambola Live Arena')).toBeInTheDocument();
     expect(screen.getByText('OFFICIAL GAME CODE')).toBeInTheDocument();
     expect(screen.queryByRole('img', { name: /QR Code for Game/i })).not.toBeInTheDocument();
   });

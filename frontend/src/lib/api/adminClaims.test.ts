@@ -3,7 +3,7 @@ import { listAdminClaims, rejectAdminClaim, verifyAdminClaim } from './adminClai
 
 const claim = {
   id: '76ab2634-5973-4bbb-b28d-6c19bcf953a1', roundId: '0d3aa3e6-4c58-4c36-b363-d5f11640ba52', participantId: '8d632d5f-16b1-4292-99e5-0d3628914c2c',
-  participantName: 'Sam Rivera', ticketId: '4d9ec244-a97a-4c8c-a657-1e7fd5b9be69', eventId: '91c16f5c-7285-4fc2-9954-7043a0d6e5b4', eventTitle: 'Tech Tombola',
+  participantName: 'Sam Rivera', ticketId: '4d9ec244-a97a-4c8c-a657-1e7fd5b9be69', eventId: '91c16f5c-7285-4fc2-9954-7043a0d6e5b4', eventTitle: 'Tech Tambola',
   patternType: 'EARLY_5', status: 'PENDING_VERIFICATION', rejectionReason: null, createdAt: '2026-10-17T10:00:00.000Z', verifiedAt: null,
 };
 const winner = {

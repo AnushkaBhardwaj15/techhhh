@@ -26,6 +26,10 @@ describe('credentialed CORS preflight', () => {
 
     const recoveryService = { markInterruptedRounds: async () => [] } as unknown as RecoveryService;
     app = await buildApp({ enableLogging: false, recoveryService });
+    app.get('/test/connection-failure/:code', async (request) => {
+      const { code } = request.params as { code: string };
+      throw Object.assign(new Error('private database connection details'), { code });
+    });
     const mutationOriginGuard = async (request: FastifyRequest): Promise<void> => verifyMutationOrigin(request);
     app.patch('/test/cors-mutation', { preHandler: [mutationOriginGuard] }, async (request) => ({
       method: request.method,
@@ -36,6 +40,27 @@ describe('credentialed CORS preflight', () => {
       method: request.method,
       cookie: request.headers.cookie,
     }));
+  });
+
+  for (const code of ['CONNECT_TIMEOUT', 'CONNECTION_CLOSED', 'CONNECTION_ENDED', 'ECONNRESET', 'ECONNREFUSED', 'ETIMEDOUT']) {
+    it(`returns a safe, retryable service error for ${code}`, async () => {
+      const response = await app.inject(`/test/connection-failure/${code}`);
+      expect(response.statusCode).toBe(503);
+      expect(response.headers['retry-after']).toBe('1');
+      expect(response.json()).toMatchObject({ error: {
+        code: 'SERVICE_UNAVAILABLE',
+        message: 'Connection temporarily unavailable. Please try again.',
+      } });
+      expect(response.body).not.toContain('private database');
+      expect(response.json().requestId).toBeTruthy();
+    });
+  }
+
+  it('keeps unexpected database errors as internal errors', async () => {
+    const response = await app.inject('/test/connection-failure/42P01');
+    expect(response.statusCode).toBe(500);
+    expect(response.headers['retry-after']).toBeUndefined();
+    expect(response.body).not.toContain('private database');
   });
 
   afterAll(async () => {

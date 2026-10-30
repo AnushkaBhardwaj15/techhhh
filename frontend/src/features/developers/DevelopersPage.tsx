@@ -53,7 +53,7 @@ export function DevelopersPage() {
           </div>
 
           <div className={styles.navCenter}>
-            <span className={styles.brandTitle}>TECH TOMBOLA</span>
+            <span className={styles.brandTitle}>TECH TAMBOLA</span>
             <span className={styles.editionBadge}>MUACM 2026</span>
           </div>
 
@@ -74,7 +74,7 @@ export function DevelopersPage() {
             Meet the Developers
           </h1>
           <p className={styles.heroSubtitle}>
-            The core team behind Tech Tombola 2026 at MUACM.
+            The core team behind Tech Tambola 2026 at MUACM.
           </p>
         </section>
 
@@ -128,7 +128,7 @@ export function DevelopersPage() {
       <footer className={styles.footer} role="contentinfo">
         <div className={styles.footerContainer}>
           <div className={styles.footerText}>
-            <strong>TECH TOMBOLA</strong> · MUACM 2026 · Play Together. Mark Your Moment.
+            <strong>TECH TAMBOLA</strong> · MUACM 2026 · Play Together. Mark Your Moment.
           </div>
           <div className={styles.footerLinks}>
             <Link to="/">Home</Link>

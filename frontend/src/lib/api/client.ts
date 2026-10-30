@@ -60,7 +60,7 @@ export async function apiRequest<T>(path: string, options: RequestInit = {}): Pr
     if (error instanceof TypeError) {
       mutationFailed(path, requestedMethod, 0);
       reportDiagnostic('api', { ...(method ? { method } : {}), status: 0 });
-      throw new ApiError(0, 'Unable to reach Tech Tombola. Check your connection and try again.');
+      throw new ApiError(0, 'Unable to reach Tech Tambola. Check your connection and try again.');
     }
     reportDiagnostic('api', method ? { method } : {});
     throw error;

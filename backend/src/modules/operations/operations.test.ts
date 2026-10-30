@@ -44,7 +44,7 @@ describe('Operations read models', () => {
 
   it('returns populated dashboard operational counts and Event-scoped recovery state', async () => {
     const expected = {
-      event: { id: 'event-1', title: 'Tech Tombola', status: 'LIVE' },
+      event: { id: 'event-1', title: 'Tech Tambola', status: 'LIVE' },
       round: { id: 'round-1', name: 'Round 1', sequenceNumber: 1, status: 'RECOVERY_REQUIRED' },
       participants: 500, drawCount: 12, pendingClaims: 2, verifiedWinners: 4, recoveryRequired: true, systemStatus: 'recovery_required' as const,
     };

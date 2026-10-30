@@ -8,7 +8,7 @@ import { ServiceUnavailableError } from '../shared/errors/app-error.ts';
 export const healthRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get('/', async () => {
     return {
-      name: 'Tech Tombola API',
+      name: 'Tech Tambola API',
       status: 'online',
       health: '/health',
       ready: '/ready',

@@ -24,7 +24,7 @@ describe('ParticipantNav', () => {
     );
 
     // Brand
-    expect(screen.getByRole('link', { name: /Tech Tombola home page/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Tech Tambola home page/i })).toBeInTheDocument();
 
     // Profile link
     expect(screen.getByRole('link', { name: /profile/i })).toHaveAttribute(

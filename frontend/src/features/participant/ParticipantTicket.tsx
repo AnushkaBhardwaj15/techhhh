@@ -94,7 +94,7 @@ export function TicketGrid({
       >
         {isMobile ? (
           /* Mobile view: 9 rows x 3 columns (Rows 1-3) to avoid horizontal scrolling */
-          <table className={styles.mobileGrid} aria-label="Your mobile Tombola ticket">
+          <table className={styles.mobileGrid} aria-label="Your mobile Tambola ticket">
             <thead>
               <tr>
                 <th className={styles.mobileColHeader}>ROW 1</th>
@@ -178,7 +178,7 @@ export function TicketGrid({
           </table>
         ) : (
           /* Laptop / Desktop view: classic 3 rows x 9 columns */
-          <table className={styles.grid} aria-label="Your Tombola ticket">
+          <table className={styles.grid} aria-label="Your Tambola ticket">
             <tbody>
               {Array.from({ length: 3 }, (_, row) => (
                 <tr

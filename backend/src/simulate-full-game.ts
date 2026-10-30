@@ -92,7 +92,7 @@ async function main() {
   let eventId: string;
   if (eventList.length === 0) {
     const [created] = await db.insert(events).values({
-      title: 'Tech Tombola Tournament 2026',
+      title: 'Tech Tambola Tournament 2026',
       description: 'Official 15-bot tournament with 2 administrators',
       status: 'LIVE',
     }).returning({ id: events.id });

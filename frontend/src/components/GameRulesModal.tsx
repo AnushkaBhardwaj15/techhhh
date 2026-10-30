@@ -36,7 +36,7 @@ export function GameRulesModal({ isOpen, onClose }: GameRulesModalProps) {
           <div className={styles.titleGroup}>
             <h2 id="rules-modal-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <BookOpenIcon width="18" height="18" aria-hidden="true" />
-              <span>How to Play Tech Tombola</span>
+              <span>How to Play Tech Tambola</span>
             </h2>
             <p>Official Event Guide & Winning Pattern Rules</p>
           </div>

@@ -39,7 +39,7 @@ let activeGameClaims: ActiveClaimRecord[] = [];
 
 let currentActiveGame: ActiveGameData = {
   id: 'a1b2c3d4-e5f6-47a8-b9c0-112233445566',
-  name: 'Tech Tombola - Tournament Round 1',
+  name: 'Tech Tambola - Tournament Round 1',
   code: '8679DE',
   status: 'READY',
   createdAt: '2026-10-23T10:00:00Z',
@@ -112,7 +112,7 @@ export function setSharedActiveGame(game: Partial<ActiveGameData> & { code: stri
 
   const updated: ActiveGameData = {
     id: game.id || (existingIdx >= 0 ? allGamesList[existingIdx].id : crypto.randomUUID()),
-    name: game.name || `Tech Tombola - Game #${cleanCode}`,
+    name: game.name || `Tech Tambola - Game #${cleanCode}`,
     code: cleanCode,
     status: game.status || 'ACTIVE',
     qrUrl: game.qrUrl,

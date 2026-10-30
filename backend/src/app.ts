@@ -281,6 +281,21 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
       request.log.error({ event: 'request_failed', requestId, method: request.method, route: request.routeOptions.url, err: error }, 'Request or database operation failed');
     }
 
+    const connectionUnavailable = typeof errCode === 'string' && [
+      'CONNECT_TIMEOUT', 'CONNECTION_CLOSED', 'CONNECTION_ENDED',
+      'ECONNRESET', 'ECONNREFUSED', 'ETIMEDOUT',
+    ].includes(errCode);
+    if (connectionUnavailable) {
+      reply.header('Retry-After', '1').status(503).send({
+        error: {
+          code: ERROR_CODES.SERVICE_UNAVAILABLE,
+          message: 'Connection temporarily unavailable. Please try again.',
+        },
+        requestId,
+      });
+      return;
+    }
+
     reply.status(500).send({
       error: {
         code: ERROR_CODES.INTERNAL_SERVER_ERROR,

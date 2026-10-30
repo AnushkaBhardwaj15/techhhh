@@ -42,7 +42,7 @@ async function main() {
   if (adminMuacm.length === 0) {
     const [adminUser] = await sql`
       INSERT INTO users (email, password_hash, name, status)
-      VALUES ('admin@muacm.org', ${adminHash}, 'Tombola Admin', 'ACTIVE')
+      VALUES ('admin@muacm.org', ${adminHash}, 'Tambola Admin', 'ACTIVE')
       RETURNING id
     `;
     await sql`

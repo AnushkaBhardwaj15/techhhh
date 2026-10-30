@@ -47,12 +47,12 @@ describe('LoginPage', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Email or password is incorrect');
   });
   it('shows a connection error when sign in cannot reach the server', async () => {
-    vi.mocked(authApi.login).mockRejectedValueOnce(new ApiError(0, 'Unable to reach Tech Tombola. Check your connection and try again.'));
+    vi.mocked(authApi.login).mockRejectedValueOnce(new ApiError(0, 'Unable to reach Tech Tambola. Check your connection and try again.'));
     const user = setup();
     await user.type(screen.getByRole('textbox', { name: /Email address/ }), 'attendee@example.test');
     await user.type(screen.getByLabelText(/Password/), 'password');
     await user.click(screen.getByRole('button', { name: /sign in/i }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('Unable to reach Tech Tombola');
+    expect(await screen.findByRole('alert')).toHaveTextContent('Unable to reach Tech Tambola');
   });
   it.each([
     ['PARTICIPANT', '/participant/lobby', 'Participant surface'],

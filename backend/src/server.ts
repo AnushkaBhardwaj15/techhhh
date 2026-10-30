@@ -42,7 +42,7 @@ async function main() {
     await app.listen({ port: env.PORT, host: listenHost });
     app.log.info(
       { config: getSafeEnv(env) },
-      `Tech Tombola backend listening on http://${listenHost}:${env.PORT}`
+      `Tech Tambola backend listening on http://${listenHost}:${env.PORT}`
     );
   } catch (err) {
     app.log.error({ err }, 'Failed to start server');

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { adminEventListSchema, adminEventSchema, createAdminEventSchema, updateAdminEventSchema } from './adminEvent';
 
 const event = {
-  id: '0d3aa3e6-4c58-4c36-b363-d5f11640ba52', title: 'Tech Tombola', description: null, status: 'DRAFT',
+  id: '0d3aa3e6-4c58-4c36-b363-d5f11640ba52', title: 'Tech Tambola', description: null, status: 'DRAFT',
   scheduledAt: null, startedAt: null, completedAt: null,
   createdAt: '2026-10-17T10:00:00.000Z', updatedAt: '2026-10-17T10:00:00.000Z',
 };

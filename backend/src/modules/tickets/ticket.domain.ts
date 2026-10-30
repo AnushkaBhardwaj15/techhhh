@@ -76,7 +76,7 @@ export function shuffle<T>(array: T[], rng: () => number = cryptoRng): T[] {
  */
 function generateGridPattern(rng: () => number = cryptoRng): Array<{ rowIndex: number; colIndex: number }> {
   // We need 15 cells total across 3 rows (5 per row) and 9 columns (0..8).
-  // In a valid traditional Tombola card, each column must contain at least 1 number (1 to 3 cells per column).
+  // In a valid traditional Tambola card, each column must contain at least 1 number (1 to 3 cells per column).
   const maxAttempts = 1000;
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     const row0Cols = pickKDistinct(9, 5, rng);
@@ -124,7 +124,7 @@ function pickKDistinct(n: number, k: number, rng: () => number = cryptoRng): num
 }
 
 /**
- * Pure generator for a traditional 3x9 Tombola ticket.
+ * Pure generator for a traditional 3x9 Tambola ticket.
  */
 export function generateTicketLayout(options: {
   keys: TicketKey[];

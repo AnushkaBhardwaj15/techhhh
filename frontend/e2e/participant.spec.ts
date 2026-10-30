@@ -23,7 +23,7 @@ async function mockAuthentication(page: Page, role?: 'PARTICIPANT' | 'ADMIN' | '
     status: user?.role === 'PARTICIPANT' ? 200 : 403,
     contentType: 'application/json',
     body: JSON.stringify(user?.role === 'PARTICIPANT'
-      ? { event: { id: 'event-1', title: 'Autumn Tombola', description: null, status: 'READY', scheduledAt: null, startedAt: null, completedAt: null, createdAt: '2026-10-16T14:00:00.000Z', updatedAt: '2026-10-17T14:00:00.000Z' } }
+      ? { event: { id: 'event-1', title: 'Autumn Tambola', description: null, status: 'READY', scheduledAt: null, startedAt: null, completedAt: null, createdAt: '2026-10-16T14:00:00.000Z', updatedAt: '2026-10-17T14:00:00.000Z' } }
       : { error: { code: 'FORBIDDEN', message: 'Participant access required' } }),
   }));
   await page.route('**/api/v1/participant/round/current', (route) => route.fulfill({
@@ -45,7 +45,7 @@ test('active round renders the server ticket within the live game at mobile and 
   await page.route('**/api/v1/participant/round/current', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ round: { id: roundId, eventId: 'event-1', sequenceNumber: roundId === 'round-1' ? 1 : 2, name: roundName, status: 'ACTIVE', patterns: [], createdAt: '2026-10-17T14:00:00.000Z', updatedAt: '2026-10-17T14:00:00.000Z' } }) }));
   await page.route('**/api/v1/participant/ticket?roundId=*', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ticket: { id: ticketId, roundId, participantId: 'participant-1', eventId: 'event-1', createdAt: '2026-10-17T14:00:00.000Z', cells } }) }));
   await page.goto('/participant/ticket');
-  await expect(page.getByRole('table', { name: 'Your Tombola ticket' })).toBeVisible();
+  await expect(page.getByRole('table', { name: 'Your Tambola ticket' })).toBeVisible();
   await expect(page.getByText('A LONG TECHNOLOGY KEY')).toBeVisible();
   await expect(page.getByText('Marked', { exact: true })).toBeVisible();
   const markedCell = page.getByRole('cell', { name: 'Row 1, column 1: A LONG TECHNOLOGY KEY, marked' });
@@ -120,7 +120,7 @@ test('a READY round starts its live feed after REST observes the host starting i
   const drawnAt = '2026-10-17T14:00:00.000Z';
   let roundStatus = 'READY';
   let roundRequests = 0;
-  await page.route('**/api/v1/participant/event', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ event: { id: eventId, title: 'Autumn Tombola', description: null, status: 'LIVE', scheduledAt: null, startedAt: null, completedAt: null, createdAt: drawnAt, updatedAt: drawnAt } }) }));
+  await page.route('**/api/v1/participant/event', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ event: { id: eventId, title: 'Autumn Tambola', description: null, status: 'LIVE', scheduledAt: null, startedAt: null, completedAt: null, createdAt: drawnAt, updatedAt: drawnAt } }) }));
   await page.route('**/api/v1/participant/round/current', (route) => {
     roundRequests += 1;
     if (roundRequests > 1) roundStatus = 'ACTIVE';
@@ -175,7 +175,7 @@ test('live Draw events reconcile to chronological REST history and matching tick
   let draws: { id: string; roundId: string; sequenceNumber: number; drawMode: string; questionText: string; keyValue: string; drawnAt: string }[] = [];
   let socket: import('@playwright/test').WebSocketRoute | undefined;
   const drawnAt = '2026-10-17T14:00:00.000Z';
-  await page.route('**/api/v1/participant/event', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ event: { id: eventId, title: 'Autumn Tombola', description: null, status: 'LIVE', scheduledAt: null, startedAt: null, completedAt: null, createdAt: drawnAt, updatedAt: drawnAt } }) }));
+  await page.route('**/api/v1/participant/event', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ event: { id: eventId, title: 'Autumn Tambola', description: null, status: 'LIVE', scheduledAt: null, startedAt: null, completedAt: null, createdAt: drawnAt, updatedAt: drawnAt } }) }));
   await page.route('**/api/v1/participant/round/current', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ round: { id: roundId, eventId, sequenceNumber: 1, name: 'Opening Round', status: 'ACTIVE', patterns: [], createdAt: drawnAt, updatedAt: drawnAt } }) }));
   await page.route('**/api/v1/participant/draws?*', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ data: draws, total: draws.length, page: 1, limit: 100 }) }));
   const cells = Array.from({ length: 15 }, (_, index) => ({ id: `cell-${index}`, rowIndex: Math.floor(index / 5), colIndex: index % 9, row: Math.floor(index / 5), column: index % 9, keyId: `key-${index}`, keyValue: index === 0 ? 'DOCKER' : `KEY ${index}`, marked: false }));
@@ -225,7 +225,7 @@ test('switching Participant accounts closes the old live socket and loads the ne
   const accountDraw = () => currentUser?.id === 'user-1'
     ? { id: '11111111-1111-4111-8111-111111111111', roundId, sequenceNumber: 1, drawMode: 'RANDOM', questionText: 'First account clue', keyValue: 'DOCKER', drawnAt }
     : { id: '44444444-4444-4444-8444-444444444444', roundId, sequenceNumber: 1, drawMode: 'RANDOM', questionText: 'Second account clue', keyValue: 'KUBERNETES', drawnAt };
-  await page.route('**/api/v1/participant/event', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ event: { id: eventId, title: 'Autumn Tombola', description: null, status: 'LIVE', scheduledAt: null, startedAt: drawnAt, completedAt: null, createdAt: drawnAt, updatedAt: drawnAt } }) }));
+  await page.route('**/api/v1/participant/event', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ event: { id: eventId, title: 'Autumn Tambola', description: null, status: 'LIVE', scheduledAt: null, startedAt: drawnAt, completedAt: null, createdAt: drawnAt, updatedAt: drawnAt } }) }));
   await page.route('**/api/v1/participant/round/current', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ round: { id: roundId, eventId, sequenceNumber: 1, name: 'Opening Round', status: 'ACTIVE', patterns: [], createdAt: drawnAt, updatedAt: drawnAt } }) }));
   await page.route('**/api/v1/participant/draws?*', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ data: [accountDraw()], total: 1, page: 1, limit: 100 }) }));
   await page.route('**/api/v1/participant/ticket?roundId=*', (route) => {
@@ -273,7 +273,7 @@ test('marking waits for the server and the confirmed state survives a page refre
   let marked = false;
   let markRequests = 0;
   const cells = cellIds.map((id, index) => ({ id, rowIndex: Math.floor(index / 5), colIndex: index % 5, row: Math.floor(index / 5), column: index % 5, keyId: `key-${index}`, keyValue: index === 0 ? 'DOCKER' : `KEY ${index}`, marked: marked && index === 0 }));
-  await page.route('**/api/v1/participant/event', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ event: { id: eventId, title: 'Autumn Tombola', description: null, status: 'LIVE', scheduledAt: null, startedAt: null, completedAt: null, createdAt: drawnAt, updatedAt: drawnAt } }) }));
+  await page.route('**/api/v1/participant/event', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ event: { id: eventId, title: 'Autumn Tambola', description: null, status: 'LIVE', scheduledAt: null, startedAt: null, completedAt: null, createdAt: drawnAt, updatedAt: drawnAt } }) }));
   await page.route('**/api/v1/participant/round/current', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ round: { id: roundId, eventId, sequenceNumber: 1, name: 'Opening Round', status: 'ACTIVE', patterns: [], createdAt: drawnAt, updatedAt: drawnAt } }) }));
   await page.route('**/api/v1/participant/draws?*', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ data: [{ id: '66666666-6666-4666-8666-666666666666', roundId, sequenceNumber: 1, drawMode: 'RANDOM', questionText: 'Which tool packages apps?', keyValue: 'DOCKER', drawnAt }], total: 1, page: 1, limit: 100 }) }));
   await page.route('**/api/v1/participant/ticket?roundId=*', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ticket: { id: ticketId, roundId, participantId: 'participant-1', eventId, createdAt: drawnAt, cells: cells.map((cell) => ({ ...cell, marked: marked && cell.id === cellIds[0] })) } }) }));
@@ -364,7 +364,7 @@ test('a Draw created during the initial snapshot and subscription gap is recover
   const firstSnapshotStarted = new Promise<void>((resolve) => { markFirstSnapshotStarted = resolve; });
   const reconcileSnapshotStarted = new Promise<void>((resolve) => { markReconcileSnapshotStarted = resolve; });
   let drawRequests = 0;
-  await page.route('**/api/v1/participant/event', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ event: { id: eventId, title: 'Autumn Tombola', description: null, status: 'LIVE', scheduledAt: null, startedAt: null, completedAt: null, createdAt: drawnAt, updatedAt: drawnAt } }) }));
+  await page.route('**/api/v1/participant/event', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ event: { id: eventId, title: 'Autumn Tambola', description: null, status: 'LIVE', scheduledAt: null, startedAt: null, completedAt: null, createdAt: drawnAt, updatedAt: drawnAt } }) }));
   await page.route('**/api/v1/participant/round/current', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ round: { id: roundId, eventId, sequenceNumber: 1, name: 'Opening Round', status: roundStatus, patterns: [], createdAt: drawnAt, updatedAt: drawnAt } }) }));
   await page.route('**/api/v1/participant/draws?*', async (route) => {
     drawRequests += 1;
@@ -413,7 +413,7 @@ test('keyboard users can open the live game from the lobby and mark a drawn Tick
     row: Math.floor(index / 5), column: index % 5, keyId: `key-${index}`,
     keyValue: index === 0 ? 'DOCKER' : `KEY ${index}`, marked: marked && index === 0,
   }));
-  await page.route('**/api/v1/participant/event', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ event: { id: eventId, title: 'Autumn Tombola', description: null, status: 'LIVE', scheduledAt: null, startedAt: drawnAt, completedAt: null, createdAt: drawnAt, updatedAt: drawnAt } }) }));
+  await page.route('**/api/v1/participant/event', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ event: { id: eventId, title: 'Autumn Tambola', description: null, status: 'LIVE', scheduledAt: null, startedAt: drawnAt, completedAt: null, createdAt: drawnAt, updatedAt: drawnAt } }) }));
   await page.route('**/api/v1/participant/round/current', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ round: { id: roundId, eventId, sequenceNumber: 1, name: 'Opening Round', status: 'ACTIVE', patterns: [], createdAt: drawnAt, updatedAt: drawnAt } }) }));
   await page.route('**/api/v1/participant/draws?*', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ data: [{ id: '66666666-6666-4666-8666-666666666666', roundId, sequenceNumber: 1, drawMode: 'RANDOM', questionText: 'Which tool packages apps?', keyValue: 'DOCKER', drawnAt }], total: 1, page: 1, limit: 100 }) }));
   await page.route('**/api/v1/participant/ticket?roundId=*', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ticket: { id: ticketId, roundId, participantId: 'participant-1', eventId, createdAt: drawnAt, cells: cells.map((cell) => ({ ...cell, marked: marked && cell.id === cellIds[0] })) } }) }));

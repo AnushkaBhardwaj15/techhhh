@@ -6,7 +6,7 @@ const roundId = '22222222-2222-4222-8222-222222222222';
 const timestamp = '2026-10-18T10:00:00.000Z';
 
 async function mockLiveFeed(page: Page) {
-  await page.route('**/api/v1/live/event', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ event: { id: eventId, title: 'Autumn Tech Tombola', description: null, status: 'LIVE', scheduledAt: null, startedAt: timestamp, completedAt: null } }) }));
+  await page.route('**/api/v1/live/event', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ event: { id: eventId, title: 'Autumn Tech Tambola', description: null, status: 'LIVE', scheduledAt: null, startedAt: timestamp, completedAt: null } }) }));
   await page.route('**/api/v1/live/round', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ round: { id: roundId, eventId, sequenceNumber: 2, name: 'The Systems Round', status: 'ACTIVE', updatedAt: timestamp } }) }));
   await page.route('**/api/v1/live/draws', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ roundId, data: [
     { id: '33333333-3333-4333-8333-333333333333', roundId, sequenceNumber: 1, drawMode: 'RANDOM', question: 'What does HTML describe?', key: 'MARKUP', drawnAt: timestamp },

@@ -4,7 +4,7 @@ import { createAdminEvent, getAdminEvent, listAdminEvents, updateAdminEvent } fr
 afterEach(() => vi.unstubAllGlobals());
 
 const event = {
-  id: '0d3aa3e6-4c58-4c36-b363-d5f11640ba52', title: 'Tech Tombola', description: null, status: 'DRAFT',
+  id: '0d3aa3e6-4c58-4c36-b363-d5f11640ba52', title: 'Tech Tambola', description: null, status: 'DRAFT',
   scheduledAt: null, startedAt: null, completedAt: null,
   createdAt: '2026-10-17T10:00:00.000Z', updatedAt: '2026-10-17T10:00:00.000Z',
 };
@@ -36,7 +36,7 @@ describe('admin Events API', () => {
   it('creates Events and sends metadata or lifecycle updates through the documented routes', async () => {
     const fetchMock = vi.fn().mockImplementation(() => Promise.resolve(response({ event })));
     vi.stubGlobal('fetch', fetchMock);
-    await createAdminEvent({ title: 'Tech Tombola' });
+    await createAdminEvent({ title: 'Tech Tambola' });
     await updateAdminEvent(event.id, { title: 'Updated event' });
     await updateAdminEvent(event.id, { status: 'READY' });
     expect(fetchMock.mock.calls.map(([url, options]) => [requestPath(url as string), (options as RequestInit).method])).toEqual([

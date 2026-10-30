@@ -3,7 +3,7 @@ import { serializeLiveDraw, serializeLiveEvent, serializeLiveRound, serializeLiv
 import type { ILiveReadRepository } from './live.repository.ts';
 import { LiveReadService } from './live.service.ts';
 
-const event = { id: 'event-public', title: 'Tech Tombola', description: 'Display description', status: 'LIVE' as const, scheduledAt: null, startedAt: new Date('2026-01-01T00:00:00.000Z'), completedAt: null };
+const event = { id: 'event-public', title: 'Tech Tambola', description: 'Display description', status: 'LIVE' as const, scheduledAt: null, startedAt: new Date('2026-01-01T00:00:00.000Z'), completedAt: null };
 const round = { id: 'round-public', eventId: event.id, sequenceNumber: 1, name: 'Round 1', status: 'ACTIVE' as const, updatedAt: new Date('2026-01-01T00:01:00.000Z') };
 const draws = [
   { id: 'draw-1', roundId: round.id, sequenceNumber: 1, drawMode: 'RANDOM', questionText: 'First clue', keyValue: 'DOCKER', drawnAt: new Date('2026-01-01T00:02:00.000Z') },
@@ -36,7 +36,7 @@ describe('LiveReadService', () => {
   it('returns public Event and Round DTOs', async () => {
     const service = new LiveReadService(repository());
     expect(await service.event()).toEqual({ event: {
-      id: 'event-public', title: 'Tech Tombola', description: 'Display description', status: 'LIVE',
+      id: 'event-public', title: 'Tech Tambola', description: 'Display description', status: 'LIVE',
       scheduledAt: null, startedAt: '2026-01-01T00:00:00.000Z', completedAt: null,
     } });
     expect(await service.round()).toEqual({ round: {
@@ -78,7 +78,7 @@ describe('LiveReadService', () => {
 describe('public Live serializers', () => {
   it('allows only public Event fields', () => {
     const result = serializeLiveEvent({ ...event, internalAuditMetadata: 'secret', ownerEmail: 'hidden@example.com' } as typeof event);
-    expect(result).toEqual({ id: 'event-public', title: 'Tech Tombola', description: 'Display description', status: 'LIVE', scheduledAt: null, startedAt: '2026-01-01T00:00:00.000Z', completedAt: null });
+    expect(result).toEqual({ id: 'event-public', title: 'Tech Tambola', description: 'Display description', status: 'LIVE', scheduledAt: null, startedAt: '2026-01-01T00:00:00.000Z', completedAt: null });
   });
 
   it('allows only public Round fields', () => {

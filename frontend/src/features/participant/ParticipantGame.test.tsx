@@ -120,7 +120,7 @@ describe("reference participant game", () => {
     fireEvent.click(screen.getByRole('button', { name: 'Dismiss notification' }));
     expect(screen.queryByText(/haven't completed Full House yet/)).not.toBeInTheDocument();
     expect(
-      screen.getByRole("table", { name: "Your Tombola ticket" }),
+      screen.getByRole("table", { name: "Your Tambola ticket" }),
     ).toBeVisible();
     expect(screen.getByText("YOUR POINTS").parentElement).toHaveTextContent(
       "0",
@@ -163,7 +163,7 @@ describe("reference participant game", () => {
     expect(await screen.findByRole('region', { name: 'Game status' })).toHaveTextContent('You’re in the lobby—waiting for other players');
     expect(screen.getByText(/You can start marking cells and claiming prizes when the host starts/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Claim Early Five' })).toBeDisabled();
-    expect(screen.getByRole('table', { name: 'Your Tombola ticket' })).toBeVisible();
+    expect(screen.getByRole('table', { name: 'Your Tambola ticket' })).toBeVisible();
   });
   it("routes a participant without a joined round to code entry", async () => {
     sessionStorage.clear();

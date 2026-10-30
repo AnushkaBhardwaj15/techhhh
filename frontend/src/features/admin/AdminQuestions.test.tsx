@@ -37,7 +37,7 @@ function renderPage(path = `/admin/questions?eventId=${eventId}&roundId=${roundI
 describe('Admin Questions and Keys', () => {
   afterEach(() => { cleanup(); vi.clearAllMocks(); });
   beforeEach(() => {
-    vi.mocked(getAdminEvent).mockResolvedValue({ id: eventId, title: 'Tech Tombola', status: 'READY', description: null, scheduledAt: null, startedAt: null, completedAt: null, ...dates });
+    vi.mocked(getAdminEvent).mockResolvedValue({ id: eventId, title: 'Tech Tambola', status: 'READY', description: null, scheduledAt: null, startedAt: null, completedAt: null, ...dates });
     vi.mocked(listAdminRounds).mockResolvedValue(page([{ id: roundId, eventId, sequenceNumber: 1, name: 'Opening round', status: 'DRAFT', patterns: [], ...dates }]) as never);
     vi.mocked(getAdminRound).mockResolvedValue({ id: roundId, eventId, sequenceNumber: 1, name: 'Opening round', status: 'DRAFT', patterns: [], ...dates });
     vi.mocked(listAdminKeys).mockResolvedValue(page([key]));
@@ -56,7 +56,7 @@ describe('Admin Questions and Keys', () => {
   });
   it('loads Event Keys and selected Round Questions, and displays clues as text', async () => {
     renderPage();
-    expect(await screen.findByText('Event: Tech Tombola')).toBeInTheDocument();
+    expect(await screen.findByText('Event: Tech Tambola')).toBeInTheDocument();
     expect(await screen.findByText('What runs containers?')).toBeInTheDocument();
     expect(listAdminKeys).toHaveBeenCalledWith(expect.objectContaining({ eventId, page: 1, limit: 20 }));
     expect(listAdminQuestions).toHaveBeenCalledWith(expect.objectContaining({ roundId, page: 1, limit: 20 }));
@@ -119,7 +119,7 @@ describe('Admin Questions and Keys', () => {
     expect(createAdminKey).not.toHaveBeenCalled();
   });
   it('hides a Key form when navigation changes Event scope', async () => {
-    vi.mocked(getAdminEvent).mockImplementation(async (id) => ({ id, title: id === eventB ? 'Second Event' : 'Tech Tombola', status: 'READY', description: null, scheduledAt: null, startedAt: null, completedAt: null, ...dates }));
+    vi.mocked(getAdminEvent).mockImplementation(async (id) => ({ id, title: id === eventB ? 'Second Event' : 'Tech Tambola', status: 'READY', description: null, scheduledAt: null, startedAt: null, completedAt: null, ...dates }));
     vi.mocked(getAdminRound).mockImplementation(async (id) => ({ id, eventId: id === roundBId ? eventB : eventId, sequenceNumber: id === roundBId ? 2 : 1, name: id === roundBId ? 'Second Event round' : 'Opening round', status: 'DRAFT', patterns: [], ...dates }));
     vi.mocked(listAdminQuestions).mockResolvedValue(page([]));
     renderPage(undefined, undefined, true);

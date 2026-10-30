@@ -1,5 +1,5 @@
 /**
- * Zero-dependency Web Audio API synthesizer for Tech Tombola.
+ * Zero-dependency Web Audio API synthesizer for Tech Tambola.
  * Generates tactile auditory feedback for marking, clues, and prize claims.
  * Gracefully silent if Web Audio is unsupported or if muted by the user.
  */

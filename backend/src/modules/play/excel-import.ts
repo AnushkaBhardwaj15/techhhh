@@ -182,7 +182,7 @@ export function parseAndValidateBankSpreadsheet(
       if (seenTerms.has(normalizedTerm)) {
         const firstRow = seenTerms.get(normalizedTerm)!;
         errors.push(
-          `Row ${rowNum}: Duplicate answer term "${rawTerm}" (matches "${normalizedTerm}" defined on Row ${firstRow}). All answers must be unique for Tombola ticket generation.`,
+          `Row ${rowNum}: Duplicate answer term "${rawTerm}" (matches "${normalizedTerm}" defined on Row ${firstRow}). All answers must be unique for Tambola ticket generation.`,
         );
       } else {
         seenTerms.set(normalizedTerm, rowNum);

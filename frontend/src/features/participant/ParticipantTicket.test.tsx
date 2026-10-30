@@ -64,7 +64,7 @@ describe('ParticipantTicket marking', () => {
 
   it('labels the Ticket table for assistive navigation', () => {
     render(<TicketGrid ticket={makeTicket()} />);
-    expect(screen.getByRole('table', { name: 'Your Tombola ticket' })).toBeInTheDocument();
+    expect(screen.getByRole('table', { name: 'Your Tambola ticket' })).toBeInTheDocument();
   });
 
   it('renders the fixed three-row by nine-column Ticket structure', () => {
@@ -148,12 +148,12 @@ describe('ParticipantTicket marking', () => {
   it('does not offer an action for an already-marked or undrawn cell', async () => {
     vi.mocked(getParticipantTicket).mockResolvedValue(makeTicket(true));
     renderTicket();
-    await screen.findByRole('table', { name: 'Your Tombola ticket' });
+    await screen.findByRole('table', { name: 'Your Tambola ticket' });
     expect(screen.queryByRole('button', { name: /DOCKER/i })).not.toBeInTheDocument();
     cleanup();
     vi.mocked(getParticipantTicket).mockResolvedValue(makeTicket());
     renderTicket(true, new Set());
-    await screen.findByRole('table', { name: 'Your Tombola ticket' });
+    await screen.findByRole('table', { name: 'Your Tambola ticket' });
     expect(screen.queryByRole('button', { name: /DOCKER/i })).not.toBeInTheDocument();
   });
 

@@ -9,6 +9,6 @@ describe('reportDiagnostic', () => {
     vi.stubGlobal('crypto', {});
 
     expect(() => reportDiagnostic('render')).not.toThrow();
-    expect(errorLog).toHaveBeenCalledWith('Tech Tombola diagnostic', { correlationId: expect.stringMatching(/^local-\d+$/), type: 'render' });
+    expect(errorLog).toHaveBeenCalledWith('Tech Tambola diagnostic', { correlationId: expect.stringMatching(/^local-\d+$/), type: 'render' });
   });
 });

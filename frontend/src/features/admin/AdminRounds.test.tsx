@@ -41,7 +41,7 @@ function renderPage(initial = `/admin/rounds?eventId=${eventA}`, useSwitch = fal
 describe('Admin Rounds and Pattern configuration', () => {
   afterEach(() => { cleanup(); vi.clearAllMocks(); });
   beforeEach(() => {
-    vi.mocked(getAdminEvent).mockImplementation(async (id) => ({ id, title: id === eventA ? 'Tech Tombola A' : 'Tech Tombola B', status: 'READY', description: null, scheduledAt: null, startedAt: null, completedAt: null, createdAt: '2026-10-17T10:00:00.000Z', updatedAt: '2026-10-17T10:00:00.000Z' }));
+    vi.mocked(getAdminEvent).mockImplementation(async (id) => ({ id, title: id === eventA ? 'Tech Tambola A' : 'Tech Tambola B', status: 'READY', description: null, scheduledAt: null, startedAt: null, completedAt: null, createdAt: '2026-10-17T10:00:00.000Z', updatedAt: '2026-10-17T10:00:00.000Z' }));
     vi.mocked(listAdminRounds).mockResolvedValue(list([]));
     vi.mocked(getAdminRound).mockResolvedValue(makeRound());
     vi.mocked(createAdminRound).mockImplementation(async (input) => makeRound({ ...input, id: 'a4a85404-a3d6-4da6-9b21-ccfc6a11e713', patterns: makeRound().patterns.map((pattern, i) => ({ ...pattern, ...input.patterns?.[i], roundId: 'a4a85404-a3d6-4da6-9b21-ccfc6a11e713' })) } as Partial<AdminRound>));
@@ -66,7 +66,7 @@ describe('Admin Rounds and Pattern configuration', () => {
   it('scopes the list to the selected Event and shows its empty state', async () => {
     renderPage();
     expect(await screen.findByText('No Rounds have been configured for this Event.')).toBeInTheDocument();
-    expect(await screen.findByText('Event: Tech Tombola A')).toBeInTheDocument();
+    expect(await screen.findByText('Event: Tech Tambola A')).toBeInTheDocument();
     expect(listAdminRounds).toHaveBeenCalledWith(expect.objectContaining({ eventId: eventA, page: 1, limit: 20 }));
   });
 
@@ -241,7 +241,7 @@ describe('Admin Rounds and Pattern configuration', () => {
     renderPage(`/admin/rounds?eventId=${eventA}&roundId=${roundId}`, true);
     await screen.findByText('1. Opening round');
     fireEvent.click(screen.getByRole('link', { name: 'Switch Event' }));
-    expect(await screen.findByText('Event: Tech Tombola B')).toBeInTheDocument();
+    expect(await screen.findByText('Event: Tech Tambola B')).toBeInTheDocument();
     expect(listAdminRounds).toHaveBeenLastCalledWith(expect.objectContaining({ eventId: eventB }));
     expect(screen.queryByText('1. Opening round')).not.toBeInTheDocument();
     expect(await screen.findByText('Select a Round or create one.')).toBeInTheDocument();
@@ -253,7 +253,7 @@ describe('Admin Rounds and Pattern configuration', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Edit configuration' }));
     fireEvent.change(screen.getByLabelText('Round name'), { target: { value: 'Unsaved change' } });
     fireEvent.click(screen.getByRole('link', { name: 'Switch Event' }));
-    expect(await screen.findByText('Event: Tech Tombola B')).toBeInTheDocument();
+    expect(await screen.findByText('Event: Tech Tambola B')).toBeInTheDocument();
     await waitFor(() => expect(screen.queryByLabelText('Round name')).not.toBeInTheDocument());
     expect(screen.queryByText('1. Opening round')).not.toBeInTheDocument();
     expect(getAdminRound).toHaveBeenCalledTimes(1);
@@ -270,9 +270,9 @@ describe('Admin Rounds and Pattern configuration', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Save Round' }));
     await waitFor(() => expect(createAdminRound).toHaveBeenCalledOnce());
     fireEvent.click(screen.getByRole('link', { name: 'Switch Event' }));
-    expect(await screen.findByText('Event: Tech Tombola B')).toBeInTheDocument();
+    expect(await screen.findByText('Event: Tech Tambola B')).toBeInTheDocument();
     await act(async () => finish(makeRound({ id: 'a4a85404-a3d6-4da6-9b21-ccfc6a11e713' })));
-    expect(screen.getByText('Event: Tech Tombola B')).toBeInTheDocument();
+    expect(screen.getByText('Event: Tech Tambola B')).toBeInTheDocument();
     expect(screen.queryByText('Round created and saved.')).not.toBeInTheDocument();
     expect(screen.queryByLabelText('Round name')).not.toBeInTheDocument();
   });

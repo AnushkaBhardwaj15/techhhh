@@ -16,7 +16,7 @@ const admin: AuthenticatedUser = { id: 'admin-1', email: 'admin@example.test', n
 const eventId = '0d3aa3e6-4c58-4c36-b363-d5f11640ba52';
 const eventBId = '91c16f5c-7285-4fc2-9954-7043a0d6e5b4';
 const personId = '4d9ec244-a97a-4c8c-a657-1e7fd5b9be69';
-const event = { id: eventId, title: 'Tech Tombola 2026', description: null, status: 'READY' as const, scheduledAt: null, startedAt: null, completedAt: null, createdAt: '2026-10-17T10:00:00.000Z', updatedAt: '2026-10-17T10:00:00.000Z' };
+const event = { id: eventId, title: 'Tech Tambola 2026', description: null, status: 'READY' as const, scheduledAt: null, startedAt: null, completedAt: null, createdAt: '2026-10-17T10:00:00.000Z', updatedAt: '2026-10-17T10:00:00.000Z' };
 const participant: AdminParticipant = { id: personId, userId: '8d632d5f-16b1-4292-99e5-0d3628914c2c', eventId, email: 'sam@example.test', name: 'Sam Rivera', externalId: 'E-42', status: 'ACTIVE', emailDeliveryStatus: 'FAILED', createdAt: event.createdAt, updatedAt: event.updatedAt };
 const result = { data: [participant], pagination: { page: 1, limit: 20, total: 1, totalPages: 1 } };
 

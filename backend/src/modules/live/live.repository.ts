@@ -73,7 +73,7 @@ export class LiveReadRepository implements ILiveReadRepository {
 
     return {
       id: 'e7bf4217-f212-4970-b3f1-e924e1782f25',
-      title: 'Tech Tombola Championship 2026',
+      title: 'Tech Tambola Championship 2026',
       description: 'Annual Technical Tambola Tournament',
       status: 'LIVE',
       scheduledAt: new Date('2026-10-23T10:00:00.000Z'),

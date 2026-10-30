@@ -83,7 +83,7 @@ export function LiveDisplay() {
       <header className={styles.topbar}>
         <div className={styles.brandGroup}>
           <p className={styles.brand}>
-            TECH <span>TOMBOLA</span>
+            TECH <span>TAMBOLA</span>
           </p>
           <span className={styles.gameName}>{gameName}</span>
         </div>

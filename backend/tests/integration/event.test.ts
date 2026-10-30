@@ -90,8 +90,8 @@ describe('Event Lifecycle Integration', () => {
         cookie: `${SESSION_COOKIE_NAME}=${adminCookie}`,
       },
       payload: {
-        title: 'Tech Tombola 2026',
-        description: 'Annual flagship engineering Tombola game',
+        title: 'Tech Tambola 2026',
+        description: 'Annual flagship engineering Tambola game',
         scheduledAt: scheduledDate,
       },
     });
@@ -99,9 +99,9 @@ describe('Event Lifecycle Integration', () => {
     expect(res.statusCode).toBe(201);
     const body = JSON.parse(res.body);
     expect(body.event).toBeDefined();
-    expect(body.event.title).toBe('Tech Tombola 2026');
+    expect(body.event.title).toBe('Tech Tambola 2026');
     expect(body.event.status).toBe('DRAFT');
-    expect(body.event.description).toBe('Annual flagship engineering Tombola game');
+    expect(body.event.description).toBe('Annual flagship engineering Tambola game');
     expect(new Date(body.event.scheduledAt).toISOString()).toBe(scheduledDate);
 
     // Verify audit log exists

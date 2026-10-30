@@ -24,9 +24,9 @@ export function LandingPage() {
       <header className={styles.navbar} role="banner">
         <div className={styles.navContainer}>
           <div className={styles.brandGroup}>
-            <Link to="/" className={styles.wordmark} aria-label="Tech Tombola Home">
+            <Link to="/" className={styles.wordmark} aria-label="Tech Tambola Home">
               <span className={styles.brandBadge}>TECH</span>
-              <strong>TOMBOLA</strong>
+              <strong>TAMBOLA</strong>
             </Link>
             <span className={styles.editionBadge}>MUACM 2026</span>
           </div>
@@ -70,7 +70,7 @@ export function LandingPage() {
               <div className={styles.eyebrowContainer}>
                 <span className={styles.eyebrow}>MUACM ANNUAL TECH EVENT</span>
                 <span className={styles.badgeRule}>·</span>
-                <span className={styles.eyebrowAccent}>SYNCHRONIZED DIGITAL TOMBOLA</span>
+                <span className={styles.eyebrowAccent}>SYNCHRONIZED DIGITAL TAMBOLA</span>
               </div>
               <h1 id="hero-title" className={styles.heroHeadline}>
                 Listen for the clue.
@@ -80,7 +80,7 @@ export function LandingPage() {
                 <em>Claim the win.</em>
               </h1>
               <p className={styles.heroSubtitle}>
-                Tech Tombola is <strong>not a quiz</strong>. A question is a clue; its answer key is
+                Tech Tambola is <strong>not a quiz</strong>. A question is a clue; its answer key is
                 revealed by the game engine. Find that key on your 15-cell ticket, mark it manually,
                 and claim winning patterns in real time with server-authoritative verification.
               </p>
@@ -341,7 +341,7 @@ export function LandingPage() {
               </div>
               <p>
                 All <strong>15 keys across all three rows</strong> marked. The ultimate achievement in
-                Tech Tombola!
+                Tech Tambola!
               </p>
               <div className={styles.miniGridPreview} aria-hidden="true">
                 <div className={styles.miniRow}>
@@ -377,7 +377,7 @@ export function LandingPage() {
         <div className={styles.footerContainer}>
           <div className={styles.footerBrand}>
             <span className={styles.footerWordmark}>
-              <strong>TECH TOMBOLA</strong> · MUACM 2026
+              <strong>TECH TAMBOLA</strong> · MUACM 2026
             </span>
             <p className={styles.footerTagline}>Play Together. Mark Your Moment.</p>
           </div>

@@ -15,11 +15,11 @@ vi.mock('../../lib/api/adminEvents', () => ({
 
 const admin: AuthenticatedUser = { id: 'admin-1', email: 'admin@example.test', name: 'Admin User', role: 'ADMIN', status: 'ACTIVE' };
 const eventA: AdminEvent = {
-  id: '0d3aa3e6-4c58-4c36-b363-d5f11640ba52', title: 'Tech Tombola A', description: 'Annual event', status: 'READY',
+  id: '0d3aa3e6-4c58-4c36-b363-d5f11640ba52', title: 'Tech Tambola A', description: 'Annual event', status: 'READY',
   scheduledAt: null, startedAt: null, completedAt: null,
   createdAt: '2026-10-17T10:00:00.000Z', updatedAt: '2026-10-17T10:00:00.000Z',
 };
-const eventB: AdminEvent = { ...eventA, id: '91c16f5c-7285-4fc2-9954-7043a0d6e5b4', title: 'Tech Tombola B' };
+const eventB: AdminEvent = { ...eventA, id: '91c16f5c-7285-4fc2-9954-7043a0d6e5b4', title: 'Tech Tambola B' };
 const emptyList = { data: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 1 } };
 
 function renderPage(initial = '/admin/event') {
@@ -184,11 +184,11 @@ describe('Admin Event management', () => {
     vi.mocked(getAdminEvent).mockImplementation((id) => id === eventA.id ? new Promise((resolve) => { resolveA = resolve; }) : Promise.resolve(eventB));
     vi.mocked(listAdminEvents).mockResolvedValue({ data: [eventA, eventB], pagination: { page: 1, limit: 20, total: 2, totalPages: 1 } });
     renderPage(`/admin/event?eventId=${eventA.id}`);
-    fireEvent.click(await screen.findByRole('button', { name: /Tech Tombola B/ }));
-    expect(await screen.findByRole('heading', { name: 'Tech Tombola B' })).toBeInTheDocument();
+    fireEvent.click(await screen.findByRole('button', { name: /Tech Tambola B/ }));
+    expect(await screen.findByRole('heading', { name: 'Tech Tambola B' })).toBeInTheDocument();
     await act(async () => { resolveA(eventA); });
-    expect(screen.getByRole('heading', { name: 'Tech Tombola B' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Tech Tombola B/ })).toHaveAttribute('aria-current', 'true');
+    expect(screen.getByRole('heading', { name: 'Tech Tambola B' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Tech Tambola B/ })).toHaveAttribute('aria-current', 'true');
   });
 
   it('paginates with the backend page and total metadata', async () => {
@@ -196,9 +196,9 @@ describe('Admin Event management', () => {
       ? { data: [eventA], pagination: { page: 1, limit: 20, total: 21, totalPages: 2 } }
       : { data: [eventB], pagination: { page: 2, limit: 20, total: 21, totalPages: 2 } });
     renderPage();
-    expect(await screen.findByText('Tech Tombola A')).toBeInTheDocument();
+    expect(await screen.findByText('Tech Tambola A')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Next' }));
-    expect(await screen.findByText('Tech Tombola B')).toBeInTheDocument();
+    expect(await screen.findByText('Tech Tambola B')).toBeInTheDocument();
     expect(listAdminEvents).toHaveBeenLastCalledWith(expect.objectContaining({ page: 2, limit: 20 }));
   });
 
@@ -207,7 +207,7 @@ describe('Admin Event management', () => {
     renderPage();
     expect(await screen.findByText('Your account cannot manage Events.')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Retry Events' }));
-    expect(await screen.findByText('Tech Tombola A')).toBeInTheDocument();
+    expect(await screen.findByText('Tech Tambola A')).toBeInTheDocument();
   });
 
   it('shows permission loss after loading an Event and allows retry', async () => {

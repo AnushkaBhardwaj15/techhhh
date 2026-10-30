@@ -8,7 +8,7 @@ import type { RoundSummary } from '../modules/rounds/round.types.ts';
 const eventId = '11111111-1111-4111-8111-111111111111';
 const roundId = '22222222-2222-4222-8222-222222222222';
 const timestamp = new Date('2026-10-15T12:00:00.000Z');
-const event: EventSummary = { id: eventId, title: 'Tech Tombola', description: null, status: 'LIVE', scheduledAt: null, startedAt: timestamp, completedAt: null, createdAt: timestamp, updatedAt: timestamp };
+const event: EventSummary = { id: eventId, title: 'Tech Tambola', description: null, status: 'LIVE', scheduledAt: null, startedAt: timestamp, completedAt: null, createdAt: timestamp, updatedAt: timestamp };
 const round: RoundSummary = { id: roundId, eventId, sequenceNumber: 1, name: 'Round 1', status: 'ACTIVE', patterns: [], createdAt: timestamp, updatedAt: timestamp };
 
 function service() {

@@ -204,7 +204,7 @@ describe('participant realtime connection', () => {
     }
     act(() => FakeWebSocket.instances.at(-1)!.close());
     expect(result.current.status).toBe('DISCONNECTED');
-    expect(errorLog).toHaveBeenCalledWith('Tech Tombola diagnostic', expect.objectContaining({ type: 'websocket', correlationId: expect.any(String) }));
+    expect(errorLog).toHaveBeenCalledWith('Tech Tambola diagnostic', expect.objectContaining({ type: 'websocket', correlationId: expect.any(String) }));
     act(() => result.current.retry());
     expect(FakeWebSocket.instances).toHaveLength(7);
   });

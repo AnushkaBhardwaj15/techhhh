@@ -277,7 +277,7 @@ export function ParticipantLobby({ waiting = false }: { waiting?: boolean }) {
                 <span className={styles.pulseDotGreen}>●</span> ACTIVE GAME ANNOUNCED BY HOST
               </span>
               <span className={styles.activeGameTitle}>
-                {activeGame.name || "Tech Tombola Live Arena"}
+                {activeGame.name || "Tech Tambola Live Arena"}
               </span>
             </div>
 

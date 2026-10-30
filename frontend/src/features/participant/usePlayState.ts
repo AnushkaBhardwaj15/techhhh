@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { readPlayRound, readPublicPlay } from "../../lib/api/play";
 import { ApiError } from "../../lib/api/client";
 import { socketUrl } from "../../lib/websocket/socketUrl";
+import { retryTransientRead } from "../../lib/queryClient";
 
 export function usePlayState(roundId: string, publicView = false) {
   const client = useQueryClient();
@@ -13,7 +14,7 @@ export function usePlayState(roundId: string, publicView = false) {
       ? readPublicPlay(signal).then((result) => result.game)
       : readPlayRound(roundId, signal),
     enabled: publicView || !!roundId,
-    retry: false,
+    retry: retryTransientRead,
     refetchInterval: (q) => {
       if (q.state.error instanceof ApiError && [401, 403].includes(q.state.error.status)) return false;
       if (q.state.error) return 30_000;
