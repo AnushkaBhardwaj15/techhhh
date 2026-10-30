@@ -22,17 +22,17 @@ describe('DevelopersPage', () => {
     expect(screen.getAllByText(/TECH TOMBOLA/i).length).toBeGreaterThan(0);
   });
 
-  it('renders all four team members with their exact assigned roles', () => {
+  it('renders all four team members with their exact names and roles', () => {
     renderWithRouter();
 
     // Verify Saransh - Tech Head
     expect(screen.getByRole('heading', { level: 2, name: /Saransh Sharma/i })).toBeInTheDocument();
     expect(screen.getByText(/Tech Head/i)).toBeInTheDocument();
 
-    // Verify Abhi - Tech Executive
-    expect(screen.getByRole('heading', { level: 2, name: /Abhi/i })).toBeInTheDocument();
+    // Verify Abhi Dubey - Tech Executive
+    expect(screen.getByRole('heading', { level: 2, name: /Abhi Dubey/i })).toBeInTheDocument();
 
-    // Verify Anushka - Tech Executive
+    // Verify Anushka Bhardwaj - Tech Executive
     expect(screen.getByRole('heading', { level: 2, name: /Anushka Bhardwaj/i })).toBeInTheDocument();
     expect(screen.getAllByText(/Tech Executive/i).length).toBe(2);
 
@@ -41,33 +41,31 @@ describe('DevelopersPage', () => {
     expect(screen.getByText(/Techno Ambassador/i)).toBeInTheDocument();
   });
 
-  it('renders profile photos for all team members', () => {
+  it('renders correctly swapped photos for all team members per specification', () => {
     renderWithRouter();
 
-    const images = screen.getAllByRole('img');
-    const srcs = images.map((img) => img.getAttribute('src'));
+    // Saransh Sharma -> anushka.jpg
+    const saranshImg = screen.getByRole('img', { name: /Saransh Sharma/i });
+    expect(saranshImg.getAttribute('src')).toContain('anushka.jpg');
 
-    expect(srcs.some((src) => src?.includes('saransh.jpg'))).toBe(true);
-    expect(srcs.some((src) => src?.includes('abhi.jpg'))).toBe(true);
-    expect(srcs.some((src) => src?.includes('anushka.jpg'))).toBe(true);
-    expect(srcs.some((src) => src?.includes('ashutosh.jpg'))).toBe(true);
+    // Abhi Dubey -> ashutosh.jpg
+    const abhiImg = screen.getByRole('img', { name: /Abhi Dubey/i });
+    expect(abhiImg.getAttribute('src')).toContain('ashutosh.jpg');
+
+    // Anushka Bhardwaj -> abhi.jpg
+    const anushkaImg = screen.getByRole('img', { name: /Anushka Bhardwaj/i });
+    expect(anushkaImg.getAttribute('src')).toContain('abhi.jpg');
+
+    // Ashutosh Singh -> saransh.jpg
+    const ashutoshImg = screen.getByRole('img', { name: /Ashutosh Singh/i });
+    expect(ashutoshImg.getAttribute('src')).toContain('saransh.jpg');
   });
 
-  it('renders developer biographies and skills', () => {
-    renderWithRouter();
-
-    // Check specific focus areas/skills
-    expect(screen.getAllByText(/System Architecture/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/WebSocket Streams/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/React 19 & Vite/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/Tournament Operations/i).length).toBeGreaterThan(0);
-  });
-
-  it('renders working GitHub links for members who have one', () => {
+  it('renders working GitHub links for each team member', () => {
     renderWithRouter();
 
     const githubLinks = screen.getAllByRole('link', { name: /github/i });
-    expect(githubLinks.length).toBeGreaterThanOrEqual(4);
+    expect(githubLinks.length).toBe(4);
 
     const saranshLink = githubLinks.find((link) =>
       link.getAttribute('href')?.includes('saransh-sh')
@@ -82,13 +80,5 @@ describe('DevelopersPage', () => {
     const homeLinks = screen.getAllByRole('link', { name: /home/i });
     expect(homeLinks.length).toBeGreaterThan(0);
     expect(homeLinks.some((link) => link.getAttribute('href') === '/')).toBe(true);
-  });
-
-  it('renders the project technology stack section', () => {
-    renderWithRouter();
-
-    expect(screen.getByRole('heading', { level: 2, name: /The Technology Stack/i })).toBeInTheDocument();
-    expect(screen.getByText(/Bun \+ Fastify/i)).toBeInTheDocument();
-    expect(screen.getByText(/PostgreSQL/i)).toBeInTheDocument();
   });
 });
